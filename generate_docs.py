@@ -403,10 +403,10 @@ def chunk_to_html(chunk: Chunk) -> str:
     html += html_before
     html += '</div>'
     html += '<div class="ntdoc-code-intro">'
-    html += intro
+    html += escape(intro)
     html += '</div>'
     html += '<div class="ntdoc-code-body">'
-    html += body
+    html += escape(body)
     html += '</div>'
     html += '<div class="ntdoc-code-footer">'
     html += html_after
