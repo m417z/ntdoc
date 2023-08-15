@@ -1,3 +1,5 @@
+This function is documented in Windows Driver Kit [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntlockfile) and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwlockfile).
+
 FileHandle HANDLE to File Object \
 opened with FILE\_READ\_DATA access. \
 LockGrantedEvent Optional HANDLE \
