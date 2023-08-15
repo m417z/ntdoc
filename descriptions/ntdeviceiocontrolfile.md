@@ -1,3 +1,5 @@
+This function is documented in Windows Driver Kit [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-zwdeviceiocontrolfile), [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntdeviceiocontrolfile), and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwdeviceiocontrolfile).
+
 Function NtDeviceIoControlFile sends IOCTL\_\* \
 control code to Device Driver. It is primary \(but not the best\) \
 solution to communicate between application and Device Driver. \

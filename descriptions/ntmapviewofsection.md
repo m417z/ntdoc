@@ -1,3 +1,5 @@
+This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwmapviewofsection)
+
 Function NtMapViewOfSection maps specified part of \
 Section Object into process memory. \
 SectionHandle HANDLE to Section \

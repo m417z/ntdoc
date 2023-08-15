@@ -1,3 +1,5 @@
+This function is documented in Windows Driver Kit [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetinformationfile) and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwsetinformationfile).
+
 \(Description of this function is also avaiable in Win2000 \
 DDK\) \
 FileHandle HANDLE to File \

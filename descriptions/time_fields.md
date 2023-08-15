@@ -1,3 +1,5 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-time_fields)
+
 TIME\_FIELDS structure is NTDLL version of \
 Win 32 API SYSTEM\_TIME. It contains detailed \
 information about date and time. \

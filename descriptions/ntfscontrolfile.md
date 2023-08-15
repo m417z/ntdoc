@@ -1,3 +1,5 @@
+This function is documented in Windows Driver Kit [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntfscontrolfile) and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwfscontrolfile).
+
 Function NtFsControlFile sends FSCTL\_\* code to \
 File System Device Driver. See also description of \
 NtDeviceIoControlFile function. \

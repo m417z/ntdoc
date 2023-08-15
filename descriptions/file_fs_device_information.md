@@ -1,3 +1,5 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_file_fs_device_information)
+
 FILE\_FS\_DEVICE\_INFORMATION represents output buffer \
 in a call to \
 NtQueryVolumeInformationFile with \
