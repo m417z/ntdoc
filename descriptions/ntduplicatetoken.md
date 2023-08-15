@@ -1,3 +1,5 @@
+This function is documented in Windows Driver Kit [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntduplicatetoken) and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwduplicatetoken).
+
 Function NtDuplicateToken creates new Token Object \
 basing on existing Token Object. \
 ExistingToken HANDLE to Token \

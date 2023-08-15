@@ -1,3 +1,5 @@
+This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtltimetotimefields)
+
 Function RtlTimeToTimeFields converts 64\-bit \
 time to user\-readable structure TIME\_FIELDS. \
 Time Pointer to LARGE\_INTEGER \

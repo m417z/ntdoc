@@ -1,3 +1,5 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_file_full_ea_information)
+
 Structure FILE\_FULL\_EA\_INFORMATION is used for get or \
 store Extended Attributes for NTFS files and directories. \
 Extended Attributes \(EA\) is a list of pair \

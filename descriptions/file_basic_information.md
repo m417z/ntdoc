@@ -1,3 +1,5 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_file_basic_information)
+
 Structure FILE\_BASIC\_INFORMATION is used in a call to \
 function \
 NtSetInformationFile with \
