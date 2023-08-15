@@ -1,3 +1,5 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_file_network_open_information)
+
 FILE\_NETWORK\_OPEN\_INFORMATION structure is used with \
 two file functions: \
 1\) \
