@@ -1,2 +1,0 @@
-HeapHandle \
-Heap address.

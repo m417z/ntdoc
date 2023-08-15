@@ -1,2 +1,0 @@
-MaxNumberOfHeaps \
-Size of HeapArray.
