@@ -1,3 +1,5 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/ns-ntddk-_file_name_information)
+
 Structure FILE\_NAME\_INFORMATION contains name of \
 queried file object. It's used as a result of call \
 NtQueryInformationFile with \
