@@ -1,3 +1,5 @@
+This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopenevent)
+
 EventHandle Result of call \- \
 HANDLE to Event Object. \
 DesiredAccess See NtCreateEvent for possible access rights. \

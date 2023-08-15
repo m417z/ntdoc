@@ -1,3 +1,5 @@
+This function is documented in Windows Driver Kit [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntwritefile) and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwwritefile).
+
 \(Also descripted in Win 2000 DDK\) \
 FileHandle HANDLE to File Object \
 opened with FILE\_WRITE\_DATA access. \
