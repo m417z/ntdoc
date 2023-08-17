@@ -9,7 +9,7 @@ Buffer must have `pNeededBufferSize` bytes length.
 
 ### pUnknown
 
--?, propably PageSize (0x4000).
+???, probably PageSize (0x4000).
 
 # See also
 

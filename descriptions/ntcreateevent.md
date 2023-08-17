@@ -10,8 +10,7 @@ Result of call - `HANDLE` to newly created Event Object.
 
 Assess rights associated with created event. Can be one of following values from **\<winnt.h\>**:
 
-* `EVENT_QUERY_STATE`	
-
+* `EVENT_QUERY_STATE`
 * `EVENT_MODIFY_STATE`
 * `EVENT_ALL_ACCESS`
 

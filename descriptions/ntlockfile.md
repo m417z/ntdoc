@@ -32,7 +32,7 @@ Length of region to lock, in bytes.
 
 ### Key
 
-Pointer to user's defined 4-bytes key associated with this lock. It can be used in multi-thread process to allow reading or writing data only for one specified thread, whitch known `Key` value. 
+Pointer to user's defined 4-bytes key associated with this lock. It can be used in multi-thread process to allow reading or writing data only for one specified thread, whitch known `Key` value.
 
 ### ReturnImmediately
 

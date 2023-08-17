@@ -4,9 +4,8 @@ This structure is [documented in Windows Driver Kit](https://learn.microsoft.com
 
 `FILE_NETWORK_OPEN_INFORMATION` structure is used with two file functions:
 
-1) `NtQueryFullAttributesFile`,
-
-2) `NtQueryInformationFile` with `FileNetworkOpenInformation` information class.
+1. `NtQueryFullAttributesFile`,
+2. `NtQueryInformationFile` with `FileNetworkOpenInformation` information class.
 
 ### CreationTime
 

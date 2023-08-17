@@ -2,7 +2,7 @@ This function is [documented in Windows Driver Kit](https://learn.microsoft.com/
 
 ---
 
-Function `NtQueryFullAttributesFile` is used to get information about file stored on low-speed connection device. See also description of `NtQueryAttributesFile` function. 
+Function `NtQueryFullAttributesFile` is used to get information about file stored on low-speed connection device. See also description of `NtQueryAttributesFile` function.
 
 ### ObjectAttributes
 

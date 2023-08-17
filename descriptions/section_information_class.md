@@ -1,4 +1,4 @@
-Enumeration type `SECTION_INFORMATION_CLASS` is used in a call to `NtQuerySection` function. 
+Enumeration type `SECTION_INFORMATION_CLASS` is used in a call to `NtQuerySection` function.
 
 This type can be one of:
 

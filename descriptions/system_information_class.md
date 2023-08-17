@@ -1,20 +1,20 @@
-Enumeration type `SYSTEM_INFORMATION_CLASS` defines information classes for a lot of system settings. \
-This type is used with function \
-`NtQuerySystemInformation` and `NtSetSystemInformation`. \
+Enumeration type `SYSTEM_INFORMATION_CLASS` defines information classes for a lot of system settings
+This type is used with function
+`NtQuerySystemInformation` and `NtSetSystemInformation`.
 For detailed informations see descriptions of structures associated with information classes below.
 
 ### SystemBasicInformation
 
 * Action: `Query`
 
-* Buffer size : *0x02C*
+* Buffer size: *0x02C*
 * Structure: `SYSTEM_BASIC_INFORMATION`
 
 ### SystemProcessorInformation
 
 * Action: `Query`
 
-* Buffer size : *0x00C*
+* Buffer size: *0x00C*
 * Structure: `SYSTEM_PROCESSOR_INFORMATION`
 
 ### SystemPerformanceInformation
@@ -29,7 +29,7 @@ For detailed informations see descriptions of structures associated with informa
 
 * Action: `Query`
 
-* Buffer size : *???*
+* Buffer size: *???*
 * Structure: `STATUS_NOT_IMPLEMENTED`
 
 System path is avaiable via structure `KUSER_SHARED_DATA`
@@ -38,26 +38,25 @@ System path is avaiable via structure `KUSER_SHARED_DATA`
 
 * Action: `Query`
 
-* Buffer size : *0x088+*
+* Buffer size: *0x088+*
 * Structure: `SYSTEM_PROCESS_INFORMATION`
 
 ### SystemCallCountInformation
 
 * Action: `Query`
 
-* Buffer size : *0x018+*
+* Buffer size: *0x018+*
 * Structure: `SYSTEM_CALL_COUNT_INFORMATION`
 
 ### SystemDeviceInformation
 
-0x018 GET \
-SystemConfigurationInformation
+0x018 GET SystemConfigurationInformation
 
 ### SystemProcessorPerformanceInformation
 
 * Action: `Query`
 
-* Buffer size : *0x030*
+* Buffer size: *0x030*
 * Structure: `SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION`
 
 ### SystemFlagsInformation
@@ -72,7 +71,7 @@ NOT_IMPLEMENTED
 
 * Action: `Query`
 
-* Buffer size : *0x106+*
+* Buffer size: *0x106+*
 * Structure: `SYSTEM_MODULE_INFORMATION`
 
 ### SystemLocksInformation
@@ -85,33 +84,31 @@ NOT_IMPLEMENTED
 
 ### SystemPagedPoolInformation
 
-0x01C GET checked build \
-only
+0x01C GET checked build only
 
 ### SystemNonPagedPoolInformation
 
-0x01C GET checked \
-build only
+0x01C GET checked build only
 
 ### SystemHandleInformation
 
 * Action: `Query`
 
-* Buffer size : *0x014+*
+* Buffer size: *0x014+*
 * Structure: `SYSTEM_HANDLE_INFORMATION`
 
 ### SystemObjectInformation
 
 * Action: `Query`
 
-* Buffer size : *0x038+*
+* Buffer size: *0x038+*
 * Structure: `SYSTEM_OBJECT_INFORMATION`
 
 ### SystemPageFileInformation
 
 * Action: `Query`
 
-* Buffer size : *0x018+*
+* Buffer size: *0x018+*
 * Structure: `SYSTEM_PAGEFILE_INFORMATION`
 
 ### SystemVdmInstemulInformation
@@ -140,8 +137,7 @@ INVALID_INFO_CLASS
 
 ### SystemFullMemoryInformation
 
-0x014 GET checked build \
-only
+0x014 GET checked build only
 
 ### SystemLoadGdiDriverInformation
 
@@ -155,28 +151,25 @@ only
 
 * Action: `Query`
 
-* Buffer size : *0x00C*
+* Buffer size: *0x00C*
 * Structure: `SYSTEM_QUERY_TIME_ADJUST_INFORMATION`
 
 * Action: `Set`
 
-* Buffer size : *0x008*
+* Buffer size: *0x008*
 * Structure: `SYSTEM_SET_TIME_ADJUST_INFORMATION`
 
 ### SystemSummaryMemoryInformation
 
-0x014 GET checked \
-build only
+0x014 GET checked build only
 
 ### SystemNextEventIdInformation
 
-???? (C0000005) GET \
-checked build only
+???? (C0000005) GET checked build only
 
 ### SystemEventIdsInformation
 
-0xB66 GET checked build \
-only
+0xB66 GET checked build only
 
 ### SystemCrashDumpInformation
 
@@ -202,19 +195,19 @@ only
 
 * Action: `Query`
 
-* Buffer size : *0x00C*
+* Buffer size: *0x00C*
 * Structure: `SYSTEM_REGISTRY_QUOTA_INFORMATION`
 
 * Action: `Set`
 
-* Buffer size : *0x00C*
+* Buffer size: *0x00C*
 * Structure: `SYSTEM_REGISTRY_QUOTA_INFORMATION`
 
 ### SystemExtendServiceTableInformation
 
 * Action: `Set`
 
-* Buffer size : *0x008*
+* Buffer size: *0x008*
 * Structure: `SYSTEM_LOAD_IMAGE_INFORMATION`
 
 ### SystemPrioritySeperation
@@ -243,7 +236,7 @@ INVALID_INFO_CLASS
 
 ### SystemLookasideInformation
 
-0x000			GET
+0x000 GET
 
 # Documented by
 

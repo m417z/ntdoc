@@ -1,4 +1,4 @@
-`NtListenPort`` `is used by *LPC* server.
+`NtListenPort` is used by *LPC* server.
 
 ### PortHandle
 

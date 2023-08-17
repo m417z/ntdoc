@@ -8,8 +8,11 @@ Length of valid structure.
 
 ### Flags
 
-Currently only one flag is known: \
-	`PPF_NORMALIZED`	`(1)`		**// Means that structure is normalized by call** `RtlNormalizeProcessParams`
+Currently only one flag is known:
+
+```
+PPF_NORMALIZED  (1)     // Means that structure is normalized by call RtlNormalizeProcessParams
+```
 
 ### DebugFlags
 

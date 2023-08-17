@@ -10,13 +10,13 @@ Time when timer should be set, in *100ns* units. If it is negative value, it mea
 
 User's APC routine, defined as follows:
 
-<PRE> \
-	<FONT COLOR="Blue">typedef void</FONT> (*`PTIMER_APC_ROUTINE`)( \
-			IN PVOID TimerContext, \
-			IN ULONG TimerLowValue, \
-			IN LONG TimerHighValue \
-			); \
-</PRE>
+```cpp
+typedef void (*PTIMER_APC_ROUTINE)(
+        IN PVOID TimerContext,
+        IN ULONG TimerLowValue,
+        IN LONG TimerHighValue
+        );
+```
 
 ### TimerContext
 

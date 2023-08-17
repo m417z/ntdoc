@@ -10,11 +10,13 @@ Pointer to newly created Directory Object after function call.
 
 As defined in \<ntddk.h\> can be one of following:
 
-   #define `DIRECTORY_QUERY`                 (*0x0001*) \
-   #define `DIRECTORY_TRAVERSE`              (*0x0002*) \
-   #define `DIRECTORY_CREATE_OBJECT`         (*0x0004*) \
-   #define `DIRECTORY_CREATE_SUBDIRECTORY`   (*0x0008*) \
-   #define `DIRECTORY_ALL_ACCESS` (STANDARD_RIGHTS_REQUIRED | *0xF*)
+```cpp
+#define DIRECTORY_QUERY                 (0x0001)
+#define DIRECTORY_TRAVERSE              (0x0002)
+#define DIRECTORY_CREATE_OBJECT         (0x0004)
+#define DIRECTORY_CREATE_SUBDIRECTORY   (0x0008)
+#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
+```
 
 ### ObjectAttributes
 

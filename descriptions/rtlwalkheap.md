@@ -4,7 +4,7 @@ Address of heap.
 
 ### ProcessHeapEntry
 
-Pointer to PROCESS_HEAP_ENTRY structure defined in **\<WinNT.h\>**.
+Pointer to `PROCESS_HEAP_ENTRY` structure defined in **\<WinNT.h\>**.
 
 ### Return value
 

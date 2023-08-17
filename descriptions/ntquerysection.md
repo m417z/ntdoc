@@ -1,10 +1,9 @@
 ### InformationClass
 
-<P CLASS="reg">Use one of following:
+Use one of following:
 
-* `SectionBasicInformation `<FONT COLOR="Green">// Result is `SECTION_BASIC_INFORMATION` structure</FONT>
-
-* `SectionImageInformation `<FONT COLOR="Green">// Result is `SECTION_IMAGE_INFORMATION` structure</FONT>
+* `SectionBasicInformation // Result is SECTION_BASIC_INFORMATION structure`
+* `SectionImageInformation // Result is SECTION_IMAGE_INFORMATION structure`
 
 `SectionImageInformation` Are avaiable only for file-based sections.
 

@@ -2,7 +2,7 @@ This function is documented in Windows Driver Kit [here](https://learn.microsoft
 
 ---
 
-`NtQueryDirectoryFile` is used to enumerate entries (files or directories) placed into file container object (directory). *Win32 API* use it in <B><I><U>FindFirstFile-FindNextFile</B></I></U> routines.
+`NtQueryDirectoryFile` is used to enumerate entries (files or directories) placed into file container object (directory). *Win32 API* use it in `FindFirstFile`-`FindNextFile` routines.
 
 ### FileHandle
 
@@ -25,9 +25,8 @@ Parameter for `ApcRoutine`.
 Pointer to `IO_STATUS_BLOCK` structure. After enumeration complete, `Information` member of this structure contains number of bytes writed into `FileInformation` buffer. `Status` member contains IO result of call, and can be one of:
 
 * `STATUS_SUCCESS` - Enumeration has results in `FileInformation` buffer.
-
 * `STATUS_NO_MORE_FILES` - `FileInformation` buffer is empty, and next call isn't needed.
-* `STATUS_NO_SUCH_FILE` - Returned when `FileMask` parameter specify exactly one file (don't contains <FONT FACE="monospace" COLOR="Red">'*'</FONT> or <FONT FACE="monospace" COLOR="Red">'?'</FONT> characters), and queried directory don't contains that file.
+* `STATUS_NO_SUCH_FILE` - Returned when `FileMask` parameter specify exactly one file (don't contains `'*'` or `'?'` characters), and queried directory don't contains that file.
 
 ### FileInformation
 
@@ -41,11 +40,9 @@ Length of `FileInformation` buffer, in bytes.
 
 Information class. Can be one of:
 
-* `FileDirectoryInformation`	
-
+* `FileDirectoryInformation`
 * `FileFullDirectoryInformation`
 * `FileBothDirectoryInformation`
-
 * `FileNamesInformation`
 * `FileOleDirectoryInformation`
 
@@ -57,7 +54,7 @@ If set, only one entry is returned.
 
 If specified, only information about files matches this wildchar mask will be returned.
 
-`WARNING:` There's no rule specifing what to do when caller makes two calls to `NtQueryDirectoryFile` both with different masks. Typically `FileMask` specified in second call will be ignored, and results will match the first (for example: **NTFS.SYS**). The best solution is to close directory `HANDLE` after every call with `FileMask` parameter specified. 
+`WARNING:` There's no rule specifing what to do when caller makes two calls to `NtQueryDirectoryFile` both with different masks. Typically `FileMask` specified in second call will be ignored, and results will match the first (for example: **NTFS.SYS**). The best solution is to close directory `HANDLE` after every call with `FileMask` parameter specified.
 
 ### RestartScan
 

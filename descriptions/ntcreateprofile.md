@@ -20,7 +20,7 @@ Size of profiled memory block.
 
 ### BucketSize
 
-*- ???* (cannot be less than *2* ).
+??? (cannot be less than 2).
 
 ### Buffer
 

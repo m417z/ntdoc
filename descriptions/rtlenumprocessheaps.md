@@ -1,10 +1,12 @@
 `PHEAP_ENUMERATION_ROUTINE` is defined as follows:
 
-`typedef` NTSTATUS \
-(*`PHEAP_ENUMERATION_ROUTINE`)( \
-		IN PVOID HeapHandle, \
-		IN PVOID UserParam \
-		);
+```cpp
+typedef NTSTATUS
+(*PHEAP_ENUMERATION_ROUTINE)(
+        IN PVOID HeapHandle,
+        IN PVOID UserParam
+        );
+```
 
 ### HeapEnumerationRoutine
 

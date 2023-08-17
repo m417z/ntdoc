@@ -52,13 +52,10 @@ Length `ShortName` array, in bytes.
 
 ### ShortName[12]
 
-Alternate file name, in UNICODE format. Empty string means: \
-<OL>
+Alternate file name, in UNICODE format. Empty string means:
 
-*  Primary name is compatible with `8DOT3` **(MS DOS)** standart, and there's no reason to set the same name twice;
-
-*  File system don't improve short names;
-</OL> 
+1. Primary name is compatible with `8DOT3` **(MS DOS)** standart, and there's no reason to set the same name twice;
+2. File system don't improve short names;
 
 ### FileName[1]
 

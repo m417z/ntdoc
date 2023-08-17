@@ -14,14 +14,14 @@ Length of `DirObjInformation` buffer.
 ### GetNextIndex
 
 Decide of `ObjectIndex` parameter usage on output. \
-  **If FALSE:**	`ObjectIndex` is number of object in Object Directory. \
-  **If TRUE:**	`ObjectIndex` is index of next object to quered object (see below) in Object Directory.
+  **If FALSE:** `ObjectIndex` is number of object in Object Directory. \
+  **If TRUE:** `ObjectIndex` is index of next object to quered object (see below) in Object Directory.
 
 ### IgnoreInputIndex
 
 Decide how to use `ObjectIndex` on function input. \
-  **If FALSE:**	`ObjectIndex` point to `ULONG` index of object in Object Directory. \
-  **If TRUE:**	`ObjectIndex` input value is ignored. Function always return informations about first object in Object Directory.
+  **If FALSE:** `ObjectIndex` point to `ULONG` index of object in Object Directory. \
+  **If TRUE:** `ObjectIndex` input value is ignored. Function always return informations about first object in Object Directory.
 
 ### ObjectIndex
 

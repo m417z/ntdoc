@@ -36,11 +36,11 @@ Parameter for `PEBLOCKROUTINE` (see below).
 
 Address of fast-locking routine for `PEB`. Definition of routine is:
 
-`	typedef void (*``PPEBLOCKROUTINE``)(`
-
-	<DD>	PVOID PebLock
-
-	<DD>`	);`
+```cpp
+typedef void (*PPEBLOCKROUTINE)(
+    PVOID PebLock
+);
+```
 
 ### FastPebUnlockRoutine
 

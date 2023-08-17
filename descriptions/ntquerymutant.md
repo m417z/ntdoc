@@ -6,11 +6,13 @@ Handle to Mutant object.
 
 Is defined as enum:
 
-	<B><FONT COLOR="Blue">typedef enum</FONT></B> `_MUTANT_INFORMATION_CLASS` \
-	{ \
-		MutantBasicInformation
+```cpp
+typedef enum _MUTANT_INFORMATION_CLASS
+{
+    MutantBasicInformation
 
-	} `MUTANT_INFORMATION_CLASS`, *`PMUTANT_INFORMATION_CLASS`;
+} MUTANT_INFORMATION_CLASS, *PMUTANT_INFORMATION_CLASS;
+```
 
 ### MutantInformation
 

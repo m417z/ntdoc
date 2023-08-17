@@ -2,7 +2,7 @@ Function `NtSignalAndWaitForSingleObject` signals one object and wait for second
 
 ### ObjectToSignal
 
-`HANDLE` to object to signal. Possible object's types are: 
+`HANDLE` to object to signal. Possible object's types are:
 
 * Event Object
 

@@ -2,9 +2,10 @@
 
 Can be one or both of following values:
 
-	#define `VM_LOCK_1`		*0x0001*	<I><FONT COLOR="Green">// This is used, when calling </I>`KERNEL32.DLL`* *`VirtualLock`<I> routine</FONT> \
-</I>	#define `VM_LOCK_2`		*0x0002*	<I><FONT COLOR="Green">// This require </I>**SE_LOCK_MEMORY_NAME**<I> privilege</FONT> \
-</I>
+```cpp
+#define VM_LOCK_1       0x0001  // This is used, when calling KERNEL32.DLL VirtualLock routine
+#define VM_LOCK_2       0x0002  // This require SE_LOCK_MEMORY_NAME privilege
+```
 
 # Documented by
 

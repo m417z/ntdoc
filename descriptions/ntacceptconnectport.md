@@ -8,7 +8,7 @@ Result of call - `HANDLE` to Port Object for established connection.
 
 ### ConnectionReply
 
-Pointer to `LPC_MESSAGE` structure received from `NtListenPort`. 
+Pointer to `LPC_MESSAGE` structure received from `NtListenPort`.
 
 ### AcceptConnection
 

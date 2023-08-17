@@ -1,4 +1,4 @@
-Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File Objects. It's used by `NtQueryInformationFile`, `NtQueryDirectoryFile` and `NtSetInformationFile` functions. 
+Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File Objects. It's used by `NtQueryInformationFile`, `NtQueryDirectoryFile` and `NtSetInformationFile` functions.
 
 ### FileDirectoryInformation=1
 
@@ -72,7 +72,7 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 
 ### FileAccessInformation
 
-// 8		FILE_ACCESS_INFORMATION			0x04			NtQueryInformationFile
+`// 8       FILE_ACCESS_INFORMATION         0x04            NtQueryInformationFile`
 
 ### FileNameInformation
 
@@ -137,15 +137,15 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 
 ### FileFullEaInformation
 
-// 15		FILE_FULL_EA_INFORMATION		???		???
+`// 15      FILE_FULL_EA_INFORMATION        ???     ???`
 
 ### FileModeInformation
 
-// 16		FILE_MODE_INFORMATION			0x04	0x04	NtQueryInformationFile
+`// 16      FILE_MODE_INFORMATION           0x04    0x04    NtQueryInformationFile`
 
 ### FileAlignmentInformation
 
-// 17		FILE_ALIGNMENT_INFORMATION		0x04			NtQueryInformationFile
+`// 17      FILE_ALIGNMENT_INFORMATION      0x04            NtQueryInformationFile`
 
 ### FileAllInformation
 
@@ -158,7 +158,7 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 
 ### FileAllocationInformation
 
-// 19		FILE_ALLOCATION_INFORMATION				0x08
+`// 19      FILE_ALLOCATION_INFORMATION             0x08`
 
 ### FileEndOfFileInformation
 
@@ -180,35 +180,35 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 
 ### FileStreamInformation
 
-// 22		FILE_STREAM_INFORMATION			0x20			NtQueryInformationFile
+`// 22      FILE_STREAM_INFORMATION         0x20            NtQueryInformationFile`
 
 ### FilePipeInformation
 
-// 23		FILE_PIPE_INFORMATION			0x08	0x08	NtQueryInformationFile
+`// 23      FILE_PIPE_INFORMATION           0x08    0x08    NtQueryInformationFile`
 
 ### FilePipeLocalInformation
 
-// 24		FILE_PIPE_LOCAL_INFORMATION		0x28			NtQueryInformationFile
+`// 24      FILE_PIPE_LOCAL_INFORMATION     0x28            NtQueryInformationFile`
 
 ### FilePipeRemoteInformation
 
-// 25		FILE_PIPE_REMOTE_INFORMATION	0x10	0x10	NtQueryInformationFile
+`// 25      FILE_PIPE_REMOTE_INFORMATION    0x10    0x10    NtQueryInformationFile`
 
 ### FileMailslotQueryInformation
 
-// 26		FILE_MAILSLOT_QUERY_INFORMATION	0x18			NtQueryInformationFile
+`// 26      FILE_MAILSLOT_QUERY_INFORMATION 0x18            NtQueryInformationFile`
 
 ### FileMailslotSetInformation
 
-// 27		FILE_MAILSLOT_SET_INFORMATION			0x04
+`// 27      FILE_MAILSLOT_SET_INFORMATION           0x04`
 
 ### FileCompressionInformation
 
-// 28		FILE_COMPRESSION_INFORMATION	0x10			NtQueryInformationFile
+`// 28      FILE_COMPRESSION_INFORMATION    0x10            NtQueryInformationFile`
 
 ### FileCopyOnWriteInformation
 
-// 29		FILE_COPY_ON_WRITE_INFORMATION			0x10
+`// 29      FILE_COPY_ON_WRITE_INFORMATION          0x10`
 
 ### FileCompletionInformation
 
@@ -221,15 +221,15 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 
 ### FileMoveClusterInformation
 
-// 31												0x10
+`// 31                                              0x10`
 
 ### FileQuotaInformation
 
-// 32		FILE_QUOTA_INFORMATION					0x10	   								-\> FileOleClassIdInformation
+`// 32      FILE_QUOTA_INFORMATION                  0x10                                    -\> FileOleClassIdInformation`
 
 ### FileReparsePointInformation
 
-// 33												0x08	 								-\> FileOleStateBitsInformation
+`// 33                                              0x08                                    -\> FileOleStateBitsInformation`
 
 ### FileNetworkOpenInformation
 
@@ -242,31 +242,31 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 
 ### FileObjectIdInformation
 
-// 35		FILE_ATTRIBUTE_TAG_INFORMATION			0x14
+`// 35      FILE_ATTRIBUTE_TAG_INFORMATION          0x14`
 
 ### FileTrackingInformation
 
-// 36										0xC0			NtQueryInformationFile		   	-\> FileOleAllInformation
+`// 36                                      0xC0            NtQueryInformationFile          -\> FileOleAllInformation`
 
 ### FileOleDirectoryInformation
 
-// 37										0x60			NtQueryDirectoryFile
+`// 37                                      0x60            NtQueryDirectoryFile`
 
 ### FileContentIndexInformation
 
-// 38												0x01
+`// 38                                              0x01`
 
 ### FileInheritContentIndexInformation
 
-// 39												0x01
+`// 39                                              0x01`
 
 ### FileOleInformation
 
-// 40										0x38	0x38	NtQueryInformationFile
+`// 40                                      0x38    0x38    NtQueryInformationFile`
 
 ### FileMaximumInformation
 
-// 41
+`// 41`
 
 # Documented by
 

@@ -24,12 +24,6 @@ Length of `FileInformation` buffer, in bytes.
 
 Enumerated information class. See `FILE_INFORMATION_CLASS` for detailed information about usage.
 
-<FONT COLOR=FF0000 SIZE=12>
-
----
-
-</FONT>
-
 # Documented by
 
 * Tomasz Nowak

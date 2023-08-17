@@ -1,10 +1,10 @@
 ### ThreadContext
 
-Pointer to `CONTEXT` structure for current thread. 
+Pointer to `CONTEXT` structure for current thread.
 
 ### RaiseAlert
 
-If set, remove *Alerted* state from current Thread Object. 
+If set, remove *Alerted* state from current Thread Object.
 
 ---
 
