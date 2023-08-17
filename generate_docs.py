@@ -358,7 +358,7 @@ def organize_idents_to_ids(chunks: List[Chunk]):
                 ident_update_from_to['P' + id] = id
             elif {ident_to_id[ident], id} == {'FSINFOCLASS', 'FS_INFORMATION_CLASS'}:
                 # Special case.
-                ident_update_from_to['FS_INFORMATION_CLASS'] = 'FSINFOCLASS'
+                ident_update_from_to['FSINFOCLASS'] = 'FS_INFORMATION_CLASS'
             else:
                 assert ident_to_id[ident] == id, (ident, ident_to_id[ident], id)
 
