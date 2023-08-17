@@ -1,12 +1,48 @@
-Flags \
-Flags are defined in &lt;WinNT.h&gt;. Can be one of following: \
-     HEAP\_NO\_SERIALIZE \
-        HEAP\_GROWABLE \
-        HEAP\_GENERATE\_EXCEPTIONS \
-        HEAP\_ZERO\_MEMORY \
-        HEAP\_REALLOC\_IN\_PLACE\_ONLY \
-        HEAP\_TAIL\_CHECKING\_ENABLED \
-        HEAP\_FREE\_CHECKING\_ENABLED \
-        HEAP\_DISABLE\_COALESCE\_ON\_FREE \
-        HEAP\_CREATE\_ALIGN\_16 \
-        HEAP\_CREATE\_ENABLE\_TRACING
+### Flags
+
+Flags are defined in **\<WinNT.h\>**. Can be one of following: \
+<B>	HEAP_NO_SERIALIZE \
+	HEAP_GROWABLE \
+	HEAP_GENERATE_EXCEPTIONS \
+	HEAP_ZERO_MEMORY \
+	HEAP_REALLOC_IN_PLACE_ONLY \
+	HEAP_TAIL_CHECKING_ENABLED \
+	HEAP_FREE_CHECKING_ENABLED \
+	HEAP_DISABLE_COALESCE_ON_FREE \
+	HEAP_CREATE_ALIGN_16 \
+	HEAP_CREATE_ENABLE_TRACING \
+</B>
+
+### Base
+
+Base address, where heap should be created. If memory was previously allocated at this address, heap is created at the nearest possibble virtual address.
+
+### Reserve
+
+How much bytes should be reserved. See `NtAllocateVirtualMemory`.
+
+### Commit
+
+How meny bytes should be commited. If `Reserve` is greater than zero, `Commit` must be less or equal to `Reserve`.
+
+### Lock
+
+If set, heap will be locked. See `RtlLockHeap` / `RtlUnlockHeap`.
+
+### RtlHeapParams
+
+Pointer to `RTL_HEAP_DEFINITION` structure. On *NT 4.0* all bytes of this (except length field) are set to zero.
+
+# Documented by
+
+* Tomasz Nowak
+* ReactOS
+
+# See also
+
+* `NtAllocateVirtualMemory`
+* `NtLockVirtualMemory`
+* `RTL_HEAP_DEFINITION`
+* `RtlDestroyHeap`
+* `RtlLockHeap`
+* `RtlUnlockHeap`

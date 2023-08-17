@@ -1,20 +1,22 @@
-NtReplyPort can be used by both sides of LPC \
-connection. \
-PortHandle HANDLE to Port \
-Object. \
-Reply Pointer to \
-LPC\_MESSAGE structure.
+`NtReplyPort` can be used by both sides of *LPC* connection.
 
-Documented by: \
-Tomasz Nowak \
-Bo Branten \
-Requirements:
+### PortHandle
 
-Library: ntdll.lib
+`HANDLE` to Port Object.
 
-See also: \
-NtAcceptConnectPort \
-NtConnectPort \
-NtReplyWaitReceivePort \
-NtReplyWaitReplyPort \
-NtRequestWaitReplyPort
+### Reply
+
+Pointer to `LPC_MESSAGE` structure.
+
+# Documented by
+
+* Tomasz Nowak
+* Bo Branten
+
+# See also
+
+* `NtAcceptConnectPort`
+* `NtConnectPort`
+* `NtReplyWaitReceivePort`
+* `NtReplyWaitReplyPort`
+* `NtRequestWaitReplyPort`

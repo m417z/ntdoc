@@ -1,20 +1,19 @@
-Structure SEMAPHORE\_BASIC\_INFORMATION is retrieved as \
-a result of call \
-NtQuerySemaphore with \
-SemaphoreBasicInformation information class. \
-CurrentCount Current state of \
-semaphore's counter. \
-MaximumCount Maximum counter position, \
-defined with call to \
-NtCreateSemaphore.
+Structure `SEMAPHORE_BASIC_INFORMATION` is retrieved as a result of call `NtQuerySemaphore` with `SemaphoreBasicInformation` information class.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### CurrentCount
 
-Library: ntdll.lib
+Current state of semaphore's counter.
 
-See also: \
-NtCreateSemaphore \
-NtQuerySemaphore \
-SEMAPHORE\_INFORMATION\_CLASS
+### MaximumCount
+
+Maximum counter position, defined with call to `NtCreateSemaphore`.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateSemaphore`
+* `NtQuerySemaphore`
+* `SEMAPHORE_INFORMATION_CLASS`

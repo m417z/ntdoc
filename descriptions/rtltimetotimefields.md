@@ -1,20 +1,23 @@
-This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtltimetotimefields)
+This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtltimetotimefields).
 
-Function RtlTimeToTimeFields converts 64\-bit \
-time to user\-readable structure TIME\_FIELDS. \
-Time Pointer to LARGE\_INTEGER \
-contains time to convert. \
-TimeFields Result of call \- pointer to \
-TIME\_FIELDS \
-structure.
+---
 
-Documented by: \
-Reactos \
-Tomasz Nowak \
-Requirements:
+Function `RtlTimeToTimeFields` converts *64-bit* time to user-readable structure `TIME_FIELDS`.
 
-Library: ntdll.lib
+### Time
 
-See also: \
-RtlTimeFieldsToTime \
-TIME\_FIELDS
+Pointer to `LARGE_INTEGER` contains time to convert.
+
+### TimeFields
+
+Result of call - pointer to `TIME_FIELDS` structure.
+
+# Documented by
+
+* ReactOS
+* Tomasz Nowak
+
+# See also
+
+* `RtlTimeFieldsToTime`
+* `TIME_FIELDS`

@@ -1,22 +1,23 @@
-Structure FILE\_FS\_CONTROL\_INFORMATION is user as \
-input and output buffers in calls to \
-NtQueryVolumeInformationFile and \
-NtSetVolumeInformationFile with information class set to \
-FileFsControlInformation. \
-FreeSpaceStartFiltering \
-FreeSpaceThreshold \
-FreeSpaceStopFiltering \
-DefaultQuotaThreshold \
-DefaultQuotaLimit \
-FileSystemControlFlags
+Structure `FILE_FS_CONTROL_INFORMATION` is user as input and output buffers in calls to `NtQueryVolumeInformationFile` and `NtSetVolumeInformationFile` with information class set to `FileFsControlInformation`.
 
-Documented by: \
-Bo Branten \
-Requirements:
+### FreeSpaceStartFiltering
 
-Library: ntdll.lib
+### FreeSpaceThreshold
 
-See also: \
-FS\_INFORMATION\_CLASS \
-NtQueryVolumeInformationFile \
-NtSetVolumeInformationFile
+### FreeSpaceStopFiltering
+
+### DefaultQuotaThreshold
+
+### DefaultQuotaLimit
+
+### FileSystemControlFlags
+
+# Documented by
+
+* Bo Branten
+
+# See also
+
+* `FS_INFORMATION_CLASS`
+* `NtQueryVolumeInformationFile`
+* `NtSetVolumeInformationFile`

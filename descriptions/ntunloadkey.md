@@ -1,17 +1,18 @@
-Function NtUnloadKey unloads previously loaded \
-Hive file from registry structure. All changes made to keys \
-and values under this Hive are stored. \
-DestinationKeyName Pointer to \
-OBJECT\_ATTRIBUTES structure contains path and name of \
-Hive root key.
+Function `NtUnloadKey` unloads previously loaded *Hive* file from registry structure. All changes made to keys and values under this Hive are stored.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### DestinationKeyName
 
-Library: ntdll.lib \
-Privileges: SE\_RESTORE\_PRIVILEGE
+Pointer to `OBJECT_ATTRIBUTES` structure contains path and name of *Hive* root key.
 
-See also: \
-NtLoadKey \
-NtLoadKey2
+# Documented by
+
+* Tomasz Nowak
+
+# Requirements
+
+Privilege: `SE_RESTORE_PRIVILEGE`
+
+# See also
+
+* `NtLoadKey`
+* `NtLoadKey2`

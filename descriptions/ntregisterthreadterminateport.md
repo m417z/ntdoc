@@ -1,21 +1,20 @@
-PortHandle HANDLE to previously \
-connected Port Object. \
-Typically, NtRegisterThreadTerminatePort is used in \
-CsrNewThread function, called \
-before thread execution begins, but in thread context. \
-Function associate PortHandle \
-with thread, and sends LPC\_TERMINATION\_MESSAGE to \
-specified port immediatelly after call \
-NtTerminateThread.
+### PortHandle
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+`HANDLE` to previously connected Port Object.
 
-Library: ntdll.lib
+---
 
-See also: \
-CsrNewThread \
-LPC\_TERMINATION\_MESSAGE \
-NtConnectPort \
-NtTerminateThread
+Typically, `NtRegisterThreadTerminatePort` is used in `CsrNewThread` function, called before thread execution begins, but in thread context.
+
+Function associate `PortHandle` with thread, and sends `LPC_TERMINATION_MESSAGE` to specified port immediatelly after call `NtTerminateThread`.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `CsrNewThread`
+* `LPC_TERMINATION_MESSAGE`
+* `NtConnectPort`
+* `NtTerminateThread`

@@ -1,14 +1,14 @@
-Currently only one information class is avaiable for Timer Object. \
-TimerBasicInformation Information \
-buffer is TIMER\_BASIC\_INFORMATION \
-structure.
+Currently only one information class is avaiable for Timer Object.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### TimerBasicInformation
 
-Library: ntdll.lib
+Information buffer is `TIMER_BASIC_INFORMATION` structure.
 
-See also: \
-NtQueryTimer \
-TIMER\_BASIC\_INFORMATION
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtQueryTimer`
+* `TIMER_BASIC_INFORMATION`

@@ -1,18 +1,19 @@
-ATOM\_TABLE\_INFORMATION descriptes Global Atom Table. \
-Is returned as a result of call NtQueryInformationAtom with \
-AtomTableInformation \
-information class. \
-NumberOfAtoms Number of members in \
-Atoms array. \
-Atoms\[1\] Array of Global Atoms.
+`ATOM_TABLE_INFORMATION` descriptes Global Atom Table. Is returned as a result of call `NtQueryInformationAtom` with `AtomTableInformation` information class.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### NumberOfAtoms
 
-Library: ntdll.lib
+Number of members in `Atoms` array.
 
-See also: \
-ATOM\_BASIC\_INFORMATION \
-ATOM\_INFORMATION\_CLASS \
-NtQueryInformationAtom
+### Atoms[1]
+
+Array of Global Atoms.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `ATOM_BASIC_INFORMATION`
+* `ATOM_INFORMATION_CLASS`
+* `NtQueryInformationAtom`

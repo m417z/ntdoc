@@ -1,16 +1,15 @@
-Enumerated type KPROFILE\_SOURCE is used as \
-performance counter identifier in application profiling. See \
-NtCreateProfile for more information about Profile Objects. \
-This enumeration type is also defined in \
-&lt;ntddk.h&gt; header file.
+Enumerated type `KPROFILE_SOURCE` is used as performance counter identifier in application profiling. See `NtCreateProfile` for more information about Profile Objects.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+---
 
-Library: ntdll.lib
+This enumeration type is also defined in **\<ntddk.h\>** header file.
 
-See also: \
-NtCreateProfile \
-NtQueryIntervalProfile \
-NtSetIntervalProfile
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateProfile`
+* `NtQueryIntervalProfile`
+* `NtSetIntervalProfile`

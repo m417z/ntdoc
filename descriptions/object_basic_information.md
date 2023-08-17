@@ -1,27 +1,32 @@
-Structure OBJECT\_BASIC\_INFORMATION is returned in a \
-result of call \
-NtQueryObject with \
-ObjectBasicInformation information class. \
-Attributes \
-DesiredAccess \
-HandleCount \
-ReferenceCount \
-PagedPoolUsage \
-NonPagedPoolUsage \
-Reserved\[3\] \
-NameInformationLength \
-TypeInformationLength \
-SecurityDescriptorLength \
-CreationTime \
-Supported on system versions: \
-NT 4.0,Win 2000,Win XP/2003
+Structure `OBJECT_BASIC_INFORMATION` is returned in a result of call `NtQueryObject` with `ObjectBasicInformation` information class.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### Attributes
 
-Library: ntdll.lib
+### DesiredAccess
 
-See also: \
-NtQueryObject \
-OBJECT\_INFORMATION\_CLASS
+### HandleCount
+
+### ReferenceCount
+
+### PagedPoolUsage
+
+### NonPagedPoolUsage
+
+### Reserved[3]
+
+### NameInformationLength
+
+### TypeInformationLength
+
+### SecurityDescriptorLength
+
+### CreationTime
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtQueryObject`
+* `OBJECT_INFORMATION_CLASS`

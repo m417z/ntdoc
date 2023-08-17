@@ -1,1 +1,10 @@
-This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopensymboliclinkobject)
+This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopensymboliclinkobject).
+
+---
+
+
+
+# See also
+
+* `NtCreateSymbolicLinkObject`
+* `NtQuerySymbolicLinkObject`

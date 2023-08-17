@@ -1,29 +1,33 @@
-DBG\_STATE enumeration is used by Debug Objects \
-as a member of DBGUI\_WAIT\_STATE\_CHANGE \
-structure returned in successfull call to NtWaitForDebugEvent function. It \
-describes current state of Debug Object. Possible values \
-are: \
-DbgIdle \
-DbgReplyPending \
-DbgCreateThreadStateChange \
-DbgCreateProcessStateChange \
-DbgExitThreadStateChange \
-DbgExitProcessStateChange \
-DbgExceptionStateChange \
-DbgBreakpointStateChange \
-DbgSingleStepStateChange \
-DbgLoadDllStateChange \
-DbgUnloadDllStateChange \
-Supported on system versions: \
-Win XP/2003
+`DBG_STATE` enumeration is used by **Debug Objects** as a member of `DBGUI_WAIT_STATE_CHANGE` structure returned in successfull call to `NtWaitForDebugEvent` function. It describes current state of **Debug Object**. Possible values are:
 
-Documented by: \
-Reactos \
-Tomasz Nowak \
-Requirements:
+### DbgIdle
 
-Library: ntdll.lib
+### DbgReplyPending
 
-See also: \
-DBGUI\_WAIT\_STATE\_CHANGE \
-NtWaitForDebugObject
+### DbgCreateThreadStateChange
+
+### DbgCreateProcessStateChange
+
+### DbgExitThreadStateChange
+
+### DbgExitProcessStateChange
+
+### DbgExceptionStateChange
+
+### DbgBreakpointStateChange
+
+### DbgSingleStepStateChange
+
+### DbgLoadDllStateChange
+
+### DbgUnloadDllStateChange
+
+# Documented by
+
+* ReactOS
+* Tomasz Nowak
+
+# See also
+
+* `DBGUI_WAIT_STATE_CHANGE`
+* `NtWaitForDebugObject`

@@ -1,8 +1,9 @@
-This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopensection)
+This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopensection).
 
-Requirements:
+---
 
-Library: ntdll.lib
 
-See also: \
-NtCreateSection
+
+# See also
+
+* `NtCreateSection`

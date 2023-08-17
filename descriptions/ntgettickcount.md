@@ -1,15 +1,12 @@
-Function NtGetTickCount returns system Timer's \
-ticks counter. This counter is also avaiable in KUSER\_SHARED\_DATA structure as \
-TickCountLow member. \
-Calling NtSetTimerResolution \
-doesn't effect in counter's update resolution.
+Function `NtGetTickCount` returns system *Timer's* ticks counter. This counter is also avaiable in `KUSER_SHARED_DATA` structure as **TickCountLow** member.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+Calling `NtSetTimerResolution` doesn't effect in counter's update resolution.
 
-Library: ntdll.lib
+# Documented by
 
-See also: \
-KUSER\_SHARED\_DATA \
-NtSetTimerResolution
+* Tomasz Nowak
+
+# See also
+
+* `KUSER_SHARED_DATA`
+* `NtSetTimerResolution`

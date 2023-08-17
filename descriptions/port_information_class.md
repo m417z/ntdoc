@@ -1,12 +1,11 @@
-PortNoInformation Currently \(on \
-WinNT 4.0 SP6\) there are no information classes for \
-Port Objects.
+### PortNoInformation
 
-Documented by: \
-Bo Branten \
-Requirements:
+Currently (on **WinNT 4.0 SP6**) there are no information classes for Port Objects.
 
-Library: ntdll.lib
+# Documented by
 
-See also: \
-NtQueryInformationPort
+* Bo Branten
+
+# See also
+
+* `NtQueryInformationPort`

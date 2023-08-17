@@ -1,16 +1,14 @@
-Token \
-Thread \
-Supported on system versions: \
-NT 4.0,Win 2000,Win XP/2003
+### Token
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### Thread
 
-Library: ntdll.lib
+# Documented by
 
-See also: \
-NtCreateProcess \
-NtOpenProcess \
-NtSetInformationProcess \
-PROCESS\_INFORMATION\_CLASS
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateProcess`
+* `NtOpenProcess`
+* `NtSetInformationProcess`
+* `PROCESS_INFORMATION_CLASS`

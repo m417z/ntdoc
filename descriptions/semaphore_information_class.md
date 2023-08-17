@@ -1,17 +1,14 @@
-SEMAPHORE\_INFORMATION\_CLASS is enumeration type used \
-with function \
-NtQuerySemaphore. Currently only one class is defined: \
-SemaphoreBasicInformation Result of \
-call to \
-NtQuerySemaphore is \
-SEMAPHORE\_BASIC\_INFORMATION structure.
+`SEMAPHORE_INFORMATION_CLASS` is enumeration type used with function `NtQuerySemaphore`. Currently only one class is defined:
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### SemaphoreBasicInformation
 
-Library: ntdll.lib
+Result of call to `NtQuerySemaphore` is `SEMAPHORE_BASIC_INFORMATION` structure.
 
-See also: \
-NtQuerySemaphore \
-SEMAPHORE\_BASIC\_INFORMATION
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtQuerySemaphore`
+* `SEMAPHORE_BASIC_INFORMATION`

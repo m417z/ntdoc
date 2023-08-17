@@ -1,15 +1,19 @@
-TimerHandle Result of call \- \
-HANDLE to Timer Object. \
-DesiredAccess Access mask for \
-TimerHandle. See NtCreateTimer for possible values. \
-ObjectAttributes Name of Timer \
-Object.
+### TimerHandle
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+Result of call - `HANDLE` to Timer Object.
 
-Library: ntdll.lib
+### DesiredAccess
 
-See also: \
-NtCreateTimer
+Access mask for `TimerHandle`. See `NtCreateTimer` for possible values.
+
+### ObjectAttributes
+
+Name of Timer Object.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateTimer`

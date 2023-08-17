@@ -1,6 +1,23 @@
-PHEAP\_ENUMERATION\_ROUTINE is defined as follows: \
-typedef NTSTATUS \
-\(\*PHEAP\_ENUMERATION\_ROUTINE\)\( \
-                IN PVOID HeapHandle, \
-                IN PVOID UserParam \
-                \);
+`PHEAP_ENUMERATION_ROUTINE` is defined as follows:
+
+`typedef` NTSTATUS \
+(*`PHEAP_ENUMERATION_ROUTINE`)( \
+		IN PVOID HeapHandle, \
+		IN PVOID UserParam \
+		);
+
+### HeapEnumerationRoutine
+
+User function address.
+
+### Param
+
+User defined parameter, will be placed as `UserParam` in every `HeapEnumerationRoutine` calls.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `RtlGetProcessHeaps`

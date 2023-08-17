@@ -1,19 +1,17 @@
-Routine RtlGetCallersAddress is usefull in program \
-debugging or exceptions control. It returns address of calling \
-instruction. \
-CallersAddress Returns address in body \
-of function that call RtlGetCallersAddress. \
-CallersCaller Returns address in \
-function's calling function that call \
-RtlGetCallersAddress body. \
-Supported on system versions: \
-NT 4.0,Win 2000,Win XP/2003
+Routine `RtlGetCallersAddress` is usefull in program debugging or exceptions control. It returns address of calling instruction.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### CallersAddress
 
-Library: ntdll.lib
+Returns address in body of function that call `RtlGetCallersAddress`.
 
-See also: \
-RtlCaptureStackBackTrace
+### CallersCaller
+
+Returns address in function's calling function that call `RtlGetCallersAddress` body.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `RtlCaptureStackBackTrace`

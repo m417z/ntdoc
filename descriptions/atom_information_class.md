@@ -1,19 +1,19 @@
-Enumeration type ATOM\_INFORMATION\_CLASS is used in a \
-call to function NtQueryInformationAtom. \
-AtomBasicInformation Result of call \
-contains ATOM\_BASIC\_INFORMATION \
-structure. \
-AtomTableInformation Result of call \
-contains ATOM\_TABLE\_INFORMATION \
-structure.
+Enumeration type `ATOM_INFORMATION_CLASS` is used in a call to function `NtQueryInformationAtom`.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### AtomBasicInformation
 
-Library: ntdll.lib
+Result of call contains `ATOM_BASIC_INFORMATION` structure.
 
-See also: \
-ATOM\_BASIC\_INFORMATION \
-ATOM\_TABLE\_INFORMATION \
-NtQueryInformationAtom
+### AtomTableInformation
+
+Result of call contains `ATOM_TABLE_INFORMATION` structure.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `ATOM_BASIC_INFORMATION`
+* `ATOM_TABLE_INFORMATION`
+* `NtQueryInformationAtom`

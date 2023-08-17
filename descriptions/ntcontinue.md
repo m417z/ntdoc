@@ -1,19 +1,23 @@
-ThreadContext Pointer to CONTEXT \
-structure for current thread. \
-RaiseAlert If set, remove \
-Alerted state from current Thread Object. \
-You can use NtContinue after processing exception for \
-continue executing thread. System uses NtContinue \
-also in APC processing.
+### ThreadContext
 
-Documented by: \
-Tomasz Nowak \
-Reactos \
-Requirements:
+Pointer to `CONTEXT` structure for current thread. 
 
-Library: ntdll.lib
+### RaiseAlert
 
-See also: \
-NtCreateThread \
-NtGetContextThread \
-NtSetContextThread
+If set, remove *Alerted* state from current Thread Object. 
+
+---
+
+You can use `NtContinue` after processing exception for continue executing thread. \
+System uses `NtContinue` also in `APC` processing.
+
+# Documented by
+
+* Tomasz Nowak
+* ReactOS
+
+# See also
+
+* `NtCreateThread`
+* `NtGetContextThread`
+* `NtSetContextThread`

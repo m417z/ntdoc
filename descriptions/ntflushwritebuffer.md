@@ -1,16 +1,13 @@
-Function NtFlushWriteBuffer does nothing... \
-It test IRQ Level, and call HAL export named \
-KeFlushWriteBuffer. \
-KeFlushWriteBuffer as first asm code has \
-ret, so it returns immediatelly. \
-Next NtFlushWriteBuffer clear eax \(set \
-result of call to STATUS\_SUCCESS\) and returns to \
-User\-Mode.
+Function `NtFlushWriteBuffer` does nothing...
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+---
 
-Library: ntdll.lib
+It test *IRQ Level*, and call *HAL* export named `KeFlushWriteBuffer`.
 
-See also:
+`KeFlushWriteBuffer` as first **asm** code has ret, so it returns immediatelly.
+
+Next `NtFlushWriteBuffer` clear `eax` (set result of call to `STATUS_SUCCESS`) and returns to *User-Mode*.
+
+# Documented by
+
+* Tomasz Nowak

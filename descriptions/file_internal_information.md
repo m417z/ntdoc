@@ -1,21 +1,18 @@
-FILE\_INTERNAL\_INFORMATION structure is a result of \
-call \
-NtQueryInformationFile with \
-FileInternalInformation information class. It's not possible to \
-set file unique identifier. \
-IndexNumber File indentifier, unique \
-for file's device.
+`FILE_INTERNAL_INFORMATION` structure is a result of call `NtQueryInformationFile` with `FileInternalInformation` information class. It's not possible to set file unique identifier.
 
-Documented by: \
-Tomasz Nowak \
-Bo Branten \
-Requirements:
+### IndexNumber
 
-Library: ntdll.lib
+File indentifier, unique for file's device.
 
-See also: \
-FILE\_ALL\_INFORMATION \
-FILE\_INFORMATION\_CLASS \
-NtCreateFile \
-NtOpenFile \
-NtQueryInformationFile
+# Documented by
+
+* Tomasz Nowak
+* Bo Branten
+
+# See also
+
+* `FILE_ALL_INFORMATION`
+* `FILE_INFORMATION_CLASS`
+* `NtCreateFile`
+* `NtOpenFile`
+* `NtQueryInformationFile`

@@ -1,16 +1,17 @@
-Function NtShutdownSystem closes system. Caller \
-should manually inform running processes about pending shutdown \
-action. \
-Action Type of shudown defined in \
-SHUTDOWN\_ACTION \
-enumeration type.
+Function `NtShutdownSystem` closes system. Caller should manually inform running processes about pending shutdown action.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### Action
 
-Library: ntdll.lib \
-Privilege: SE\_SHUTDOWN\_PRIVILEGE
+Type of shudown defined in `SHUTDOWN_ACTION` enumeration type.
 
-See also: \
-SHUTDOWN\_ACTION
+# Documented by
+
+* Tomasz Nowak
+
+# Requirements
+
+Privilege: `SE_SHUTDOWN_PRIVILEGE`
+
+# See also
+
+* `SHUTDOWN_ACTION`

@@ -1,19 +1,23 @@
-Function NtSetSystemTime sets system time. See \
-NtQuerySystemTime \
-for detailed information. \
-SystemTime Pointer to \
-LARGE\_INTEGER contains UTC time to set. \
-PreviousTime Optionally receives time \
-before change.
+Function `NtSetSystemTime` sets system time. See `NtQuerySystemTime` for detailed information.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### SystemTime
 
-Library: ntdll.lib \
-Privilege: SE\_SYSTEMTIME\_PRIVILEGE
+Pointer to `LARGE_INTEGER` contains *UTC* time to set.
 
-See also: \
-NtQuerySystemTime \
-RtlTimeFieldsToTime \
-RtlTimeToTimeFields
+### PreviousTime
+
+Optionally receives time before change.
+
+# Documented by
+
+* Tomasz Nowak
+
+# Requirements
+
+Privilege: `SE_SYSTEMTIME_PRIVILEGE`
+
+# See also
+
+* `NtQuerySystemTime`
+* `RtlTimeFieldsToTime`
+* `RtlTimeToTimeFields`

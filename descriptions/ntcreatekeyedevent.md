@@ -1,25 +1,27 @@
-Synchronization object called KeyedEvent is avaiable \
-in Windows XP\+ systems. It's usefull when both \(or more\) \
-threads have to wait for each other. \
-KeyedEventHandle HANDLE to newly \
-created KeyedEvent object. \
-DesiredAccess The same values as for \
-Event objects \(typically \
-EVENT\_ALL\_ACCESS\). \
-ObjectAttributes Optionally name of \
-object. \
-Reserved Have to be zero. Reserved for \
-future use. \
-Supported on system versions: \
-Win XP/2003
+Synchronization object called `KeyedEvent` is avaiable in *Windows XP+* systems. It's usefull when both (or more) threads have to wait for each other.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### KeyedEventHandle
 
-Library: ntdll.lib
+`HANDLE` to newly created `KeyedEvent` object.
 
-See also: \
-NtOpenKeyedEvent \
-NtReleaseKeyedEvent \
-NtWaitForkeyedEvent
+### DesiredAccess
+
+The same values as for `Event` objects (typically `EVENT_ALL_ACCESS`).
+
+### ObjectAttributes
+
+Optionally name of object.
+
+### Reserved
+
+Have to be zero. Reserved for future use.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtOpenKeyedEvent`
+* `NtReleaseKeyedEvent`
+* `NtWaitForkeyedEvent`

@@ -1,26 +1,32 @@
-Function NtSetIoCompletion increments pending IO \
-counter in IO Completion Object. It can be used to manual finish IO \
-operation. \
-IoCompletionHandle HANDLE to IO \
-Completion Object opened with IO\_COMPLETION\_MODIFY\_STATE \
-access. \
-CompletionKey User's defined key \
-received by \
-NtRemoveIoCompletion function. \
-IoStatusBlock IO result of call. \
-CompletionStatus IO operation \
-status. \
-NumberOfBytesTransfered Number of bytes \
-transfered in manually finished IO operation.
+Function `NtSetIoCompletion` increments pending IO counter in IO Completion Object. It can be used to manual finish IO operation.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### IoCompletionHandle
 
-Library: ntdll.lib
+`HANDLE` to IO Completion Object opened with `IO_COMPLETION_MODIFY_STATE` access.
 
-See also: \
-NtCreateIoCompletion \
-NtOpenIoCompletion \
-NtQueryIoCompletion \
-NtRemoveIoCompletion
+### CompletionKey
+
+User's defined key received by `NtRemoveIoCompletion` function.
+
+### IoStatusBlock
+
+IO result of call.
+
+### CompletionStatus
+
+IO operation status.
+
+### NumberOfBytesTransfered
+
+Number of bytes transfered in manually finished IO operation.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateIoCompletion`
+* `NtOpenIoCompletion`
+* `NtQueryIoCompletion`
+* `NtRemoveIoCompletion`

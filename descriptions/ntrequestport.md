@@ -1,21 +1,23 @@
-NtRequestPort sends request message to other side of \
-LPC connection. \
-PortHandle HANDLE to Port \
-Object. \
-Request Pointer to \
-LPC\_MESSAGE struct contains request data.
+`NtRequestPort` sends request message to other side of *LPC* connection.
 
-Documented by: \
-Tomasz Nowak \
-Bo Branten \
-Requirements:
+### PortHandle
 
-Library: ntdll.lib
+`HANDLE` to Port Object.
 
-See also: \
-LPC\_MESSAGE \
-NtAcceptConnectPort \
-NtConnectPort \
-NtListenPort \
-NtReplyPort \
-NtRequestWaitReplyPort
+### Request
+
+Pointer to `LPC_MESSAGE` struct contains request data.
+
+# Documented by
+
+* Tomasz Nowak
+* Bo Branten
+
+# See also
+
+* `LPC_MESSAGE`
+* `NtAcceptConnectPort`
+* `NtConnectPort`
+* `NtListenPort`
+* `NtReplyPort`
+* `NtRequestWaitReplyPort`

@@ -1,17 +1,14 @@
-Enumeration type MEMORY\_INFORMATION\_CLASS specify \
-type of information returned in a call to \
-NtQueryVirtualMemory function. Currently only one class is \
-defined. \
-MemoryBasicInformation Result buffer \
-contains structure \
-MEMORY\_BASIC\_INFORMATION.
+Enumeration type `MEMORY_INFORMATION_CLASS` specify type of information returned in a call to `NtQueryVirtualMemory` function. Currently only one class is defined.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### MemoryBasicInformation
 
-Library: ntdll.lib
+Result buffer contains structure `MEMORY_BASIC_INFORMATION`.
 
-See also: \
-MEMORY\_BASIC\_INFORMATION \
-NtQueryVirtualMemory
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `MEMORY_BASIC_INFORMATION`
+* `NtQueryVirtualMemory`

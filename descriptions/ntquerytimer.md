@@ -1,23 +1,29 @@
-TimerHandle HANDLE to Timer \
-Object opened with TIMER\_QUERY\_STATE access. \
-TimerInformationClass Information \
-class. See TIMER\_INFORMATION\_CLASS for \
-details. \
-TimerInformation User's allocated \
-buffer for result data. \
-TimerInformationLength Length of \
-TimerInformation buffer, in \
-bytes. \
-ReturnLength Optional pointer to value \
-received used/required length of TimerInformation buffer.
+### TimerHandle
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+`HANDLE` to Timer Object opened with `TIMER_QUERY_STATE` access.
 
-Library: ntdll.lib
+### TimerInformationClass
 
-See also: \
-NtCreateTimer \
-NtOpenTimer \
-TIMER\_INFORMATION\_CLASS
+Information class. See `TIMER_INFORMATION_CLASS` for details.
+
+### TimerInformation
+
+User's allocated buffer for result data.
+
+### TimerInformationLength
+
+Length of `TimerInformation` buffer, in bytes.
+
+### ReturnLength
+
+Optional pointer to value received used/required length of `TimerInformation` buffer.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateTimer`
+* `NtOpenTimer`
+* `TIMER_INFORMATION_CLASS`

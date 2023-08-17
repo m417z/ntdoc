@@ -1,23 +1,27 @@
-Function NtOpenIoCompletion opens existing IO \
-Completion Object. IO Completion must be created as named \
-object. \
-IoCompletionHandle Result of call \- \
-pointer to HANDLE value. \
-DesiredAccess Can be one or combination \
-of: \
-IO\_COMPLETION\_QUERY\_STATE \
-IO\_COMPLETION\_MODIFY\_STATE \
-IO\_COMPLETION\_ALL\_ACCESS \
-ObjectAttributes Pointer to \
-OBJECT\_ATTRIBUTES structure containing valid IO Completion \
-name.
+Function `NtOpenIoCompletion` opens existing IO Completion Object. IO Completion must be created as named object.
 
-Documented by: \
-Tomasz Nowak \
-Reactos \
-Requirements:
+### IoCompletionHandle
 
-Library: ntdll.lib
+Result of call - pointer to `HANDLE` value.
 
-See also: \
-NtCreateIoCompletion
+### DesiredAccess
+
+Can be one or combination of:
+
+* `IO_COMPLETION_QUERY_STATE`
+
+* `IO_COMPLETION_MODIFY_STATE`
+* `IO_COMPLETION_ALL_ACCESS`
+
+### ObjectAttributes
+
+Pointer to `OBJECT_ATTRIBUTES` structure containing valid IO Completion name.
+
+# Documented by
+
+* Tomasz Nowak
+* ReactOS
+
+# See also
+
+* `NtCreateIoCompletion`

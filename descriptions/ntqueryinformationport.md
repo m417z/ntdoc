@@ -1,17 +1,20 @@
-Currently \(on WinNT 4.0 SP6\) there are no information \
-classes for Port Object. \
-PortHandle \
-PortInformationClass \
-PortInformation \
-Length \
-ResultLength
+Currently (on **WinNT 4.0 SP6**) there are no information classes for Port Object.
 
-Documented by: \
-Tomasz Nowak \
-Bo Branten \
-Requirements:
+### PortHandle
 
-Library: ntdll.lib
+### PortInformationClass
 
-See also: \
-PORT\_INFORMATION\_CLASS
+### PortInformation
+
+### Length
+
+### ResultLength
+
+# Documented by
+
+* Tomasz Nowak
+* Bo Branten
+
+# See also
+
+* `PORT_INFORMATION_CLASS`

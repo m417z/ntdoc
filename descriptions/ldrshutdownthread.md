@@ -1,6 +1,5 @@
-Requirements:
 
-Library: ntdll.lib
 
-See also: \
-LdrShutdownProcess
+# See also
+
+* `LdrShutdownProcess`

@@ -1,19 +1,21 @@
-EventHandle HANDLE to Event \
-Object opened with EVENT\_MODIFY\_STATE access. \
-PreviousState Optional pointer to state \
-of event before function call. Difference between \
-NtResetEvent and NtClearEvent is the \
-first one can return state of event before call.
+### EventHandle
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+`HANDLE` to Event Object opened with `EVENT_MODIFY_STATE` access.
 
-Library: ntdll.lib
+### PreviousState
 
-See also: \
-NtClearEvent \
-NtCreateEvent \
-NtOpenEvent \
-NtQueryEvent \
-NtSetEvent
+Optional pointer to state of event before function call.
+
+Difference between `NtResetEvent` and `NtClearEvent` is the first one can return state of event before call.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtClearEvent`
+* `NtCreateEvent`
+* `NtOpenEvent`
+* `NtQueryEvent`
+* `NtSetEvent`

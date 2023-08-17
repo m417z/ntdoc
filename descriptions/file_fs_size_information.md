@@ -1,19 +1,19 @@
-Structure provides detailed information about volume physical size. \
-Is returned in call to \
-NtQueryVolumeInformationFile with \
-FileFsSizeInformation information class. \
-TotalAllocationUnits \
-AvailableAllocationUnits \
-SectorsPerAllocationUnit \
-BytesPerSector
+Structure provides detailed information about volume physical size. Is returned in call to `NtQueryVolumeInformationFile` with `FileFsSizeInformation` information class.
 
-Documented by: \
-Bo Branten \
-Tomasz Nowak \
-Requirements:
+### TotalAllocationUnits
 
-Library: ntdll.lib
+### AvailableAllocationUnits
 
-See also: \
-FS\_INFORMATION\_CLASS \
-NtQueryVolumeInformationFile
+### SectorsPerAllocationUnit
+
+### BytesPerSector
+
+# Documented by
+
+* Bo Branten
+* Tomasz Nowak
+
+# See also
+
+* `FS_INFORMATION_CLASS`
+* `NtQueryVolumeInformationFile`

@@ -1,56 +1,86 @@
-Function NtCreateToken creates Token Object. \
-TokenHandle Result of call \- pointer to \
-HANDLE to Token Object. \
-DesiredAccess Can be one or more of \
-following: \
-TOKEN\_ASSIGN\_PRIMARY \
-TOKEN\_DUPLICATE \
-TOKEN\_IMPERSONATE \
-TOKEN\_QUERY \
-TOKEN\_QUERY\_SOURCE \
-TOKEN\_ADJUST\_PRIVILEGES \
-TOKEN\_ADJUST\_GROUPS \
-TOKEN\_ADJUST\_DEFAULT \
-TOKEN\_ADJUST\_SESSIONID \
-TOKEN\_ALL\_ACCESS \
-ObjectAttributes Pointer to \
-OBJECT\_ATTRIBUTES structure. \
-TokenType \(?\), see \
-TOKEN\_TYPE enumeration type. \
-AuthenticationId \(?\), see \
-NtAllocateLocallyUniqueId security function. \
-ExpirationTime \(?\), \
-pointer to LARGE\_INTEGER value contains time in \
-100\-ns format. \
-TokenUser \(?\), see \
-TOKEN\_USER structure. \
-TokenGroups \(?\), see \
-TOKEN\_GROUPS structure. \
-TokenPrivileges \(?\), see \
-TOKEN\_PRIVILEGES \
-structure. \
-TokenOwner \(?\), see \
-TOKEN\_OWNER structure. \
-TokenPrimaryGroup \(?\), \
-see TOKEN\_PRIMARY\_GROUP \
-structure. \
-TokenDefaultDacl \(?\), see \
-TOKEN\_DEFAULT\_DACL \
-structure. \
-TokenSource \(?\), see \
-TOKEN\_SOURCE structure.
+Function `NtCreateToken` creates Token Object.
 
-Documented by: \
-Reactos \
-Requirements:
+### TokenHandle
 
-Library: ntdll.lib \
-Privilege: SE\_CREATE\_TOKEN\_PRIVILEGE
+Result of call - pointer to `HANDLE` to Token Object.
 
-See also: \
-NtAllocateLocallyUniqueId \
-NtDuplicateToken \
-NtOpenProcessToken \
-NtOpenThreadToken \
-NtQueryInformationToken \
-NtSetInformationToken
+### DesiredAccess
+
+Can be one or more of following:
+
+* `TOKEN_ASSIGN_PRIMARY`
+
+* `TOKEN_DUPLICATE`
+* `TOKEN_IMPERSONATE`
+
+* `TOKEN_QUERY`
+* `TOKEN_QUERY_SOURCE`
+
+* `TOKEN_ADJUST_PRIVILEGES`
+* `TOKEN_ADJUST_GROUPS`
+
+* `TOKEN_ADJUST_DEFAULT`
+* `TOKEN_ADJUST_SESSIONID`
+
+* `TOKEN_ALL_ACCESS`
+
+### ObjectAttributes
+
+Pointer to `OBJECT_ATTRIBUTES` structure.
+
+### TokenType
+
+**(?)**, see `TOKEN_TYPE` enumeration type.
+
+### AuthenticationId
+
+**(?)**, see `NtAllocateLocallyUniqueId` security function.
+
+### ExpirationTime
+
+**(?)**, pointer to `LARGE_INTEGER` value contains time in *100-ns* format.
+
+### TokenUser
+
+**(?)**, see `TOKEN_USER` structure.
+
+### TokenGroups
+
+**(?)**, see `TOKEN_GROUPS` structure.
+
+### TokenPrivileges
+
+**(?)**, see `TOKEN_PRIVILEGES` structure.
+
+### TokenOwner
+
+**(?)**, see `TOKEN_OWNER` structure.
+
+### TokenPrimaryGroup
+
+**(?)**, see `TOKEN_PRIMARY_GROUP` structure.
+
+### TokenDefaultDacl
+
+**(?)**, see `TOKEN_DEFAULT_DACL` structure.
+
+### TokenSource
+
+**(?)**, see `TOKEN_SOURCE` structure.
+
+# Documented by
+
+* ReactOS
+
+# Requirements
+
+Privilege: `SE_CREATE_TOKEN_PRIVILEGE`
+
+# See also
+
+* `NtAllocateLocallyUniqueId`
+* `NtDuplicateToken`
+* `NtOpenProcessToken`
+* `NtOpenThreadToken`
+* `NtQueryInformationToken`
+* `NtSetInformationToken`

@@ -1,17 +1,15 @@
-Structure IO\_COMPLETION\_BASIC\_INFORMATION is used as \
-result of call \
-NtQueryIoCompletion with \
-IoCompletionBasicInformation information class. \
-Depth Number of currently pending file \
-operations for specified IO Completion Object.
+Structure `IO_COMPLETION_BASIC_INFORMATION` is used as result of call `NtQueryIoCompletion` with `IoCompletionBasicInformation` information class.
 
-Documented by: \
-Tomasz Nowak \
-Bo Branten \
-Requirements:
+### Depth
 
-Library: ntdll.lib
+Number of currently pending file operations for specified IO Completion Object.
 
-See also: \
-IO\_COMPLETION\_INFORMATION\_CLASS \
-NtQueryIoCompletion
+# Documented by
+
+* Tomasz Nowak
+* Bo Branten
+
+# See also
+
+* `IO_COMPLETION_INFORMATION_CLASS`
+* `NtQueryIoCompletion`

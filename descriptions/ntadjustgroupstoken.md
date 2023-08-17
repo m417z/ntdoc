@@ -1,35 +1,39 @@
-Function NtAdjustGroupsToken modify state of one or \
-more groups avaialbe for Token Object. See also description of \
-similar Win32 API AdjustTokenGroups in Win32 \
-SDK. \
-TokenHandle HANDLE to Token \
-Object opened with TOKEN\_ADJUST\_GROUPS access. \
-ResetToDefault If set, groups are reset \
-to token's defaults. In this case all other parameters are \
-ignored. \
-TokenGroups Pointer to TOKEN\_GROUPS structure containing groups to \
-modify. \
-PreviousGroupsLength Specifies length \
-of PreviousGroups buffer, in \
-bytes. \
-PreviousGroups Optionally pointer to \
-TOKEN\_GROUPS buffer receiving \
-information about modified groups before modification begins. \
-RequiredLength If PreviousGroups parameter is specified, and \
-PreviousGroupsLength is to \
-small, this value receives required length of buffer, in bytes.
+Function `NtAdjustGroupsToken` modify state of one or more groups avaialbe for Token Object. See also description of similar *Win32 API* **AdjustTokenGroups** in *Win32 SDK*.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### TokenHandle
 
-Library: ntdll.lib
+`HANDLE` to Token Object opened with `TOKEN_ADJUST_GROUPS` access.
 
-See also: \
-NtAdjustPrivilegesToken \
-NtCreateToken \
-NtOpenProcessToken \
-NtOpenThreadToken \
-NtQueryInformationToken \
-NtSetInformationToken \
-TOKEN\_GROUPS
+### ResetToDefault
+
+If set, groups are reset to token's defaults. In this case all other parameters are ignored.
+
+### TokenGroups
+
+Pointer to `TOKEN_GROUPS` structure containing groups to modify.
+
+### PreviousGroupsLength
+
+Specifies length of `PreviousGroups` buffer, in bytes.
+
+### PreviousGroups
+
+Optionally pointer to `TOKEN_GROUPS` buffer receiving information about modified groups before modification begins.
+
+### RequiredLength
+
+If `PreviousGroups` parameter is specified, and `PreviousGroupsLength` is to small, this value receives required length of buffer, in bytes.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtAdjustPrivilegesToken`
+* `NtCreateToken`
+* `NtOpenProcessToken`
+* `NtOpenThreadToken`
+* `NtQueryInformationToken`
+* `NtSetInformationToken`
+* `TOKEN_GROUPS`

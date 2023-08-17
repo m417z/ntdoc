@@ -1,17 +1,16 @@
-Function NtDeleteAtom remove Atom from Global Atom \
-Table. If Atom's reference counter is greater then 1, \
-function decrements this counter, but Atom stayed in Global Atom \
-Table. \
-Atom Atom identifier.
+Function `NtDeleteAtom` remove Atom from Global Atom Table. If Atom's reference counter is greater then *1*, function decrements this counter, but Atom stayed in Global Atom Table.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### Atom
 
-Library: ntdll.lib
+Atom identifier.
 
-See also: \
-ATOM\_BASIC\_INFORMATION \
-NtAddAtom \
-NtFindAtom \
-NtQueryInformationAtom
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `ATOM_BASIC_INFORMATION`
+* `NtAddAtom`
+* `NtFindAtom`
+* `NtQueryInformationAtom`

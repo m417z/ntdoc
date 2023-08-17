@@ -1,16 +1,18 @@
-Function NtStartProfile starts performance counter \
-assiciated with previously created Profile Object. \
-ProfileHandle HANDLE to Profile \
-Object. \
-Counter is stopped when user call \
-NtStopProfile.
+Function `NtStartProfile` starts performance counter assiciated with previously created Profile Object.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### ProfileHandle
 
-Library: ntdll.lib
+`HANDLE` to Profile Object.
 
-See also: \
-NtCreateProfile \
-NtStopProfile
+---
+
+Counter is stopped when user call `NtStopProfile`.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateProfile`
+* `NtStopProfile`

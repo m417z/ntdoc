@@ -1,20 +1,22 @@
-Function NtFlushInstructionCache empties execution \
-cache for specified region of code. It shoult be used always after \
-modification of process's executable memory \(for example when \
-NtLdr fills imported function's entries\). \
-ProcessHandle HANDLE to Process \
-Object. \
-BaseAddress Starting memory address to \
-flush. \
-NumberOfBytesToFlush Length of flushed \
-memory block.
+Function `NtFlushInstructionCache` empties execution cache for specified region of code. It shoult be used always after modification of process's executable memory (for example when *NtLdr* fills imported function's entries).
 
-Documented by: \
-Reactos \
-Tomasz Nowak \
-Requirements:
+### ProcessHandle
 
-Library: ntdll.lib
+`HANDLE` to Process Object.
 
-See also: \
-NtOpenProcess
+### BaseAddress
+
+Starting memory address to flush.
+
+### NumberOfBytesToFlush
+
+Length of flushed memory block.
+
+# Documented by
+
+* ReactOS
+* Tomasz Nowak
+
+# See also
+
+* `NtOpenProcess`

@@ -1,15 +1,15 @@
-This enumeration type is used with NtQueryEvent. There're no corresponding \
-function to set event information. Currently only one information \
-class is defined: \
-EventBasicInformation See EVENT\_BASIC\_INFORMATION for \
-details.
+This enumeration type is used with `NtQueryEvent`. There're no corresponding function to set event information. \
+Currently only one information class is defined:
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### EventBasicInformation
 
-Library: ntdll.lib
+See `EVENT_BASIC_INFORMATION` for details.
 
-See also: \
-EVENT\_BASIC\_INFORMATION \
-NtQueryEvent
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `EVENT_BASIC_INFORMATION`
+* `NtQueryEvent`

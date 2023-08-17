@@ -1,16 +1,14 @@
-FaultingPc \
-FaultingVa \
-Supported on system versions: \
-NT 4.0,Win 2000,Win XP/2003
+### FaultingPc
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### FaultingVa
 
-Library: ntdll.lib
+# Documented by
 
-See also: \
-NtCreateProcess \
-NtOpenProcess \
-NtQueryInformationProcess \
-PROCESS\_INFORMATION\_CLASS
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateProcess`
+* `NtOpenProcess`
+* `NtQueryInformationProcess`
+* `PROCESS_INFORMATION_CLASS`
