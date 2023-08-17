@@ -477,7 +477,7 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
             # only supports trailing "  ".
             description = re.sub(r' \\$', '  ', description, flags=re.MULTILINE)
 
-            html_description = markdown2.markdown(description)
+            html_description = markdown2.markdown(description, extras=['cuddled-lists', 'fenced-code-blocks', 'header-ids', 'tables'])
 
             html += html_add_id_links(html_description, ident_to_id, id)
         else:
