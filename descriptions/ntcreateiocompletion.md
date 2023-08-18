@@ -9,7 +9,6 @@ Result of call - `HANDLE` to newly created IO Completion Object.
 Access mask for created `HANDLE`. Can be combination of:
 
 * `IO_COMPLETION_QUERY_STATE`
-
 * `IO_COMPLETION_MODIFY_STATE`
 * `IO_COMPLETION_ALL_ACCESS`
 

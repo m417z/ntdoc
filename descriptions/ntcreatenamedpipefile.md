@@ -10,19 +10,14 @@ Result of call - pointer to `HANDLE` to Named Pipe.
 Access rights for object's handle. Can be one or combination of:
 
 * `FILE_READ_DATA`
-
 * `FILE_WRITE_DATA`
 * `FILE_CREATE_PIPE_INSTANCE`
-
 * `FILE_READ_ATTRIBUTES`
 * `FILE_WRITE_ATTRIBUTES`
-
 * `SYNCHRONIZE`
 * `READ_CONTROL`
-
 * `WRITE_OWNER`
 * `WRITE_DAC`
-
 * `ACCESS_SYSTEM_SECURITY`
 Also combination of Generic rights are supported.
 
@@ -39,7 +34,6 @@ IO result of call.
 Can be combination of following:
 
 * `FILE_SHARE_READ`
-
 * `FILE_SHARE_WRITE`
 * `FILE_SHARE_DELETE`
 

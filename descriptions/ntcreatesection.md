@@ -13,13 +13,10 @@ Result of call - `HANDLE` to Section Object.
 Access mask. Can be combination of:
 
 * `SECTION_QUERY`
-
 * `SECTION_MAP_WRITE`
 * `SECTION_MAP_READ`
-
 * `SECTION_MAP_EXECUTE`
 * `SECTION_EXTEND_SIZE`
-
 * `SECTION_ALL_ACCESS`
 
 ### ObjectAttributes
@@ -35,19 +32,14 @@ Optionally define maximum size of section. Must be defined when caller create se
 Can be one or combination of:
 
 * `PAGE_NOACCESS`
-
 * `PAGE_READONLY`
 * `PAGE_READWRITE`
-
 * `PAGE_WRITECOPY`
 * `PAGE_EXECUTE`
-
 * `PAGE_EXECUTE_READ`
 * `PAGE_EXECUTE_READWRITE`
-
 * `PAGE_EXECUTE_WRITECOPY`
 * `PAGE_GUARD`
-
 * `PAGE_NOCACHE`
 * `PAGE_WRITECOMBINE`
 
@@ -56,10 +48,8 @@ Can be one or combination of:
 Can be one or combination of:
 
 * `SEC_FILE`
-
 * `SEC_IMAGE`
 * `SEC_RESERVE`
-
 * `SEC_COMMIT`
 * `SEC_NOCACHE`
 

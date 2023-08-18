@@ -41,29 +41,23 @@ How to child processes inherid maped section. See description of enumeration typ
 Can be one of:
 
 * `MEM_COMMIT`
-
 * `MEM_RESERVE`
 
 ### Protect
 
 Page protection. Can be one of:
 
-* `PAGE_NOACCESS        `
-
-* `PAGE_READONLY        `
-* `PAGE_READWRITE       `
-
-* `PAGE_WRITECOPY       `
-* `PAGE_EXECUTE         `
-
-* `PAGE_EXECUTE_READ    `
+* `PAGE_NOACCESS`
+* `PAGE_READONLY`
+* `PAGE_READWRITE`
+* `PAGE_WRITECOPY`
+* `PAGE_EXECUTE`
+* `PAGE_EXECUTE_READ`
 * `PAGE_EXECUTE_READWRITE`
-
 * `PAGE_EXECUTE_WRITECOPY`
-* `PAGE_GUARD           `
-
-* `PAGE_NOCACHE         `
-* `PAGE_WRITECOMBINE    `
+* `PAGE_GUARD`
+* `PAGE_NOCACHE`
+* `PAGE_WRITECOMBINE`
 
 # Documented by
 

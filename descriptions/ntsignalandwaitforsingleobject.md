@@ -5,7 +5,6 @@ Function `NtSignalAndWaitForSingleObject` signals one object and wait for second
 `HANDLE` to object to signal. Possible object's types are:
 
 * Event Object
-
 * Semaphore Object
 * Mutant Object
 

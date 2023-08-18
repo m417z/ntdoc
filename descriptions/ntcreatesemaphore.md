@@ -9,7 +9,6 @@ Result of call - pointer to `HANDLE` to Semaphore Object.
 Access rights to Semaphore Object. Can be one of:
 
 * `SEMAPHORE_QUERY_STATE`
-
 * `SEMAPHORE_MODIFY_STATE`
 * `SEMAPHORE_ALL_ACCESS`
 

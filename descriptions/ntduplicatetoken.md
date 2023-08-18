@@ -13,16 +13,12 @@ Function `NtDuplicateToken` creates new Token Object basing on existing Token Ob
 Access mask for newly created token. Can be combination of:
 
 * `TOKEN_ASSIGN_PRIMARY`
-
 * `TOKEN_DUPLICATE`
 * `TOKEN_IMPERSONATE`
-
 * `TOKEN_QUERY`
 * `TOKEN_QUERY_SOURCE`
-
 * `TOKEN_ADJUST_PRIVILEGES`
 * `TOKEN_ADJUST_GROUPS`
-
 * `TOKEN_ADJUST_DEFAULT`
 * `TOKEN_ADJUST_SESSIONID`
 

@@ -9,19 +9,14 @@ Result of call - pointer to `HANDLE` to Token Object.
 Can be one or more of following:
 
 * `TOKEN_ASSIGN_PRIMARY`
-
 * `TOKEN_DUPLICATE`
 * `TOKEN_IMPERSONATE`
-
 * `TOKEN_QUERY`
 * `TOKEN_QUERY_SOURCE`
-
 * `TOKEN_ADJUST_PRIVILEGES`
 * `TOKEN_ADJUST_GROUPS`
-
 * `TOKEN_ADJUST_DEFAULT`
 * `TOKEN_ADJUST_SESSIONID`
-
 * `TOKEN_ALL_ACCESS`
 
 ### ObjectAttributes

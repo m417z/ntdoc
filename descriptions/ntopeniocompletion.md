@@ -9,7 +9,6 @@ Result of call - pointer to `HANDLE` value.
 Can be one or combination of:
 
 * `IO_COMPLETION_QUERY_STATE`
-
 * `IO_COMPLETION_MODIFY_STATE`
 * `IO_COMPLETION_ALL_ACCESS`
 

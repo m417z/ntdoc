@@ -13,10 +13,8 @@ Function `NtQuerySecurityObject` retrieve object's Security Descriptor.
 Can be combination of:
 
 * `OWNER_SECURITY_INFORMATION`
-
 * `GROUP_SECURITY_INFORMATION`
 * `DACL_SECURITY_INFORMATION`
-
 * `SACL_SECURITY_INFORMATION`
 
 ### DescriptorBuffer

@@ -6,14 +6,12 @@ For detailed informations see descriptions of structures associated with informa
 ### SystemBasicInformation
 
 * Action: `Query`
-
 * Buffer size: *0x02C*
 * Structure: `SYSTEM_BASIC_INFORMATION`
 
 ### SystemProcessorInformation
 
 * Action: `Query`
-
 * Buffer size: *0x00C*
 * Structure: `SYSTEM_PROCESSOR_INFORMATION`
 
@@ -28,7 +26,6 @@ For detailed informations see descriptions of structures associated with informa
 ### SystemPathInformation
 
 * Action: `Query`
-
 * Buffer size: *???*
 * Structure: `STATUS_NOT_IMPLEMENTED`
 
@@ -37,14 +34,12 @@ System path is avaiable via structure `KUSER_SHARED_DATA`
 ### SystemProcessInformation
 
 * Action: `Query`
-
 * Buffer size: *0x088+*
 * Structure: `SYSTEM_PROCESS_INFORMATION`
 
 ### SystemCallCountInformation
 
 * Action: `Query`
-
 * Buffer size: *0x018+*
 * Structure: `SYSTEM_CALL_COUNT_INFORMATION`
 
@@ -55,7 +50,6 @@ System path is avaiable via structure `KUSER_SHARED_DATA`
 ### SystemProcessorPerformanceInformation
 
 * Action: `Query`
-
 * Buffer size: *0x030*
 * Structure: `SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION`
 
@@ -70,7 +64,6 @@ NOT_IMPLEMENTED
 ### SystemModuleInformation
 
 * Action: `Query`
-
 * Buffer size: *0x106+*
 * Structure: `SYSTEM_MODULE_INFORMATION`
 
@@ -93,21 +86,18 @@ NOT_IMPLEMENTED
 ### SystemHandleInformation
 
 * Action: `Query`
-
 * Buffer size: *0x014+*
 * Structure: `SYSTEM_HANDLE_INFORMATION`
 
 ### SystemObjectInformation
 
 * Action: `Query`
-
 * Buffer size: *0x038+*
 * Structure: `SYSTEM_OBJECT_INFORMATION`
 
 ### SystemPageFileInformation
 
 * Action: `Query`
-
 * Buffer size: *0x018+*
 * Structure: `SYSTEM_PAGEFILE_INFORMATION`
 
@@ -117,7 +107,7 @@ NOT_IMPLEMENTED
 
 ### SystemVdmBopInformation
 
-INVALID_INFO_CLASS
+`INVALID_INFO_CLASS`
 
 ### SystemFileCacheInformation
 
@@ -150,12 +140,12 @@ INVALID_INFO_CLASS
 ### SystemTimeAdjustmentInformation
 
 * Action: `Query`
-
 * Buffer size: *0x00C*
 * Structure: `SYSTEM_QUERY_TIME_ADJUST_INFORMATION`
 
-* Action: `Set`
+<!-- -->
 
+* Action: `Set`
 * Buffer size: *0x008*
 * Structure: `SYSTEM_SET_TIME_ADJUST_INFORMATION`
 
@@ -194,19 +184,18 @@ INVALID_INFO_CLASS
 ### SystemRegistryQuotaInformation
 
 * Action: `Query`
-
 * Buffer size: *0x00C*
 * Structure: `SYSTEM_REGISTRY_QUOTA_INFORMATION`
 
-* Action: `Set`
+<!-- -->
 
+* Action: `Set`
 * Buffer size: *0x00C*
 * Structure: `SYSTEM_REGISTRY_QUOTA_INFORMATION`
 
 ### SystemExtendServiceTableInformation
 
 * Action: `Set`
-
 * Buffer size: *0x008*
 * Structure: `SYSTEM_LOAD_IMAGE_INFORMATION`
 
@@ -224,11 +213,11 @@ NOT_IMPLEMENTED, GET
 
 ### SystemPowerInformation
 
-INVALID_INFO_CLASS
+`INVALID_INFO_CLASS`
 
 ### SystemProcessorSpeedInformation
 
-INVALID_INFO_CLASS
+`INVALID_INFO_CLASS`
 
 ### SystemCurrentTimeZoneInformation
 

@@ -9,7 +9,6 @@ Structure `SECTION_BASIC_INFORMATION` is returned as a result of call `NtQuerySe
 Can be one or combination of:
 
 * `SEC_RESERVE`
-
 * `SEC_IMAGE`
 * `SEC_FILE`
 

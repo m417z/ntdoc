@@ -7,7 +7,6 @@ Result of call - `HANDLE` to Timer Object.
 Access mask for `TimerHandle`. Can be set of (from **\<WinNT.h\>**):
 
 * `TIMER_QUERY_STATE`
-
 * `TIMER_MODIFY_STATE`
 * `TIMER_ALL_ACCESS`
 

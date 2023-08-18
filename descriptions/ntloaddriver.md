@@ -8,7 +8,6 @@ Registry path in system format. Path must begin with **"//registry//machine//SYS
 Key must have at least 2 values:
 
 * **"ImagePath"** System path to file, in UNICODE format
-
 * **"Type"** Set to 1.
 
 # Requirements

@@ -3,71 +3,57 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 ### FileDirectoryInformation=1
 
 * Action: `Query`
-
 * Buffer size: *0x48*
 * Structure: `FILE_DIRECTORY_INFORMATION`
-
 * Function: `NtQueryDirectoryFile`
 
 ### FileFullDirectoryInformation
 
 * Action: `Query`
-
 * Buffer size: *0x48*
 * Structure: `FILE_FULL_DIR_INFORMATION`
-
 * Function: `NtQueryDirectoryFile`
 
 ### FileBothDirectoryInformation
 
 * Action: `Query`
-
 * Buffer size: *0x48*
 * Structure: `FILE_BOTH_DIR_INFORMATION`
-
 * Function: `NtQueryDirectoryFile`
 
 ### FileBasicInformation
 
 * Action: `Query`
-
 * Buffer size: *0x28*
 * Structure: `FILE_BASIC_INFORMATION`
-
 * Function: `NtQueryInformationFile`
 
-* Action: `Set`
+<!-- -->
 
+* Action: `Set`
 * Buffer size: *0x28*
 * Structure: `FILE_BASIC_INFORMATION`
-
 * Function: `NtSetInformationFile`
 
 ### FileStandardInformation
 
 * Action: `Query`
-
 * Buffer size: *0x18*
 * Structure: `FILE_STANDARD_INFORMATION`
-
 * Function: `NtQueryInformationFile`
 
 ### FileInternalInformation
 
 * Action: `Query`
-
 * Buffer size: *0x08*
 * Structure: `FILE_INTERNAL_INFORMATION`
-
 * Function: `NtQueryInformationFile`
 
 ### FileEaInformation
 
 * Action: `Query`
-
 * Buffer size: *0x04*
 * Structure: `FILE_EA_INFORMATION`
-
 * Function: `NtQueryInformationFile`
 
 ### FileAccessInformation
@@ -77,62 +63,50 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 ### FileNameInformation
 
 * Action: `Query`
-
 * Buffer size: *0x08+*
 * Structure: `FILE_NAME_INFORMATION`
-
 * Function: `NtQueryInformationFile`
 
 ### FileRenameInformation
 
 * Action: `Set`
-
 * Buffer size: *0x10*
 * Structure: `FILE_RENAME_INFORMATION`
-
 * Function: `NtSetInformationFile`
 
 ### FileLinkInformation
 
 * Action: `Set`
-
 * Buffer size: *0x10*
 * Structure: `FILE_LINK_INFORMATION`
-
 * Function: `NtSetInformationFile`
 
 ### FileNamesInformation
 
 * Action: `Query`
-
 * Buffer size: *0x10*
 * Structure: `FILE_NAMES_INFORMATION`
-
 * Function: `NtQueryDirectoryFile`
 
 ### FileDispositionInformation
 
 * Action: `Set`
-
 * Buffer size: *0x01*
 * Structure: `FILE_DISPOSITION_INFORMATION`
-
 * Function: `NtSetInformationFile`
 
 ### FilePositionInformation
 
 * Action: `Query`
-
 * Buffer size: *0x08*
 * Structure: `FILE_POSITION_INFORMATION`
-
 * Function: `NtQueryInformationFile`
 
-* Action: `Set`
+<!-- -->
 
+* Action: `Set`
 * Buffer size: *0x08*
 * Structure: `FILE_POSITION_INFORMATION`
-
 * Function: `NtSetInformationFile`
 
 ### FileFullEaInformation
@@ -150,10 +124,8 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 ### FileAllInformation
 
 * Action: `Query`
-
 * Buffer size: *0x68*
 * Structure: `FILE_ALL_INFORMATION`
-
 * Function: `NtQueryInformationFile`
 
 ### FileAllocationInformation
@@ -163,19 +135,15 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 ### FileEndOfFileInformation
 
 * Action: `Set`
-
 * Buffer size: *0x08*
 * Structure: `FILE_END_OF_FILE_INFORMATION`
-
 * Function: `NtSetInformationFile`
 
 ### FileAlternateNameInformation
 
 * Action: `Query`
-
 * Buffer size: *0x08+*
 * Structure: `FILE_NAME_INFORMATION`
-
 * Function: `NtQueryInformationFile`
 
 ### FileStreamInformation
@@ -213,10 +181,8 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 ### FileCompletionInformation
 
 * Action: `Set`
-
 * Buffer size: *0x08*
 * Structure: `FILE_COMPLETION_INFORMATION`
-
 * Function: `NtSetInformationFile`
 
 ### FileMoveClusterInformation
@@ -234,10 +200,8 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 ### FileNetworkOpenInformation
 
 * Action: `Query`
-
 * Buffer size: *0x38*
 * Structure: `FILE_NETWORK_OPEN_INFORMATION`
-
 * Function: `NtQueryInformationFile`
 
 ### FileObjectIdInformation

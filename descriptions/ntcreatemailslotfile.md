@@ -21,7 +21,6 @@ IO result of call.
 Can be combination of:
 
 * `FILE_WRITE_THROUGH`
-
 * `FILE_SYNCHRONOUS_IO_ALERT`
 * `FILE_SYNCHRONOUS_IO_NONALERT`
 

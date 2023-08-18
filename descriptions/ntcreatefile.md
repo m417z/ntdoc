@@ -21,13 +21,10 @@ Name of file to create (or open), optionally path in name string. You can also d
 Pointer to `IO_STATUS_BLOCK` structure, that receive final status of function call. Can be one of:
 
 * `FILE_CREATED`
-
 * `FILE_OPENED`
 * `FILE_OVERWRITTEN`
-
 * `FILE_SUPERSEDED`
 * `FILE_EXISTS`
-
 * `FILE_DOES_NOT_EXIST`
 
 ### AllocationSize
@@ -39,16 +36,12 @@ File size after creation.
 Attributes for newly created file, as follows:
 
 * `FILE_ATTRIBUTE_READONLY`
-
 * `FILE_ATTRIBUTE_HIDDEN`
 * `FILE_ATTRIBUTE_SYSTEM`
-
 * `FILE_ATTRIBUTE_ARCHIVE`
 * `FILE_ATTRIBUTE_NORMAL`
-
 * `FILE_ATTRIBUTE_TEMPORARY`
 * `FILE_ATTRIBUTE_OFFLINE`
-
 * `FILE_ATTRIBUTE_NOT_CONTENT_INDEXED`
 
 ### ShareAccess
@@ -56,7 +49,6 @@ Attributes for newly created file, as follows:
 Specifies share method for opened object. Can be set to zero or any combination of flags:
 
 * `FILE_SHARE_READ`
-
 * `FILE_SHARE_WRITE`
 * `FILE_SHARE_DELETE`
 
@@ -65,13 +57,10 @@ Specifies share method for opened object. Can be set to zero or any combination 
 Specifies disposition how to create or open object and can be one of:
 
 * `FILE_SUPERSEDE` - If file exists, deletes it before creation of new one.
-
 * `FILE_OPEN` - Fails, if file not exists.
 * `FILE_CREATE` - Fails, if file exists.
-
 * `FILE_OPEN_IF` - If file exists, opens it. If not, creates new one and then open it.
 * `FILE_OVERWRITE` - If file not exists, create and open it. If exists, open them and reset content.
-
 * `FILE_OVERWRITE_IF` - As `FILE_OVERWRITE`, but fails if file not exists.
 
 ### CreateOptions
