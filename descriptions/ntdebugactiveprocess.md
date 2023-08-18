@@ -1,20 +1,21 @@
-Function NtDebugActiveProcess is used to attach \
-Debug Object to any non\-debuged process. \
-ProcessHandle HANDLE to process \
-being debugged \(opened with enough access rigths \- see \
-NtOpenProcess\). \
-DebugObjectHandle HANDLE to \
-previously created Debug Object. \
-Supported on system versions: \
-Win XP/2003
+Function NtDebugActiveProcess is used to attach Debug Object to any non-debugged
+process.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### ProcessHandle
 
-Library: ntdll.lib
+HANDLE to process being debugged (opened with enough access rights
+- see NtOpenProcess).
 
-See also: \
-NtCreateDebugObject \
-NtOpenProcess \
-NtRemoveProcessDebug
+### DebugObjectHandle
+
+HANDLE to previously created Debug Object.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateDebugObject`
+* `NtOpenProcess`
+* `NtRemoveProcessDebug`

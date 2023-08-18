@@ -1,19 +1,19 @@
-Function NtRemoveProcessDebug detach debugger from \
-process. It's reverse of \
-NtDebugActiveProcess function. \
-ProcessHandle HANDLE to process \
-being debugged. \
-DebugObjectHandle HANDLE to \
-Debug Object. \
-Supported on system versions: \
-Win XP/2003
+Function NtRemoveProcessDebug detach debugger from process. It's reverse of
+NtDebugActiveProcess function.
 
-Documented by: \
-Tomasz Nowak \
-Requirements:
+### ProcessHandle
 
-Library: ntdll.lib
+HANDLE to process being debugged.
 
-See also: \
-NtCreateDebugObject \
-NtDebugActiveProcess
+### DebugObjectHandle
+
+HANDLE to Debug Object.
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtCreateDebugObject`
+* `NtDebugActiveProcess`
