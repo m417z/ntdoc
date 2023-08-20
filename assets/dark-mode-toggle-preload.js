@@ -1,40 +1,35 @@
-(function () {
+function getStylesheetTagsForDarkModeToggle(lightModeHref, darkModeHref) {
     'use strict';
 
     const PREFERS_COLOR_SCHEME = 'prefers-color-scheme';
-    const MEDIA = 'media';
     const LIGHT = 'light';
     const DARK = 'dark';
-    const LINK_REL_STYLESHEET = 'link[rel=stylesheet]';
     const ALL = 'all';
     const NOT_ALL = 'not all';
     const NAME = 'dark-mode-toggle';
-    const darkCSS = document.querySelectorAll(
-        `${LINK_REL_STYLESHEET}[${MEDIA}*=${PREFERS_COLOR_SCHEME}][${MEDIA}*="${DARK}"]`,
-    );
-    const lightCSS = document.querySelectorAll(
-        `${LINK_REL_STYLESHEET}[${MEDIA}*=${PREFERS_COLOR_SCHEME}][${MEDIA}*="${LIGHT}"]`,
-    );
-    switch (localStorage.getItem(NAME)) {
+
+    let mode = null;
+    try {
+        mode = localStorage.getItem(NAME);
+    } catch (e) { }
+
+    let lightCSSMedia = `(${PREFERS_COLOR_SCHEME}: ${LIGHT})`;
+    let darkCSSMedia = `(${PREFERS_COLOR_SCHEME}: ${DARK})`;
+
+    switch (mode) {
         case LIGHT:
-            lightCSS.forEach((link) => {
-                link.media += ', ' + ALL;
-                link.disabled = false;
-            });
-            darkCSS.forEach((link) => {
-                link.media += ' and ' + NOT_ALL;
-                link.disabled = true;
-            });
+            lightCSSMedia += ', ' + ALL;
+            darkCSSMedia += ' and ' + NOT_ALL;
             break;
+
         case DARK:
-            darkCSS.forEach((link) => {
-                link.media += ', ' + ALL;
-                link.disabled = false;
-            });
-            lightCSS.forEach((link) => {
-                link.media += ' and ' + NOT_ALL;
-                link.disabled = true;
-            });
+            darkCSSMedia += ', ' + ALL;
+            lightCSSMedia += ' and ' + NOT_ALL;
             break;
     }
-})();
+
+    return `
+        <link rel="stylesheet" href="${lightModeHref}" media="${lightCSSMedia}">
+        <link rel="stylesheet" href="${darkModeHref}" media="${darkCSSMedia}">
+    `;
+}
