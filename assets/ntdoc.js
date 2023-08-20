@@ -5,6 +5,7 @@
 
     function run() {
         initSearch();
+        addControlButtons();
     }
 
     function initSearch() {
@@ -82,5 +83,67 @@
                 window.location = item.id;
             },
         }).virtualselect('load');
+    }
+
+    function addControlButtons() {
+        const codeElementsContainer = document.querySelector('.ntdoc-code-elements');
+
+        const controlButtonsContainer = document.createElement('div');
+        controlButtonsContainer.classList.add('ntdoc-code-control-buttons');
+
+        const buttonCopy = document.createElement('button');
+        buttonCopy.classList.add('ntdoc-code-control-button-autohide');
+        buttonCopy.textContent = 'Copy';
+        buttonCopy.addEventListener('click', () => {
+            const codeElement = Array.from(
+                codeElementsContainer.querySelectorAll(':scope > .ntdoc-code-element')
+            ).filter((e) => e.style.display !== 'none')[0];
+            const code = codeElement.querySelector('.ntdoc-code-intro').textContent +
+                codeElement.querySelector('.ntdoc-code-body').textContent;
+            navigator.clipboard.writeText(code);
+
+            const previousText = buttonCopy.textContent;
+            buttonCopy.textContent = '✅';
+            buttonCopy.disabled = true;
+            setTimeout(() => {
+                buttonCopy.textContent = previousText;
+                buttonCopy.disabled = false;
+            }, 500);
+        });
+        controlButtonsContainer.append(buttonCopy);
+
+        const codeElements = codeElementsContainer.querySelectorAll(':scope > .ntdoc-code-element');
+        if (codeElements.length > 1) {
+            let currentBlockIndex = 0;
+
+            const buttonLeft = document.createElement('button');
+            buttonLeft.textContent = '⬅️';
+            buttonLeft.title = 'Previous definition';
+            buttonLeft.disabled = true;
+
+            const buttonRight = document.createElement('button');
+            buttonRight.textContent = '➡️';
+            buttonRight.title = 'Next definition';
+
+            buttonLeft.addEventListener('click', () => {
+                codeElements[currentBlockIndex].style.display = 'none';
+                currentBlockIndex--;
+                codeElements[currentBlockIndex].style.display = 'block';
+                buttonLeft.disabled = currentBlockIndex === 0;
+                buttonRight.disabled = currentBlockIndex === codeElements.length - 1;
+            });
+
+            buttonRight.addEventListener('click', () => {
+                codeElements[currentBlockIndex].style.display = 'none';
+                currentBlockIndex++;
+                codeElements[currentBlockIndex].style.display = 'block';
+                buttonLeft.disabled = currentBlockIndex === 0;
+                buttonRight.disabled = currentBlockIndex === codeElements.length - 1;
+            });
+
+            controlButtonsContainer.append(buttonLeft, buttonRight);
+        }
+
+        codeElementsContainer.append(controlButtonsContainer);
     }
 })();
