@@ -362,12 +362,24 @@ def organize_idents_to_ids(chunks: List[Chunk]):
             else:
                 assert ident_to_id[ident] == id, (ident, ident_to_id[ident], id)
 
+    # ZwAbc and NtAbc are the same, assign the same id.
+    for k in ident_to_id:
+        if k.startswith('Zw'):
+            nt_k = 'Nt' + k[2:]
+            assert nt_k in ident_to_id, (k, nt_k)
+            ident_to_id[k] = ident_to_id[nt_k]
+
     for k in ident_to_id:
         if ident_to_id[k] in ident_update_from_to:
             ident_to_id[k] = ident_update_from_to[ident_to_id[k]]
 
         ident_to_id[k] = ident_to_id[k].lower()
         assert re.match(r'^[a-z0-9_]+$', ident_to_id[k]), ident_to_id[k]
+
+    for chunk in chunks:
+        id = ident_to_id[chunk.idents[0]]
+        for ident in chunk.idents[1:]:
+            assert ident_to_id[ident] == id, (ident, ident_to_id[ident], id)
 
     return ident_to_id
 
