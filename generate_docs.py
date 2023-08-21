@@ -1,3 +1,4 @@
+import argparse
 import json
 import re
 import shutil
@@ -9,8 +10,9 @@ from typing import Dict, List, Tuple
 
 import markdown2
 
-URL_PHTN_HEADER = 'https://github.com/m417z/ntdoc/blob/main/phnt.h'
+URL_PHTN_REPOSITORY = 'https://github.com/winsiderss/systeminformer'
 URL_DESCRIPTIONS = 'https://github.com/m417z/ntdoc/blob/main/descriptions'
+PHTN_REPOSITORY_COMMIT = 'master'
 
 
 def rstrip_line_with_comment(code: str) -> str:
@@ -183,10 +185,10 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     if re.search(r'^typedef .*? NTAPI WNF_USER_CALLBACK\(', chunk, flags=re.DOTALL | re.MULTILINE):
         return ['WNF_USER_CALLBACK']
 
-    if chunk.startswith('typedef ') and (match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL)\s*(?:\*\s*)?(\w+)\)', chunk)):
+    if chunk.startswith('typedef ') and (match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL|WINAPI)\s*(?:\*\s*)?(\w+)\)', chunk)):
         return [match.group(1)]
 
-    if match := re.match(r'^typedef(?: const)? \w+(?: const)?(?: UNALIGNED)?(.*?)(?:\[\w+\])?;$', chunk):
+    if match := re.match(r'^typedef(?: const)? \w+(?: const)?(?: UNALIGNED)?(.*?)(?:\[.*?\])?;$', chunk):
         idents = match.group(1).split(',')
         idents = [x.lstrip('* ').rstrip() for x in idents]
         assert len(idents) > 0, chunk
@@ -221,6 +223,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
 @dataclass
 class Chunk:
+    header_name: str
     line_number: int
     idents: List[str]
     before: List[Tuple[str, str]]
@@ -233,7 +236,12 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     code = path.read_text()
     original_newline_count = code.count('\n')
 
-    assert '\t' not in code
+    # Temporary spacial case for ntioapi.h.
+    if path.name == 'ntioapi.h':
+        code = code.replace('\t', ' ')
+    else:
+        assert '\t' not in code
+
     assert '@' not in code
 
     # Remove block comments.
@@ -315,7 +323,7 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
         if len(idents) == 0:
             continue
 
-        result.append(Chunk(line_number, idents, before.copy(), intro, body, after.copy()))
+        result.append(Chunk(path.name, line_number, idents, before.copy(), intro, body, after.copy()))
 
     return result
 
@@ -345,7 +353,11 @@ def remove_redundant_forward_declaration_chunks(chunks: List[Chunk]) -> List[Chu
 
 def organize_idents_to_ids(chunks: List[Chunk]):
     ident_to_id: Dict[str, str] = {}
-    ident_update_from_to: Dict[str, str] = {}
+    id_update_from_to_collisions: Dict[str, str] = {
+        # Collides with function WinStationShadow.
+        'WINSTATIONSHADOW': 'struct-winstationshadow',
+    }
+    id_update_from_to = id_update_from_to_collisions.copy()
 
     for chunk in chunks:
         id = chunk.idents[0]
@@ -353,12 +365,12 @@ def organize_idents_to_ids(chunks: List[Chunk]):
             if ident not in ident_to_id:
                 ident_to_id[ident] = id
             elif 'P' + ident_to_id[ident] == id:
-                ident_update_from_to['P' + ident_to_id[ident]] = ident_to_id[ident]
+                id_update_from_to['P' + ident_to_id[ident]] = ident_to_id[ident]
             elif ident_to_id[ident] == 'P' + id:
-                ident_update_from_to['P' + id] = id
+                id_update_from_to['P' + id] = id
             elif {ident_to_id[ident], id} == {'FSINFOCLASS', 'FS_INFORMATION_CLASS'}:
                 # Special case.
-                ident_update_from_to['FSINFOCLASS'] = 'FS_INFORMATION_CLASS'
+                id_update_from_to['FSINFOCLASS'] = 'FS_INFORMATION_CLASS'
             else:
                 assert ident_to_id[ident] == id, (ident, ident_to_id[ident], id)
 
@@ -370,11 +382,22 @@ def organize_idents_to_ids(chunks: List[Chunk]):
             ident_to_id[k] = ident_to_id[nt_k]
 
     for k in ident_to_id:
-        if ident_to_id[k] in ident_update_from_to:
-            ident_to_id[k] = ident_update_from_to[ident_to_id[k]]
+        if ident_to_id[k] in id_update_from_to:
+            ident_to_id[k] = id_update_from_to[ident_to_id[k]]
 
-        ident_to_id[k] = ident_to_id[k].lower()
-        assert re.match(r'^[a-z0-9_]+$', ident_to_id[k]), ident_to_id[k]
+    id_lower_case_mapping = {}
+    for k in ident_to_id:
+        id_lower_case = ident_to_id[k].lower()
+        id_original_case = ident_to_id[k]
+
+        if id_lower_case in id_lower_case_mapping:
+            assert id_lower_case_mapping[id_lower_case] == id_original_case, (
+                f'Different case for {id_original_case}: {id_lower_case_mapping[id_lower_case]} vs {id_original_case}')
+        else:
+            id_lower_case_mapping[id_lower_case] = id_original_case
+
+        ident_to_id[k] = id_lower_case
+        assert re.match(r'^[a-z0-9_]+$', ident_to_id[k]) or ident_to_id[k] in id_update_from_to_collisions.values(), ident_to_id[k]
 
     for chunk in chunks:
         id = ident_to_id[chunk.idents[0]]
@@ -385,6 +408,7 @@ def organize_idents_to_ids(chunks: List[Chunk]):
 
 
 def chunk_to_html(chunk: Chunk) -> str:
+    header_name = chunk.header_name
     line_number = chunk.line_number
     before = chunk.before
     intro = chunk.intro
@@ -409,6 +433,8 @@ def chunk_to_html(chunk: Chunk) -> str:
 
     html_after = '\n' + html_after
 
+    code_url = URL_PHTN_REPOSITORY + f'/blob/{PHTN_REPOSITORY_COMMIT}/phnt/include/{header_name}#L{line_number}'
+
     html = '<pre class="ntdoc-code-pre">'
     html += '<code class="ntdoc-code">'
     html += '<div class="ntdoc-code-header">'
@@ -426,7 +452,7 @@ def chunk_to_html(chunk: Chunk) -> str:
     html += '</code>'
     html += '</pre>'
     html += '<div class="ntdoc-code-links">'
-    html += f'<a target="_blank" href="{URL_PHTN_HEADER}#L{line_number}">View code on GitHub</a>'
+    html += f'<a target="_blank" href="{code_url}">View code on GitHub</a>'
     html += '</div>'
 
     return html
@@ -465,8 +491,13 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
         html = chunk_to_html(chunk)
         id_to_html_contents.setdefault(id, []).append(html)
 
-        id_human_candidates = [x for x in chunk.idents if x.lower() == id.lower()]
+        id_parts = id.split('-')
+        assert 1 <= len(id_parts) <= 2, id
+        id_to_match = id_parts[-1]
+
+        id_human_candidates = [x for x in chunk.idents if x.lower() == id_to_match.lower()]
         assert len(id_human_candidates) <= 1, (id, chunk.idents)
+
         if len(id_human_candidates) > 0:
             assert id not in id_to_id_human or id_to_id_human[id] == id_human_candidates[0]
             id_to_id_human[id] = id_human_candidates[0]
@@ -483,7 +514,8 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
 
         html += '<div class="ntdoc-description">\n'
 
-        description = Path('descriptions', f'{id}.md').read_text().strip()
+        description_path = Path('descriptions', f'{id}.md')
+        description = description_path.read_text().strip() if description_path.exists() else ''
         if description != '':
             # GitHub markdown supports newline with trailing " \", but markdown2
             # only supports trailing "  ".
@@ -517,10 +549,21 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--path", help="phnt include path", required=True)
+    parser.add_argument("-c", "--commit", help="phnt commit", required=True)
+    args = parser.parse_args()
+
+    phnt_include_path = Path(args.path)
+
+    global PHTN_REPOSITORY_COMMIT
+    PHTN_REPOSITORY_COMMIT = args.commit
+
     start = time.time()
 
-    path = Path('phnt.h')
-    chunks = split_header_to_chunks(path)
+    chunks: List[Chunk] = []
+    for p in sorted(phnt_include_path.glob('*.h')):
+        chunks += split_header_to_chunks(p)
 
     chunks = remove_redundant_forward_declaration_chunks(chunks)
 
@@ -532,6 +575,7 @@ def main():
 
     end = time.time()
     print(f'Finished in {end - start:.2f}s')
+
 
 if __name__ == '__main__':
     main()
