@@ -247,10 +247,6 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     # Remove block comments.
     code = re.sub(r'/\*.*?\*/', lambda x: re.sub(r'[^\n]', '', x.group(0)), code, flags=re.DOTALL)
 
-    # Remove include guards.
-    code = code.replace('#ifndef _PHNT_AMALGAMATE_H\n#define _PHNT_AMALGAMATE_H\n', '\n\n')
-    code = code.replace('#endif // _PHNT_AMALGAMATE_H\n', '\n')
-
     # Remove extern "C" declarations.
     code = code.replace('#ifdef __cplusplus\nextern "C" {\n#endif\n', '\n\n\n')
     code = code.replace('#ifdef __cplusplus\n}\n#endif\n', '\n\n\n')
