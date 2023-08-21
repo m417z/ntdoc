@@ -12,7 +12,16 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: main
+      - name: Checkout winsiderss/systeminformer
+        uses: actions/checkout@v3
+        with:
+          repository: winsiderss/systeminformer
+          path: systeminformer
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -22,11 +31,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install markdown2 Pygments
       - name: Generate docs
-        run: python -u generate_docs.py --path ./phnt-include --commit 8a7b8bc42f287bede29b5b2f1d43b2b071d45244
+        run: |
+          commit=$(git -C systeminformer rev-list HEAD -- phnt/include | head -n 1)
+          cd main
+          python -u generate_docs.py --path ../systeminformer/phnt/include --commit $commit
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
+          publish_dir: ./main/docs
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'

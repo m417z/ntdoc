@@ -236,12 +236,7 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     code = path.read_text()
     original_newline_count = code.count('\n')
 
-    # Temporary spacial case for ntioapi.h.
-    if path.name == 'ntioapi.h':
-        code = code.replace('\t', ' ')
-    else:
-        assert '\t' not in code
-
+    assert '\t' not in code
     assert '@' not in code
 
     # Remove block comments.
