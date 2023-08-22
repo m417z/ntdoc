@@ -1,3 +1,7 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/ns-ntddk-_file_fs_volume_information).
+
+---
+
 Structure provides basic information about volume. It's filled in a result of call `NtQueryVolumeInformationFile` with `FileFsVolumeInformation` class.
 
 ### VolumeCreationTime

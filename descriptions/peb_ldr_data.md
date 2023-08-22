@@ -1,3 +1,7 @@
+This structure is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-peb_ldr_data).
+
+---
+
 ### Length
 
 Size of structure, used by `ntdll.dll` as structure version ID.

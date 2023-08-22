@@ -1,3 +1,7 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_fs_attribute_information).
+
+---
+
 `FILE_FS_ATTRIBUTE_INFORMATION` is output buffer in a call to `NtQueryVolumeInformationFile` function with `FileFsAttributeInformation` information class.
 
 ### FileSystemAttributes

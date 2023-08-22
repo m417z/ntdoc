@@ -1,3 +1,7 @@
+This enumeration is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ne-ntifs-_object_information_class).
+
+---
+
 `OBJECT_INFORMATION_CLASS` specifies a kind of information of any object available in caller context. It's used with functions `NtQueryObject` and `NtSetInformationObject`.
 
 ### ObjectBasicInformation

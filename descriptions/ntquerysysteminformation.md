@@ -1,3 +1,7 @@
+This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerysysteminformation).
+
+---
+
 `NtQuerySystemInformation` is used to check some system informations avaiable only in *KernelMode* (above *0x80000000*). \
 All avaiable (or all known) information classes are described in `SYSTEM_INFORMATION_CLASS`.
 

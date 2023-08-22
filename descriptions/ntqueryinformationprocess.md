@@ -1,3 +1,7 @@
+This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryinformationprocess).
+
+---
+
 ### ProcessHandle
 
 Handle to process opened with `PROCESS_QUERY_INFORMATION` access.
