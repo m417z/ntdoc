@@ -1,3 +1,7 @@
+This structure is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-peb).
+
+---
+
 Structure `PEB` *(Process Enviroment Block)* contains all *User-Mode* parameters associated by system with current process.
 
 ### InheritedAddressSpace

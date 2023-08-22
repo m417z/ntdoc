@@ -1,3 +1,7 @@
+This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryinformationthread).
+
+---
+
 ### ThreadHandle
 
 Handle to Thread Object opened with `THREAD_QUERY_INFORMATION` access.

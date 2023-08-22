@@ -1,3 +1,7 @@
+This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerysystemtime).
+
+---
+
 Function `NtQuerySystemTime` returns current time in Coordinated Universal Time (*UTC*) *8-bytes* format.
 
 ### SystemTime

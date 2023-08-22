@@ -1,3 +1,7 @@
+This structure is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-teb).
+
+---
+
 Structure `TEB` *(Thread Environment Block)* is memory block containing system variables placed in *User-Mode* memory. Every created thread have own `TEB` block. User can get address of `TEB` by call `NtCurrentTeb` function.
 
 ### Tib
