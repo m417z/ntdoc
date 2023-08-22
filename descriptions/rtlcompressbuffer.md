@@ -1,3 +1,7 @@
+This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlcompressbuffer).
+
+---
+
 ### CompressionFormat
 
 Only lower 2 bytes are supported. Higher byte means Compression Engine. Lower byte means Compressing Format.

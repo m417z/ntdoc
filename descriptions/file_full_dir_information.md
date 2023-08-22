@@ -1,3 +1,7 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_full_dir_information).
+
+---
+
 Structure `FILE_FULL_DIR_INFORMATION` is returned as a result of call `NtQueryDirectoryFile` with `FileFullDirectoryInformation` \
 information class. It contains some typical informations about directory entries, like a `FILE_DIRECTORY_INFORMATION` structure, but additionally contains member specifing size of Extended Attributes.
 

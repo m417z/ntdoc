@@ -1,3 +1,7 @@
+This enumeration is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ne-wdm-_file_information_class).
+
+---
+
 Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File Objects. It's used by `NtQueryInformationFile`, `NtQueryDirectoryFile` and `NtSetInformationFile` functions.
 
 ### FileDirectoryInformation=1

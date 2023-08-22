@@ -1,3 +1,7 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_both_dir_information).
+
+---
+
 Structure `FILE_BOTH_DIR_INFORMATION` is returned as a result of call `NtQueryDirectoryFile` with `FileBothDirectoryInformation` \
 information class. It's extended version of `FILE_FULL_DIR_INFORMATION` structure, \
 additionally containing short file name. It's used in *Win32 API* calls `FindFirstFile` and `FindNextFile`.

@@ -1,3 +1,7 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_names_information).
+
+---
+
 Structure `FILE_NAMES_INFORMATION` is used as a result of call `NtQueryDirectoryFile` with `FileNamesInformation` information class. It's shorter then other directory informational structures, so can be used for better performance, when only file names are required.
 
 ### NextEntryOffset

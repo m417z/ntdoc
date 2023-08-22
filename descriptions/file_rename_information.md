@@ -1,3 +1,7 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_rename_information).
+
+---
+
 Structure `FILE_RENAME_INFORMATION` is used as input buffer for function `NtSetInformationFile`, called with `FileRenameInformation` information class. Using this structure caller can rename file, or move it into other directory.
 
 ### ReplaceIfExists

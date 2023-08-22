@@ -1,3 +1,7 @@
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_get_ea_information).
+
+---
+
 Structure `FILE_GET_EA_INFORMATION` is used in a call to `NtQueryEaFile` function. See `FILE_FULL_EA_INFORMATION` for detailed information about *EA*.
 
 ### NextEntryOffset
