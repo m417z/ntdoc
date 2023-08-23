@@ -1,12 +1,14 @@
-See `AlertResumeThread`.
+Resumes a previously suspended thread.
 
-# Documented by
+# Parameters
+ - `ThreadHandle` - a handle to a thread granting either `THREAD_SUSPEND_RESUME` or `THREAD_RESUME` access.
+ - `PreviousSuspendCount` - an optional pointer to a variable that receives the previous value of the suspension counter of the thread.
 
-* Tomasz Nowak
-* ReactOS
+# Related Win32 API
+ - [`ResumeThread`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-resumethread)
 
 # See also
-
-* `NtAlertResumeThread`
-* `NtCreateThread`
-* `NtSuspendThread`
+ - `NtOpenThread`
+ - `NtSuspendThread`
+ - `NtSuspendProcess`
+ - `NtResumeProcess`
