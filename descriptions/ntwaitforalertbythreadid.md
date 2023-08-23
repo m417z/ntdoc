@@ -2,7 +2,7 @@ Waits on the specified address to be alerted-by-ID by another thread.
 
 # Parameters
  - `Address` - the user-provided value that serves as a key.
- - `Timeout` - an optional pointer to a timeout for the wait. A negative value indicates relative timeout for the specified number of 100-nanosecond intervals. To wait for a specific number of milliseconds, multiply them by `-10,000`. Positive values indicate an absolute time.`
+ - `Timeout` - an optional pointer to a timeout for the wait. A negative value indicates relative timeout for the specified number of 100-nanosecond intervals. To wait for a specific number of milliseconds, multiply them by `-10,000`. Positive values indicate an absolute time.
 
 # Notable return values
  - `STATUS_ALERTED` - the thread woke due to a call to `NtAlertThreadByThreadId`.
