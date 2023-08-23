@@ -1,17 +1,17 @@
-### ThreadHandle
+Forcefully terminates a thread.
 
-Open handle to thread object.
+# Parameters
+ - `ThreadHandle` - a handle to a thread granting `THREAD_TERMINATE` access. If this value is `NULL`, the calling thread is terminated.
+ - `ExitStatus` - the value to set as the exist status of the thread.
 
-### ExitStatus
+# Notable return values
+ - `STATUS_CANT_TERMINATE_SELF` - indicates that a thread attempted to terminate itself by default (called `NtTerminateThread` with `NULL`) and it was the last thread in the current process.
 
-Result of thread, as `NTSTATUS`.
-
-# Documented by
-
-* Tomasz Nowak
+# Related Win32 API
+ - [`TerminateThread`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-terminatethread)
 
 # See also
-
-* `NtCreateThread`
-* `NtOpenThread`
-* `NtTerminateProcess`
+ - `RtlExitUserThread`
+ - `NtOpenThread`
+ - `NtSuspendThread`
+ - `NtTerminateProcess`

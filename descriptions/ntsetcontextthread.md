@@ -1,18 +1,16 @@
-### ThreadHandle
+Changes the context of the specified thread.
 
-Handle to Thread Object opened with `THREAD_SET_CONTEXT` access flag.
+# Parameters
+ - `ThreadHandle` - a handle to a thread granting `THREAD_SET_CONTEXT` access.
+ - `ThreadContext` - a pointer to a `CONTEXT` structure that contains the context to be set in the specified thread. **Note:** the value of the `ContextFlags` field specifies which portions of a thread's context to set.
 
-### Context
-
-Context to set to thread.
-
-# Documented by
-
-* Tomasz Nowak
+# Related Win32 API
+ - [`SetThreadContext`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadcontext)
 
 # See also
-
-* `NtContinue`
-* `NtCreateThread`
-* `NtGetContextThread`
-* `RtlInitializeContext`
+ - `NtGetContextThread`
+ - `RtlCopyContext`
+ - `RtlGetExtendedContextLength`
+ - `NtOpenThread`
+ - `NtQueryInformationThread`
+ - `NtSetInformationThread`

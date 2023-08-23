@@ -1,43 +1,27 @@
-### ThreadHandle
+Creates a new thread in the specified process. This is a legacy function that requires manually allocating stack and preparing thread context.
 
-Caller supplied storage for the resulting handle.
+# Parameters
+ - `ThreadHandle` - a pointer to a variable that receives a handle to the new thread.
+ - `DesiredAccess` - the thread access mask to provide on the returned handle. This value is usually `THREAD_ALL_ACCESS`.
+ - `ObjectAttributes` - an optional pointer to an `OBJECT_ATTRIBUTES` structure that specifies attributes for the new object/handle, such as the security descriptor and handle inheritance.
+ - `ProcessHandle` - a handle to the process where the thread should be created. This can either be the `NtCurrentProcess` pseudo-handle or a handle with `PROCESS_CREATE_THREAD` access.
+ - `ClientId` - a pointer to a variable that receives the client ID of the new thread.
+ - `ThreadContext` - the initial context (a set of registers) for the thread.
+ - `InitialTeb` - the structure describing the thread stack.
+ - `CreateSuspended` - whether the new thread should be created in a suspended state or allowed to run immediately. When specifying `TRUE`, you can use `NtResumeThread` to resume the thread later.
 
-### DesiredAccess
+# Remarks
+For the modern equivalent, see `NtCreateThreadEx`.
 
-Specifies the allowed or desired access to the thread.
+To avoid retaining unused resources, call `NtClose` to close the returned handle when it is no longer required.
 
-### ObjectAttributes
-
-Initialized attributes for the object.
-
-### ProcessHandle
-
-Handle to the threads parent process.
-
-### ClientId
-
-Caller supplies storage for returned process id and thread id.
-
-### ThreadContext
-
-Initial processor context for the thread.
-
-### InitialTeb
-
-Initial user mode stack context for the thread.
-
-### CreateSuspended
-
-Specifies if the thread is ready for scheduling. See `NtContinue` for more information.
-
-# Documented by
-
-* ReactOS
+# Related Win32 API
+This functionality is not exposed in Win32 API. The closest alternative that uses the modern syscall is [`CreateRemoteThreadEx`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethreadex).
 
 # See also
-
-* `INITIAL_TEB`
-* `NtContinue`
-* `NtCreateProcess`
-* `NtTerminateThread`
-* `NtAlertResumeThread`
+ - `NtCreateThreadEx`
+ - `RtlCreateUserThread`
+ - `NtResumeThread`
+ - `NtOpenThread`
+ - `NtOpenProcess`
+ - `NtCreateProcess`
