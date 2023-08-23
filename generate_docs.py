@@ -508,9 +508,10 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
         description_path = Path('descriptions', f'{id}.md')
         description = description_path.read_text().strip() if description_path.exists() else ''
         if description != '':
-            # GitHub markdown supports newline with trailing " \", but markdown2
+            # GitHub markdown supports newline with trailing "\", but markdown2
             # only supports trailing "  ".
-            description = re.sub(r' \\$', '  ', description, flags=re.MULTILINE)
+            # https://github.com/trentm/python-markdown2/issues/525
+            description = re.sub(r'\\\n', '  \n', description)
 
             html_description = markdown2.markdown(description, extras=['cuddled-lists', 'fenced-code-blocks', 'header-ids', 'tables'])
 
