@@ -12,7 +12,7 @@ import markdown2
 
 URL_PHTN_REPOSITORY = 'https://github.com/winsiderss/systeminformer'
 URL_DESCRIPTIONS = 'https://github.com/m417z/ntdoc/blob/main/descriptions'
-PHTN_REPOSITORY_COMMIT = 'master'
+PHTN_REPOSITORY_COMMIT = 'master'  # Updated from command line.
 
 
 def rstrip_line_with_comment(code: str) -> str:
@@ -539,19 +539,7 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
     (out_path / f'symbols.html').write_text(html_page)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-p", "--path", help="phnt include path", required=True)
-    parser.add_argument("-c", "--commit", help="phnt commit", required=True)
-    args = parser.parse_args()
-
-    phnt_include_path = Path(args.path)
-
-    global PHTN_REPOSITORY_COMMIT
-    PHTN_REPOSITORY_COMMIT = args.commit
-
-    start = time.time()
-
+def generate_docs(phnt_include_path: Path):
     chunks: List[Chunk] = []
     for p in sorted(phnt_include_path.glob('*.h')):
         chunks += split_header_to_chunks(p)
@@ -563,6 +551,44 @@ def main():
     assets_path = Path('assets')
     out_path = Path('docs')
     organize_chunks_to_dir(chunks, ident_to_id, assets_path, out_path)
+
+
+def validate_description_files():
+    descriptions_ids = set(p.stem for p in Path('descriptions').glob('*.md'))
+
+    with Path('docs', 'ident-to-id.json').open() as f:
+        docs_ids = set(json.load(f).values())
+
+    if descriptions_ids != docs_ids:
+        print('Warning: Description files and docs do not match.')
+        print('> Description files without docs:')
+        print('\n'.join(sorted(descriptions_ids - docs_ids)))
+        print('> Docs without description files:')
+        print('\n'.join(sorted(docs_ids - descriptions_ids)))
+
+        # for p in descriptions_ids - docs_ids:
+        #     Path('descriptions', p + '.md').unlink()
+
+        # for p in docs_ids - descriptions_ids:
+        #     Path('descriptions', p + '.md').touch()
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p", "--path", help="phnt include path", required=True)
+    parser.add_argument("-c", "--commit", help="phnt commit")
+    args = parser.parse_args()
+
+    phnt_include_path = Path(args.path)
+
+    global PHTN_REPOSITORY_COMMIT
+    if args.commit is not None:
+        PHTN_REPOSITORY_COMMIT = args.commit
+
+    start = time.time()
+
+    generate_docs(phnt_include_path)
+    validate_description_files()
 
     end = time.time()
     print(f'Finished in {end - start:.2f}s')
