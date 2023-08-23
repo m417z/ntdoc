@@ -74,34 +74,109 @@ ZwOpenThread(
 </div></code></pre><div class="ntdoc-code-links"><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/9105bca119f7e4ffd701355e8730d28f3f06367a/phnt/include/ntzwapi.h#L2558">View code on GitHub</a></div></div>
 </div>
 <div class="ntdoc-description">
-<h3 id="threadhandle">ThreadHandle</h3>
+<p>Opens a handle to an existing thread.</p>
 
-<p>Pointer to received handle to thread object.</p>
-
-<h3 id="accessmask">AccessMask</h3>
-
-<p>Access mask. See <code>WinNT.h</code> for details.</p>
-
-<h3 id="objectattributes">ObjectAttributes</h3>
-
-<p>Attributes of thread to open. For standard threads there are empty.</p>
-
-<h3 id="clientid">ClientId</h3>
-
-<p>Pointer to <code><a href="client_id">CLIENT_ID</a></code> structure. Only <code>UniqueThread</code> member is required (difference to <code><a href="ntopenprocess">NtOpenProcess</a></code>).</p>
-
-<h1 id="documented-by">Documented by</h1>
+<h1 id="parameters">Parameters</h1>
 
 <ul>
-<li>Tomasz Nowak</li>
+<li><code>ThreadHandle</code> - a pointer to a variable that receives a handle to the thread.</li>
+<li><code>DesiredAccess</code> - the requested access mask.</li>
+<li><code>ObjectAttributes</code> - a pointer to an <code><a href="object_attributes">OBJECT_ATTRIBUTES</a></code> structure that specifies attributes of the handle. Use <code><a href="initializeobjectattributes">InitializeObjectAttributes</a></code> to initialize this structure.</li>
+<li><code>ClientId</code> - a pointer to the variable that indicates the client ID of the thread to open. You can omit the process part of the structure by specifying <code>NULL</code> in <code>UniqueProcess</code>.</li>
+</ul>
+
+<h1 id="access-masks">Access masks</h1>
+
+<table>
+<thead>
+<tr>
+  <th>Access mask</th>
+  <th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>THREAD_TERMINATE</code></td>
+  <td>Allows terminating the thread via <code><a href="ntterminatethread">NtTerminateThread</a></code>.</td>
+</tr>
+<tr>
+  <td><code>THREAD_SUSPEND_RESUME</code></td>
+  <td>Allows suspending and resuming the thread via <code><a href="ntsuspendthread">NtSuspendThread</a></code> and <code><a href="ntresumethread">NtResumeThread</a></code>, respectively.</td>
+</tr>
+<tr>
+  <td><code><a href="thread_alert">THREAD_ALERT</a></code></td>
+  <td>Allows waking the thread from an alertable wait via <code><a href="ntalertthread">NtAlertThread</a></code>.</td>
+</tr>
+<tr>
+  <td><code>THREAD_GET_CONTEXT</code></td>
+  <td>Allows retrieving the context (set of registers) of the thread via <code><a href="ntgetcontextthread">NtGetContextThread</a></code>.</td>
+</tr>
+<tr>
+  <td><code>THREAD_SET_CONTEXT</code></td>
+  <td>Allows changing the context of the thread via <code><a href="ntsetcontextthread">NtSetContextThread</a></code> and queuing APCs via <code><a href="ntqueueapcthread">NtQueueApcThread</a></code>.</td>
+</tr>
+<tr>
+  <td><code>THREAD_SET_INFORMATION</code></td>
+  <td>Allows setting most information classes via <code><a href="ntsetinformationthread">NtSetInformationThread</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="thread_query_information">THREAD_QUERY_INFORMATION</a></code></td>
+  <td>Allows querying most information classes via <code><a href="ntqueryinformationthread">NtQueryInformationThread</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="thread_set_thread_token">THREAD_SET_THREAD_TOKEN</a></code></td>
+  <td>Allows setting thread impersonation token via <code><a href="ntsetinformationthread">NtSetInformationThread</a></code> with <code>ThreadImpersonationToken</code>.</td>
+</tr>
+<tr>
+  <td><code><a href="thread_impersonate">THREAD_IMPERSONATE</a></code></td>
+  <td>Allows using the thread as a server during direct impersonation via <code><a href="ntimpersonatethread">NtImpersonateThread</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="thread_direct_impersonation">THREAD_DIRECT_IMPERSONATION</a></code></td>
+  <td>Allows using the thread as a client during direct impersonation via <code><a href="ntimpersonatethread">NtImpersonateThread</a></code>.</td>
+</tr>
+<tr>
+  <td><code>THREAD_SET_LIMITED_INFORMATION</code></td>
+  <td>Allows setting some information classes via <code><a href="ntsetinformationthread">NtSetInformationThread</a></code>. The system automatically includes this right if the caller requested <code>THREAD_SET_INFORMATION</code>.</td>
+</tr>
+<tr>
+  <td><code>THREAD_QUERY_LIMITED_INFORMATION</code></td>
+  <td>Allows querying some information classes via <code><a href="ntqueryinformationthread">NtQueryInformationThread</a></code>. The system automatically includes this right if the caller requested <code><a href="thread_query_information">THREAD_QUERY_INFORMATION</a></code>.</td>
+</tr>
+<tr>
+  <td><code>THREAD_RESUME</code></td>
+  <td>Allows resuming the thread via <code><a href="ntresumethread">NtResumeThread</a></code>. The system automatically includes this right if the caller requested <code>THREAD_SUSPEND_RESUME</code>.</td>
+</tr>
+<tr>
+  <td><code>THREAD_ALL_ACCESS</code></td>
+  <td>All of the above plus standard rights.</td>
+</tr>
+</tbody>
+</table>
+
+<h1 id="remarks">Remarks</h1>
+
+<p>This function bypasses some access checks if the caller has the <code>SeDebugPrivilege</code> enabled.</p>
+
+<p>To avoid retaining unused resources, call <code><a href="ntclose">NtClose</a></code> to close the returned handle when it is no longer required.</p>
+
+<p>Instead of opening the current thread, consider using the <code><a href="ntcurrentthread">NtCurrentThread</a></code> pseudo-handle.</p>
+
+<h1 id="related-win32-api">Related Win32 API</h1>
+
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openthread"><code>OpenThread</code></a></li>
 </ul>
 
 <h1 id="see-also">See also</h1>
 
 <ul>
-<li><code><a href="ntcreatethread">NtCreateThread</a></code></li>
-<li><code><a href="ntopenprocess">NtOpenProcess</a></code></li>
-<li><code><a href="ntterminatethread">NtTerminateThread</a></code></li>
+<li><code><a href="ntcurrentthread">NtCurrentThread</a></code></li>
+<li><code><a href="ntqueryinformationthread">NtQueryInformationThread</a></code></li>
+<li><code><a href="ntsetinformationthread">NtSetInformationThread</a></code></li>
+<li><code><a href="ntresumethread">NtResumeThread</a></code></li>
+<li><code><a href="ntsuspendthread">NtSuspendThread</a></code></li>
+<li><code><a href="ntcreatethreadex">NtCreateThreadEx</a></code></li>
 </ul>
 </div>
 <div class="ntdoc-description-links">
