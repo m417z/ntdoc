@@ -87,6 +87,9 @@
 
     function addControlButtons() {
         const codeElementsContainer = document.querySelector('.ntdoc-code-elements');
+        if (!codeElementsContainer) {
+            return;
+        }
 
         const controlButtonsContainer = document.createElement('div');
         controlButtonsContainer.classList.add('ntdoc-code-control-buttons');
