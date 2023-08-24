@@ -2,7 +2,7 @@ This macro allows constructing a process/thread creation attribute value based o
 
 # Known values
  - `PS_ATTRIBUTE_PARENT_PROCESS` = 0x60000;
- - `PS_ATTRIBUTE_DEBUG_PORT` = 0x60001;
+ - `PS_ATTRIBUTE_DEBUG_OBJECT` = 0x60001;
  - `PS_ATTRIBUTE_TOKEN` = 0x60002;
  - `PS_ATTRIBUTE_CLIENT_ID` = 0x10003;
  - `PS_ATTRIBUTE_TEB_ADDRESS` = 0x10004;

@@ -15,7 +15,7 @@ Sets the execution state for the current thread and manages the corresponding po
 You can view the power requests created via this and other APIs via `powercfg /requests`.
 
 # Related Win32 API
- - [`SetThreadExecutionState`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate
+ - [`SetThreadExecutionState`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setthreadexecutionstate)
 
 # See also
  - `NtPowerInformation`

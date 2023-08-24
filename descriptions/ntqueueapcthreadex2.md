@@ -27,7 +27,7 @@ This function was introduced in Windows 11.
 
 # See also
  - `NtQueueApcThread`
- - `NtQueueApcThreadEx2`
+ - `NtQueueApcThreadEx`
  - `RtlQueueApcWow64Thread`
  - `NtOpenThread`
  - `NtTestAlert`
