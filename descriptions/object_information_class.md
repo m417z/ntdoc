@@ -1,45 +1,61 @@
-This enumeration is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ne-ntifs-_object_information_class).
+Defines common types of information that can be queried or set for kernel handles/objects. This enumeration is partially [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ne-ntifs-_object_information_class).
 
----
+# Applicable to
+ - `NtQueryObject`
+ - `NtSetInformationObject`
 
-`OBJECT_INFORMATION_CLASS` specifies a kind of information of any object available in caller context. It's used with functions `NtQueryObject` and `NtSetInformationObject`.
+# Members
 
-### ObjectBasicInformation
 
-* Action: `Query`
-* Buffer size: *0x038*
-* Structure: `OBJECT_BASIC_INFORMATION`
+## ObjectBasicInformation (0)
+Retrieves basic information about the handle and the underlying object, such as the granted access mask and handle count.
 
-### ObjectNameInformation
+|                 | Query                      | Set
+| --------------- | -------------------------- | ---
+| Type            | `OBJECT_BASIC_INFORMATION` | N/A
+| Required access | None                       | N/A
+| Optional access | `READ_CONTROL`             | N/A
 
-* Action: `Query`
-* Buffer size: *0x08*
-* Structure: `OBJECT_NAME_INFORMATION`
+## ObjectNameInformation (1)
+Retrieves the name of the object in its native form.
 
-### ObjectTypeInformation
+|                 | Query                     | Set
+| --------------- | ------------------------- | ---
+| Type            | `OBJECT_NAME_INFORMATION` | N/A
+| Required access | None                      | N/A
 
-* Action: `Query`
-* Buffer size: *0x070*
-* Structure: `OBJECT_TYPE_INFORMATION`
+## ObjectTypeInformation (2)
+Retrieves information about the type of the object referenced via the handle.
 
-### ObjectAllInformation
+|                 | Query                     | Set
+| --------------- | ------------------------- | ---
+| Type            | `OBJECT_TYPE_INFORMATION` | N/A
+| Required access | None                      | N/A
 
-* Action: `Query`
-* Buffer size: *0x04+*
-* Structure: `OBJECT_ALL_INFORMATION`
-* Comment: Size of buffer depends on number of objects opened by caller.
+## ObjectTypesInformation (3)
+Retrieves information about all types of kernel objects registered on the system. This information class does not require a handle on input.
 
-### ObjectDataInformation
+|                 | Query                      | Set
+| --------------- | -------------------------- | ---
+| Type            | `OBJECT_TYPES_INFORMATION` | N/A
+| Required access | N/A                        | N/A
 
-* Action: `Query, Set`
-* Buffer size: *0x02*
-* Structure: `OBJECT_DATA_INFORMATION`
+## ObjectHandleFlagInformation (4)
+Controls handle inheritance and protection attributes.
 
-# Documented by
+|                 | Query                            | Set
+| --------------- | -------------------------------- | ---
+| Type            | `OBJECT_HANDLE_FLAG_INFORMATION` | `OBJECT_HANDLE_FLAG_INFORMATION`
+| Required access | None                             | None
 
-* Tomasz Nowak
+### Related Win32 API
+ - [`GetHandleInformation`](https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-gethandleinformation)
+ - [`SetHandleInformation`](https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-sethandleinformation)
 
-# See also
+### See also
+ - `OBJ_INHERIT`
+ - `OBJ_PROTECT_CLOSE`
 
-* `NtQueryObject`
-* `NtSetInformationObject`
+## ObjectSessionInformation (5)
+
+## ObjectSessionObjectInformation (6)

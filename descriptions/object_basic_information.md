@@ -1,32 +1,56 @@
-Structure `OBJECT_BASIC_INFORMATION` is returned in a result of call `NtQueryObject` with `ObjectBasicInformation` information class.
+Basic kernel handle/object information, common to all object types.
 
-### Attributes
+# Applicable to
+ - `NtQueryObject` with `ObjectBasicInformation`.
 
-### DesiredAccess
+# Members
 
-### HandleCount
+## Attributes
+A bit mask containing attributes of the handle/object:
 
-### ReferenceCount
+ - `OBJ_PROTECT_CLOSE` - the handle is protected from closing.
+ - `OBJ_INHERIT` - the handle is inheritable.
+ - `OBJ_PERMANENT` - object has permanent lifetime.
+ - `OBJ_EXCLUSIVE` - the handle/object is exclusive and prevents other handles from being open to the object.
 
-### PagedPoolUsage
+## GrantedAccess
+The access mask granted on the handle.
 
-### NonPagedPoolUsage
+## HandleCount
+The number of handles pointing to the object.
 
-### Reserved[3]
+## PointerCount
+The number of pointers to the object.
 
-### NameInformationLength
+## PagedPoolCharge
+The number of paged pool bytes charged for the object.
 
-### TypeInformationLength
+## NonPagedPoolCharge
+The number of non-paged pool bytes charged for the object.
 
-### SecurityDescriptorLength
+## Reserved[3]
+Unused field.
 
-### CreationTime
+## NameInfoSize
+The number of bytes required to query object name information.
 
-# Documented by
+### See also
+ - `NtQueryObject` with `ObjectNameInformation`.
 
-* Tomasz Nowak
+## TypeInfoSize
+The number of bytes required to query object type information.
 
-# See also
+### See also
+ - `NtQueryObject` with `ObjectTypeInformation`.
 
-* `NtQueryObject`
-* `OBJECT_INFORMATION_CLASS`
+## SecurityDescriptorSize
+The number of bytes required to query the security descriptor of the object. Note that the system populates this field only when the handle grants `READ_CONTROL` access.
+
+### See also
+ - `NtQuerySecurityObject`
+
+## CreationTime
+The time of creation for symbolic link objects.
+
+### See also
+ - `NtCreateSymbolicLinkObject`

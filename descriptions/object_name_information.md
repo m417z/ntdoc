@@ -1,18 +1,9 @@
-Structure `OBJECT_NAME_INFORMATION` is used as a result of call `NtQueryObject` with `ObjectNameInformation` information class.
+This structure describes the full name for named kernel objects.
 
-### Name
+# Applicable to
+ - `NtQueryObject` with `ObjectNameInformation`.
 
-Name of object or `NULL` if object don't have associated name.
+# Members
 
-### NameBuffer[0]
-
-Buffer with UNICODE name of object.
-
-# Documented by
-
-* Tomasz Nowak
-
-# See also
-
-* `NtQueryObject`
-* `OBJECT_INFORMATION_CLASS`
+## Name
+The name of the object inside the NT namespace. For more details about the relationship between Native and Win32 filenames, see this [blog post](https://googleprojectzero.blogspot.com/2016/02/the-definitive-guide-on-win32-to-nt.html).

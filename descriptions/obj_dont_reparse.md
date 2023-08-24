@@ -1,0 +1,18 @@
+This `OBJECT_ATTRIBUTES` flag indicates that the open/create operation should fail with `STATUS_REPARSE_POINT_ENCOUNTERED` if the target path contains reparse points.
+
+# Related flags
+ - `OBJ_PROTECT_CLOSE`
+ - `OBJ_INHERIT`
+ - `OBJ_AUDIT_OBJECT_CLOSE`
+ - `OBJ_NO_RIGHTS_UPGRADE`
+ - `OBJ_PERMANENT`
+ - `OBJ_EXCLUSIVE`
+ - `OBJ_CASE_INSENSITIVE`
+ - `OBJ_OPENIF`
+ - `OBJ_OPENLINK`
+ - `OBJ_KERNEL_HANDLE`
+ - `OBJ_FORCE_ACCESS_CHECK`
+ - `OBJ_IGNORE_IMPERSONATED_DEVICEMAP`
+
+# See also
+ - `OBJECT_ATTRIBUTES`
