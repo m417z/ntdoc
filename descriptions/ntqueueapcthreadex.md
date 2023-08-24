@@ -13,7 +13,7 @@ This function has three modes of operation:
 
 1. When `ReserveHandle` is `NULL`, the function behaves identically to `NtQueueApcThread`. To execute the APC, the thread must first enter an alertable wait via `NtDelayExecution` (or a similar function) or call `NtTestAlert`.
 2. When `ReserveHandle` is a handle to the reserve object, the function uses this object to avoid additional memory allocations. Otherwise, the behavior is identical to option 1.
-3. When `ReserveHandle` is the `QUEUE_USER_APC_SPECIAL_USER_APC` value, the function queues a *special user-mode APC* that does not require the thread to enter an alertable state. The APC will be executed on the next thread's transition to user mode. This flag is supported on Windows 10 RS5 (1809) and above. Because execution of special APCs is not synchronized with the target thread
+3. When `ReserveHandle` is the `QUEUE_USER_APC_SPECIAL_USER_APC` value, the function queues a *special user-mode APC* that does not require the thread to enter an alertable state. The APC will be executed on the next thread's transition to user mode. This flag is supported on Windows 10 RS5 (1809) and above. Because execution of special APCs is not synchronized with the target thread (which might happen to acquire locks), it is crucial to keep the amount and complexity of the code invoked by the special APC routine to a minimum.
 
 To queue a WoW64 APC, encode the `ApcRoutine` parameter using the `Wow64EncodeApcRoutine` macro or use `RtlQueueApcWow64Thread`.
 

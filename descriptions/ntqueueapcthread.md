@@ -20,7 +20,7 @@ Note that user APCs on the Native API level have three parameters in contrast wi
  - [`QueueUserAPC`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-queueuserapc)
 
 # See also
- - `NtQueueApcThread`
+ - `NtQueueApcThreadEx`
  - `NtQueueApcThreadEx2`
  - `RtlQueueApcWow64Thread`
  - `NtOpenThread`

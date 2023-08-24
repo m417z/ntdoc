@@ -8,6 +8,7 @@ Initiates a sleep on the current thread.
  - `STATUS_SUCCESS` - the thread woke due to the timeout.
  - `STATUS_USER_APC` - the sleep was interrupted by an APC.
  - `STATUS_ALERTED` - the sleep was interrupted by a call to `NtAlertThread`.
+ - `STATUS_NO_YIELD_PERFORMED` - a zero-timeout sleep did not cause switching to other threads.
 
 # Remarks
 Despite the name, `NtAlertThreadByThreadId` is unrelated to alertable sleeps and cannot interrupt them.

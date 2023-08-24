@@ -1,28 +1,19 @@
-### ObjectHandle
+Adjusts various information common to all types of kernel handles. 
 
-Open handle to any NT object.
+# Parameters
+ - `Handle` - a handle to set information on. The handle does not need to grant any specific access.
+ - `ObjectInformationClass` - the type of information to set.
+ - `ObjectInformation` - a pointer to the buffer with the data specific to the request.
+ - `ObjectInformationLength` - the size of the provided buffer in bytes.
 
-### ObjectInformationClass
+# Information classes
+For the list of supported information classes, see `OBJECT_INFORMATION_CLASS`.
 
-See `NtQueryObject` for detailed description of possible information classes.
-
-### ObjectInformation
-
-Buffor with data to set.
-
-### Length
-
-Length of `ObjectInformation` buffer, in bytes.
-
----
-
-Currently only one class in allowed in set mode: `ObjectDataInformation`. See description of `OBJECT_DATA_INFORMATION` structure.
-
-# Documented by
-
-* Tomasz Nowak
+# Related Win32 API
+ - [`SetHandleInformation`](https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-sethandleinformation)
 
 # See also
-
-* `NtQueryObject`
-* `OBJECT_DATA_INFORMATION`
+ - `NtQueryObject`
+ - `NtSetSecurityObject`
+ - `OBJ_INHERIT`
+ - `OBJ_PROTECT_CLOSE`
