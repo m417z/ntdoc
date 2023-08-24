@@ -9,7 +9,7 @@ This structure defines a collection of all registered types of kernel objects.
 The total number of types present.
 
 ## (Variable part)
-The variable part of the structure contains variable-sized `OBJECT_TYPES_INFORMATION` structures following each other. Each entry occupies `sizeof(OBJECT_TYPE_INFORMATION) + entry->TypeName.MaximumLength` bytes and is aligned up to a pointer boundary.
+The variable part of the structure contains variable-sized `OBJECT_TYPE_INFORMATION` structures following each other. Each entry occupies `sizeof(OBJECT_TYPE_INFORMATION) + entry->TypeName.MaximumLength` bytes and is aligned up to a pointer boundary.
 
 # Parsing
 Here is an example on how to parse this structure:
