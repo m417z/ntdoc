@@ -14,7 +14,7 @@ Optional `HANDLE` to Event Object signaled after query complete.
 
 ### ApcRoutine
 
-Optinal pointer to user's *APC* routine queued after query complete.
+Optional pointer to user's *APC* routine queued after query complete.
 
 ### ApcContext
 
@@ -22,7 +22,7 @@ Parameter for `ApcRoutine`.
 
 ### IoStatusBlock
 
-Pointer to `IO_STATUS_BLOCK` structure. After enumeration complete, `Information` member of this structure contains number of bytes writed into `FileInformation` buffer. `Status` member contains IO result of call, and can be one of:
+Pointer to `IO_STATUS_BLOCK` structure. After enumeration complete, `Information` member of this structure contains number of bytes written into `FileInformation` buffer. `Status` member contains IO result of call, and can be one of:
 
 * `STATUS_SUCCESS` - Enumeration has results in `FileInformation` buffer.
 * `STATUS_NO_MORE_FILES` - `FileInformation` buffer is empty, and next call isn't needed.
@@ -54,7 +54,7 @@ If set, only one entry is returned.
 
 If specified, only information about files matches this wildchar mask will be returned.
 
-`WARNING:` There's no rule specifing what to do when caller makes two calls to `NtQueryDirectoryFile` both with different masks. Typically `FileMask` specified in second call will be ignored, and results will match the first (for example: **NTFS.SYS**). The best solution is to close directory `HANDLE` after every call with `FileMask` parameter specified.
+`WARNING:` There's no rule specifying what to do when caller makes two calls to `NtQueryDirectoryFile` both with different masks. Typically `FileMask` specified in second call will be ignored, and results will match the first (for example: **NTFS.SYS**). The best solution is to close directory `HANDLE` after every call with `FileMask` parameter specified.
 
 ### RestartScan
 

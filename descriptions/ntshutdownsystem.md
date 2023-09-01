@@ -2,7 +2,7 @@ Function `NtShutdownSystem` closes system. Caller should manually inform running
 
 ### Action
 
-Type of shudown defined in `SHUTDOWN_ACTION` enumeration type.
+Type of shutdown defined in `SHUTDOWN_ACTION` enumeration type.
 
 # Documented by
 

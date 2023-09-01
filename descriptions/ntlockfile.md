@@ -8,7 +8,7 @@ This function is documented in Windows Driver Kit [here](https://learn.microsoft
 
 ### LockGrantedEvent
 
-Optional `HANDLE` to Event Object, whitch is signaled when lock is created (typically used with `ReturnImmediately` parameter set to `TRUE`).
+Optional `HANDLE` to Event Object, which is signaled when lock is created (typically used with `ReturnImmediately` parameter set to `TRUE`).
 
 ### ApcRoutine
 
@@ -32,7 +32,7 @@ Length of region to lock, in bytes.
 
 ### Key
 
-Pointer to user's defined 4-bytes key associated with this lock. It can be used in multi-thread process to allow reading or writing data only for one specified thread, whitch known `Key` value.
+Pointer to user's defined 4-bytes key associated with this lock. It can be used in multi-thread process to allow reading or writing data only for one specified thread, with known `Key` value.
 
 ### ReturnImmediately
 

@@ -6,7 +6,7 @@ Function `NtReadFileScatter` reads specified block from file into multiple buffe
 
 ### Event
 
-`HANDLE` to Event Object signaled when reading is complete. This parameter is optional, but caller should use one of notification way, becouse function always use asynchronous reading method.
+`HANDLE` to Event Object signaled when reading is complete. This parameter is optional, but caller should use one of notification way, because function always use asynchronous reading method.
 
 ### ApcRoutine
 

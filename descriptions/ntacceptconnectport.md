@@ -20,7 +20,7 @@ If connection uses large data buffers, and a `HANDLE` to Section Object for shar
 
 ### ClientSharedMemory
 
-Similar to `ServerSharedMemory`, but when connection client create Section Object. In this case server doesn't know section's `HANDLE`, but shared memory window is automatically maped to his address space. Size and base address of mapped memory are returned in `LPC_SECTION_MEMORY` structure.
+Similar to `ServerSharedMemory`, but when connection client create Section Object. In this case server doesn't know section's `HANDLE`, but shared memory window is automatically mapped to his address space. Size and base address of mapped memory are returned in `LPC_SECTION_MEMORY` structure.
 
 ---
 

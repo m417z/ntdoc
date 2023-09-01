@@ -14,7 +14,7 @@ If set, waiting can be broken by alerting thread.
 
 ### Timeout
 
-Optinally pointer for timing out value.
+Optionally pointer for timing out value.
 
 # Documented by
 

@@ -1,4 +1,4 @@
-`NtNotifyChangeDirectoryFile` is used to process changes to directory File Object. Becouse function returns immediatelly with `STATUS_PENDING`, you must decide to use Event Object or *APC* routine as notification form.
+`NtNotifyChangeDirectoryFile` is used to process changes to directory File Object. Because function returns immediately with `STATUS_PENDING`, you must decide to use Event Object or *APC* routine as notification form.
 
 ### FileHandle
 
@@ -22,7 +22,7 @@ IO result of call. **Status** member in `IoStatusBlock` can result `STATUS_NOTIF
 
 ### Buffer
 
-User's allocated buffer for change informations. It contains one or more of `FILE_NOTIFY_INFORMATION` structures.
+User's allocated buffer for change information. It contains one or more of `FILE_NOTIFY_INFORMATION` structures.
 
 ### BufferSize
 
@@ -30,7 +30,7 @@ Size of `Buffer`, in bytes.
 
 ### CompletionFilter
 
-Mask specifing what sort of changes should be monitored. Can be combination of:
+Mask specifying what sort of changes should be monitored. Can be combination of:
 
 * `FILE_NOTIFY_CHANGE_FILE_NAME`
 * `FILE_NOTIFY_CHANGE_DIR_NAME`

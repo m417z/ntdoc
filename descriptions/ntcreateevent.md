@@ -24,7 +24,7 @@ See `EVENT_TYPE` for details.
 
 ### InitialState
 
-State of event immediatelly after creation.
+State of event immediately after creation.
 
 # Documented by
 

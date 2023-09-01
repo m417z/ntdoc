@@ -1,4 +1,4 @@
-`DBG_STATE` enumeration is used by **Debug Objects** as a member of `DBGUI_WAIT_STATE_CHANGE` structure returned in successfull call to `NtWaitForDebugEvent` function. It describes current state of **Debug Object**. Possible values are:
+`DBG_STATE` enumeration is used by **Debug Objects** as a member of `DBGUI_WAIT_STATE_CHANGE` structure returned in successful call to `NtWaitForDebugEvent` function. It describes current state of **Debug Object**. Possible values are:
 
 ### DbgIdle
 

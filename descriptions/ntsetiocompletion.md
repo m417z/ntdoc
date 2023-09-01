@@ -16,9 +16,9 @@ IO result of call.
 
 IO operation status.
 
-### NumberOfBytesTransfered
+### NumberOfBytesTransferred
 
-Number of bytes transfered in manually finished IO operation.
+Number of bytes transferred in manually finished IO operation.
 
 # Documented by
 

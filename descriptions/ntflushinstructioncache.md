@@ -1,4 +1,4 @@
-Function `NtFlushInstructionCache` empties execution cache for specified region of code. It shoult be used always after modification of process's executable memory (for example when *NtLdr* fills imported function's entries).
+Function `NtFlushInstructionCache` empties execution cache for specified region of code. It should be used always after modification of process's executable memory (for example when *NtLdr* fills imported function's entries).
 
 ### ProcessHandle
 

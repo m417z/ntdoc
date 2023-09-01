@@ -2,8 +2,8 @@ This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/w
 
 ---
 
-`NtQuerySystemInformation` is used to check some system informations avaiable only in *KernelMode* (above *0x80000000*). \
-All avaiable (or all known) information classes are described in `SYSTEM_INFORMATION_CLASS`.
+`NtQuerySystemInformation` is used to check some system information available only in *KernelMode* (above *0x80000000*). \
+All available (or all known) information classes are described in `SYSTEM_INFORMATION_CLASS`.
 
 ### SystemInformationClass
 

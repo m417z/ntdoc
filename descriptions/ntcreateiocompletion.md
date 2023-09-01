@@ -1,4 +1,4 @@
-Function `NtCreateIoCompletion` creates IO Completion Object. IO Completion Object is used for waiting on pending IO operation (reading or writing) in multi-process file access. It contains more informations about IO operation than synchronization event or *APC Routine*.
+Function `NtCreateIoCompletion` creates IO Completion Object. IO Completion Object is used for waiting on pending IO operation (reading or writing) in multi-process file access. It contains more information about IO operation than synchronization event or *APC Routine*.
 
 ### IoCompletionHandle
 

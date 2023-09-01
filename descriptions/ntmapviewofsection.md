@@ -22,7 +22,7 @@ Indicates how many high bits must not be set in `BaseAddress`.
 
 ### CommitSize
 
-Size of initially commited memory, in bytes.
+Size of initially committed memory, in bytes.
 
 ### SectionOffset
 
@@ -34,7 +34,7 @@ Pointer to size of mapped block, in bytes. This value is rounded up to page size
 
 ### InheritDisposition
 
-How to child processes inherid maped section. See description of enumeration type `SECTION_INHERIT`.
+How do child processes inherit mapped section. See description of enumeration type `SECTION_INHERIT`.
 
 ### AllocationType
 

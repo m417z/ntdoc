@@ -6,7 +6,7 @@ Pointer to `OBJECT_ATTRIBUTES` structure contains name of loaded key and virtual
 
 ### HiveFileName
 
-Pointer to `OBJECT_ATTRIBUTES` structure specifing Hive file.
+Pointer to `OBJECT_ATTRIBUTES` structure specifying Hive file.
 
 ### Flags
 

@@ -1,4 +1,4 @@
-Structure `SYSTEM_PAGEFILE_INFORMATION` is used as a result of call `NtQuerySystemInformation` with `SystemPageFileInformation` information class. If contains information about currently instaled Paged Files (files used by system for swap paged pool memory to disk).
+Structure `SYSTEM_PAGEFILE_INFORMATION` is used as a result of call `NtQuerySystemInformation` with `SystemPageFileInformation` information class. If contains information about currently installed Paged Files (files used by system for swap paged pool memory to disk).
 
 ### NextEntryOffset
 

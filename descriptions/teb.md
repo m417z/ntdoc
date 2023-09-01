@@ -6,7 +6,7 @@ Structure `TEB` *(Thread Environment Block)* is memory block containing system v
 
 ### Tib
 
-Structure `NT_TIB` is avaiable in **\<WinNT.h\>** header file.
+Structure `NT_TIB` is available in **\<WinNT.h\>** header file.
 
 ### EnvironmentPointer
 

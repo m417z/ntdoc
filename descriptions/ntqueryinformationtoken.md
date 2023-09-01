@@ -2,7 +2,7 @@ This function is documented in Windows Driver Kit [here](https://learn.microsoft
 
 ---
 
-Function `NtQueryInformationToken` receives informations specified by information class from Token Object. See also *Win32 API* **GetTokenInformation**.
+Function `NtQueryInformationToken` receives information specified by information class from Token Object. See also *Win32 API* **GetTokenInformation**.
 
 ### TokenHandle
 

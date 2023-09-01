@@ -1,4 +1,4 @@
-Function `NtStartProfile` starts performance counter assiciated with previously created Profile Object.
+Function `NtStartProfile` starts performance counter associated with previously created Profile Object.
 
 ### ProfileHandle
 

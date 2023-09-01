@@ -21,7 +21,7 @@ Decide of `ObjectIndex` parameter usage on output. \
 
 Decide how to use `ObjectIndex` on function input. \
   **If FALSE:** `ObjectIndex` point to `ULONG` index of object in Object Directory. \
-  **If TRUE:** `ObjectIndex` input value is ignored. Function always return informations about first object in Object Directory.
+  **If TRUE:** `ObjectIndex` input value is ignored. Function always return information about first object in Object Directory.
 
 ### ObjectIndex
 

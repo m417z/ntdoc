@@ -22,7 +22,7 @@ User's allocated buffer receiving queried value's data.
 
 ### BufferLength
 
-Pointer to value specifing length of `DataBuffer`, in bytes.
+Pointer to value specifying length of `DataBuffer`, in bytes.
 
 ### RequiredLength
 

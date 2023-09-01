@@ -1,4 +1,4 @@
-Function `NtReplaceKey` save specified hive key to file, and starts use this file instread of original hive file. Original hive file contents is replaced with contents of third hive file, specified below.
+Function `NtReplaceKey` save specified hive key to file, and starts use this file instead of original hive file. Original hive file contents is replaced with contents of third hive file, specified below.
 
 ### NewHiveFileName
 
@@ -6,7 +6,7 @@ Pointer to `OBJECT_ATTRIBUTES` structure containing name of third file (file wit
 
 ### KeyHandle
 
-`HANDLE` to Key Object. Backuped and replaced are all keys from hive whith contains key specified by `KeyHandle` parameter.
+`HANDLE` to Key Object. Backuped and replaced are all keys from hive which contains key specified by `KeyHandle` parameter.
 
 ### BackupHiveFileName
 
@@ -16,7 +16,7 @@ Pointer to `OBJECT_ATTRIBUTES` structure containing name of first file (new hive
 
 Example:
 
-`NewHiveFile` -\> `OrginalHiveFile` -\> `BackupHiveFile`
+`NewHiveFile` -\> `OriginalHiveFile` -\> `BackupHiveFile`
 
 Before call to `NtReplaceKey` system uses `OriginalHiveFile`.
 

@@ -1,4 +1,4 @@
-`NtSetSystemInformation` is used to set some unaccessable *KernelMode* variables. See also `NtQuerySystemInformation`.
+`NtSetSystemInformation` is used to set some inaccessible *KernelMode* variables. See also `NtQuerySystemInformation`.
 
 ### SystemInformationClass
 

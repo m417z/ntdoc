@@ -6,7 +6,7 @@
 
 ### ConnectionRequest
 
-Result of call - pointer to structure `LPC_MESSAGE` filled with incomming connection data.
+Result of call - pointer to structure `LPC_MESSAGE` filled with incoming connection data.
 
 ---
 

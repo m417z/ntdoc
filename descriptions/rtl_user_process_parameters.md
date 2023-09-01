@@ -42,7 +42,7 @@ Handle to `FILE` object.
 
 ### DllPath
 
-DOS-like paths separated by **';'** where system shoult search for DLL files.
+DOS-like paths separated by **';'** where system should search for DLL files.
 
 ### ImagePathName
 

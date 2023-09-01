@@ -27,7 +27,7 @@ Pointer to `OBJECT_ATTRIBUTES` structure contains section name, in Object Namesp
 
 Optionally define maximum size of section. Must be defined when caller create section based on system *PageFile*.
 
-### PageAttributess
+### PageAttributes
 
 Can be one or combination of:
 

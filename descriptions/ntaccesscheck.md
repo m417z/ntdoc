@@ -22,7 +22,7 @@ Function fills this buffer with structure `PRIVILEGE_SET` contains required priv
 
 ### BufferLength
 
-Pointer to `ULONG` value. On input this value means size of `RequiredPrivilegesBuffer` buffer. If buffer was to small, required buffer size is avaiable on output.
+Pointer to `ULONG` value. On input this value means size of `RequiredPrivilegesBuffer` buffer. If buffer was to small, required buffer size is available on output.
 
 ### GrantedAccess
 

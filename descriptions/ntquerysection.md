@@ -5,7 +5,7 @@ Use one of following:
 * `SectionBasicInformation // Result is SECTION_BASIC_INFORMATION structure`
 * `SectionImageInformation // Result is SECTION_IMAGE_INFORMATION structure`
 
-`SectionImageInformation` Are avaiable only for file-based sections.
+`SectionImageInformation` Are available only for file-based sections.
 
 # See also
 

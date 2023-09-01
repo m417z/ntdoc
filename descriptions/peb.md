@@ -2,7 +2,7 @@ This structure is [documented in Windows SDK](https://learn.microsoft.com/en-us/
 
 ---
 
-Structure `PEB` *(Process Enviroment Block)* contains all *User-Mode* parameters associated by system with current process.
+Structure `PEB` *(Process Environment Block)* contains all *User-Mode* parameters associated by system with current process.
 
 ### InheritedAddressSpace
 

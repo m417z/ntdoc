@@ -1,4 +1,4 @@
-Function `NtCancelIoFile` sends cancel signal to Device Driver. If any IO operation with specified file is pending, it is immediatelly canceled.
+Function `NtCancelIoFile` sends cancel signal to Device Driver. If any IO operation with specified file is pending, it is immediately canceled.
 
 ### FileHandle
 

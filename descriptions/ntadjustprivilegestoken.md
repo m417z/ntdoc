@@ -1,4 +1,4 @@
-Function `NtAdjustPrivilegesToken` is used to modify state of avaiable token's privileges, and it's descripted also in *Microsoft SDK* help as `AdjustTokenPrivileges`.
+Function `NtAdjustPrivilegesToken` is used to modify state of available token's privileges, and it's descripted also in *Microsoft SDK* help as `AdjustTokenPrivileges`.
 
 ### TokenHandle
 
@@ -6,7 +6,7 @@ Function `NtAdjustPrivilegesToken` is used to modify state of avaiable token's p
 
 ### DisableAllPrivileges
 
-If set, all accessable privileges are disabled, and rest of parameters below are ignored.
+If set, all accessible privileges are disabled, and rest of parameters below are ignored.
 
 ### TokenPrivileges
 

@@ -6,11 +6,11 @@ Structure provides basic information about volume. It's filled in a result of ca
 
 ### VolumeCreationTime
 
-It means time of last Volume Formating Process.
+It means time of last Volume Formatting Process.
 
 ### VolumeSerialNumber
 
-Serial number of volume, associated in Volume Formating Process.
+Serial number of volume, associated in Volume Formatting Process.
 
 ### VolumeLabelLength
 

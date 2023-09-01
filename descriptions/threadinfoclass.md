@@ -251,7 +251,7 @@ Gets and sets the WoW64 context (set of registers) for 32-bit threads running on
 
 |                 | Query                | Set
 | --------------- | -------------------- | ---
-| Type            | `WOW64_CONTEX`       | `WOW64_CONTEX`
+| Type            | `WOW64_CONTEXT`      | `WOW64_CONTEXT`
 | Required access | `THREAD_GET_CONTEXT` | `THREAD_SET_CONTEXT`
 
 ### Related Win32 API

@@ -71,7 +71,7 @@ Output buffer size, in bytes.
 
 ### DefaultTimeOut
 
-Pointer to `LARGE_INTEGER` value specifing pipe's time out, in *100-ns* units. Negative value means relative time.
+Pointer to `LARGE_INTEGER` value specifying pipe's time out, in *100-ns* units. Negative value means relative time.
 
 # Documented by
 

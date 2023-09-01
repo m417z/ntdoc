@@ -14,7 +14,7 @@ IO result of call.
 
 ### Buffer
 
-Caller's allocated buffer for output data. See `FILE_FULL_EA_INFORMATION` for detailed description of fields avaiable in buffer.
+Caller's allocated buffer for output data. See `FILE_FULL_EA_INFORMATION` for detailed description of fields available in buffer.
 
 ### Length
 

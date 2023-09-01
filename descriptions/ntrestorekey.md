@@ -1,6 +1,6 @@
 ### KeyHandle
 
-All keys and values stored in file represented by `FileHandle` will be childern of `KeyHandle`.
+All keys and values stored in file represented by `FileHandle` will be children of `KeyHandle`.
 
 ### FileHandle
 

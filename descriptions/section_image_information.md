@@ -1,6 +1,6 @@
 Structure `SECTION_IMAGE_INFORMATION` is returned as a result of call `NtQuerySection` with `SectionImageInformation` information class. System automatically check type and contents of File Object passed as a parameter to function `NtCreateSection`, and sets `SEC_IMAGE` bit on Section Attributes.
 
-This structure is very useful in process creation, becouse caller can check most interesting of *PE Header* fields just before call to `NtCreateProcess` and without mapping section to target process'es memory.
+This structure is very useful in process creation, because caller can check most interesting of *PE Header* fields just before call to `NtCreateProcess` and without mapping section to target process'es memory.
 
 ### EntryPoint
 
@@ -16,11 +16,11 @@ Total size of stack, in bytes.
 
 ### StackCommit
 
-Initially commited stack's block size.
+Initially committed stack's block size.
 
 ### ImageSubsystem
 
-One of `IMAGE_SUBSYSTEM_*` descripted in *Microsoft SDK* and avaiable in **\<winnt.h\>** header file.
+One of `IMAGE_SUBSYSTEM_*` descripted in *Microsoft SDK* and available in **\<winnt.h\>** header file.
 
 ### SubSystemVersionLow
 

@@ -2,7 +2,7 @@ This structure is [documented in Windows Driver Kit](https://learn.microsoft.com
 
 ---
 
-Structure `FILE_DIRECTORY_INFORMATION` is returned as a result of call `NtQueryDirectoryFile` with `FileDirectoryInformation` information class. It contains some typical informations about directory entries.
+Structure `FILE_DIRECTORY_INFORMATION` is returned as a result of call `NtQueryDirectoryFile` with `FileDirectoryInformation` information class. It contains some typical information about directory entries.
 
 ### NextEntryOffset
 
@@ -10,7 +10,7 @@ Offset (in bytes) of next `FILE_DIRECTORY_INFORMATION` structure placed in resul
 
 ### FileIndex
 
-File index value, or zero, if directory indexing is not avaiable.
+File index value, or zero, if directory indexing is not available.
 
 ### CreationTime
 
@@ -46,7 +46,7 @@ Length of `FileName` array, in bytes.
 
 ### FileName[1]
 
-UNICODE string specifing file name.
+UNICODE string specifying file name.
 
 # Documented by
 

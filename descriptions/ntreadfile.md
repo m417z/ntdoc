@@ -26,7 +26,7 @@ Pointer to IO_STATUS structure received IO status of file reading.
 
 ### Buffer
 
-User-allocated buffer for readed data.
+User-allocated buffer for read data.
 
 ### Length
 
@@ -34,7 +34,7 @@ Length of `Buffer`, in bytes.
 
 ### ByteOffset
 
-Offset from begining of file, in bytes.
+Offset from beginning of file, in bytes.
 
 ### Key
 

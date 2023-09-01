@@ -4,11 +4,11 @@ Function `NtCreatePagingFile` is typically used by Control Panel's "*System*" ap
 
 System path to newly created paged file.
 
-### MiniumSize
+### MinimumSize
 
 Minimum size of paged file, in bytes. This value must be multiply of page size (*0x1000* bytes on **x86**), and must be greater then *2MB* (*0x02000000* bytes).
 
-### MaxiumSize
+### MaximumSize
 
 Maximum size of paged file, in bytes. Also this value must be multiply of page size. Minimal value accepted is *5MB* (*0x05000000* bytes).
 

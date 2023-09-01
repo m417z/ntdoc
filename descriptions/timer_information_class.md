@@ -1,4 +1,4 @@
-Currently only one information class is avaiable for Timer Object.
+Currently only one information class is available for Timer Object.
 
 ### TimerBasicInformation
 

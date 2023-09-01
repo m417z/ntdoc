@@ -1,4 +1,4 @@
-`NtReplyWaitReceivePort` is typically used by *LPC* server process for receive *LPC* requests incomming from client process.
+`NtReplyWaitReceivePort` is typically used by *LPC* server process for receive *LPC* requests incoming from client process.
 
 ### PortHandle
 

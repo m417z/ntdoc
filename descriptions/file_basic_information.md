@@ -26,7 +26,7 @@ File attributes. See `NtCreateFile` for possibilities.
 
 ---
 
-Structure is also avaiable in *Microsoft DDK*.
+Structure is also available in *Microsoft DDK*.
 
 # Documented by
 

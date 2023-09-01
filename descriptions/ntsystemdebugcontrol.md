@@ -1,8 +1,8 @@
-Function `NtSystemDebugControl` is used by some low-level debuggers written by *Microsoft* and avaiable typically in *DDK*.
+Function `NtSystemDebugControl` is used by some low-level debuggers written by *Microsoft* and available typically in *DDK*.
 
 ### Command
 
-Command request for system. Command's codes are avaiable in enumeration type `SYSDBG_COMMAND`.
+Command request for system. Command's codes are available in enumeration type `SYSDBG_COMMAND`.
 
 ### InputBuffer
 

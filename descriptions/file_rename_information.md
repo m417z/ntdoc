@@ -18,7 +18,7 @@ Length of `FileName` array, in bytes.
 
 ### FileName[1]
 
-UNICODE string specifing destination file name. If `RootDirectory` is *NULL*, it must contains full system path, or only destination file name for in-place rename operation.
+UNICODE string specifying destination file name. If `RootDirectory` is *NULL*, it must contains full system path, or only destination file name for in-place rename operation.
 
 # Documented by
 

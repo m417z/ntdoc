@@ -6,7 +6,7 @@ Performance counter identifier defined in `KPROFILE_SOURCE` enumeration type.
 
 ### Interval
 
-Pointer to `ULONG` value receiving current interval, in ms. If received value is *zero*, counter specified in `ProfileSource` parameter is hardware counter (performacne counter build in *CPU*).
+Pointer to `ULONG` value receiving current interval, in ms. If received value is *zero*, counter specified in `ProfileSource` parameter is hardware counter (performances counter build in *CPU*).
 
 # Documented by
 

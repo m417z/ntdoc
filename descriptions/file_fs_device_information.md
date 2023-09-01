@@ -2,7 +2,7 @@ This structure is [documented in Windows Driver Kit](https://learn.microsoft.com
 
 ---
 
-`FILE_FS_DEVICE_INFORMATION` represents output buffer in a call to `NtQueryVolumeInformationFile` with `FileFsDeviceInformation` information class. Structure is avaiable in **\<ntddk.h\>** header file from *Win2000 DDK*.
+`FILE_FS_DEVICE_INFORMATION` represents output buffer in a call to `NtQueryVolumeInformationFile` with `FileFsDeviceInformation` information class. Structure is available in **\<ntddk.h\>** header file from *Win2000 DDK*.
 
 ### DeviceType
 

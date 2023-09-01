@@ -18,7 +18,7 @@ If set, *APC Routine* can break waiting.
 
 ### Time
 
-Optionally pointer to `LARGE_INTEGER` value specifing time (absolute or relative) when function time outs (in *100-ns* units). Negative value means relative time.
+Optionally pointer to `LARGE_INTEGER` value specifying time (absolute or relative) when function time outs (in *100-ns* units). Negative value means relative time.
 
 # Documented by
 

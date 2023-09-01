@@ -34,7 +34,7 @@ Length of `Buffer`, in bytes.
 
 ### ByteOffset
 
-Offset from begining of file, where write starts.
+Offset from beginning of file, where write starts.
 
 ### Key
 

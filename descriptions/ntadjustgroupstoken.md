@@ -1,4 +1,4 @@
-Function `NtAdjustGroupsToken` modify state of one or more groups avaialbe for Token Object. See also description of similar *Win32 API* **AdjustTokenGroups** in *Win32 SDK*.
+Function `NtAdjustGroupsToken` modify state of one or more groups available for Token Object. See also description of similar *Win32 API* **AdjustTokenGroups** in *Win32 SDK*.
 
 ### TokenHandle
 

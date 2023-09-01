@@ -12,7 +12,7 @@ Pointer to size of region to protect. On output will be round to page size (4KB)
 
 ### NewAccessProtection
 
-One or some of `PAGE_...` attributess.
+One or some of `PAGE_...` attributes.
 
 ### OldAccessProtection
 

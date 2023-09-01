@@ -2,7 +2,7 @@ This function is documented in Windows Driver Kit [here](https://learn.microsoft
 
 ---
 
-*(Avaiable also in 2000 DDK.)*
+*(Available also in 2000 DDK.)*
 
 ### FileHandle
 

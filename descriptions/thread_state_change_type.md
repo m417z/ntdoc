@@ -10,7 +10,7 @@ Suspends the associated thread.
 
 |                 | Change
 | --------------- | ------
-| Extra bufffer   | void (zero size)
+| Extra buffer    | void (zero size)
 | Required access | `THREAD_SUSPEND_RESUME`
 
 ### See also
@@ -21,7 +21,7 @@ Resumes the associated thread.
 
 |                 | Change
 | --------------- | ------
-| Extra bufffer   | void (zero size)
+| Extra buffer    | void (zero size)
 | Required access | `THREAD_SUSPEND_RESUME`
 
 ### See also

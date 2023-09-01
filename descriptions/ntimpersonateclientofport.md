@@ -1,4 +1,4 @@
-`NtImpersonateClientOfPort` is called by LPC server process to get security context of client. That means: client's Token Object is assiciated with calling server thread (like `NtSetInformationThread` with `ThreadImpersonationToken` information class).
+`NtImpersonateClientOfPort` is called by LPC server process to get security context of client. That means: client's Token Object is associated with calling server thread (like `NtSetInformationThread` with `ThreadImpersonationToken` information class).
 
 ### PortHandle
 

@@ -27,14 +27,14 @@ It's level of compression. Higher level means better results, but longer time us
 In NT 4.0 sp6 engines works only with compression (specified in `RtlDecompressBuffer` are ignored)
 
 ```cpp
-#define COMPRESSION_ENGINE_STANDARD (0x0000)        // Standart compression
+#define COMPRESSION_ENGINE_STANDARD (0x0000)        // Standard compression
 #define COMPRESSION_ENGINE_MAXIMUM  (0x0100)        // Maximum (slowest but better)
 #define COMPRESSION_ENGINE_HIBER    (0x0200)        // STATUS_NOT_SUPPORTED
 ```
 
 ### Unknown
 
-Put 0x1000 here. Propably means page size.
+Put 0x1000 here. Probably means page size.
 
 ### pDestinationSize
 

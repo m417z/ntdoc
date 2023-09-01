@@ -1,4 +1,4 @@
-Function `NtSetEventPriorityBoost` was added in *Windows XP* system. Has the same functionality as `NtSetEvent`, but thread that is waiting on specified *Event* will be executed immediatelly after context switch, regardless of waiting thread's priority.
+Function `NtSetEventPriorityBoost` was added in *Windows XP* system. Has the same functionality as `NtSetEvent`, but thread that is waiting on specified *Event* will be executed immediately after context switch, regardless of waiting thread's priority.
 
 ### EventHandle
 

@@ -12,7 +12,7 @@ Offset (in bytes) of next `FILE_BOTH_DIR_INFORMATION` structure placed in result
 
 ### FileIndex
 
-File index value, or zero, if directory indexing is not avaiable.
+File index value, or zero, if directory indexing is not available.
 
 ### CreationTime
 
@@ -58,12 +58,12 @@ Length `ShortName` array, in bytes.
 
 Alternate file name, in UNICODE format. Empty string means:
 
-1. Primary name is compatible with `8DOT3` **(MS DOS)** standart, and there's no reason to set the same name twice;
+1. Primary name is compatible with `8DOT3` **(MS DOS)** standard, and there's no reason to set the same name twice;
 2. File system don't improve short names;
 
 ### FileName[1]
 
-UNICODE string specifing file name.
+UNICODE string specifying file name.
 
 # Documented by
 

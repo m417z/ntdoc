@@ -2,7 +2,7 @@ This function is documented in Windows Driver Kit [here](https://learn.microsoft
 
 ---
 
-Function `NtSetInforamtionToken` sets parameters of Token Objects. See also description of **SetTokenInformation** \
+Function `NtSetInformationToken` sets parameters of Token Objects. See also description of **SetTokenInformation** \
 in *Win32 API SDK*.
 
 ### TokenHandle

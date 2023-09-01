@@ -14,7 +14,7 @@ Pointer to `LARGE_INTEGER` receiving converted time.
 
 ---
 
-See also oposite function `RtlTimeToTimeFields`.
+See also opposite function `RtlTimeToTimeFields`.
 
 # Documented by
 

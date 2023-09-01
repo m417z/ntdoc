@@ -27,7 +27,7 @@ How much bytes should be reserved. See `NtAllocateVirtualMemory`.
 
 ### Commit
 
-How meny bytes should be commited. If `Reserve` is greater than zero, `Commit` must be less or equal to `Reserve`.
+How many bytes should be committed. If `Reserve` is greater than zero, `Commit` must be less or equal to `Reserve`.
 
 ### Lock
 

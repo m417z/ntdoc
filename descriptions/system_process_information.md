@@ -1,8 +1,8 @@
-Structure `SYSTEM_PROCESS_INFORMATION` contains list of processes and threads and it's avaiable via `NtQuerySystemInformation` function with `SystemProcessInformation` information class.
+Structure `SYSTEM_PROCESS_INFORMATION` contains list of processes and threads and it's available via `NtQuerySystemInformation` function with `SystemProcessInformation` information class.
 
 ### NextEntryOffset
 
-Offset from begining of output buffer to next process entry. On last entry contains zero.
+Offset from beginning of output buffer to next process entry. On last entry contains zero.
 
 ### NumberOfThreads
 

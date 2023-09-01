@@ -3,7 +3,7 @@ This structure is [documented in Windows Driver Kit](https://learn.microsoft.com
 ---
 
 Structure `FILE_FULL_DIR_INFORMATION` is returned as a result of call `NtQueryDirectoryFile` with `FileFullDirectoryInformation` \
-information class. It contains some typical informations about directory entries, like a `FILE_DIRECTORY_INFORMATION` structure, but additionally contains member specifing size of Extended Attributes.
+information class. It contains some typical information about directory entries, like a `FILE_DIRECTORY_INFORMATION` structure, but additionally contains member specifying size of Extended Attributes.
 
 ### NextEntryOffset
 
@@ -11,7 +11,7 @@ Offset (in bytes) of next `FILE_FULL_DIR_INFORMATION` structure placed in result
 
 ### FileIndex
 
-File index value, or zero, if directory indexing is not avaiable.
+File index value, or zero, if directory indexing is not available.
 
 ### CreationTime
 
@@ -51,7 +51,7 @@ Size of Extended Attributes associated with file. See also `FILE_EA_INFORMATION`
 
 ### FileName[1]
 
-UNICODE string specifing file name.
+UNICODE string specifying file name.
 
 # Documented by
 

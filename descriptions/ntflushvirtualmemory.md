@@ -15,7 +15,7 @@ On output this value is rounded to Page Size *(0x1000)*.
 
 ### NumberOfBytesToFlush
 
-Pointer to `ULONG` value specifing length of area to flush. On output this value is rounded up to Page Size *(0x1000)*.
+Pointer to `ULONG` value specifying length of area to flush. On output this value is rounded up to Page Size *(0x1000)*.
 
 ### IoStatusBlock
 

@@ -1,4 +1,4 @@
-Function `NtReleaseSemaphore` increments semaphore's counter, oposite to any waiting function (semaphore is signaled when semaphore's counter is greater then zero).
+Function `NtReleaseSemaphore` increments semaphore's counter, opposite to any waiting function (semaphore is signaled when semaphore's counter is greater then zero).
 
 ### SemaphoreHandle
 

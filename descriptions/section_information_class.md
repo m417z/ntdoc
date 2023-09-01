@@ -4,11 +4,11 @@ This type can be one of:
 
 ### SectionBasicInformation
 
-Result buffer contains structure `SECTION_BASIC_INFORMATION`. Buffer size shoud be set to *0x0C*.
+Result buffer contains structure `SECTION_BASIC_INFORMATION`. Buffer size should be set to *0x0C*.
 
 ### SectionImageInformation
 
-Result buffer contains structure `SECTION_IMAGE_INFORMATION`. Buffer size shoud be set to *0x28*. This information class is accessable only where section was created with `HANDLE` to open executable file (see `NtCreateSection` for details).
+Result buffer contains structure `SECTION_IMAGE_INFORMATION`. Buffer size should be set to *0x28*. This information class is accessible only where section was created with `HANDLE` to open executable file (see `NtCreateSection` for details).
 
 # Documented by
 

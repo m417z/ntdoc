@@ -6,7 +6,7 @@ This structure is [documented in Windows Driver Kit](https://learn.microsoft.com
 
 ### IndexNumber
 
-File indentifier, unique for file's device.
+File identifier, unique for file's device.
 
 # Documented by
 
