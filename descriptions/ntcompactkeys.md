@@ -2,7 +2,7 @@ Function `NtCompactKeys` compacts (reduces size) of specified key(s). On Windows
 
 ### NrOfKeys
 
-Number of enries in `KeysArray` array.
+Number of entries in `KeysArray` array.
 
 ### KeysArray[]
 

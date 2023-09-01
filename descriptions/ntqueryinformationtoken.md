@@ -10,7 +10,7 @@ Function `NtQueryInformationToken` receives information specified by information
 
 ### TokenInformationClass
 
-Information class descripted in `TOKEN_INFORMATION_CLASS` topic.
+Information class described in `TOKEN_INFORMATION_CLASS` topic.
 
 ### TokenInformation
 

@@ -6,7 +6,7 @@ Function `NtSetSecurityDescriptor` writes object's Security Descriptor.
 
 ### ObjectHandle
 
-`HANDLE` to object of any type. Must be opened with `WRITE_DAC` or `WRITE_OWNER` access dependly to `SecurityInformationClass` parameter.
+`HANDLE` to object of any type. Must be opened with `WRITE_DAC` or `WRITE_OWNER` access depending on `SecurityInformationClass` parameter.
 
 ### SecurityInformationClass
 

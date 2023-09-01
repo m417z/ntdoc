@@ -6,7 +6,7 @@ Pointer to `OBJECT_ATTRIBUTES` structure containing name of third file (file wit
 
 ### KeyHandle
 
-`HANDLE` to Key Object. Backuped and replaced are all keys from hive which contains key specified by `KeyHandle` parameter.
+`HANDLE` to Key Object. Backed up and replaced are all keys from hive which contains key specified by `KeyHandle` parameter.
 
 ### BackupHiveFileName
 

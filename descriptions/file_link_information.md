@@ -12,7 +12,7 @@ If set, and destination object already exists, it will be replaced with newly cr
 
 ### RootDirectory
 
-`HANDLE` to File Object specyfing directory where link should be placed. Can be *NULL* if `FileName` parameter contains full path.
+`HANDLE` to File Object specifying directory where link should be placed. Can be *NULL* if `FileName` parameter contains full path.
 
 ### FileNameLength
 
@@ -20,7 +20,7 @@ Length of `FileName` array, in bytes.
 
 ### FileName[1]
 
-UNICODE string specyfing name of link and optionally with path (see description of `RootDirectory`).
+UNICODE string specifying name of link and optionally with path (see description of `RootDirectory`).
 
 # Documented by
 

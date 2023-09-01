@@ -48,7 +48,7 @@ Mask specifying what sort of changes should be monitored. Can be combination of:
 
 ### WatchTree
 
-If set, all subdirectiories of specified directory will be also monitored.
+If set, all subdirectories of specified directory will be also monitored.
 
 # Documented by
 

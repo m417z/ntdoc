@@ -1,6 +1,6 @@
 ### DesiredAccess
 
-See `NtCreateEventPair` for definitions of EventPair possibble access rights.
+See `NtCreateEventPair` for definitions of EventPair possible access rights.
 
 # Documented by
 

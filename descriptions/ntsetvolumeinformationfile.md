@@ -12,7 +12,7 @@ IO result of call.
 
 ### FileSystemInformation
 
-Buffer containing information to set, dependly to `FileSystemInformationClass` parameter.
+Buffer containing information to set, depending on `FileSystemInformationClass` parameter.
 
 ### Length
 

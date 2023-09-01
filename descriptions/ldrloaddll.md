@@ -1,6 +1,6 @@
 ### Flags
 
-See WINAPI `LoadLibraryEx` for possibbilitied flags.
+See WINAPI `LoadLibraryEx` for possible flags.
 
 ### ModuleHandle
 

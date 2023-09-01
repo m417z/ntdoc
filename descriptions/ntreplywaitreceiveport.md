@@ -8,7 +8,7 @@
 
 ### Reply
 
-If other side waiting for reply message, you can send it by specyfing *LPC* Message Buffer as this parameter.
+If other side waiting for reply message, you can send it by specifying *LPC* Message Buffer as this parameter.
 
 ### IncomingRequest
 

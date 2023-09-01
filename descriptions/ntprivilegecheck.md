@@ -2,7 +2,7 @@ This function is [documented in Windows Driver Kit](https://learn.microsoft.com/
 
 ---
 
-Function `NtPrivilegeCheck` is used to check state of any privileges in Token Object. It's also descripted in *Microsoft SDK* as **PrivilegeCheck**.
+Function `NtPrivilegeCheck` is used to check state of any privileges in Token Object. It's also described in *Microsoft SDK* as **PrivilegeCheck**.
 
 ### TokenHandle
 

@@ -38,7 +38,7 @@ Pointer to `ULONG` value contains 1-based index of queried attribute.
 
 ### RestartScan
 
-If set, result is the first quered *EA*.
+If set, result is the first queried *EA*.
 
 # Documented by
 

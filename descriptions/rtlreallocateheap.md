@@ -1,4 +1,4 @@
-`Kernel32.dll` `HeapReAlloc` maps directly to `RtlReAllocateHeap`. All parameters are descripted in *Ms SDK*.
+`Kernel32.dll` `HeapReAlloc` maps directly to `RtlReAllocateHeap`. All parameters are described in *Ms SDK*.
 
 # Documented by
 

@@ -6,7 +6,7 @@ Offset from beginning of output buffer to next process entry. On last entry cont
 
 ### NumberOfThreads
 
-Number of process'es threads. Also number of members in `Threads` array descripted below.
+Number of process'es threads. Also number of members in `Threads` array described below.
 
 ### Reserved[3]
 
@@ -62,7 +62,7 @@ IO performance counters.
 
 ### Threads[0]
 
-Array of `SYSTEM_THREAD` structures descripting process's threads.
+Array of `SYSTEM_THREAD` structures describing process's threads.
 
 # Documented by
 

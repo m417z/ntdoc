@@ -4,7 +4,7 @@ Handle to Directory Object opened with `DIRECTORY_QUERY` access.
 
 ### DirObjInformation
 
-Pointer to `OBJDIR_INFORMATION` structure. Warning: structure has variable length dependly to length of object name. \
+Pointer to `OBJDIR_INFORMATION` structure. Warning: structure has variable length depending on length of object name. \
 To test for required length of buffer use `DataWritten` parameter.
 
 ### BufferLength
@@ -15,7 +15,7 @@ Length of `DirObjInformation` buffer.
 
 Decide of `ObjectIndex` parameter usage on output. \
   **If FALSE:** `ObjectIndex` is number of object in Object Directory. \
-  **If TRUE:** `ObjectIndex` is index of next object to quered object (see below) in Object Directory.
+  **If TRUE:** `ObjectIndex` is index of next object to queried object (see below) in Object Directory.
 
 ### IgnoreInputIndex
 

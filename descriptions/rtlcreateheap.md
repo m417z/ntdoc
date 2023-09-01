@@ -19,7 +19,7 @@ Flags are defined in **\<WinNT.h\>**. Can be one of following:
 
 ### Base
 
-Base address, where heap should be created. If memory was previously allocated at this address, heap is created at the nearest possibble virtual address.
+Base address, where heap should be created. If memory was previously allocated at this address, heap is created at the nearest possible virtual address.
 
 ### Reserve
 

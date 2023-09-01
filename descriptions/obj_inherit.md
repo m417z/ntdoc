@@ -1,4 +1,4 @@
-This `OBJECT_ATTRIBUTES` flag indicates that the handle should be inheriable. Whether the child processes actually inherit this handle depends on the flags used during process creation and some other attributes of the object.
+This `OBJECT_ATTRIBUTES` flag indicates that the handle should be inheritable. Whether the child processes actually inherit this handle depends on the flags used during process creation and some other attributes of the object.
 
 # Related flags
  - `OBJ_PROTECT_CLOSE`

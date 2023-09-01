@@ -18,7 +18,7 @@ Optionally contains object name, in Objects Namespace.
 
 ### NumberOfConcurrentThreads
 
-Number of threads accessing File Object associated with IO Completion. If Zero, system reserves memory for number of threads equal to current nymber of processes.
+Number of threads accessing File Object associated with IO Completion. If Zero, system reserves memory for number of threads equal to current number of processes.
 
 # Documented by
 

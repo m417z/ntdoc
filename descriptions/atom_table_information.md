@@ -1,4 +1,4 @@
-`ATOM_TABLE_INFORMATION` descriptes Global Atom Table. Is returned as a result of call `NtQueryInformationAtom` with `AtomTableInformation` information class.
+`ATOM_TABLE_INFORMATION` describes Global Atom Table. Is returned as a result of call `NtQueryInformationAtom` with `AtomTableInformation` information class.
 
 ### NumberOfAtoms
 

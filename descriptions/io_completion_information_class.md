@@ -2,7 +2,7 @@ Enumeration type `IO_COMPLETION_INFORMATION_CLASS` is used with `NtQueryIoComple
 
 ### IoCompletionBasicInformation
 
-Buffer receiving data is descripted as `IO_COMPLETION_BASIC_INFORMATION` structure and has *0x04* bytes length.
+Buffer receiving data is described as `IO_COMPLETION_BASIC_INFORMATION` structure and has *0x04* bytes length.
 
 # Documented by
 

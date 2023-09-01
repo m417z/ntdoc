@@ -1,4 +1,4 @@
-Routine `RtlGetCallersAddress` is usefull in program debugging or exceptions control. It returns address of calling instruction.
+Routine `RtlGetCallersAddress` is useful in program debugging or exceptions control. It returns address of calling instruction.
 
 ### CallersAddress
 

@@ -6,7 +6,7 @@ Function `NtQuerySemaphore` retrieve semaphore's parameters (see `SEMAPHORE_BASI
 
 ### SemaphoreInformationClass
 
-Information class descripted in `SEMAPHORE_INFORMATION_CLASS` section.
+Information class described in `SEMAPHORE_INFORMATION_CLASS` section.
 
 ### SemaphoreInformation
 

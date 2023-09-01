@@ -1,4 +1,4 @@
-Function `NtAdjustPrivilegesToken` is used to modify state of available token's privileges, and it's descripted also in *Microsoft SDK* help as `AdjustTokenPrivileges`.
+Function `NtAdjustPrivilegesToken` is used to modify state of available token's privileges, and it's described also in *Microsoft SDK* help as `AdjustTokenPrivileges`.
 
 ### TokenHandle
 

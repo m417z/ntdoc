@@ -1,4 +1,4 @@
-Synchronization object called `KeyedEvent` is available in *Windows XP+* systems. It's usefull when both (or more) threads have to wait for each other.
+Synchronization object called `KeyedEvent` is available in *Windows XP+* systems. It's useful when both (or more) threads have to wait for each other.
 
 ### KeyedEventHandle
 

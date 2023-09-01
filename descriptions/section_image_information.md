@@ -20,7 +20,7 @@ Initially committed stack's block size.
 
 ### ImageSubsystem
 
-One of `IMAGE_SUBSYSTEM_*` descripted in *Microsoft SDK* and available in **\<winnt.h\>** header file.
+One of `IMAGE_SUBSYSTEM_*` described in *Microsoft SDK* and available in **\<winnt.h\>** header file.
 
 ### SubSystemVersionLow
 

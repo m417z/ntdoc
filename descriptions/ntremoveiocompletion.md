@@ -1,6 +1,6 @@
 Function `NtRemoveIoCompletion` is one of waiting calls and it's finished when at least one completion record will be available in specified *Io Completion* object. Records are added when I/O operation is finished, but previously *File* object have to been associated with *Io Completion* object. \
-Association between *File* and *Io Completion* objects is maded by call to `NtSetInformationFile` \
-with `FileCompletionInformation` information class. Additionally every assotiation have to have unique `Key` defined. This functionality allows to use one *Io Completion* object with different *File* objects. \
+Association between *File* and *Io Completion* objects is added by call to `NtSetInformationFile` \
+with `FileCompletionInformation` information class. Additionally every association have to have unique `Key` defined. This functionality allows to use one *Io Completion* object with different *File* objects. \
 Every one *File* object can have only one *Io Completion* associated with it.
 
 I/O operations won't be appended to *Io Completion* object except file operations will be called with non-zero value in `ApcContext` parameters.

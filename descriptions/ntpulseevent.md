@@ -8,7 +8,7 @@ State of event before call.
 
 ---
 
-Function sets event to signaled state, releases all (or one - dependly of `EVENT_TYPE`) waiting threads, and resets event to non-signaled state. If they're no waiting threads, `NtPulseEvent` just clear event state.
+Function sets event to signaled state, releases all (or one - depending on `EVENT_TYPE`) waiting threads, and resets event to non-signaled state. If they're no waiting threads, `NtPulseEvent` just clear event state.
 
 # Documented by
 

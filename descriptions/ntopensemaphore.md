@@ -6,7 +6,7 @@ Result of call - pointer to `HANDLE` to Semaphore Object.
 
 ### DesiredAccess
 
-Access rights, descripted in `NtCreateSemaphore`.
+Access rights, described in `NtCreateSemaphore`.
 
 ### ObjectAttributes
 

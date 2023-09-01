@@ -14,7 +14,7 @@ Month, in range **1 - 12**.
 
 ### Day
 
-Day, in range **1 - 31**, dependly on `Month` member.
+Day, in range **1 - 31**, depending on `Month` member.
 
 ### Hour
 

@@ -20,7 +20,7 @@ Length of `FileSystemInformation` buffer, in bytes.
 
 ### FileSystemInformationClass
 
-Information class descripted in `FS_INFORMATION_CLASS` topic.
+Information class described in `FS_INFORMATION_CLASS` topic.
 
 ---
 

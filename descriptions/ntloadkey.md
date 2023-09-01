@@ -1,4 +1,4 @@
-Function `NtLoadKey` is used to make available registry keys and values stored in *Hive* File. *Hive* file can be created by calling `NtSaveKey`. If loaded *Hive* is no longer needed (for example when user logout for *HKCU Hive*), it can be udloaded by call `NtUnloadKey`.
+Function `NtLoadKey` is used to make available registry keys and values stored in *Hive* File. *Hive* file can be created by calling `NtSaveKey`. If loaded *Hive* is no longer needed (for example when user logout for *HKCU Hive*), it can be unloaded by call `NtUnloadKey`.
 
 ### DestinationKeyName
 
