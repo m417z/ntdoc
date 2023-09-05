@@ -10,9 +10,9 @@ from typing import Dict, List, Tuple
 
 import markdown2
 
-URL_PHTN_REPOSITORY = 'https://github.com/winsiderss/systeminformer'
+URL_PHNT_REPOSITORY = 'https://github.com/winsiderss/systeminformer'
 URL_DESCRIPTIONS = 'https://github.com/m417z/ntdoc/blob/main/descriptions'
-PHTN_REPOSITORY_COMMIT = 'master'  # Updated from command line.
+PHNT_REPOSITORY_COMMIT = 'master'  # Updated from command line.
 
 
 def rstrip_line_with_comment(code: str) -> str:
@@ -424,7 +424,7 @@ def chunk_to_html(chunk: Chunk) -> str:
 
     html_after = '\n' + html_after
 
-    code_url = URL_PHTN_REPOSITORY + f'/blob/{PHTN_REPOSITORY_COMMIT}/phnt/include/{header_name}#L{line_number}'
+    code_url = URL_PHNT_REPOSITORY + f'/blob/{PHNT_REPOSITORY_COMMIT}/phnt/include/{header_name}#L{line_number}'
 
     html = '<pre class="ntdoc-code-pre">'
     html += '<code class="ntdoc-code">'
@@ -582,9 +582,9 @@ def main():
 
     phnt_include_path = Path(args.path)
 
-    global PHTN_REPOSITORY_COMMIT
+    global PHNT_REPOSITORY_COMMIT
     if args.commit is not None:
-        PHTN_REPOSITORY_COMMIT = args.commit
+        PHNT_REPOSITORY_COMMIT = args.commit
 
     start = time.time()
 
