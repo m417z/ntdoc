@@ -6,7 +6,7 @@ Result handle to EventPair object.
 
 Is defined as:
 
-`#define` `EVENT_PAIR_ALL_ACCESS` ( STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE )
+`#define EVENT_PAIR_ALL_ACCESS ( STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE )`
 
 # Documented by
 
