@@ -25,7 +25,7 @@
                         return title;
                     },
                     theme: 'code-preview',
-                    maxWidth: 'none',
+                    maxWidth: 'calc(100vw - 20px)',
                 });
             }
         } catch (e) {

@@ -468,6 +468,10 @@ def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str, i
         tooltip_text_lines = tooltip_text.splitlines()
         if len(tooltip_text_lines) > tooltip_text_lines_max:
             tooltip_text = '\n'.join(tooltip_text_lines[:tooltip_text_lines_max]) + '\n...'
+        elif len(tooltip_text_lines) == 1:
+            # Remove extra whitespace, for example in defines such as:
+            # #define FILE_CREATED                    0x00000002
+            tooltip_text = re.sub(r'\s+', ' ', tooltip_text)
 
         tooltip_text_escaped = escape(tooltip_text).replace('\n', '&#10;')
 
