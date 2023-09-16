@@ -4,8 +4,33 @@
     run();
 
     function run() {
-        initSearch();
-        addControlButtons();
+        try {
+            initSearch();
+        } catch (e) {
+            console.error(e);
+        }
+
+        try {
+            addControlButtons();
+        } catch (e) {
+            console.error(e);
+        }
+
+        try {
+            if (typeof tippy !== 'undefined') {
+                tippy('[title]', {
+                    content(reference) {
+                        const title = reference.getAttribute('title');
+                        reference.removeAttribute('title');
+                        return title;
+                    },
+                    theme: 'code-preview',
+                    maxWidth: 'none',
+                });
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     function initSearch() {

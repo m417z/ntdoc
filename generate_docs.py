@@ -449,7 +449,7 @@ def chunk_to_html(chunk: Chunk) -> str:
     return html
 
 
-def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str):
+def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str, id_to_body: Dict[str, str]) -> str:
     # Sort by length to avoid matching substrings, e.g. "struct ABC" should
     # match before "ABC".
     ids_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
@@ -462,7 +462,16 @@ def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str):
         if id == exclude_id:
             return ident
 
-        return f'<a href="{id}">{ident}</a>'
+        tooltip_text = id_to_body[id].strip()
+
+        tooltip_text_lines_max = 20
+        tooltip_text_lines = tooltip_text.splitlines()
+        if len(tooltip_text_lines) > tooltip_text_lines_max:
+            tooltip_text = '\n'.join(tooltip_text_lines[:tooltip_text_lines_max]) + '\n...'
+
+        tooltip_text_escaped = escape(tooltip_text).replace('\n', '&#10;')
+
+        return f'<a href="{id}" title="{tooltip_text_escaped}">{ident}</a>'
 
     return re.sub(regex, repl, html)
 
@@ -476,6 +485,7 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
 
     id_to_html_contents: Dict[str, List[str]] = {}
     id_to_id_human: Dict[str, str] = {}
+    id_to_body: Dict[str, str] = {}
 
     for chunk in chunks:
         id = ident_to_id[chunk.idents[0]]
@@ -493,12 +503,15 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
             assert id not in id_to_id_human or id_to_id_human[id] == id_human_candidates[0]
             id_to_id_human[id] = id_human_candidates[0]
 
+        if id not in id_to_body:
+            id_to_body[id] = chunk.body
+
     for id, html_contents in id_to_html_contents.items():
         html = '<div class="ntdoc-code-elements">\n'
 
         for html_content in html_contents:
             html += '<div class="ntdoc-code-element">\n'
-            html += html_add_id_links(html_content, ident_to_id, id)
+            html += html_add_id_links(html_content, ident_to_id, id, id_to_body)
             html += '</div>\n'
 
         html += '</div>\n'
@@ -515,7 +528,7 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
 
             html_description = markdown2.markdown(description, extras=['cuddled-lists', 'fenced-code-blocks', 'header-ids', 'tables'])
 
-            html += html_add_id_links(html_description, ident_to_id, id)
+            html += html_add_id_links(html_description, ident_to_id, id, id_to_body)
         else:
             html += '<div class="ntdoc-description-none">\n'
             html += '<p>No description available.</p>\n'
