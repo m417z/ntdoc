@@ -18,7 +18,17 @@
 
         try {
             if (typeof tippy !== 'undefined') {
-                const scrollBarWidth = getScrollBarWidth();
+                // https://stackoverflow.com/a/66726233
+                const calculateScrollbarWidth = () => {
+                    document.documentElement.style.setProperty('--scrollbar-width', (window.innerWidth - document.documentElement.clientWidth) + 'px');
+                };
+                // Recalculate on resize.
+                window.addEventListener('resize', calculateScrollbarWidth);
+                // Recalculate on dom load.
+                document.addEventListener('DOMContentLoaded', calculateScrollbarWidth); 
+                // Recalculate on load (assets loaded as well).
+                window.addEventListener('load', calculateScrollbarWidth);
+
                 tippy('[title]', {
                     content(reference) {
                         const title = reference.getAttribute('title');
@@ -26,7 +36,7 @@
                         return title;
                     },
                     theme: 'code-preview',
-                    maxWidth: `calc(100vw - ${scrollBarWidth}px)`,
+                    maxWidth: 'calc(100vw - var(--scrollbar-width) - 10px)',
                 });
             }
         } catch (e) {
@@ -174,32 +184,5 @@
         }
 
         codeElementsContainer.append(controlButtonsContainer);
-    }
-
-    // https://stackoverflow.com/a/986977
-    function getScrollBarWidth() {
-        var inner = document.createElement('p');
-        inner.style.width = "100%";
-        inner.style.height = "200px";
-
-        var outer = document.createElement('div');
-        outer.style.position = "absolute";
-        outer.style.top = "0px";
-        outer.style.left = "0px";
-        outer.style.visibility = "hidden";
-        outer.style.width = "200px";
-        outer.style.height = "150px";
-        outer.style.overflow = "hidden";
-        outer.appendChild(inner);
-
-        document.body.appendChild(outer);
-        var w1 = inner.offsetWidth;
-        outer.style.overflow = 'scroll';
-        var w2 = inner.offsetWidth;
-        if (w1 == w2) w2 = outer.clientWidth;
-
-        document.body.removeChild(outer);
-
-        return (w1 - w2);
     }
 })();
