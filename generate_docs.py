@@ -197,7 +197,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     assert not chunk.startswith('typedef '), chunk
 
-    if match := re.search(r'(?:NTAPI|NTAPI_INLINE)\n(\w+)\(', chunk):
+    if match := re.search(r'(?:NTAPI|NTAPI_INLINE)\n(\w+)\s*\(', chunk):
         return [match.group(1)]
 
     assert 'NTAPI' not in chunk, chunk
@@ -215,7 +215,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return [match.group(1)]
 
     # Functions.
-    if match := re.match(r'^(?:\w+\s+)*(\w+)\(', chunk):
+    if match := re.match(r'^(?:\w+\s+)*(\w+)\s*\(', chunk):
         return [match.group(1)]
 
     assert False, chunk
