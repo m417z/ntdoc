@@ -534,7 +534,13 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
             # https://github.com/trentm/python-markdown2/issues/525
             description = re.sub(r'\\\n', '  \n', description)
 
-            html_description = markdown2.markdown(description, extras=['cuddled-lists', 'fenced-code-blocks', 'header-ids', 'tables'])
+            html_description = markdown2.markdown(description, extras=[
+                'cuddled-lists',
+                'fenced-code-blocks',
+                'header-ids',
+                'target-blank-links',
+                'tables',
+            ])
 
             html += html_add_id_links(html_description, ident_to_id, id, id_to_body)
         else:
