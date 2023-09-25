@@ -1,3 +1,7 @@
+This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/devnotes/ntqueryperformancecounter).
+
+---
+
 ### PerformanceCounter
 
 Result is number of processor ticks after last reset.

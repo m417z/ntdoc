@@ -1,4 +1,4 @@
-Opens a handle to an existing thread.
+Opens a handle to an existing thread. This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/devnotes/ntopenthread).
 
 # Parameters
  - `ThreadHandle` - a pointer to a variable that receives a handle to the thread.

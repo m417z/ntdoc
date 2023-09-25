@@ -1,4 +1,4 @@
-This structure describes various information about a type of kernel objects.
+This structure describes various information about a type of kernel objects. This structure is partially [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-__public_object_type_information).
 
 # Applicable to
  - `NtQueryObject` with `ObjectTypeInformation`.

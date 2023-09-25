@@ -1,3 +1,7 @@
+This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/devnotes/nt-create-named-pipe-file).
+
+---
+
 Function `NtCreateNamedPipeFile` creates *Named Pipe* File Object. Named Pipes are especial kind of files, so all functionality is provided with file's functions like `NtReadFile`, `NtWriteFile` etc. \
 Named Pipes are frequently used in NT system, for example as **stdin** and **stdout** handles.
 

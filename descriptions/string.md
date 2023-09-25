@@ -1,1 +1,1 @@
-This structure is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-string).
+This structure is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows/win32/api/ntdef/ns-ntdef-string) and [in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-string).
