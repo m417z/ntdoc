@@ -185,9 +185,13 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     if re.search(r'^typedef .*? NTAPI WNF_USER_CALLBACK\(', chunk, flags=re.DOTALL | re.MULTILINE):
         return ['WNF_USER_CALLBACK']
 
+    # Example:
+    # typedef VOID (NTAPI *PACTIVATION_CONTEXT_NOTIFY_ROUTINE)(...
     if chunk.startswith('typedef ') and (match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL|WINAPI)\s*(?:\*\s*)?(\w+)\)', chunk)):
         return [match.group(1)]
 
+    # Example:
+    # typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
     if match := re.match(r'^typedef(?: const)? \w+(?: const)?(?: UNALIGNED)?(.*?)(?:\[.*?\])?;$', chunk):
         idents = match.group(1).split(',')
         idents = [x.lstrip('* ').rstrip() for x in idents]
@@ -215,7 +219,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return [match.group(1)]
 
     # Functions.
-    if match := re.match(r'^(?:\w+\s+)*(\w+)\s*\(', chunk):
+    if match := re.match(r'^(?:\w+\**\s+)*(\w+)\s*\(', chunk):
         return [match.group(1)]
 
     assert False, chunk
