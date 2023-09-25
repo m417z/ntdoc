@@ -195,11 +195,11 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 
 ### FileQuotaInformation
 
-`// 32      FILE_QUOTA_INFORMATION                  0x10                                    -\> FileOleClassIdInformation`
+`// 32      FILE_QUOTA_INFORMATION                  0x10                                    -> FileOleClassIdInformation`
 
 ### FileReparsePointInformation
 
-`// 33                                              0x08                                    -\> FileOleStateBitsInformation`
+`// 33                                              0x08                                    -> FileOleStateBitsInformation`
 
 ### FileNetworkOpenInformation
 
@@ -214,7 +214,7 @@ Enumeration type `FILE_INFORMATION_CLASS` defines informational classes for File
 
 ### FileTrackingInformation
 
-`// 36                                      0xC0            NtQueryInformationFile          -\> FileOleAllInformation`
+`// 36                                      0xC0            NtQueryInformationFile          -> FileOleAllInformation`
 
 ### FileOleDirectoryInformation
 
