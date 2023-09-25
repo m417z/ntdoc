@@ -1,3 +1,7 @@
+This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/devnotes/ntquerydirectoryobject).
+
+---
+
 ### DirectoryObjectHandle
 
 Handle to Directory Object opened with `DIRECTORY_QUERY` access.

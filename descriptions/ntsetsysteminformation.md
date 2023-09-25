@@ -1,3 +1,7 @@
+This function is [documented in Windows SDK](https://learn.microsoft.com/en-us/windows/win32/sysinfo/ntsetsysteminformation).
+
+---
+
 `NtSetSystemInformation` is used to set some inaccessible *KernelMode* variables. See also `NtQuerySystemInformation`.
 
 ### SystemInformationClass

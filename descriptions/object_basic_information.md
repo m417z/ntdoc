@@ -1,4 +1,4 @@
-Basic kernel handle/object information, common to all object types.
+Basic kernel handle/object information, common to all object types. This structure is partially [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_public_object_basic_information).
 
 # Applicable to
  - `NtQueryObject` with `ObjectBasicInformation`.

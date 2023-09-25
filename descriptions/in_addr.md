@@ -1,0 +1,1 @@
+This structure is documented in Windows SDK [here](https://learn.microsoft.com/en-us/windows/win32/api/winsock2/ns-winsock2-in_addr) and [here](https://learn.microsoft.com/en-us/windows/win32/api/inaddr/ns-inaddr-in_addr).
