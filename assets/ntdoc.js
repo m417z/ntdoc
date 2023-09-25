@@ -131,6 +131,15 @@
         controlButtonsContainer.classList.add('ntdoc-code-control-buttons');
 
         const buttonCopy = document.createElement('button');
+        // Wrap the button to allow tippy to work.
+        // https://github.com/atomiks/tippyjs/issues/286
+        const wrapperForButtonCopy = document.createElement('span');
+        wrapperForButtonCopy.append(buttonCopy);
+        let copiedTooltip = typeof tippy !== 'undefined' ? tippy(wrapperForButtonCopy, {
+            content: 'Copied',
+            theme: 'code-preview',
+            trigger: 'manual',
+        }) : null;
         buttonCopy.classList.add('ntdoc-code-control-button-autohide');
         buttonCopy.textContent = 'Copy';
         buttonCopy.addEventListener('click', () => {
@@ -141,15 +150,20 @@
                 codeElement.querySelector('.ntdoc-code-body').textContent;
             navigator.clipboard.writeText(code);
 
-            const previousText = buttonCopy.textContent;
-            buttonCopy.textContent = '✅';
             buttonCopy.disabled = true;
+            copiedTooltip?.show();
+            copiedTooltip?.setProps({
+                trigger: 'mouseenter focus',
+            });
             setTimeout(() => {
-                buttonCopy.textContent = previousText;
                 buttonCopy.disabled = false;
+                copiedTooltip?.hide();
+                copiedTooltip?.setProps({
+                    trigger: 'manual',
+                });
             }, 500);
         });
-        controlButtonsContainer.append(buttonCopy);
+        controlButtonsContainer.append(wrapperForButtonCopy);
 
         const codeElements = codeElementsContainer.querySelectorAll(':scope > .ntdoc-code-element');
         if (codeElements.length > 1) {
