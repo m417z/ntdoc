@@ -42,6 +42,14 @@
         } catch (e) {
             console.error(e);
         }
+
+        try {
+            if (typeof anchors !== 'undefined') {
+                anchors.add('.ntdoc-description :is(h1, h2, h3, h4, h5, h6)');
+            }
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     function initSearch() {
