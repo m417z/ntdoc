@@ -4,7 +4,7 @@ Function `NtWriteFileGather` writes specified block of file with data from memor
 
 `HANDLE` to File Object opened with `FILE_WRITE_DATA` access and `FILE_NO_INTERMEDIATE_BUFFERING` open option.
 
-**Warring:** You cannot use File Object opened with `FILE_APPEND_DATA` access.
+**Warning:** You cannot use File Object opened with `FILE_APPEND_DATA` access.
 
 ### Event
 
