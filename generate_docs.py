@@ -579,16 +579,15 @@ def validate_description_files():
 
     if descriptions_ids != docs_ids:
         print('Warning: Description files and docs do not match.')
-        print('> Description files without docs:')
-        print('\n'.join(sorted(descriptions_ids - docs_ids)))
-        print('> Docs without description files:')
-        print('\n'.join(sorted(docs_ids - descriptions_ids)))
+        print('To update, run:')
+        print()
 
-        # for p in descriptions_ids - docs_ids:
-        #     Path('descriptions', p + '.md').unlink()
+        for p in sorted(descriptions_ids - docs_ids):
+            size = Path('descriptions', p + '.md').stat().st_size
+            print(f'rm descriptions/{p}.md # size={size}')
 
-        # for p in docs_ids - descriptions_ids:
-        #     Path('descriptions', p + '.md').touch()
+        for p in sorted(docs_ids - descriptions_ids):
+            print(f'touch descriptions/{p}.md')
 
 
 def main():
