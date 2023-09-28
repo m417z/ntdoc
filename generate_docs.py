@@ -484,7 +484,7 @@ def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str, i
     return re.sub(regex, repl, html)
 
 
-def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], assets_path: Path, out_path: Path):
+def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], assets_path: Path, out_path: Path, ids_pattern: str | None):
     shutil.copytree(assets_path, out_path)
 
     html_page_template_path = out_path / 'page-template.html'
@@ -515,6 +515,9 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
             id_to_body[id] = chunk.body
 
     for id, html_contents in id_to_html_contents.items():
+        if ids_pattern and not re.search(ids_pattern, id):
+            continue
+
         html = '<div class="ntdoc-code-elements">\n'
 
         for html_content in html_contents:
@@ -567,7 +570,7 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
     (out_path / f'symbols.html').write_text(html_page)
 
 
-def generate_docs(phnt_include_path: Path):
+def generate_docs(phnt_include_path: Path, ids_pattern: str | None):
     chunks: List[Chunk] = []
     for p in sorted(phnt_include_path.glob('*.h')):
         chunks += split_header_to_chunks(p)
@@ -578,7 +581,7 @@ def generate_docs(phnt_include_path: Path):
 
     assets_path = Path('assets')
     out_path = Path('docs')
-    organize_chunks_to_dir(chunks, ident_to_id, assets_path, out_path)
+    organize_chunks_to_dir(chunks, ident_to_id, assets_path, out_path, ids_pattern)
 
 
 def validate_description_files():
@@ -604,6 +607,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--path", help="phnt include path", required=True)
     parser.add_argument("-c", "--commit", help="phnt commit")
+    parser.add_argument("-i", "--ids-pattern",
+                        help="generate only the ids matching the regex pattern, "
+                             "useful for testing to quickly generate a subset of the docs")
     args = parser.parse_args()
 
     phnt_include_path = Path(args.path)
@@ -614,7 +620,7 @@ def main():
 
     start = time.time()
 
-    generate_docs(phnt_include_path)
+    generate_docs(phnt_include_path, args.ids_pattern)
     validate_description_files()
 
     end = time.time()
