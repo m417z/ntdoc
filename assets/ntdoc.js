@@ -35,7 +35,7 @@
                         reference.removeAttribute('title');
                         return title;
                     },
-                    theme: 'code-preview',
+                    theme: 'ntdoc code-preview',
                     maxWidth: 'calc(100vw - var(--scrollbar-width) - 10px)',
                 });
             }
@@ -145,7 +145,7 @@
         wrapperForButtonCopy.append(buttonCopy);
         let copiedTooltip = typeof tippy !== 'undefined' ? tippy(wrapperForButtonCopy, {
             content: 'Copied',
-            theme: 'code-preview',
+            theme: 'ntdoc',
             trigger: 'manual',
         }) : null;
         buttonCopy.classList.add('ntdoc-code-control-button-autohide');
@@ -203,6 +203,17 @@
             });
 
             controlButtonsContainer.append(buttonLeft, buttonRight);
+
+            if (typeof tippy !== 'undefined') {
+                tippy(controlButtonsContainer.querySelectorAll('[title]'), {
+                    content(reference) {
+                        const title = reference.getAttribute('title');
+                        reference.removeAttribute('title');
+                        return title;
+                    },
+                    theme: 'ntdoc',
+                });
+            }
         }
 
         codeElementsContainer.append(controlButtonsContainer);
