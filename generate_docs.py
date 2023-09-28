@@ -444,11 +444,12 @@ def chunk_to_html(chunk: Chunk) -> str:
     html += '<span class="ntdoc-code-footer">'
     html += html_after
     html += '</span>'
+    html += '<span class="ntdoc-code-links">'
+    html += '<hr>'
+    html += f'<a target="_blank" href="{code_url}">View code on GitHub</a>'
+    html += '</span>'
     html += '</code>'
     html += '</pre>'
-    html += '<div class="ntdoc-code-links">'
-    html += f'<a target="_blank" href="{code_url}">View code on GitHub</a>'
-    html += '</div>'
 
     return html
 
