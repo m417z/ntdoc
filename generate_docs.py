@@ -240,7 +240,8 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     code = path.read_text()
     original_newline_count = code.count('\n')
 
-    assert '\t' not in code
+    # Temporary exception for ntioapi.h.
+    assert path.name == 'ntioapi.h' or '\t' not in code
     assert '@' not in code
 
     # Remove block comments.
