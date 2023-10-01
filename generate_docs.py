@@ -240,8 +240,10 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     code = path.read_text()
     original_newline_count = code.count('\n')
 
-    # Temporary exception for ntioapi.h.
-    assert path.name == 'ntioapi.h' or '\t' not in code
+    # Tabs to spaces, only at the beginning of the line.
+    code = re.sub(r'^\t+', lambda x: 4 * ' ' * len(x.group(0)), code, flags=re.MULTILINE)
+
+    assert '\t' not in code
     assert '@' not in code
 
     # Remove block comments.
@@ -517,7 +519,7 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
             id_to_body[id] = chunk.body
 
     for id, html_contents in id_to_html_contents.items():
-        if ids_pattern and not re.search(ids_pattern, id):
+        if ids_pattern and not re.search(ids_pattern, id, flags=re.IGNORECASE):
             continue
 
         html = '<div class="ntdoc-code-elements">\n'
