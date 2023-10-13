@@ -60,18 +60,29 @@ Limits on which processors the thread is allowed to run.
 | Required access | N/A   | `THREAD_SET_LIMITED_INFORMATION`
 
 ## ThreadImpersonationToken (5)
-Sets thread impersonation token. Note that if the token of the target process does not have `SeImpersonatePrivilege` enabled, the system might downgrade the assigned token to the identification level of impersonation.
+Sets thread impersonation token.
 
 |                 | Query | Set
 | --------------- | ----- | ---
-| Type            | N/A   | Token `HANDLE` with `TOKEN_IMPERSONATE` access
+| Type            | N/A   | Token `HANDLE` with `TOKEN_IMPERSONATE` access or `NULL` to clear
 | Required access | N/A   | `THREAD_SET_THREAD_TOKEN`
+
+### Remarks
+Note that if the the target process does not have `SeImpersonatePrivilege` enabled, the system might silently downgrade the assigned token (a copy of the provided one) to the identification level of impersonation. Additionally, the system can also duplicate the token before assignment to remove an incompatible process trust level.
+
+### Notable return values
+ - `STATUS_BAD_TOKEN_TYPE` - the caller provided a primary token while the operation requires an impersonation token.
 
 ### Related Win32 API
  - [`SetThreadToken`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadtoken)
+ - [`ImpersonateLoggedOnUser`](https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-impersonateloggedonuser)
+ - [`RevertToSelf`](https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-reverttoself)
 
 ### See also
  - `NtOpenThreadToken`
+ - `NtImpersonateThread`
+ - `RtlImpersonateSelf`
+ - `NtSetInformationProcess` with `ProcessAccessToken`
 
 ## ThreadDescriptorTableEntry (6)
 

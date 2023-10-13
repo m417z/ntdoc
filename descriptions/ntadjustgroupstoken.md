@@ -1,39 +1,29 @@
-Function `NtAdjustGroupsToken` modify state of one or more groups available for Token Object. See also description of similar *Win32 API* **AdjustTokenGroups** in *Win32 SDK*.
+Enables and disables groups in the token.
 
-### TokenHandle
+# Parameters
+ - `TokenHandle` - a handle to the token. The handle must grant `TOKEN_ADJUST_GROUPS` access. Additionally, the handle must grant `TOKEN_QUERY` when the caller provides the `PreviousState` buffer.
+ - `ResetToDefault` - a boolean indicating if the function should reset group states to their defaults based on the presence of `SE_GROUP_ENABLED_BY_DEFAULT` flag.
+ - `NewState` - an optional pointer to a collection of group SIDs with their desired states, such as `SE_GROUP_DISABLED` (`0`) or `SE_GROUP_ENABLED`.
+ - `BufferLength` - the size of the `PreviousState` buffer in bytes.
+ - `PreviousState` - an optional pointer to a user-allocated buffer that receives the state of token groups prior to adjustment.
+ - `ReturnLength` - an optional pointer to a variable that receives the number of bytes written to the `PreviousState` buffer when the function succeeds or the number of bytes requires when the buffer is too small.
 
-`HANDLE` to Token Object opened with `TOKEN_ADJUST_GROUPS` access.
+# Notable return values
+ - `STATUS_CANT_ENABLE_DENY_ONLY` - the caller attempted to enable a group that has `SE_GROUP_USE_FOR_DENY_ONLY` flag set.
+ - `STATUS_CANT_DISABLE_MANDATORY` - the caller attempted to disable a group that has `SE_GROUP_MANDATORY` flag set.
+ - `STATUS_NOT_ALL_ASSIGNED` - this successful status indicates that not all of the requested groups were adjusted, such as when they are not present.
+ - `STATUS_BUFFER_TOO_SMALL` - the previous state data does not fit into the provided buffer.
 
-### ResetToDefault
+# Remarks
+Groups are taken into account for granting access checks when they have `SE_GROUP_ENABLED` flag set. Groups are taken into account for denying access checks when they have either `SE_GROUP_ENABLED` or `SE_GROUP_USE_FOR_DENY_ONLY` flags set.                                                                                                                                                                       
 
-If set, groups are reset to token's defaults. In this case all other parameters are ignored.
+Note that this function does not support token pseudo-handles such as `NtCurrentProcessToken`. If you want to adjust the current process/thread token, you need to open it first.
 
-### TokenGroups
-
-Pointer to `TOKEN_GROUPS` structure containing groups to modify.
-
-### PreviousGroupsLength
-
-Specifies length of `PreviousGroups` buffer, in bytes.
-
-### PreviousGroups
-
-Optionally pointer to `TOKEN_GROUPS` buffer receiving information about modified groups before modification begins.
-
-### RequiredLength
-
-If `PreviousGroups` parameter is specified, and `PreviousGroupsLength` is to small, this value receives required length of buffer, in bytes.
-
-# Documented by
-
-* Tomasz Nowak
+# Related Win32 API
+ - [`AdjustTokenGroups`](https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-adjusttokengroups)
 
 # See also
-
-* `NtAdjustPrivilegesToken`
-* `NtCreateToken`
-* `NtOpenProcessToken`
-* `NtOpenThreadToken`
-* `NtQueryInformationToken`
-* `NtSetInformationToken`
-* `TOKEN_GROUPS`
+ - `NtFilterToken`
+ - `NtAdjustPrivilegesToken`
+ - `NtOpenProcessToken`
+ - `NtOpenThreadToken`

@@ -1,31 +1,41 @@
-This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenprocesstoken).
+Opens a handle to a primary token of a process. This function is [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenprocesstoken).
 
----
+# Parameters
+ - `ProcessHandle` - a handle to the process or the `NtCurrentProcess` pseudo-handle. The handle must grant `PROCESS_QUERY_LIMITED_INFORMATION` access.
+ - `DesiredAccess` - the requested access mask.
+ - `TokenHandle` - a pointer to a variable that receives a handle to the token.
 
-### ProcessHandle
+# Access masks
 
-`HANDLE` to Process Object.
+Access mask               | Use
+------------------------- | -----
+`TOKEN_ASSIGN_PRIMARY`    | Allows creating processes with this token and assigning the token as primary via `NtSetInformationProcess` with `ProcessAccessToken`.
+`TOKEN_DUPLICATE`         | Allows duplicating the token via `NtDuplicateToken`.
+`TOKEN_IMPERSONATE`       | Allows impersonating the token via `NtSetInformationThread` with `ThreadImpersonationToken`.
+`TOKEN_QUERY`             | Allows querying most information classes via `NtQueryInformationToken`.
+`TOKEN_QUERY_SOURCE`      | Allows querying `TokenSource` via `NtQueryInformationToken`.
+`TOKEN_ADJUST_PRIVILEGES` | Allows adjusting token privileges via `NtAdjustPrivilegesToken`
+`TOKEN_ADJUST_GROUPS`     | Allows adjusting token privileges via `NtAdjustGroupsToken`
+`TOKEN_ADJUST_DEFAULT`    | Allows setting most information classes via `NtSetInformationToken`.
+`TOKEN_ADJUST_SESSIONID`  | Allows setting `TokenSessionId` via `NtSetInformationToken`.
+`TOKEN_ALL_ACCESS_P`      | All of the above except for the `TOKEN_ADJUST_SESSIONID` right, plus standard rights.
+`TOKEN_ALL_ACCESS`        | All of the above plus standard rights.
 
-### DesiredAccess
+# Remarks
+To avoid retaining unused resources, call `NtClose` to close the returned handle when it is no longer required.
 
-Access mask for opened Token Object.
+Instead of opening the current process token for query, consider using the `NtCurrentProcessToken` pseudo-handle on Windows 8 and above.
 
-### TokenHandle
+To specify handle attributes, use `NtOpenProcessTokenEx`.
 
-Result of call - `HANDLE` to Token Object associated with process specified by `ProcessHandle` parameter.
-
----
-
-See also `PROCESS_INFORMATION_CLASS` with `ProcessAccessToken` information class.
-
-# Documented by
-
-* Tomasz Nowak
+# Related Win32 API
+ - [`OpenProcessToken`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openprocesstoken)
 
 # See also
-
-* `NtCreateToken`
-* `NtOpenThreadToken`
-* `NtQueryInformationProcess`
-* `NtSetInformationProcess`
-* `PROCESS_INFORMATION_CLASS`
+ - `NtCurrentProcessToken`
+ - `NtOpenProcessTokenEx`
+ - `NtOpenThreadToken`
+ - `NtQueryInformationToken`
+ - `NtSetInformationToken`
+ - `NtDuplicateToken`
+ - `NtOpenProcess`
