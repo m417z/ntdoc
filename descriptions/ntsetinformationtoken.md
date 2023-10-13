@@ -1,34 +1,27 @@
-This function is documented in Windows Driver Kit [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetinformationtoken) and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwsetinformationtoken).
+Sets various information about the specified token. This function is partially documented in Windows Driver Kit [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetinformationtoken) and [here](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwsetinformationtoken).
 
----
+# Parameters
+ - `TokenHandle` - a handle to the token. For most information classes, the handle must grant `TOKEN_ADJUST_DEFAULT` access.
+ - `TokenInformationClass` - the type of information to set.
+ - `TokenInformation` - a pointer to the buffer with the data specific to the request.
+ - `TokenInformationLength` - the size of the provided buffer in bytes.
 
-Function `NtSetInformationToken` sets parameters of Token Objects. See also description of **SetTokenInformation** \
-in *Win32 API SDK*.
+# Information classes
+For the list of supported info classes and required token access, see `TOKEN_INFORMATION_CLASS`.
 
-### TokenHandle
+# Notable return values
+ - `STATUS_TOKEN_ALREADY_IN_USE` indicates that the specified type of information cannot be changed for a token that is currently used as a primary token for a process.
 
-`HANDLE` to Token Object opened with `TOKEN_ADJUST_DEFAULT` access.
+# Remarks
+Note that as opposed to `NtQueryInformationToken`, this function does not support token pseudo-handles.
 
-### TokenInformationClass
-
-Information class described in `TOKEN_INFORMATION_CLASS` topic.
-
-### TokenInformation
-
-User's allocated buffer containing data to set to.
-
-### TokenInformationLength
-
-Length of `TokenInformation` buffer, in bytes.
-
-# Documented by
-
-* Tomasz Nowak
+# Related Win32 API
+ - [`SetTokenInformation`](https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-settokeninformation)
 
 # See also
-
-* `NtCreateToken`
-* `NtOpenProcessToken`
-* `NtOpenThreadToken`
-* `NtQueryInformationToken`
-* `TOKEN_INFORMATION_CLASS`
+ - `NtQueryInformationToken`
+ - `NtFilterToken`
+ - `NtAdjustPrivilegesToken`
+ - `NtAdjustGroupsToken`
+ - `NtOpenProcessToken`
+ - `NtOpenThreadToken`
