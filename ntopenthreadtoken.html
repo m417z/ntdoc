@@ -54,7 +54,7 @@ NtOpenThreadToken(
     );
 </span><span class="ntdoc-code-footer">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/70b51c1afe05dd37470e36a13cc45eea09aa0b28/phnt/include/ntseapi.h#L297">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/719729224e463c15472124d3c2e63781cb3ee665/phnt/include/ntseapi.h#L297">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">#ifndef _NTZWAPI_H
 
@@ -69,49 +69,111 @@ ZwOpenThreadToken(
     );
 </span><span class="ntdoc-code-footer">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/70b51c1afe05dd37470e36a13cc45eea09aa0b28/phnt/include/ntzwapi.h#L2606">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/719729224e463c15472124d3c2e63781cb3ee665/phnt/include/ntzwapi.h#L2606">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
-<p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenthreadtoken">documented in Windows Driver Kit</a>.</p>
+<p>Opens a handle to an impersonation token of a thread. This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenthreadtoken">documented in Windows Driver Kit</a>.</p>
 
-<hr />
-
-<h3 id="threadhandle">ThreadHandle</h3>
-
-<p><code>HANDLE</code> to thread object.</p>
-
-<h3 id="desiredaccess">DesiredAccess</h3>
-
-<p>Access mask for opened Token Object.</p>
-
-<h3 id="openasself">OpenAsSelf</h3>
-
-<p>???</p>
-
-<h3 id="tokenhandle">TokenHandle</h3>
-
-<p>Result of call - <code>HANDLE</code> to Token Object associated with <code>ThreadHandle</code> thread.</p>
-
-<hr />
-
-<p>Usually Win32 threads don't have associated Tokens. If you want to associate Token for Thread Object, use <br />
-<code><a href="ntsetinformationthread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationThread(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ THREADINFOCLASS ThreadInformationClass,&#10;    _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,&#10;    _In_ ULONG ThreadInformationLength&#10;    );">NtSetInformationThread</a></code> with <code>ThreadImpersonationToken</code> information class.</p>
-
-<h1 id="documented-by">Documented by</h1>
+<h1 id="parameters">Parameters</h1>
 
 <ul>
-<li>Tomasz Nowak</li>
-<li>ReactOS</li>
+<li><code>ThreadHandle</code> - a handle to the thread or the <code><a href="ntcurrentthread" title="#define NtCurrentThread() ((HANDLE)(LONG_PTR)-2)">NtCurrentThread</a></code> pseudo-handle. The handle must grant <code>THREAD_QUERY_LIMITED_INFORMATION</code> access.</li>
+<li><code>DesiredAccess</code> - the requested access mask.</li>
+<li><code>OpenAsSelf</code> - a boolean determining whether the system should perform the access check on the target token using the effective security context of the calling thread (<code>FALSE</code>) or ignore impersonation and use the security context of the calling process (<code>TRUE</code>).</li>
+<li><code>TokenHandle</code> - a pointer to a variable that receives a handle to the token.</li>
+</ul>
+
+<h1 id="access-masks">Access masks</h1>
+
+<table>
+<thead>
+<tr>
+  <th>Access mask</th>
+  <th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>TOKEN_ASSIGN_PRIMARY</code></td>
+  <td>Allows creating processes with this token and assigning the token as primary via <code><a href="ntsetinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength&#10;    );">NtSetInformationProcess</a></code> with <code>ProcessAccessToken</code>.</td>
+</tr>
+<tr>
+  <td><code>TOKEN_DUPLICATE</code></td>
+  <td>Allows duplicating the token via <code><a href="ntduplicatetoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDuplicateToken(&#10;    _In_ HANDLE ExistingTokenHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ BOOLEAN EffectiveOnly,&#10;    _In_ TOKEN_TYPE Type,&#10;    _Out_ PHANDLE NewTokenHandle&#10;    );">NtDuplicateToken</a></code>.</td>
+</tr>
+<tr>
+  <td><code>TOKEN_IMPERSONATE</code></td>
+  <td>Allows impersonating the token via <code><a href="ntsetinformationthread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationThread(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ THREADINFOCLASS ThreadInformationClass,&#10;    _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,&#10;    _In_ ULONG ThreadInformationLength&#10;    );">NtSetInformationThread</a></code> with <code>ThreadImpersonationToken</code>.</td>
+</tr>
+<tr>
+  <td><code>TOKEN_QUERY</code></td>
+  <td>Allows querying most information classes via <code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code>.</td>
+</tr>
+<tr>
+  <td><code>TOKEN_QUERY_SOURCE</code></td>
+  <td>Allows querying <code>TokenSource</code> via <code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code>.</td>
+</tr>
+<tr>
+  <td><code>TOKEN_ADJUST_PRIVILEGES</code></td>
+  <td>Allows adjusting token privileges via <code><a href="ntadjustprivilegestoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAdjustPrivilegesToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ BOOLEAN DisableAllPrivileges,&#10;    _In_opt_ PTOKEN_PRIVILEGES NewState,&#10;    _In_ ULONG BufferLength,&#10;    _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtAdjustPrivilegesToken</a></code></td>
+</tr>
+<tr>
+  <td><code>TOKEN_ADJUST_GROUPS</code></td>
+  <td>Allows adjusting token privileges via <code><a href="ntadjustgroupstoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAdjustGroupsToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ BOOLEAN ResetToDefault,&#10;    _In_opt_ PTOKEN_GROUPS NewState,&#10;    _In_opt_ ULONG BufferLength,&#10;    _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_GROUPS PreviousState,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtAdjustGroupsToken</a></code></td>
+</tr>
+<tr>
+  <td><code>TOKEN_ADJUST_DEFAULT</code></td>
+  <td>Allows setting most information classes via <code><a href="ntsetinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _In_reads_bytes_(TokenInformationLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength&#10;    );">NtSetInformationToken</a></code>.</td>
+</tr>
+<tr>
+  <td><code>TOKEN_ADJUST_SESSIONID</code></td>
+  <td>Allows setting <code>TokenSessionId</code> via <code><a href="ntsetinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _In_reads_bytes_(TokenInformationLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength&#10;    );">NtSetInformationToken</a></code>.</td>
+</tr>
+<tr>
+  <td><code>TOKEN_ALL_ACCESS_P</code></td>
+  <td>All of the above except for the <code>TOKEN_ADJUST_SESSIONID</code> right, plus standard rights.</td>
+</tr>
+<tr>
+  <td><code>TOKEN_ALL_ACCESS</code></td>
+  <td>All of the above plus standard rights.</td>
+</tr>
+</tbody>
+</table>
+
+<h1 id="notable-return-values">Notable return values</h1>
+
+<ul>
+<li><code>STATUS_NO_TOKEN</code> - the thread is not impersonating at the moment.</li>
+<li><code>STATUS_CANT_OPEN_ANONYMOUS</code> - the caller attempted to open a token that has anonymous level of impersonation.</li>
+</ul>
+
+<h1 id="remarks">Remarks</h1>
+
+<p>To avoid retaining unused resources, call <code><a href="ntclose" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a></code> to close the returned handle when it is no longer required.</p>
+
+<p>Instead of opening the current thread token for query, consider using the <code><a href="ntcurrentthreadtoken" title="#define NtCurrentThreadToken() ((HANDLE)(LONG_PTR)-5) // NtOpenThreadToken(NtCurrentThread())">NtCurrentThreadToken</a></code> pseudo-handle on Windows 8 and above.</p>
+
+<p>To specify handle attributes, use <code><a href="ntopenthreadtokenex" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThreadTokenEx(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ BOOLEAN OpenAsSelf,&#10;    _In_ ULONG HandleAttributes,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenThreadTokenEx</a></code>.</p>
+
+<p>To set a thread token, use <code><a href="ntsetinformationthread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationThread(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ THREADINFOCLASS ThreadInformationClass,&#10;    _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,&#10;    _In_ ULONG ThreadInformationLength&#10;    );">NtSetInformationThread</a></code> with <code>ThreadImpersonationToken</code>. See <code><a href="threadinfoclass" title="typedef enum _THREADINFOCLASS&#10;{&#10;    ThreadBasicInformation, // q: THREAD_BASIC_INFORMATION&#10;    ThreadTimes, // q: KERNEL_USER_TIMES&#10;    ThreadPriority, // s: KPRIORITY (requires SeIncreaseBasePriorityPrivilege)&#10;    ThreadBasePriority, // s: KPRIORITY&#10;    ThreadAffinityMask, // s: KAFFINITY&#10;    ThreadImpersonationToken, // s: HANDLE&#10;    ThreadDescriptorTableEntry, // q: DESCRIPTOR_TABLE_ENTRY (or WOW64_DESCRIPTOR_TABLE_ENTRY)&#10;    ThreadEnableAlignmentFaultFixup, // s: BOOLEAN&#10;    ThreadEventPair,&#10;    ThreadQuerySetWin32StartAddress, // q: ULONG_PTR&#10;    ThreadZeroTlsCell, // s: ULONG // TlsIndex // 10&#10;    ThreadPerformanceCount, // q: LARGE_INTEGER&#10;    ThreadAmILastThread, // q: ULONG&#10;    ThreadIdealProcessor, // s: ULONG&#10;    ThreadPriorityBoost, // qs: ULONG&#10;    ThreadSetTlsArrayAddress, // s: ULONG_PTR // Obsolete&#10;    ThreadIsIoPending, // q: ULONG&#10;    ThreadHideFromDebugger, // q: BOOLEAN; s: void&#10;...">THREADINFOCLASS</a></code> for more details.</p>
+
+<h1 id="related-win32-api">Related Win32 API</h1>
+
+<ul>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openthreadtoken"><code>OpenThreadToken</code></a></li>
 </ul>
 
 <h1 id="see-also">See also</h1>
 
 <ul>
-<li><code><a href="ntcreatetoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateToken(&#10;    _Out_ PHANDLE TokenHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ TOKEN_TYPE Type,&#10;    _In_ PLUID AuthenticationId,&#10;    _In_ PLARGE_INTEGER ExpirationTime,&#10;    _In_ PTOKEN_USER User,&#10;    _In_ PTOKEN_GROUPS Groups,&#10;    _In_ PTOKEN_PRIVILEGES Privileges,&#10;    _In_opt_ PTOKEN_OWNER Owner,&#10;    _In_ PTOKEN_PRIMARY_GROUP PrimaryGroup,&#10;    _In_opt_ PTOKEN_DEFAULT_DACL DefaultDacl,&#10;    _In_ PTOKEN_SOURCE Source&#10;    );">NtCreateToken</a></code></li>
+<li><code><a href="ntcurrentthreadtoken" title="#define NtCurrentThreadToken() ((HANDLE)(LONG_PTR)-5) // NtOpenThreadToken(NtCurrentThread())">NtCurrentThreadToken</a></code></li>
+<li><code><a href="ntcurrentthreadeffectivetoken" title="#define NtCurrentThreadEffectiveToken() ((HANDLE)(LONG_PTR)-6) // NtOpenThreadToken(NtCurrentThread()) + NtOpenProcessToken(NtCurrentProcess())">NtCurrentThreadEffectiveToken</a></code></li>
+<li><code><a href="ntopenthreadtokenex" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThreadTokenEx(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ BOOLEAN OpenAsSelf,&#10;    _In_ ULONG HandleAttributes,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenThreadTokenEx</a></code></li>
 <li><code><a href="ntopenprocesstoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenProcessToken(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenProcessToken</a></code></li>
+<li><code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code></li>
+<li><code><a href="ntsetinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _In_reads_bytes_(TokenInformationLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength&#10;    );">NtSetInformationToken</a></code></li>
+<li><code><a href="ntduplicatetoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDuplicateToken(&#10;    _In_ HANDLE ExistingTokenHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ BOOLEAN EffectiveOnly,&#10;    _In_ TOKEN_TYPE Type,&#10;    _Out_ PHANDLE NewTokenHandle&#10;    );">NtDuplicateToken</a></code></li>
 <li><code><a href="ntopenthread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThread(&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PCLIENT_ID ClientId&#10;    );">NtOpenThread</a></code></li>
-<li><code><a href="ntsetinformationthread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationThread(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ THREADINFOCLASS ThreadInformationClass,&#10;    _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,&#10;    _In_ ULONG ThreadInformationLength&#10;    );">NtSetInformationThread</a></code></li>
-<li><code>THREAD_INFORMATION_CLASS</code></li>
 </ul>
 </div>
 <div class="ntdoc-description-links">
@@ -122,6 +184,7 @@ ZwOpenThreadToken(
     <div class="spacer"></div>
     <footer>
         By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
         <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
         <dark-mode-toggle permanent></dark-mode-toggle>
     </footer>

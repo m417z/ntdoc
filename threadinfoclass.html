@@ -107,7 +107,7 @@
 </span><span class="ntdoc-code-footer">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/70b51c1afe05dd37470e36a13cc45eea09aa0b28/phnt/include/ntpsapi.h#L229">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/719729224e463c15472124d3c2e63781cb3ee665/phnt/include/ntpsapi.h#L229">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
 <p>This enumeration defines types of information that can be queried or set for threads.</p>
@@ -279,7 +279,7 @@
 
 <h2 id="threadimpersonationtoken-5">ThreadImpersonationToken (5)</h2>
 
-<p>Sets thread impersonation token. Note that if the token of the target process does not have <code>SeImpersonatePrivilege</code> enabled, the system might downgrade the assigned token to the identification level of impersonation.</p>
+<p>Sets thread impersonation token.</p>
 
 <table>
 <thead>
@@ -293,7 +293,7 @@
 <tr>
   <td>Type</td>
   <td>N/A</td>
-  <td>Token <code>HANDLE</code> with <code>TOKEN_IMPERSONATE</code> access</td>
+  <td>Token <code>HANDLE</code> with <code>TOKEN_IMPERSONATE</code> access or <code>NULL</code> to clear</td>
 </tr>
 <tr>
   <td>Required access</td>
@@ -303,16 +303,31 @@
 </tbody>
 </table>
 
+<h3 id="remarks">Remarks</h3>
+
+<p>Note that if the the target process does not have <code>SeImpersonatePrivilege</code> enabled, the system might silently downgrade the assigned token (a copy of the provided one) to the identification level of impersonation. Additionally, the system can also duplicate the token before assignment to remove an incompatible process trust level.</p>
+
+<h3 id="notable-return-values">Notable return values</h3>
+
+<ul>
+<li><code>STATUS_BAD_TOKEN_TYPE</code> - the caller provided a primary token while the operation requires an impersonation token.</li>
+</ul>
+
 <h3 id="related-win32-api-3">Related Win32 API</h3>
 
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadtoken"><code>SetThreadToken</code></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-impersonateloggedonuser"><code>ImpersonateLoggedOnUser</code></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-reverttoself"><code>RevertToSelf</code></a></li>
 </ul>
 
 <h3 id="see-also-2">See also</h3>
 
 <ul>
 <li><code><a href="ntopenthreadtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThreadToken(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ BOOLEAN OpenAsSelf,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenThreadToken</a></code></li>
+<li><code><a href="ntimpersonatethread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtImpersonateThread(&#10;    _In_ HANDLE ServerThreadHandle,&#10;    _In_ HANDLE ClientThreadHandle,&#10;    _In_ PSECURITY_QUALITY_OF_SERVICE SecurityQos&#10;    );">NtImpersonateThread</a></code></li>
+<li><code><a href="rtlimpersonateself" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlImpersonateSelf(&#10;    _In_ SECURITY_IMPERSONATION_LEVEL ImpersonationLevel&#10;    );">RtlImpersonateSelf</a></code></li>
+<li><code><a href="ntsetinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength&#10;    );">NtSetInformationProcess</a></code> with <code>ProcessAccessToken</code></li>
 </ul>
 
 <h2 id="threaddescriptortableentry-6">ThreadDescriptorTableEntry (6)</h2>
@@ -1324,6 +1339,7 @@
     <div class="spacer"></div>
     <footer>
         By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
         <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
         <dark-mode-toggle permanent></dark-mode-toggle>
     </footer>

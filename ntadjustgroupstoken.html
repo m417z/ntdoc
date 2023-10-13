@@ -56,7 +56,7 @@ NtAdjustGroupsToken(
     );
 </span><span class="ntdoc-code-footer">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/70b51c1afe05dd37470e36a13cc45eea09aa0b28/phnt/include/ntseapi.h#L363">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/719729224e463c15472124d3c2e63781cb3ee665/phnt/include/ntseapi.h#L363">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">#ifndef _NTZWAPI_H
 
@@ -73,51 +73,50 @@ ZwAdjustGroupsToken(
     );
 </span><span class="ntdoc-code-footer">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/70b51c1afe05dd37470e36a13cc45eea09aa0b28/phnt/include/ntzwapi.h#L194">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/719729224e463c15472124d3c2e63781cb3ee665/phnt/include/ntzwapi.h#L194">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
-<p>Function <code>NtAdjustGroupsToken</code> modify state of one or more groups available for Token Object. See also description of similar <em>Win32 API</em> <strong>AdjustTokenGroups</strong> in <em>Win32 SDK</em>.</p>
+<p>Enables and disables groups in the token.</p>
 
-<h3 id="tokenhandle">TokenHandle</h3>
-
-<p><code>HANDLE</code> to Token Object opened with <code>TOKEN_ADJUST_GROUPS</code> access.</p>
-
-<h3 id="resettodefault">ResetToDefault</h3>
-
-<p>If set, groups are reset to token's defaults. In this case all other parameters are ignored.</p>
-
-<h3 id="tokengroups">TokenGroups</h3>
-
-<p>Pointer to <code>TOKEN_GROUPS</code> structure containing groups to modify.</p>
-
-<h3 id="previousgroupslength">PreviousGroupsLength</h3>
-
-<p>Specifies length of <code>PreviousGroups</code> buffer, in bytes.</p>
-
-<h3 id="previousgroups">PreviousGroups</h3>
-
-<p>Optionally pointer to <code>TOKEN_GROUPS</code> buffer receiving information about modified groups before modification begins.</p>
-
-<h3 id="requiredlength">RequiredLength</h3>
-
-<p>If <code>PreviousGroups</code> parameter is specified, and <code>PreviousGroupsLength</code> is to small, this value receives required length of buffer, in bytes.</p>
-
-<h1 id="documented-by">Documented by</h1>
+<h1 id="parameters">Parameters</h1>
 
 <ul>
-<li>Tomasz Nowak</li>
+<li><code>TokenHandle</code> - a handle to the token. The handle must grant <code>TOKEN_ADJUST_GROUPS</code> access. Additionally, the handle must grant <code>TOKEN_QUERY</code> when the caller provides the <code>PreviousState</code> buffer.</li>
+<li><code>ResetToDefault</code> - a boolean indicating if the function should reset group states to their defaults based on the presence of <code>SE_GROUP_ENABLED_BY_DEFAULT</code> flag.</li>
+<li><code>NewState</code> - an optional pointer to a collection of group SIDs with their desired states, such as <code>SE_GROUP_DISABLED</code> (<code>0</code>) or <code>SE_GROUP_ENABLED</code>.</li>
+<li><code>BufferLength</code> - the size of the <code>PreviousState</code> buffer in bytes.</li>
+<li><code>PreviousState</code> - an optional pointer to a user-allocated buffer that receives the state of token groups prior to adjustment.</li>
+<li><code>ReturnLength</code> - an optional pointer to a variable that receives the number of bytes written to the <code>PreviousState</code> buffer when the function succeeds or the number of bytes requires when the buffer is too small.</li>
+</ul>
+
+<h1 id="notable-return-values">Notable return values</h1>
+
+<ul>
+<li><code>STATUS_CANT_ENABLE_DENY_ONLY</code> - the caller attempted to enable a group that has <code>SE_GROUP_USE_FOR_DENY_ONLY</code> flag set.</li>
+<li><code>STATUS_CANT_DISABLE_MANDATORY</code> - the caller attempted to disable a group that has <code>SE_GROUP_MANDATORY</code> flag set.</li>
+<li><code>STATUS_NOT_ALL_ASSIGNED</code> - this successful status indicates that not all of the requested groups were adjusted, such as when they are not present.</li>
+<li><code>STATUS_BUFFER_TOO_SMALL</code> - the previous state data does not fit into the provided buffer.</li>
+</ul>
+
+<h1 id="remarks">Remarks</h1>
+
+<p>Groups are taken into account for granting access checks when they have <code>SE_GROUP_ENABLED</code> flag set. Groups are taken into account for denying access checks when they have either <code>SE_GROUP_ENABLED</code> or <code>SE_GROUP_USE_FOR_DENY_ONLY</code> flags set.                                                                                                                                                                       </p>
+
+<p>Note that this function does not support token pseudo-handles such as <code><a href="ntcurrentprocesstoken" title="#define NtCurrentProcessToken() ((HANDLE)(LONG_PTR)-4) // NtOpenProcessToken(NtCurrentProcess())">NtCurrentProcessToken</a></code>. If you want to adjust the current process/thread token, you need to open it first.</p>
+
+<h1 id="related-win32-api">Related Win32 API</h1>
+
+<ul>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-adjusttokengroups"><code>AdjustTokenGroups</code></a></li>
 </ul>
 
 <h1 id="see-also">See also</h1>
 
 <ul>
+<li><code><a href="ntfiltertoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtFilterToken(&#10;    _In_ HANDLE ExistingTokenHandle,&#10;    _In_ ULONG Flags,&#10;    _In_opt_ PTOKEN_GROUPS SidsToDisable,&#10;    _In_opt_ PTOKEN_PRIVILEGES PrivilegesToDelete,&#10;    _In_opt_ PTOKEN_GROUPS RestrictedSids,&#10;    _Out_ PHANDLE NewTokenHandle&#10;    );">NtFilterToken</a></code></li>
 <li><code><a href="ntadjustprivilegestoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAdjustPrivilegesToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ BOOLEAN DisableAllPrivileges,&#10;    _In_opt_ PTOKEN_PRIVILEGES NewState,&#10;    _In_ ULONG BufferLength,&#10;    _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtAdjustPrivilegesToken</a></code></li>
-<li><code><a href="ntcreatetoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateToken(&#10;    _Out_ PHANDLE TokenHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ TOKEN_TYPE Type,&#10;    _In_ PLUID AuthenticationId,&#10;    _In_ PLARGE_INTEGER ExpirationTime,&#10;    _In_ PTOKEN_USER User,&#10;    _In_ PTOKEN_GROUPS Groups,&#10;    _In_ PTOKEN_PRIVILEGES Privileges,&#10;    _In_opt_ PTOKEN_OWNER Owner,&#10;    _In_ PTOKEN_PRIMARY_GROUP PrimaryGroup,&#10;    _In_opt_ PTOKEN_DEFAULT_DACL DefaultDacl,&#10;    _In_ PTOKEN_SOURCE Source&#10;    );">NtCreateToken</a></code></li>
 <li><code><a href="ntopenprocesstoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenProcessToken(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenProcessToken</a></code></li>
 <li><code><a href="ntopenthreadtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThreadToken(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ BOOLEAN OpenAsSelf,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenThreadToken</a></code></li>
-<li><code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code></li>
-<li><code><a href="ntsetinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _In_reads_bytes_(TokenInformationLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength&#10;    );">NtSetInformationToken</a></code></li>
-<li><code>TOKEN_GROUPS</code></li>
 </ul>
 </div>
 <div class="ntdoc-description-links">
@@ -128,6 +127,7 @@ ZwAdjustGroupsToken(
     <div class="spacer"></div>
     <footer>
         By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
         <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
         <dark-mode-toggle permanent></dark-mode-toggle>
     </footer>
