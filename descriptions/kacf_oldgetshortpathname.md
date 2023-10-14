@@ -1,0 +1,31 @@
+This application compatibility flag used to be documented in early Windows 10 EWDK.
+
+# Applicable to
+ - `PEB->AppCompatFlags`
+
+# Meaning
+Don't be like Win9x: in [`GetShortPathName`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getshortpathnamew), NT 4 did not care if the file existed - it would give the short path name anyway. This behavior was changed in NT 5 (Win2000) to reflect behavior of Win9x which will fail if the file does not exist. Turning on this flag will give the old behavior for the app.
+
+# Related flags
+ - `KACF_VERSIONLIE_NOT_USED`
+ - `KACF_GETDISKFREESPACE`
+ - `KACF_FTMFROMCURRENTAPT`
+ - `KACF_DISALLOWORBINDINGCHANGES`
+ - `KACF_OLE32VALIDATEPTRS`
+ - `KACF_DISABLECICERO`
+ - `KACF_OLE32ENABLEASYNCDOCFILE`
+ - `KACF_OLE32ENABLELEGACYEXCEPTIONHANDLING`
+ - `KACF_RPCDISABLENDRCLIENTHARDENING`
+ - `KACF_RPCDISABLENDRMAYBENULL_SIZEIS`
+ - `KACF_DISABLEALLDDEHACK_NOT_USED`
+ - `KACF_RPCDISABLENDR61_RANGE`
+ - `KACF_RPC32ENABLELEGACYEXCEPTIONHANDLING`
+ - `KACF_OLE32DOCFILEUSELEGACYNTFSFLAGS`
+ - `KACF_RPCDISABLENDRCONSTIIDCHECK`
+ - `KACF_USERDISABLEFORWARDERPATCH`
+ - `KACF_OLE32DISABLENEW_WMPAINT_DISPATCH`
+ - `KACF_ADDRESTRICTEDSIDINCOINITIALIZESECURITY`
+ - `KACF_ALLOCDEBUGINFOFORCRITSECTIONS`
+ - `KACF_OLEAUT32ENABLEUNSAFELOADTYPELIBRELATIVE`
+ - `KACF_ALLOWMAXIMIZEDWINDOWGAMMA`
+ - `KACF_DONOTADDTOCACHE`
