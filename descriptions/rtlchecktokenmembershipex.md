@@ -17,7 +17,7 @@ This function supports the following pseudo-handle values:
  - `NtCurrentThreadEffectiveToken` - performs the query on the impersonation token of the calling thread, if present. Otherwise, the function uses the primary token of the calling process.
 
 # Implementation details
-This function creates a security descriptor with the owner set to the provided SID and a DACL that grants access to the SID. When the flag for including AppContainers is set, it also adds as access allowed ACE for `ALL APPLICATION PACKAGES` (`S-1-15-2-1`). When the LPAC flag is set, the function adds an access allowed ACE for `ALL RESTRICTED APPLICATION PACKAGES` (`S-1-15-2-2`). Then the function performs an access checks against it via `NtAccessCheck`. 
+This function creates a security descriptor with the owner set to the provided SID and a DACL that grants access to the SID. When the flag for including AppContainers is set, it also adds as access allowed ACE for `ALL APPLICATION PACKAGES` (`S-1-15-2-1`). When the LPAC flag is set, the function adds an access allowed ACE for `ALL RESTRICTED APPLICATION PACKAGES` (`S-1-15-2-2`). Then the function performs an access checks against it via `NtAccessCheck`.
 
 # Required OS version
 This function was introduced in Windows 8.

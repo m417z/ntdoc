@@ -15,7 +15,7 @@ Enables and disables groups in the token.
  - `STATUS_BUFFER_TOO_SMALL` - the previous state data does not fit into the provided buffer.
 
 # Remarks
-Groups are taken into account for granting access checks when they have `SE_GROUP_ENABLED` flag set. Groups are taken into account for denying access checks when they have either `SE_GROUP_ENABLED` or `SE_GROUP_USE_FOR_DENY_ONLY` flags set.                                                                                                                                                                       
+Groups are taken into account for granting access checks when they have `SE_GROUP_ENABLED` flag set. Groups are taken into account for denying access checks when they have either `SE_GROUP_ENABLED` or `SE_GROUP_USE_FOR_DENY_ONLY` flags set.
 
 Note that this function does not support token pseudo-handles such as `NtCurrentProcessToken`. If you want to adjust the current process/thread token, you need to open it first.
 

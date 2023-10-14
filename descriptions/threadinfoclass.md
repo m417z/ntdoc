@@ -143,7 +143,7 @@ Adjusts the number of the ideal (preferred) processor for the thread. This info 
  - [`SetThreadIdealProcessor`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-setthreadidealprocessor)
 
 ## ThreadPriorityBoost (14)
-Queries, enables, or disables priority boosting for the thread
+Queries, enables, or disables priority boosting for the thread.
 
 |                 | Query                              | Set
 | --------------- | ---------------------------------- | ---

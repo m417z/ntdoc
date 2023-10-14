@@ -4,7 +4,7 @@ This application compatibility flag used to be documented in early Windows 10 EW
  - `PEB->AppCompatFlags`
 
 # Meaning
-Apply this empty AppHack flag to prevent an executable from being placed in the cache
+Apply this empty AppHack flag to prevent an executable from being placed in the cache.
 
 # Related flags
  - `KACF_OLDGETSHORTPATHNAME`

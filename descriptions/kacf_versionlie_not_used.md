@@ -4,7 +4,7 @@ This application compatibility flag used to be documented in early Windows 10 EW
  - `PEB->AppCompatFlags`
 
 # Meaning
-LEGACY: Replaced by version lie shims
+LEGACY: Replaced by version lie shims.
 
 # Related flags
  - `KACF_OLDGETSHORTPATHNAME`

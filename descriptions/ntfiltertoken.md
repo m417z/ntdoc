@@ -17,7 +17,7 @@ Creates a restricted (filtered) copy of a token.
 # Remarks
 To avoid retaining unused resources, call `NtClose` to close the returned handle when it is no longer required.
 
-It is often convenient to use a full access handle for the existing (input) token because the system copies the granted access rights from the provided handle. Alternatively, you can reopen the new handle after filtration via`NtDuplicateObject`.
+It is often convenient to use a full access handle for the existing (input) token because the system copies the granted access rights from the provided handle. Alternatively, you can reopen the new handle after filtration via `NtDuplicateObject`.
 
 Note that this function does not support token pseudo-handles such as `NtCurrentProcessToken`. If you want to filter the current process/thread token, you need to open it first.
 

@@ -26,7 +26,7 @@ Retrieves the list of SIDs (group membership) associated with the token.
 | Required access | `TOKEN_QUERY`  | N/A
 
 ### Remarks
-A group SID is considered enabled for granting access checks when its attributes include `SE_GROUP_ENABLED`. A group SID is considered enabled for denying access checks when its attributes include either `SE_GROUP_ENABLED` or `SE_GROUP_USE_FOR_DENY_ONLY`. 
+A group SID is considered enabled for granting access checks when its attributes include `SE_GROUP_ENABLED`. A group SID is considered enabled for denying access checks when its attributes include either `SE_GROUP_ENABLED` or `SE_GROUP_USE_FOR_DENY_ONLY`.
 
 ### See also
  - `NtFilterToken`
@@ -233,7 +233,7 @@ Opens a copy of a token from the linked logon session or links logon sessions of
 ### Remarks
 Querying this information class returns a primary token when the caller has `SeTcbPrivilege` enabled and an identification-level token otherwise.
 
-Settings linked token requires both tokens to be primary and belong to logon sessions that are not already linked. The token passed in the first parameter to `NtSetInformationToken` provides the logon session to be marked as elevated while the token passed via the buffer becomes the limited logon session. 
+Settings linked token requires both tokens to be primary and belong to logon sessions that are not already linked. The token passed in the first parameter to `NtSetInformationToken` provides the logon session to be marked as elevated while the token passed via the buffer becomes the limited logon session.
 
 ## TokenElevation (20)
 Determines whether the token is elevated by checking if it contains any sensitive groups (see `RtlIsElevatedRid`) or privileges.

@@ -1,4 +1,4 @@
-Adjusts various information common to all types of kernel handles. 
+Adjusts various information common to all types of kernel handles.
 
 # Parameters
  - `Handle` - a handle to set information on. The handle does not need to grant any specific access.

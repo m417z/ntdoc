@@ -8,7 +8,7 @@ Queues a user-mode Asynchronous Procedure Call (APC) on the specified thread.
  - `ApcArgument3` - the third argument to pass to the APC routine.
 
 # Remarks
-To execute the APC, the thread must first enter an alertable wait via `NtDelayExecution` (or a similar function) or call `NtTestAlert`. 
+To execute the APC, the thread must first enter an alertable wait via `NtDelayExecution` (or a similar function) or call `NtTestAlert`.
 
 To queue a WoW64 APC, encode the `ApcRoutine` parameter using the `Wow64EncodeApcRoutine` macro or use `RtlQueueApcWow64Thread`.
 

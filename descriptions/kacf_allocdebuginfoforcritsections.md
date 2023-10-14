@@ -4,7 +4,7 @@ This application compatibility flag used to be documented in early Windows 10 EW
  - `PEB->AppCompatFlags`
 
 # Meaning
-If set, DebugInfo for critical section is allocated
+If set, DebugInfo for critical section is allocated.
 
 # Related flags
  - `KACF_OLDGETSHORTPATHNAME`
