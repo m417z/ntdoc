@@ -14,3 +14,8 @@ headers](https://github.com/winsiderss/systeminformer/tree/master/phnt).
 * https://forum.tuts4you.com/files/file/1242-the-undocumented-functions/ \
   An archive of the undocumented.ntinternals.net website by Tomasz Nowak, which
   isn't online anymore. Used for the initial descriptions.
+
+## Content contribution
+
+Contributions are welcome. By submitting documentation changes, you agree to
+license them under the CC BY-SA 4.0 license as specified in `LICENSE.md`.
