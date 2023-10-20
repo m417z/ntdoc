@@ -14,6 +14,14 @@ URL_PHNT_REPOSITORY = 'https://github.com/winsiderss/systeminformer'
 URL_DESCRIPTIONS = 'https://github.com/m417z/ntdoc/blob/main/descriptions'
 PHNT_REPOSITORY_COMMIT = 'master'  # Updated from command line.
 
+MARKDOWN2_EXTRAS = [
+    'cuddled-lists',
+    'fenced-code-blocks',
+    'header-ids',
+    'target-blank-links',
+    'tables',
+]
+
 
 def rstrip_line_with_comment(code: str) -> str:
     if '//' in code:
@@ -457,7 +465,7 @@ def chunk_to_html(chunk: Chunk) -> str:
     return html
 
 
-def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str, id_to_body: Dict[str, str]) -> str:
+def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str | None, id_to_body: Dict[str, str]) -> str:
     # Sort by length to avoid matching substrings, e.g. "struct ABC" should
     # match before "ABC".
     ids_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
@@ -486,6 +494,32 @@ def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str, i
         return f'<a href="{id}" title="{tooltip_text_escaped}">{ident}</a>'
 
     return re.sub(regex, repl, html)
+
+
+def changelog_to_html(ident_to_id: Dict[str, str], id_to_body: Dict[str, str]) -> Tuple[str, str]:
+    changelog_path = Path('CHANGELOG.md')
+    changelog = changelog_path.read_text()
+
+    changelog_markdown = changelog.split('<!-- content -->', 1)[1].lstrip()
+    changelog_markdown_short = changelog_markdown.split('<!-- more -->', 1)[0]
+
+    changelog_short = '<div class="ntdoc-changelog-short">\n'
+    changelog_short += '<h1>Recent content changes</h1>\n'
+    changelog_short += markdown2.markdown(changelog_markdown_short, extras=MARKDOWN2_EXTRAS)
+    changelog_short += '<a href="changelog">All content changes</a>\n'
+    changelog_short += '</div>\n'
+
+    # h2 -> h3, h1 -> h2.
+    changelog_short = re.sub(r'(</?h)2\b', r'\g<1>3', changelog_short)
+    changelog_short = re.sub(r'(</?h)1\b', r'\g<1>2', changelog_short)
+
+    changelog_full = '<div class="ntdoc-description ntdoc-changelog-full">\n'
+    changelog_full += markdown2.markdown(changelog_markdown, extras=MARKDOWN2_EXTRAS)
+    changelog_full += '</div>\n'
+
+    changelog_full = html_add_id_links(changelog_full, ident_to_id, None, id_to_body)
+
+    return changelog_short, changelog_full
 
 
 def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], assets_path: Path, out_path: Path, ids_pattern: str | None):
@@ -541,13 +575,7 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
             # https://github.com/trentm/python-markdown2/issues/525
             description = re.sub(r'\\\n', '  \n', description)
 
-            html_description = markdown2.markdown(description, extras=[
-                'cuddled-lists',
-                'fenced-code-blocks',
-                'header-ids',
-                'target-blank-links',
-                'tables',
-            ])
+            html_description = markdown2.markdown(description, extras=MARKDOWN2_EXTRAS)
 
             html += html_add_id_links(html_description, ident_to_id, id, id_to_body)
         else:
@@ -572,6 +600,14 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
 
     html_page = html_page_template.replace('{{id}}', 'Symbols').replace('{{content}}', html)
     (out_path / f'symbols.html').write_text(html_page)
+
+    changelog_short, changelog_full = changelog_to_html(ident_to_id, id_to_body)
+
+    index_html_path = out_path / 'index.html'
+    index_html_path.write_text(index_html_path.read_text().replace('{{changelog}}', changelog_short))
+
+    html_page = html_page_template.replace('{{id}}', 'Content changes').replace('{{content}}', changelog_full)
+    (out_path / f'changelog.html').write_text(html_page)
 
 
 def generate_docs(phnt_include_path: Path, ids_pattern: str | None):
