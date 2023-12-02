@@ -527,7 +527,7 @@ Removes the child process creation restriction from the token.
 To check the existing child process creation restrictions, query token flags and test them for `TOKEN_NO_CHILD_PROCESS`, `TOKEN_NO_CHILD_PROCESS_UNLESS_SECURE`, and `TOKEN_AUDIT_NO_CHILD_PROCESS`.
 
 ## See also
- - `PROCESS_CHILD_PROCESS_INFORMATION`
+ - `NtQueryInformationProcess` with `PROCESSINFOCLASS` value of `ProcessChildProcessInformation` (73)
  - `PS_ATTRIBUTE_CHILD_PROCESS_POLICY`
 
 ## TokenIsLessPrivilegedAppContainer (46)

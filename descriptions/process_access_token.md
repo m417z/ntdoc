@@ -1,14 +1,12 @@
-### Token
+This structure defines a request to change the primary token of the process.
 
-### Thread
+# Applicable to
+ - `NtSetInformationProcess` with `ProcessAccessToken` (9)
 
-# Documented by
+# Members
 
-* Tomasz Nowak
+## Token
+A handle to a primary token to use. The handle must grant `TOKEN_ASSIGN_PRIMARY` access.
 
-# See also
-
-* `NtCreateProcess`
-* `NtOpenProcess`
-* `NtSetInformationProcess`
-* `PROCESS_INFORMATION_CLASS`
+## Thread
+This field is currently unused.
