@@ -12,8 +12,7 @@ All notable documentation content changes are documented in this file.
 ## 24 Aug 2023
 
 **Handle/object operations ([#4](https://github.com/m417z/ntdoc/pull/4))**: Object attributes and common handle operations. 33 pages, including: NtQueryObject, NtSetInformationObject, NtDuplicateObject, NtWaitForMultipleObjects, NtClose.
-
+<!-- more -->
 ## 23 Aug 2023
 
 **Thread operations ([#3](https://github.com/m417z/ntdoc/pull/3))**: Thread-related functions and types. 55 pages, including: NtCreateThreadEx, NtOpenThread, NtSuspendThread, NtResumeThread, NtQueryInformationThread.
-<!-- more -->
