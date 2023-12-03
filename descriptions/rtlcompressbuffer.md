@@ -24,7 +24,7 @@ In NT 4.0 sp6 only LZNT1 is supported.
 **Compression engine**.
 
 It's level of compression. Higher level means better results, but longer time used for compression process. \
-In NT 4.0 sp6 engines works only with compression (specified in `RtlDecompressBuffer` are ignored)
+In NT 4.0 sp6 engines works only with compression (specified in `RtlDecompressBuffer` are ignored).
 
 ```cpp
 #define COMPRESSION_ENGINE_STANDARD (0x0000)        // Standard compression

@@ -14,7 +14,7 @@ File index value, or zero, if directory indexing is not available.
 
 ### CreationTime
 
-Time of object creation;
+Time of object creation.
 
 ### LastAccessTime
 

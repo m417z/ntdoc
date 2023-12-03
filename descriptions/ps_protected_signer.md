@@ -1,4 +1,4 @@
-The enumeration defines the strength and type of the signature for the process
+The enumeration defines the strength and type of the signature for the process.
 
 # Known values
  - `PsProtectedSignerNone` (0) - the process has no signature that grants it protection.

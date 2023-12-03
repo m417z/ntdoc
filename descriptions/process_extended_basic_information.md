@@ -12,7 +12,7 @@ Specifies the size in bytes of the valid portion of this structure's header.
 The basic information. See `PROCESS_BASIC_INFORMATION` for more details.
 
 ## Flags
-A bit mask of various flags about the process
+A bit mask of various flags about the process.
 
 ### IsProtectedProcess
 The process is full- or light-protected.

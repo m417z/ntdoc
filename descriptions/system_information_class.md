@@ -1,4 +1,4 @@
-Enumeration type `SYSTEM_INFORMATION_CLASS` defines information classes for a lot of system settings
+Enumeration type `SYSTEM_INFORMATION_CLASS` defines information classes for a lot of system settings.
 This type is used with function
 `NtQuerySystemInformation` and `NtSetSystemInformation`.
 For detailed information see descriptions of structures associated with information classes below.
@@ -29,7 +29,7 @@ For detailed information see descriptions of structures associated with informat
 * Buffer size: *???*
 * Structure: `STATUS_NOT_IMPLEMENTED`
 
-System path is available via structure `KUSER_SHARED_DATA`
+System path is available via structure `KUSER_SHARED_DATA`.
 
 ### SystemProcessInformation
 

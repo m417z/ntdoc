@@ -538,7 +538,7 @@ Retrieves the number of cycles spent by all threads of the process.
  - `ProcessUptimeInformation` (88)
 
 ## ProcessPagePriority (39)
-Retrieves or adjusts paging priority for the process
+Retrieves or adjusts paging priority for the process.
 
 |                 | Query                               | Set
 | --------------- | ----------------------------------- | ---
@@ -765,7 +765,7 @@ Retrieves the wake (keep-alive) counter for the process.
 | Minimal version | Windows 8                             | N/A
 
 ## ProcessRevokeFileHandles (56)
-Revokes file handles on the specified device from an AppContainer process,
+Revokes file handles on the specified device from an AppContainer process.
 
 |                 | Query | Set
 | --------------- | ----- | ---
@@ -779,7 +779,7 @@ Trying to perform file operations on a revoked handle fails with `STATUS_FILE_HA
 Handle revocation has no effect on non-AppContainer processes.
 
 ## ProcessWorkingSetControl (57)
-Perform an operation on the working set of the process
+Perform an operation on the working set of the process.
 
 |                    | Query | Set
 | ------------------ | ----- | ---

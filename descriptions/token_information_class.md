@@ -289,7 +289,7 @@ Retrieves or changes the integrity level of the token.
 | Required privilege | None                    | None to lower; `SeTcbPrivilege` to raise
 
 ### Remarks
-Attempting to raise integrity level of a token that is assigned as a primary process token results in `STATUS_TOKEN_ALREADY_IN_USE`
+Attempting to raise integrity level of a token that is assigned as a primary process token results in `STATUS_TOKEN_ALREADY_IN_USE`.
 
 Lowering integrity automatically disables incompatible privileges and prevents them from being enabled.
 
@@ -312,7 +312,7 @@ Retrieves or sets mandatory policy for the token.
 | Required privilege | None                     | `SeTcbPrivilege`
 
 ### Remarks
-Attempting to change mandatory policy of a token that is assigned as a primary process token results in `STATUS_TOKEN_ALREADY_IN_USE`
+Attempting to change mandatory policy of a token that is assigned as a primary process token results in `STATUS_TOKEN_ALREADY_IN_USE`.
 
 ## TokenLogonSid (28)
 Finds (the first) logon SID (a group with `SE_GROUP_LOGON_ID` flag) in the list of token groups.

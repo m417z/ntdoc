@@ -42,7 +42,7 @@ Optionally pointer to `PRIVILEGE_SET` structure filled by user with valid privil
 
 ### AccessGranted
 
-= ???
+???
 
 ### GenerateOnClose
 

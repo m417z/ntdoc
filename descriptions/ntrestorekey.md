@@ -8,7 +8,7 @@ See `NtSaveKey` for more information about `FileHandle`.
 
 ### RestoreOption
 
-See `RegRestoreKey` in *SDK*
+See `RegRestoreKey` in *SDK*.
 
 # Requirements
 
