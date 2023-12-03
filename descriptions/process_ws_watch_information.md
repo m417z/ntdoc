@@ -1,14 +1,13 @@
-### FaultingPc
+This structure defines a Working Set Watch entry.
 
-### FaultingVa
+# Applicable to
+ - `NtQueryInformationProcess` with `ProcessWorkingSetWatch` (15)
+ - `PROCESS_WS_WATCH_INFORMATION_EX`
 
-# Documented by
+# Members
 
-* Tomasz Nowak
+## FaultingPc
+The instruction pointer at the moment of the page fault.
 
-# See also
-
-* `NtCreateProcess`
-* `NtOpenProcess`
-* `NtQueryInformationProcess`
-* `PROCESS_INFORMATION_CLASS`
+## FaultingVa
+The virtual address that triggered the page fault.

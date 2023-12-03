@@ -1,4 +1,4 @@
-This `OBJECT_ATTRIBUTES` flag indicates that the open/create operation should ignore the device map from the logon session of the impersonated token.
+This `OBJECT_ATTRIBUTES` flag indicates that the open/create operation should ignore the DOS Devices map from the logon session of the impersonated token.
 
 # Related flags
  - `OBJ_PROTECT_CLOSE`
@@ -17,4 +17,5 @@ This `OBJECT_ATTRIBUTES` flag indicates that the open/create operation should ig
 # See also
  - `OBJECT_ATTRIBUTES`
  - `NtOpenThreadToken`
- - `NtSetInformationThread` with `ThreadImpersonationToken`
+ - `NtSetInformationThread` with `THREADINFOCLASS` value of `ThreadImpersonationToken` (5)
+ - `NtSetInformationProcess` with `PROCESSINFOCLASS` value of `ProcessDeviceMap` (23)
