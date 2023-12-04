@@ -14,13 +14,14 @@ URL_PHNT_REPOSITORY = 'https://github.com/winsiderss/systeminformer'
 URL_DESCRIPTIONS = 'https://github.com/m417z/ntdoc/blob/main/descriptions'
 PHNT_REPOSITORY_COMMIT = 'master'  # Updated from command line.
 
-MARKDOWN2_EXTRAS = [
-    'cuddled-lists',
-    'fenced-code-blocks',
-    'header-ids',
-    'target-blank-links',
-    'tables',
-]
+MARKDOWN2_EXTRAS = {
+    'breaks': {'on_backslash': True},
+    'cuddled-lists': None,
+    'fenced-code-blocks': None,
+    'header-ids': None,
+    'target-blank-links': None,
+    'tables': None,
+}
 
 
 def rstrip_line_with_comment(code: str) -> str:
@@ -570,11 +571,6 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
         description_path = Path('descriptions', f'{id}.md')
         description = description_path.read_text().strip() if description_path.exists() else ''
         if description != '':
-            # GitHub markdown supports newline with trailing "\", but markdown2
-            # only supports trailing "  ".
-            # https://github.com/trentm/python-markdown2/issues/525
-            description = re.sub(r'\\\n', '  \n', description)
-
             html_description = markdown2.markdown(description, extras=MARKDOWN2_EXTRAS)
 
             html += html_add_id_links(html_description, ident_to_id, id, id_to_body)
