@@ -129,8 +129,13 @@ def pop_next_chunk(code: list) -> Tuple[str, str, int] | None:
 
 
 def get_chunk_identifiers(chunk: str) -> List[str]:
-    if (chunk.startswith('#include') or
-        chunk.startswith('#error') or
+    if chunk.startswith('#include'):
+        # push/pop pack includes are handled separately.
+        assert 'pshpack' not in chunk.lower(), chunk
+        assert 'poppack' not in chunk.lower(), chunk
+        return []
+
+    if (chunk.startswith('#error') or
         chunk.startswith('#undef') or
         chunk.startswith('#define PHNT_') or
         chunk.startswith('C_ASSERT(') or
@@ -266,7 +271,8 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     code = code.replace('// Options\n\n//#define PHNT_NO_INLINE_INIT_STRING\n', '\n\n\n')
 
     # Add custom markers.
-    code = re.sub(r'^(// (begin|end)_)', r'@\1', code, flags=re.MULTILINE)
+    code = re.sub(r'^// (begin|end)_', r'@\g<0>', code, flags=re.MULTILINE)
+    code = re.sub(r'^#include <(pshpack\d+|poppack)\.h>$', r'@\g<0>', code, flags=re.MULTILINE)
 
     # Make sure we didn't mess up the line count for line number tracking.
     assert code.count('\n') == original_newline_count
@@ -300,6 +306,11 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
             after.insert(0, re.sub(r'^@// begin_(\w+).*$', r'// end_\1', body))
             continue
 
+        if body.startswith('@#include <pshpack'):
+            before.append((intro, body[1:]))
+            after.insert(0, '#include <poppack.h>\n')
+            continue
+
         if body.startswith('#endif'):
             _, popped_before = before.pop()
             popped_after = after.pop(0)
@@ -312,6 +323,13 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
             popped_after = after.pop(0)
             assert popped_before.startswith('// begin_'), popped_before
             assert popped_after.startswith('// end_'), popped_after
+            continue
+
+        if body.startswith('@#include <poppack.h>'):
+            _, popped_before = before.pop()
+            popped_after = after.pop(0)
+            assert popped_before.startswith('#include <pshpack'), popped_before
+            assert popped_after.startswith('#include <poppack.h>'), popped_after
             continue
 
         if body.startswith('#else'):
@@ -331,6 +349,9 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
             continue
 
         result.append(Chunk(path.name, line_number, idents, before.copy(), intro, body, after.copy()))
+
+    assert len(before) == 0, before
+    assert len(after) == 0, after
 
     return result
 
