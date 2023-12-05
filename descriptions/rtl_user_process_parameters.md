@@ -34,7 +34,7 @@ PPF_NORMALIZED  (1)     // Means that structure is normalized by call RtlNormali
 
 ### CurrentDirectoryPath
 
-Specified in DOS-like symbolic link path, ex: **"C:/WinNT/SYSTEM32"**
+Specified in DOS-like symbolic link path, ex: **"C:\\WinNT\\SYSTEM32"**
 
 ### CurrentDirectoryHandle
 

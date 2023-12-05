@@ -10,7 +10,7 @@ Access rights associated with opened handle.
 
 ### ObjectAttributes
 
-Pointer to `OBJECT_ATTRIBUTES` structure contains valid object name. Name must be in format **"//??/MAILSLOT/..."** where **"..."** means unique name of Mailslot.
+Pointer to `OBJECT_ATTRIBUTES` structure contains valid object name. Name must be in format **"\\\\??\\MAILSLOT\\..."** where **"..."** means unique name of Mailslot.
 
 ### IoStatusBlock
 

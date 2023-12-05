@@ -27,7 +27,7 @@ Also combination of Generic rights are supported.
 
 ### ObjectAttributes
 
-Pointer to `OBJECT_ATTRIBUTES` structure contains name of named pipe. Name must begin with **"/??/PIPE/"** string, that is Symbolic Link to *NamedPipe* device object.
+Pointer to `OBJECT_ATTRIBUTES` structure contains name of named pipe. Name must begin with **"\\??\\PIPE\\"** string, that is Symbolic Link to *NamedPipe* device object.
 
 ### IoStatusBlock
 
