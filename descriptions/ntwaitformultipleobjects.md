@@ -1,4 +1,4 @@
-Waits for one or more object to enter a signaled state.
+Waits for one or more objects to enter a signaled state.
 
 # Parameters
  - `Count` - the number of handles passed in the `Handles` parameter, up to `MAXIMUM_WAIT_OBJECTS` (64).
