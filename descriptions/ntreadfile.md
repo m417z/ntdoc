@@ -46,6 +46,7 @@ Offset from beginning of file, in bytes.
 # Documented by
 
 * Tomasz Nowak
+* Wojciech Dudek
 
 # See also
 
