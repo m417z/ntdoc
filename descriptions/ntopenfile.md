@@ -33,7 +33,6 @@ Open options.
 # Documented by
 
 * Tomasz Nowak
-* Wojciech Dudek
 
 # See also
 
