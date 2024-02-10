@@ -28,9 +28,14 @@ Sharing option defined as `FILE_SHARE_*`.
 
 Open options.
 
+# Related Win32 API
+ - [`OpenFile`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openfile)
+
+
 # Documented by
 
 * Tomasz Nowak
+* Wojciech Dudek
 
 # See also
 
