@@ -28,8 +28,6 @@ Sharing option defined as `FILE_SHARE_*`.
 
 Open options.
 
-
-
 # Documented by
 
 * Tomasz Nowak
