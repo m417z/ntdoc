@@ -28,10 +28,6 @@ Sharing option defined as `FILE_SHARE_*`.
 
 Open options.
 
-# Related Win32 API
- - [`OpenFile`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-openfile)
- - *[`CreateFileA`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea)*
- - *[`CreateFileW`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew)*
 
 
 # Documented by
