@@ -40,6 +40,9 @@ Offset from beginning of file, in bytes.
 
 ??? (In my opinion: use this, if you previously lock file, and now you want read it, but without unlocking).
 
+# Related Win32 API
+ - [`ReadFile`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile) (though it does a lot more on itself than just calling this function)
+
 # Documented by
 
 * Tomasz Nowak
