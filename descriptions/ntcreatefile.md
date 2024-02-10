@@ -75,6 +75,10 @@ Buffer for Extended Attributes contains one or more of `FILE_FULL_EA_INFORMATION
 
 Length of `EaBuffer`.
 
+# Related Win32 API
+ - [`CreateFileA`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea)
+ - [`CreateFileW`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew)
+
 # Documented by
 
 * Tomasz Nowak
