@@ -82,6 +82,7 @@ Length of `EaBuffer`.
 # Documented by
 
 * Tomasz Nowak
+* Wojciech Dudek
 
 # See also
 
