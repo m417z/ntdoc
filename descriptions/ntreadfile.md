@@ -43,6 +43,10 @@ Offset from beginning of file, in bytes.
 # Related Win32 API
  - [`ReadFile`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile) (Although it does more than just forwarding the arguments and invoking this procedure.) 
 
+# Documented by
+
+* Tomasz Nowak
+
 # See also
 
 * `NtCreateFile`
