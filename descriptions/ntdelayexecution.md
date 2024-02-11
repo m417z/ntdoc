@@ -17,9 +17,6 @@ Despite the name, `NtAlertThreadByThreadId` is unrelated to alertable sleeps and
  - [`SleepEx`](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleepex)
  - [`Sleep`](https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleep)
 
-# Documented by
-* Wojciech Dudek
-
 # See also
  - `NtWaitForSingleObject`
  - `NtWaitForMultipleObjects`
