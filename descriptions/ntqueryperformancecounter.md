@@ -24,4 +24,3 @@ Another method of `uptime` calculation:
 
 * Sven B. Schreiber
 * Tomasz Nowak
-* Wojciech Dudek
