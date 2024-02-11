@@ -14,6 +14,10 @@ Example: \
 # Related Win32 API
  - [`DeleteFile`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-deletefile) (Although it does more than just forwarding the arguments and invoking this procedure.) 
 
+# Documented by
+
+* Tomasz Nowak
+
 # See also
 
 * `NtCreateFile`
