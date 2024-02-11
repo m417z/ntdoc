@@ -43,11 +43,6 @@ Offset from beginning of file, where write starts.
 # Related Win32 API
  - [`WriteFile`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile) (Although it does more than just forwarding the arguments and invoking this procedure.) 
 
-# Documented by
-
-* Tomasz Nowak
-* Wojciech Dudek
-
 # See also
 
 * `NtCreateFile`
