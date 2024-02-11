@@ -19,9 +19,3 @@ Another method of `uptime` calculation:
 # Related Win32 API
  - [`QueryPerformanceCounter`](https://learn.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancecounter)
  - [`QueryPerformanceFrequency`](https://learn.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancefrequency)
-
-# Documented by
-
-* Sven B. Schreiber
-* Tomasz Nowak
-* Wojciech Dudek
