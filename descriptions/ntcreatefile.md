@@ -79,11 +79,6 @@ Length of `EaBuffer`.
  - [`CreateFileA`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea)
  - [`CreateFileW`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew)
 
-# Documented by
-
-* Tomasz Nowak
-* Wojciech Dudek
-
 # See also
 
 * `FILE_FULL_EA_INFORMATION`
