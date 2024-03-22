@@ -226,6 +226,9 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     if match := re.match(r'^DEFINE_GUID\((\w+),', chunk):
         return [match.group(1)]
 
+    if match := re.match(r'^EXTERN_C DECLSPEC_SELECTANY CONST GUID (\w+) =', chunk):
+        return [match.group(1)]
+
     if match := re.match(r'^NTSYSAPI \w+ (\w+);$', chunk):
         return [match.group(1)]
 
