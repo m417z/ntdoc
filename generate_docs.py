@@ -147,10 +147,10 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     chunk = re.sub(r'^_Function_class_\(\w+\)\s*', '', chunk)
     chunk = chunk.strip()
 
-    if re.match(r'^#define \w+$', chunk):
+    if re.match(r'^#define +\w+$', chunk):
         return []
 
-    if match := re.match(r'^#define (\w+)[( ]', chunk):
+    if match := re.match(r'^#define +(\w+)[( ]', chunk):
         return [match.group(1)]
 
     assert not chunk.startswith('#define '), chunk
@@ -206,7 +206,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     # Example:
     # typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
-    if match := re.match(r'^typedef(?: const)? \w+(?: const)?(?: UNALIGNED)?(.*?)(?:\[.*?\])?;$', chunk):
+    if match := re.match(r'^typedef(?: const| signed)* \w+(?: const| UNALIGNED)*(.*?)(?:\[.*?\])?;$', chunk):
         idents = match.group(1).split(',')
         idents = [x.lstrip('* ').rstrip() for x in idents]
         assert len(idents) > 0, chunk
@@ -267,11 +267,13 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     code = re.sub(r'/\*.*?\*/', lambda x: re.sub(r'[^\n]', '', x.group(0)), code, flags=re.DOTALL)
 
     # Remove extern "C" declarations.
-    code = code.replace('#ifdef __cplusplus\nextern "C" {\n#endif\n', '\n\n\n')
-    code = code.replace('#ifdef __cplusplus\n}\n#endif\n', '\n\n\n')
+    code = code.replace('\n#ifdef __cplusplus\nextern "C" {\n#endif\n', '\n\n\n\n')
+    code = code.replace('\n#ifdef __cplusplus\n}\n#endif\n', '\n\n\n\n')
+    code = code.replace('\nEXTERN_C_START\n', '\n\n')
+    code = code.replace('\nEXTERN_C_END\n', '\n\n')
 
     # Remove other stuff.
-    code = code.replace('// Options\n\n//#define PHNT_NO_INLINE_INIT_STRING\n', '\n\n\n')
+    code = code.replace('\n// Options\n\n//#define PHNT_NO_INLINE_INIT_STRING\n', '\n\n\n\n')
 
     # Add custom markers.
     code = re.sub(r'^// (begin|end)_', r'@\g<0>', code, flags=re.MULTILINE)
@@ -387,6 +389,12 @@ def remove_redundant_forward_declaration_chunks(chunks: List[Chunk]) -> List[Chu
 
 def organize_idents_to_ids(chunks: List[Chunk]):
     ident_to_id: Dict[str, str] = {}
+    id_special_cases: Dict[str, str] = {
+        'FSINFOCLASS': 'FS_INFORMATION_CLASS',
+        'PERFINFO_TRACE_ENTRY': 'PERFINFO_TRACE_HEADER',
+        'WMI_DISKIO_READWRITE': 'ETW_DISKIO_READWRITE_V3',
+        'WMI_DISKIO_FLUSH_BUFFERS': 'ETW_DISKIO_FLUSH_BUFFERS_V3',
+    }
     id_update_from_to_collisions: Dict[str, str] = {
         # Collides with function WinStationShadow.
         'WINSTATIONSHADOW': 'struct-winstationshadow',
@@ -398,15 +406,17 @@ def organize_idents_to_ids(chunks: List[Chunk]):
         for ident in chunk.idents:
             if ident not in ident_to_id:
                 ident_to_id[ident] = id
-            elif 'P' + ident_to_id[ident] == id:
-                id_update_from_to['P' + ident_to_id[ident]] = ident_to_id[ident]
-            elif ident_to_id[ident] == 'P' + id:
-                id_update_from_to['P' + id] = id
-            elif {ident_to_id[ident], id} == {'FSINFOCLASS', 'FS_INFORMATION_CLASS'}:
-                # Special case.
-                id_update_from_to['FSINFOCLASS'] = 'FS_INFORMATION_CLASS'
+                continue
+
+            id1 = ident_to_id[ident]
+            id2 = id
+
+            if id1 in id_special_cases and id2 == id_special_cases[id1]:
+                id_update_from_to[id1] = id_special_cases[id1]
+            elif id2 in id_special_cases and id1 == id_special_cases[id2]:
+                id_update_from_to[id2] = id_special_cases[id2]
             else:
-                assert ident_to_id[ident] == id, (ident, ident_to_id[ident], id)
+                assert id1 == id2, (ident, id1, id2)
 
     # ZwAbc and NtAbc are the same, assign the same id.
     for k in ident_to_id:
