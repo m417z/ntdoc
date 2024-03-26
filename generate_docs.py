@@ -360,14 +360,17 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
 
 
 def remove_redundant_forward_declaration_chunks(chunks: List[Chunk]) -> List[Chunk]:
+    def is_forward_declaration(chunk: Chunk) -> bool:
+        return re.match(r'^(typedef )?(struct|union|enum) (\w+).*;(\s*//.*)?$', chunk.body) is not None
+
     result: List[Chunk] = []
 
     for chunk in chunks:
-        if re.match(r'^(typedef )?(struct|union|enum) (\w+).*;(\s*//.*)?$', chunk.body):
+        if is_forward_declaration(chunk):
             idents_unique = set(chunk.idents)
 
             for chunk_other in chunks:
-                if chunk_other is chunk:
+                if chunk_other is chunk or is_forward_declaration(chunk_other):
                     continue
 
                 for ident in list(idents_unique):
