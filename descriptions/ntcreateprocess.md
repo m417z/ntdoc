@@ -1,5 +1,3 @@
-
-
 # See also
 
 * `PsCreateSystemProcess`
