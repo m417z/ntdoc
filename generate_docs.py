@@ -266,10 +266,6 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     # Remove block comments.
     code = re.sub(r'/\*.*?\*/', lambda x: re.sub(r'[^\n]', '', x.group(0)), code, flags=re.DOTALL)
 
-    # Temporary fix.
-    if path.name == 'ntwmi.h':
-        code = code.replace('\n} PERFINFO_CONTIGUOUS_PAGE_GENERATE, PERFINFO_CONTIGUOUS_PAGE_GENERATE;\n', '\n} PERFINFO_CONTIGUOUS_PAGE_GENERATE;\n')
-
     # Remove extern "C" declarations.
     code = code.replace('\n#ifdef __cplusplus\nextern "C" {\n#endif\n', '\n\n\n\n')
     code = code.replace('\n#ifdef __cplusplus\n}\n#endif\n', '\n\n\n\n')
