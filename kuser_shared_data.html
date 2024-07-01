@@ -281,7 +281,10 @@
 
     //
     // Number of physical pages in the system. This can dynamically change as
-    // physical memory can be added or removed from a running system.
+    // physical memory can be added or removed from a running system.  This
+    // cell is too small to hold the non-truncated value on very large memory
+    // machines so code that needs the full value should access
+    // FullNumberOfPhysicalPages instead.
     //
 
     ULONG NumberOfPhysicalPages;
@@ -353,7 +356,9 @@
             ULONG DbgMultiSessionSku        : 1;
             ULONG DbgMultiUsersInSessionSku : 1;
             ULONG DbgStateSeparationEnabled : 1;
-            ULONG SpareBits                 : 21;
+            ULONG DbgSplitTokenEnabled      : 1;
+            ULONG DbgShadowAdminEnabled     : 1;
+            ULONG SpareBits                 : 19;
         } DUMMYSTRUCTNAME2;
     } DUMMYUNIONNAME2;
 
@@ -383,7 +388,9 @@
     ULONG Reserved2;
 
     //
-    //
+    // Full 64 bit version of the number of physical pages in the system.
+    // This can dynamically change as physical memory can be added or removed
+    // from a running system.
     //
 
     ULONGLONG FullNumberOfPhysicalPages;
@@ -555,18 +562,18 @@
         struct
         {
             //
-            // A boolean indicating whether performance counter queries
-            // can read the counter directly (bypassing the system call).
+            // A bitfield indicating whether performance counter queries can
+            // read the counter directly (bypassing the system call) and flags.
             //
 
             volatile UCHAR QpcBypassEnabled;
 
             //
-            // Shift applied to the raw counter value to derive the
-            // QPC count.
+            // Reserved, leave as zero for backward compatibility. Was shift
+            // applied to the raw counter value to derive QPC count.
             //
 
-            UCHAR QpcShift;
+            UCHAR QpcReserved;
         };
     };
 
@@ -574,7 +581,7 @@
     LARGE_INTEGER TimeZoneBiasEffectiveEnd;
 
     //
-    // Extended processor state configuration
+    // Extended processor state configuration (AMD64 and x86).
     //
 
     XSTATE_CONFIGURATION XState;
@@ -584,12 +591,21 @@
 
     ULONG64 UserPointerAuthMask;
 
-    ULONG InternsReserved[210];
+    //
+    // Extended processor state configuration (ARM64). The reserved space for
+    // other architectures is not available for reuse.
+    //
+
+#if defined(_ARM64_)
+    XSTATE_CONFIGURATION XStateArm64;
+#else
+    ULONG Reserved10[210];
+#endif
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 </span><span class="ntdoc-code-footer">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/c9e9c7040469dfef2ff10ad5a9298c6ba6bb9229/phnt/include/ntexapi.h#L4877">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/781442168efdad9df04f89565a4034ea2bc495c9/phnt/include/ntexapi.h#L4877">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
 <p>This structure is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/ns-ntddk-kuser_shared_data">documented in Windows Driver Kit</a>.</p>
