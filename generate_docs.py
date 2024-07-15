@@ -118,7 +118,9 @@ def pop_next_chunk(code: list) -> Tuple[str, str, int] | None:
         chunk = pop_next_chunk_custom_marker(code)
     elif code[0].startswith('#'):
         chunk = pop_next_chunk_macro(code)
-    elif code[0].startswith('typedef struct ') or code[0].startswith('typedef union '):
+    elif (code[0].startswith('typedef struct ') or
+          code[0].startswith('_Struct_size_bytes_(') or
+          code[0].startswith('typedef union ')):
         chunk = pop_next_chunk_struct_union(code)
     elif starts_with_function_definition(code):
         chunk = pop_next_chunk_function_definition(code)
@@ -156,6 +158,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     assert not chunk.startswith('#define '), chunk
 
     if (chunk.startswith('typedef struct') or
+        chunk.startswith('_Struct_size_bytes_(') or
         chunk.startswith('typedef union') or
         chunk.startswith('typedef enum')):
         last_index = chunk.rfind('}')
@@ -166,9 +169,10 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
             idents = idents.removesuffix(';')
 
             ident_full = None
-            if match := re.match(r'^typedef (struct|union|enum) .*?(\w+)\s*\{', chunk):
-                assert not match.group(2).startswith('DECLSPEC'), chunk
-                ident_full = match.group(1) + ' ' + match.group(2)
+            match = re.search(r'^typedef (struct|union|enum) .*?(\w+)\s*\{', chunk, flags=re.MULTILINE)
+            assert match, chunk
+            assert not match.group(2).startswith('DECLSPEC'), chunk
+            ident_full = match.group(1) + ' ' + match.group(2)
         else:
             # Forward declaration.
             assert '{' not in chunk, chunk
