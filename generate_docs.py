@@ -417,7 +417,7 @@ def organize_idents_to_ids(chunks: List[Chunk]):
     }
     id_update_from_to_collisions: Dict[str, str] = {
         # Collides with function WinStationShadow.
-        'WINSTATIONSHADOW': 'struct-winstationshadow',
+        'WINSTATIONSHADOW': 'winstationshadow-struct',
         # Collides with size_t (lowercase).
         'SIZE_T': 'size_t-win',
         # Collides with RtlXxxToSizeT.
@@ -648,7 +648,7 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
 
         id_parts = id.split('-')
         assert 1 <= len(id_parts) <= 2, id
-        id_to_match = id_parts[-1]
+        id_to_match = id_parts[0]
 
         id_human_candidates = [x for x in chunk.idents if x.lower() == id_to_match.lower()]
         assert len(id_human_candidates) <= 1, (id, chunk.idents)
