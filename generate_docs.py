@@ -59,21 +59,25 @@ def pop_next_chunk_struct_union(code: list) -> str:
 
 
 def starts_with_function_definition(code: list) -> bool:
-    # Starts with one of:
-    #   FORCEINLINE
-    #   _Check_return_ FORCEINLINE
-    #   DECLSPEC_NORETURN FORCEINLINE
+    had_brackets = False
+    for line in code:
+        line = rstrip_line_with_comment(line)
 
-    if (code[0].startswith('FORCEINLINE') or
-        code[0].startswith('_Check_return_ FORCEINLINE') or
-        code[0].startswith('DECLSPEC_NORETURN FORCEINLINE')):
-        return True
+        if '(' in line:
+            had_brackets = True
 
-    if (code[0] in ['_Check_return_\n', 'DECLSPEC_NORETURN\n'] and
-        code[1].startswith('FORCEINLINE')):
-        return True
+        if ')' in line:
+            assert had_brackets
 
-    return False
+        if line.endswith(';'):
+            return False
+        assert ';' not in line, line
+
+        if '{' in line:
+            assert line == '{', line
+            return had_brackets
+
+    assert False, code
 
 
 def pop_next_chunk_function_definition(code: list) -> str:
@@ -82,7 +86,7 @@ def pop_next_chunk_function_definition(code: list) -> str:
         line = code.pop(0)
         chunk += line
         if line.startswith('}'):
-            assert line.rstrip('\n') == '}', line
+            assert line.rstrip() == '}', line
             break
     return chunk
 
@@ -141,7 +145,14 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         chunk.startswith('#undef') or
         chunk.startswith('#define PHNT_') or
         chunk.startswith('C_ASSERT(') or
-        chunk.startswith('static_assert(')):
+        chunk.startswith('static_assert(') or
+        chunk.startswith('#pragma region') or
+        chunk.startswith('#pragma endregion') or
+        chunk.startswith('#pragma warning') or
+        chunk.startswith('#pragma intrinsic') or
+        chunk.startswith('#pragma deprecated') or
+        chunk.startswith('#pragma comment(lib,') or
+        chunk.rstrip() == '#pragma once'):
         return []
 
     # Remove comments and noise, then strip.
@@ -190,6 +201,8 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     # Special cases.
     if chunk == 'typedef _Return_type_success_(return >= 0) LONG NTSTATUS;':
         return ['NTSTATUS']
+    if chunk == 'typedef _Return_type_success_(return >= 0) long NTSTATUS;':
+        return ['NTSTATUS']
     if chunk.startswith('typedef NTSTATUS (*PSYSTEM_WATCHDOG_HANDLER)('):
         return ['PSYSTEM_WATCHDOG_HANDLER']
     if chunk.startswith('typedef NTSTATUS ALLOCATE_VIRTUAL_MEMORY_EX_CALLBACK('):
@@ -210,7 +223,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     # Example:
     # typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
-    if match := re.match(r'^typedef(?: const| signed)* \w+(?: const| UNALIGNED)*(.*?)(?:\[.*?\])?;$', chunk):
+    if match := re.match(r'^typedef(?:\s+(?:const|signed|unsigned|\[public\]|_W64|_Null_terminated_))*\s+\w+(?: const| UNALIGNED)*(.*?)(?:\[.*?\])?;$', chunk):
         idents = match.group(1).split(',')
         idents = [x.lstrip('* ').rstrip() for x in idents]
         assert len(idents) > 0, chunk
@@ -278,6 +291,9 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
 
     # Remove other stuff.
     code = code.replace('\n// Options\n\n//#define PHNT_NO_INLINE_INIT_STRING\n', '\n\n\n\n')
+
+    # Fix indentation.
+    code = code.replace('\n\n    _When_(_Old_(*ppszSrc) != NULL, _Unchanged_(*ppszSrc))\n', '\n\n_When_(_Old_(*ppszSrc) != NULL, _Unchanged_(*ppszSrc))\n')
 
     # Add custom markers.
     code = re.sub(r'^// (begin|end)_', r'@\g<0>', code, flags=re.MULTILINE)
@@ -402,6 +418,56 @@ def organize_idents_to_ids(chunks: List[Chunk]):
     id_update_from_to_collisions: Dict[str, str] = {
         # Collides with function WinStationShadow.
         'WINSTATIONSHADOW': 'struct-winstationshadow',
+        # Collides with size_t (lowercase).
+        'SIZE_T': 'size_t-win',
+        # Collides with RtlXxxToSizeT.
+        'RtlDWord64ToSIZET': 'rtldword64tosizet-win',
+        'RtlDWordLongToSIZET': 'rtldwordlongtosizet-win',
+        'RtlInt16ToSIZET': 'rtlint16tosizet-win',
+        'RtlInt32ToSIZET': 'rtlint32tosizet-win',
+        'RtlInt64ToSIZET': 'rtlint64tosizet-win',
+        'RtlInt8ToSIZET': 'rtlint8tosizet-win',
+        'RtlIntPtrToSIZET': 'rtlintptrtosizet-win',
+        'RtlIntToSIZET': 'rtlinttosizet-win',
+        'RtlLong64ToSIZET': 'rtllong64tosizet-win',
+        'RtlLongLongToSIZET': 'rtllonglongtosizet-win',
+        'RtlLongPtrToSIZET': 'rtllongptrtosizet-win',
+        'RtlLongToSIZET': 'rtllongtosizet-win',
+        'RtlPtrdiffTToSIZET': 'rtlptrdiffttosizet-win',
+        'RtlShortToSIZET': 'rtlshorttosizet-win',
+        'RtlSSIZETToSIZET': 'rtlssizettosizet-win',
+        'RtlUInt64ToSIZET': 'rtluint64tosizet-win',
+        'RtlULong64ToSIZET': 'rtlulong64tosizet-win',
+        'RtlULongLongToSIZET': 'rtlulonglongtosizet-win',
+        # Collides with RtlSizeTXXX.
+        'RtlSIZETAdd': 'rtlsizetadd-win',
+        'RtlSIZETMult': 'rtlsizetmult-win',
+        'RtlSIZETSub': 'rtlsizetsub-win',
+        # Collides with RtlSizeTToXXX.
+        'RtlSIZETToByte': 'rtlsizettobyte-win',
+        'RtlSIZETToChar': 'rtlsizettochar-win',
+        'RtlSIZETToDWord': 'rtlsizettodword-win',
+        'RtlSIZETToInt': 'rtlsizettoint-win',
+        'RtlSIZETToInt16': 'rtlsizettoint16-win',
+        'RtlSIZETToInt32': 'rtlsizettoint32-win',
+        'RtlSIZETToInt64': 'rtlsizettoint64-win',
+        'RtlSIZETToInt8': 'rtlsizettoint8-win',
+        'RtlSIZETToIntPtr': 'rtlsizettointptr-win',
+        'RtlSIZETToLong': 'rtlsizettolong-win',
+        'RtlSIZETToLong64': 'rtlsizettolong64-win',
+        'RtlSIZETToLongLong': 'rtlsizettolonglong-win',
+        'RtlSIZETToLongPtr': 'rtlsizettolongptr-win',
+        'RtlSIZETToPtrdiffT': 'rtlsizettoptrdifft-win',
+        'RtlSIZETToShort': 'rtlsizettoshort-win',
+        'RtlSIZETToSSIZET': 'rtlsizettossizet-win',
+        'RtlSIZETToUChar': 'rtlsizettouchar-win',
+        'RtlSIZETToUInt': 'rtlsizettouint-win',
+        'RtlSIZETToUInt16': 'rtlsizettouint16-win',
+        'RtlSIZETToUInt32': 'rtlsizettouint32-win',
+        'RtlSIZETToUInt8': 'rtlsizettouint8-win',
+        'RtlSIZETToULong': 'rtlsizettoulong-win',
+        'RtlSIZETToUShort': 'rtlsizettoushort-win',
+        'RtlSIZETToWord': 'rtlsizettoword-win',
     }
     id_update_from_to = id_update_from_to_collisions.copy()
 
