@@ -20,3 +20,4 @@ This function was introduced in Windows 11.
  - `NtChangeThreadState`
  - `NtOpenThread`
  - `NtSuspendThread`
+ - `NtCreateProcessStateChange`

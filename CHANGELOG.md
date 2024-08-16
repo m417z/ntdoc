@@ -2,6 +2,9 @@
 
 All notable documentation content changes are documented in this file.
 <!-- content -->
+## 16 Aug 2024
+**Process operations ([#16](https://github.com/m417z/ntdoc/pull/16))**: `NtGetNextProcess`, `NtTerminateProcess`, `NtSuspendProcess`, `NtChangeProcessState`.
+
 ## 3 Dec 2023
 **Process information ([#11](https://github.com/m417z/ntdoc/pull/11))**: `NtQueryInformationProcess`, `NtSetInformationProcess`, and 100+ `PROCESSINFOCLASS` values.
 
