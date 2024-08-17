@@ -80,6 +80,52 @@ def starts_with_function_definition(code: list) -> bool:
     assert False, code
 
 
+def get_function_identifier(chunk: str) -> str:
+    if match := re.search(r'^{\s*(?://.*)?$', chunk, flags=re.MULTILINE):
+        chunk = chunk[:match.start()]
+    elif match := re.search(r';\s*(?://.*)?$', chunk, flags=re.MULTILINE):
+        chunk = chunk[:match.start()]
+    else:
+        assert False, chunk
+
+    assert ';' not in chunk, chunk
+    assert '{' not in chunk, chunk
+
+    if match := re.findall(r'(\w+)\s*\(', chunk):
+        match = [m for m in match if m not in [
+            '_Always_',
+            '_At_',
+            '_Deref_out_range_',
+            '_In_range_',
+            '_In_reads_',
+            '_In_reads_bytes_',
+            '_In_reads_opt_',
+            '_In_reads_or_z_',
+            '_Inout_updates_',
+            '_Inout_updates_bytes_',
+            '_Old_',
+            '_Out_writes_',
+            '_Out_writes_bytes_',
+            '_Out_writes_bytes_all_',
+            '_Out_writes_to_',
+            '_Outptr_opt_result_buffer_',
+            '_Outptr_opt_result_bytebuffer_',
+            '_Outptr_result_buffer_',
+            '_Post_equal_to_',
+            '_Post_satisfies_',
+            '_String_length_',
+            '_Success_',
+            '_Unchanged_',
+            '_When_',
+            'sizeof',
+        ]]
+        if len(match) == 1:
+            return match[0]
+        assert False, (chunk, match)
+
+    assert False, chunk
+
+
 def pop_next_chunk_function_definition(code: list) -> str:
     chunk = ''
     while True:
@@ -253,8 +299,8 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return [match.group(1)]
 
     # Functions.
-    if match := re.match(r'^(?:\w+\**\s+)*(\w+)\s*\(', chunk):
-        return [match.group(1)]
+    if ident := get_function_identifier(chunk):
+        return [ident]
 
     assert False, chunk
 
