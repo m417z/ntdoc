@@ -2,7 +2,7 @@ This function allows iterating over threads in a process without incurring any r
 
 # Parameters
  - `ProcessHandle` - a handle to the process which threads should be enumerated. This can either be the `NtCurrentProcess` pseudo-handle or a handle with `PROCESS_QUERY_INFORMATION` access.
- - `ThreadHandle` - a handle to the previous thread to continue enumeration from or `NULL` to restart enumeration.
+ - `ThreadHandle` - a handle to the previous thread to continue enumeration from or `NULL` to restart enumeration. The handle doesn't need to grant any particular access.
  - `DesiredAccess` - the thread access mask expected on the opened handle.
  - `HandleAttributes` - flags that control the property of the handle, such as its inheritance (`OBJ_INHERIT`).
  - `Flags` - this parameter is unused and should be set to zero.
@@ -16,7 +16,7 @@ For the list of thread-specific access masks, see `NtOpenThread`.
  - `STATUS_NO_MORE_ENTRIES` - the function failed because there are no more accessible threads to enumerate.
 
 # Remarks
-`NtGetNextThread` automatically skips inaccessible threads. In other words, it only enumerates threads for which it can return handles with the specified desired access. However, if there are no threads that can be returned at the start of enumeration (when the input handle is `NULL`), the function returns the error accordingly (usually `STATUS_ACCESS_DENIED`) instead of `STATUS_NO_MORE_ENTRIES`.
+`NtGetNextThread` automatically skips inaccessible threads. In other words, it only enumerates threads for which it can return handles with the specified desired access. However, if there are no threads that satisfy this criterion at the start of enumeration (when the input handle is `NULL`), the function returns the error accordingly (usually `STATUS_ACCESS_DENIED`) instead of `STATUS_NO_MORE_ENTRIES`.
 
 To avoid retaining unused resources, call `NtClose` to close the returned handles when they are no longer required.
 

@@ -25,3 +25,4 @@ This function was introduced in Windows 11.
  - `NtOpenThread`
  - `NtSuspendThread`
  - `NtResumeThread`
+ - `NtChangeProcessState`
