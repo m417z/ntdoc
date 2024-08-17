@@ -13,9 +13,6 @@ Suspends (freezes) the associated process.
 | Extra buffer    | void (zero size)
 | Required access | `PROCESS_SUSPEND_RESUME`
 
-### Remarks
-
-
 ### See also
  - `NtSuspendProcess`
  - `THREAD_CREATE_FLAGS_BYPASS_PROCESS_FREEZE`
