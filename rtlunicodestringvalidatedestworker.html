@@ -42,6 +42,69 @@
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">#ifndef _NTSTRSAFE_H_INCLUDED_
+#ifndef NTSTRSAFE_NO_UNICODE_STRING_FUNCTIONS
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">_Post_satisfies_(*pcchDest*sizeof(wchar_t) == DestinationString-&gt;MaximumLength)
+    <a href="ntstrsafeworkerddi" title="#define NTSTRSAFEWORKERDDI EXTERN_C NTSTATUS __stdcall">NTSTRSAFEWORKERDDI</a>
+    RtlUnicodeStringValidateDestWorker(
+            _In_ <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a> DestinationString,
+            _Outptr_result_buffer_(*pcchDest) wchar_t** ppszDest,
+            _Out_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>* pcchDest,
+            _Out_opt_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>* pcchDestLength,
+            _In_ const <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchMax,
+            _In_ <a href="dword" title="typedef unsigned long DWORD;">DWORD</a> dwFlags);
+</span><span class="ntdoc-code-footer">
+#endif
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/919c0985f506f4c91afb2fc96f122794dd854911/phnt/include/ntstrsafe.h#L414">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">#ifndef _NTSTRSAFE_H_INCLUDED_
+// Below here are the worker functions that actually do the work
+#if defined(NTSTRSAFE_LIB_IMPL) || !defined(NTSTRSAFE_LIB)
+#ifndef NTSTRSAFE_NO_UNICODE_STRING_FUNCTIONS
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">_Post_satisfies_(*pcchDest*sizeof(wchar_t) == DestinationString-&gt;MaximumLength)
+    <a href="ntstrsafeworkerddi" title="#define NTSTRSAFEWORKERDDI EXTERN_C NTSTATUS __stdcall">NTSTRSAFEWORKERDDI</a>
+    RtlUnicodeStringValidateDestWorker(
+            _In_ <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a> DestinationString,
+            _Outptr_result_buffer_(*pcchDest) wchar_t** ppszDest,
+            _Out_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>* pcchDest,
+            _Out_opt_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>* pcchDestLength,
+            _In_ const <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchMax,
+            _In_ <a href="dword" title="typedef unsigned long DWORD;">DWORD</a> dwFlags)
+{
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
+
+    *ppszDest = NULL;
+    *pcchDest = 0;
+
+    if (pcchDestLength)
+    {
+        *pcchDestLength = 0;
+    }
+
+    status = <a href="rtlunicodestringvalidateworker" title="NTSTRSAFEWORKERDDI&#10;RtlUnicodeStringValidateWorker(&#10;        _In_opt_ PCUNICODE_STRING SourceString,&#10;        _In_ const size_t cchMax,&#10;        _In_ DWORD dwFlags);">RtlUnicodeStringValidateWorker</a>(DestinationString, cchMax, dwFlags);
+
+    if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) &amp;&amp; DestinationString)
+    {
+        *ppszDest = DestinationString-&gt;Buffer;
+        *pcchDest = DestinationString-&gt;MaximumLength / sizeof(wchar_t);
+
+        if (pcchDestLength)
+        {
+            *pcchDestLength = DestinationString-&gt;Length / sizeof(wchar_t);
+        }
+    }
+
+    return status;
+}
+</span><span class="ntdoc-code-footer">
+#endif
+#endif
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/919c0985f506f4c91afb2fc96f122794dd854911/phnt/include/ntstrsafe.h#L12753">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">#ifndef _NTSTRSAFE_H_INCLUDED_
 // Do not call these functions, they are worker functions for internal use within this file
 #ifdef DEPRECATE_SUPPORTED
 // ...

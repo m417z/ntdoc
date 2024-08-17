@@ -2,9 +2,9 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="description" content="RtlStringCbCatNA - NtDoc, the native NT API online documentation">
+    <meta name="description" content="RtlUnicodeStringInit - NtDoc, the native NT API online documentation">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>RtlStringCbCatNA - NtDoc</title>
+    <title>RtlUnicodeStringInit - NtDoc</title>
     <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
@@ -29,7 +29,7 @@
     <header>
         <a href="."><img class="ntdoc-title-logo" src="logo.png" alt="logo"></a>
         <h1 class="ntdoc-title">
-            RtlStringCbCatNA - NtDoc
+            RtlUnicodeStringInit - NtDoc
         </h1>
         <div class="ntdoc-subtitle">
             Native API online documentation, based on the System Informer
@@ -43,49 +43,26 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">#ifndef _NTSTRSAFE_H_INCLUDED_
 #ifndef NTSTRSAFE_LIB_IMPL
-#ifndef NTSTRSAFE_NO_CB_FUNCTIONS
+#ifndef NTSTRSAFE_NO_UNICODE_STRING_FUNCTIONS
 
-</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
-    RtlStringCbCatNA(
-            _Inout_updates_bytes_(cbDest) _Always_(_Post_z_) <a href="ntstrsafe_pstr" title="typedef _Null_terminated_ char* NTSTRSAFE_PSTR;">NTSTRSAFE_PSTR</a> pszDest,
-            _In_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cbDest,
-            _In_reads_bytes_(cbToAppend) <a href="strsafe_pcnzch" title="typedef const char* STRSAFE_PCNZCH;">STRSAFE_PCNZCH</a> pszSrc,
-            _In_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cbToAppend)
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">_At_(DestinationString-&gt;Buffer, _Post_equal_to_(pszSrc))
+_At_(DestinationString-&gt;Length, _Post_equal_to_(_String_length_(pszSrc) * sizeof(WCHAR)))
+_At_(DestinationString-&gt;MaximumLength, _Post_equal_to_((_String_length_(pszSrc)+1) * sizeof(WCHAR)))
+<a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
+RtlUnicodeStringInit(
+        _Out_ <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">PUNICODE_STRING</a> DestinationString,
+        _In_opt_ <a href="ntstrsafe_pcwstr" title="typedef _Null_terminated_ const wchar_t* NTSTRSAFE_PCWSTR;">NTSTRSAFE_PCWSTR</a> pszSrc)
 {
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
-    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchDest = cbDest / sizeof(char);
-    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchDestLength;
-
-    status = <a href="rtlstringvalidatedestandlengtha" title="_Post_satisfies_(cchDest &gt; 0 &amp;&amp; cchDest &lt;= cchMax)&#10;NTSTRSAFEWORKERDDI&#10;RtlStringValidateDestAndLengthA(&#10;    _In_reads_opt_(cchDest) NTSTRSAFE_PCSTR pszDest,&#10;    _In_ size_t cchDest,&#10;    _Out_ _Deref_out_range_(0, cchDest - 1) size_t* pcchDestLength,&#10;    _In_ const size_t cchMax);">RtlStringValidateDestAndLengthA</a>(pszDest,
-            cchDest,
-            &amp;cchDestLength,
-            <a href="ntstrsafe_max_cch" title="#define NTSTRSAFE_MAX_CCH 2147483647 // max buffer size, in characters, that we support (same as INT_MAX)">NTSTRSAFE_MAX_CCH</a>);
-
-    if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
-    {
-        <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchToAppend = cbToAppend / sizeof(char);
-
-        if (cchToAppend &gt; <a href="ntstrsafe_max_length" title="#define NTSTRSAFE_MAX_LENGTH (NTSTRSAFE_MAX_CCH - 1) // max buffer length, in characters, that we support">NTSTRSAFE_MAX_LENGTH</a>)
-        {
-            status = STATUS_INVALID_PARAMETER;
-        }
-        else
-        {
-            status = <a href="rtlstringcopyworkera" title="NTSTRSAFEWORKERDDI&#10;RtlStringCopyWorkerA(&#10;    _Out_writes_(cchDest) _Always_(_Post_z_) NTSTRSAFE_PSTR pszDest,&#10;    _In_ _In_range_(1, NTSTRSAFE_MAX_CCH) size_t cchDest,&#10;    _Always_(_Out_opt_ _Deref_out_range_(&lt;=, (cchToCopy &lt; cchDest) ? cchToCopy : (cchDest - 1))) size_t* pcchNewDestLength,&#10;    _In_reads_or_z_(cchToCopy) STRSAFE_PCNZCH pszSrc,&#10;    _In_ _In_range_(&lt;, NTSTRSAFE_MAX_CCH) size_t cchToCopy);">RtlStringCopyWorkerA</a>(pszDest + cchDestLength,
-                    cchDest - cchDestLength,
-                    NULL,
-                    pszSrc,
-                    cchToAppend);
-        }
-    }
-
-    return status;
+    return <a href="rtlunicodestringinitworker" title="_At_(DestinationString-&gt;Buffer, _Post_equal_to_(pszSrc))&#10;_At_(DestinationString-&gt;Length, _Post_equal_to_(_String_length_(pszSrc) * sizeof(WCHAR)))&#10;_At_(DestinationString-&gt;MaximumLength, _Post_equal_to_((_String_length_(pszSrc)+1) * sizeof(WCHAR)))&#10;NTSTRSAFEWORKERDDI&#10;RtlUnicodeStringInitWorker(&#10;        _Out_ PUNICODE_STRING DestinationString,&#10;        _In_opt_ NTSTRSAFE_PCWSTR pszSrc,&#10;        _In_ const size_t cchMax,&#10;        _In_ DWORD dwFlags);">RtlUnicodeStringInitWorker</a>(DestinationString,
+            pszSrc,
+            <a href="ntstrsafe_unicode_string_max_cch" title="#define NTSTRSAFE_UNICODE_STRING_MAX_CCH (0xffff / sizeof(wchar_t)) // max buffer size, in characters, for a UNICODE_STRING">NTSTRSAFE_UNICODE_STRING_MAX_CCH</a>,
+            0);
 }
 </span><span class="ntdoc-code-footer">
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/919c0985f506f4c91afb2fc96f122794dd854911/phnt/include/ntstrsafe.h#L3550">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/919c0985f506f4c91afb2fc96f122794dd854911/phnt/include/ntstrsafe.h#L6761">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
 <div class="ntdoc-description-none">
@@ -93,7 +70,7 @@
 </div>
 </div>
 <div class="ntdoc-description-links">
-<a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/rtlstringcbcatna.md">Edit description on GitHub</a>
+<a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/rtlunicodestringinit.md">Edit description on GitHub</a>
 </div>
 
     <!-- For sticky footer: https://stackoverflow.com/a/34146411 -->
