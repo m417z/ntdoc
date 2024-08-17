@@ -75,46 +75,114 @@ ZwOpenProcess(
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/919c0985f506f4c91afb2fc96f122794dd854911/phnt/include/ntzwapi.h#L2549">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
-<p>This function is documented in Windows Driver Kit <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-ntopenprocess">here</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-zwopenprocess">here</a>.</p>
+<p>Opens a handle to an existing process. This function is documented in Windows Driver Kit <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-ntopenprocess">here</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-zwopenprocess">here</a>.</p>
 
-<hr />
-
-<h3 id="accessmask">AccessMask</h3>
+<h1 id="parameters">Parameters</h1>
 
 <ul>
-<li><code><a href="process_terminate" title="#define PROCESS_TERMINATE 0x0001">PROCESS_TERMINATE</a></code></li>
-<li><code><a href="process_create_thread" title="#define PROCESS_CREATE_THREAD 0x0002">PROCESS_CREATE_THREAD</a></code></li>
-<li><code><a href="process_set_sessionid" title="#define PROCESS_SET_SESSIONID 0x0004">PROCESS_SET_SESSIONID</a></code></li>
-<li><code><a href="process_vm_operation" title="#define PROCESS_VM_OPERATION 0x0008">PROCESS_VM_OPERATION</a></code></li>
-<li><code><a href="process_vm_read" title="#define PROCESS_VM_READ 0x0010">PROCESS_VM_READ</a></code></li>
-<li><code><a href="process_vm_write" title="#define PROCESS_VM_WRITE 0x0020">PROCESS_VM_WRITE</a></code></li>
-<li><code>PROCESS_DUP_HANDLE</code></li>
-<li><code><a href="process_create_process" title="#define PROCESS_CREATE_PROCESS 0x0080">PROCESS_CREATE_PROCESS</a></code></li>
-<li><code><a href="process_set_quota" title="#define PROCESS_SET_QUOTA 0x0100">PROCESS_SET_QUOTA</a></code></li>
-<li><code><a href="process_set_information" title="#define PROCESS_SET_INFORMATION 0x0200">PROCESS_SET_INFORMATION</a></code></li>
-<li><code><a href="process_query_information" title="#define PROCESS_QUERY_INFORMATION 0x0400">PROCESS_QUERY_INFORMATION</a></code></li>
-<li><code>PROCESS_ALL_ACCESS</code></li>
+<li><code>ProcessHandle</code> - a pointer to a variable that receives a handle to the process.</li>
+<li><code>DesiredAccess</code> - the requested access mask.</li>
+<li><code>ObjectAttributes</code> - a pointer to an <code><a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PVOID SecurityDescriptor; // PSECURITY_DESCRIPTOR;&#10;    PVOID SecurityQualityOfService; // PSECURITY_QUALITY_OF_SERVICE&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a></code> structure that specifies attributes of the handle. Use <code><a href="initializeobjectattributes" title="#define InitializeObjectAttributes(p, n, a, r, s) { \&#10;    (p)-&gt;Length = sizeof(OBJECT_ATTRIBUTES); \&#10;    (p)-&gt;RootDirectory = r; \&#10;    (p)-&gt;Attributes = a; \&#10;    (p)-&gt;ObjectName = n; \&#10;    (p)-&gt;SecurityDescriptor = s; \&#10;    (p)-&gt;SecurityQualityOfService = NULL; \&#10;    }">InitializeObjectAttributes</a></code> to initialize this structure.</li>
+<li><code>ClientId</code> - a pointer to the variable that indicates the client ID of the process to open. Specify the PID in <code>UniqueProcess</code> and set <code>UniqueThread</code> field to <code>NULL</code>.</li>
 </ul>
 
-<h3 id="objectattributes">ObjectAttributes</h3>
+<h1 id="access-masks">Access masks</h1>
 
-<p>For standard processes, all fields of <code>ObjectAttributes</code> should be <em>NULL</em>.</p>
+<table>
+<thead>
+<tr>
+  <th>Access mask</th>
+  <th>Use</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code><a href="process_terminate" title="#define PROCESS_TERMINATE 0x0001">PROCESS_TERMINATE</a></code></td>
+  <td>Terminating the process via <code><a href="ntterminateprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtTerminateProcess(&#10;    _In_opt_ HANDLE ProcessHandle,&#10;    _In_ NTSTATUS ExitStatus&#10;    );">NtTerminateProcess</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="process_create_thread" title="#define PROCESS_CREATE_THREAD 0x0002">PROCESS_CREATE_THREAD</a></code></td>
+  <td>Creating threads in the process via <code><a href="ntcreatethread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateThread(&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ HANDLE ProcessHandle,&#10;    _Out_ PCLIENT_ID ClientId,&#10;    _In_ PCONTEXT ThreadContext,&#10;    _In_ PINITIAL_TEB InitialTeb,&#10;    _In_ BOOLEAN CreateSuspended&#10;    );">NtCreateThread</a></code> and <code><a href="ntcreatethreadex" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateThreadEx(&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PUSER_THREAD_START_ROUTINE StartRoutine,&#10;    _In_opt_ PVOID Argument,&#10;    _In_ ULONG CreateFlags, // THREAD_CREATE_FLAGS_*&#10;    _In_ SIZE_T ZeroBits,&#10;    _In_ SIZE_T StackSize,&#10;    _In_ SIZE_T MaximumStackSize,&#10;    _In_opt_ PPS_ATTRIBUTE_LIST AttributeList&#10;    );">NtCreateThreadEx</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="process_set_sessionid" title="#define PROCESS_SET_SESSIONID 0x0004">PROCESS_SET_SESSIONID</a></code></td>
+  <td>Unused</td>
+</tr>
+<tr>
+  <td><code><a href="process_vm_operation" title="#define PROCESS_VM_OPERATION 0x0008">PROCESS_VM_OPERATION</a></code></td>
+  <td>Performing various memory operations such as <code><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG Protect&#10;    );">NtAllocateVirtualMemory</a></code>, <code><a href="ntprotectvirtualmemory" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtProtectVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ PVOID *BaseAddress,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG NewProtect,&#10;    _Out_ PULONG OldProtect&#10;    );">NtProtectVirtualMemory</a></code>, <code><a href="ntmapviewofsection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtMapViewOfSection(&#10;    _In_ HANDLE SectionHandle,&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*ViewSize) _Writable_bytes_(*ViewSize) _Post_readable_byte_size_(*ViewSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _In_ SIZE_T CommitSize,&#10;    _Inout_opt_ PLARGE_INTEGER SectionOffset,&#10;    _Inout_ PSIZE_T ViewSize,&#10;    _In_ SECTION_INHERIT InheritDisposition,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG Win32Protect&#10;    );">NtMapViewOfSection</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="process_vm_read" title="#define PROCESS_VM_READ 0x0010">PROCESS_VM_READ</a></code></td>
+  <td>Reading the process's memory via <code><a href="ntreadvirtualmemory" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReadVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_opt_ PVOID BaseAddress,&#10;    _Out_writes_bytes_(BufferSize) PVOID Buffer,&#10;    _In_ SIZE_T BufferSize,&#10;    _Out_opt_ PSIZE_T NumberOfBytesRead&#10;    );">NtReadVirtualMemory</a></code></td>
+</tr>
+<tr>
+  <td><code><a href="process_vm_write" title="#define PROCESS_VM_WRITE 0x0020">PROCESS_VM_WRITE</a></code></td>
+  <td>Writing to the process's memory via <code><a href="ntwritevirtualmemory" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWriteVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_opt_ PVOID BaseAddress,&#10;    _In_reads_bytes_(BufferSize) PVOID Buffer,&#10;    _In_ SIZE_T BufferSize,&#10;    _Out_opt_ PSIZE_T NumberOfBytesWritten&#10;    );">NtWriteVirtualMemory</a></code></td>
+</tr>
+<tr>
+  <td><code>PROCESS_DUP_HANDLE</code></td>
+  <td>Duplicating and closing process handles via <code><a href="ntduplicateobject" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDuplicateObject(&#10;    _In_ HANDLE SourceProcessHandle,&#10;    _In_ HANDLE SourceHandle,&#10;    _In_opt_ HANDLE TargetProcessHandle,&#10;    _Out_opt_ PHANDLE TargetHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ ULONG HandleAttributes,&#10;    _In_ ULONG Options&#10;    );">NtDuplicateObject</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="process_create_process" title="#define PROCESS_CREATE_PROCESS 0x0080">PROCESS_CREATE_PROCESS</a></code></td>
+  <td>Specifying the process as the parent in <code><a href="ntcreateprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateProcess(&#10;    _Out_ PHANDLE ProcessHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ HANDLE ParentProcess,&#10;    _In_ BOOLEAN InheritObjectTable,&#10;    _In_opt_ HANDLE SectionHandle,&#10;    _In_opt_ HANDLE DebugPort,&#10;    _In_opt_ HANDLE TokenHandle&#10;    );">NtCreateProcess</a></code> and <code><a href="ntcreateuserprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateUserProcess(&#10;    _Out_ PHANDLE ProcessHandle,&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK ProcessDesiredAccess,&#10;    _In_ ACCESS_MASK ThreadDesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ProcessObjectAttributes,&#10;    _In_opt_ POBJECT_ATTRIBUTES ThreadObjectAttributes,&#10;    _In_ ULONG ProcessFlags, // PROCESS_CREATE_FLAGS_*&#10;    _In_ ULONG ThreadFlags, // THREAD_CREATE_FLAGS_*&#10;    _In_opt_ PVOID ProcessParameters, // PRTL_USER_PROCESS_PARAMETERS&#10;    _Inout_ PPS_CREATE_INFO CreateInfo,&#10;    _In_opt_ PPS_ATTRIBUTE_LIST AttributeList&#10;    );">NtCreateUserProcess</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="process_set_quota" title="#define PROCESS_SET_QUOTA 0x0100">PROCESS_SET_QUOTA</a></code></td>
+  <td>Adjusting  quota limits via <code><a href="ntsetinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength&#10;    );">NtSetInformationProcess</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="process_set_information" title="#define PROCESS_SET_INFORMATION 0x0200">PROCESS_SET_INFORMATION</a></code></td>
+  <td>Setting most information classes via <code><a href="ntsetinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength&#10;    );">NtSetInformationProcess</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="process_query_information" title="#define PROCESS_QUERY_INFORMATION 0x0400">PROCESS_QUERY_INFORMATION</a></code></td>
+  <td>Querying most information classes via <code><a href="ntqueryinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationProcess</a></code> and <code><a href="ntqueryvirtualmemory" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_opt_ PVOID BaseAddress,&#10;    _In_ MEMORY_INFORMATION_CLASS MemoryInformationClass,&#10;    _Out_writes_bytes_(MemoryInformationLength) PVOID MemoryInformation,&#10;    _In_ SIZE_T MemoryInformationLength,&#10;    _Out_opt_ PSIZE_T ReturnLength&#10;    );">NtQueryVirtualMemory</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="process_suspend_resume" title="#define PROCESS_SUSPEND_RESUME 0x0800">PROCESS_SUSPEND_RESUME</a></code></td>
+  <td>Suspending and resuming all threads in the process via <code><a href="ntsuspendprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSuspendProcess(&#10;    _In_ HANDLE ProcessHandle&#10;    );">NtSuspendProcess</a></code> and <code><a href="ntresumethread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtResumeThread(&#10;    _In_ HANDLE ThreadHandle,&#10;    _Out_opt_ PULONG PreviousSuspendCount&#10;    );">NtResumeThread</a></code>.</td>
+</tr>
+<tr>
+  <td><code><a href="process_query_limited_information" title="#define PROCESS_QUERY_LIMITED_INFORMATION 0x1000">PROCESS_QUERY_LIMITED_INFORMATION</a></code></td>
+  <td>Querying some information classes via <code><a href="ntqueryinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationProcess</a></code> and <code><a href="ntqueryvirtualmemory" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_opt_ PVOID BaseAddress,&#10;    _In_ MEMORY_INFORMATION_CLASS MemoryInformationClass,&#10;    _Out_writes_bytes_(MemoryInformationLength) PVOID MemoryInformation,&#10;    _In_ SIZE_T MemoryInformationLength,&#10;    _Out_opt_ PSIZE_T ReturnLength&#10;    );">NtQueryVirtualMemory</a></code>. The system automatically includes this right if the caller requests <code><a href="process_query_information" title="#define PROCESS_QUERY_INFORMATION 0x0400">PROCESS_QUERY_INFORMATION</a></code>.</td>
+</tr>
+<tr>
+  <td><code>PROCESS_SET_LIMITED_INFORMATION</code></td>
+  <td>Setting some information classes via <code><a href="ntsetinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength&#10;    );">NtSetInformationProcess</a></code>. The system automatically includes this right if the caller requests <code><a href="process_set_information" title="#define PROCESS_SET_INFORMATION 0x0200">PROCESS_SET_INFORMATION</a></code>.</td>
+</tr>
+<tr>
+  <td><code>PROCESS_ALL_ACCESS</code></td>
+  <td>All of the above plus standard rights.</td>
+</tr>
+</tbody>
+</table>
 
-<h3 id="clientid">ClientId</h3>
+<h1 id="remarks">Remarks</h1>
 
-<p>Process id and thread id must be fill with valid values.</p>
+<p>This function bypasses some access checks if the caller has the <code>SeDebugPrivilege</code> enabled.</p>
 
-<h1 id="documented-by">Documented by</h1>
+<p>To avoid retaining unused resources, call <code><a href="ntclose" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a></code> to close the returned handle when it is no longer required.</p>
+
+<p>Instead of opening the current process, consider using the <code><a href="ntcurrentprocess" title="#define NtCurrentProcess() ((HANDLE)(LONG_PTR)-1)">NtCurrentProcess</a></code> pseudo-handle.</p>
+
+<h1 id="related-win32-api">Related Win32 API</h1>
 
 <ul>
-<li>Tomasz Nowak</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openprocess"><code>OpenProcess</code></a></li>
 </ul>
 
 <h1 id="see-also">See also</h1>
 
 <ul>
+<li><code><a href="client_id" title="typedef struct _CLIENT_ID&#10;{&#10;    HANDLE UniqueProcess;&#10;    HANDLE UniqueThread;&#10;} CLIENT_ID, *PCLIENT_ID;">CLIENT_ID</a></code></li>
+<li><code><a href="ntgetnextprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtGetNextProcess(&#10;    _In_opt_ HANDLE ProcessHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ ULONG HandleAttributes,&#10;    _In_ ULONG Flags,&#10;    _Out_ PHANDLE NewProcessHandle&#10;    );">NtGetNextProcess</a></code></li>
 <li><code><a href="ntcreateprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateProcess(&#10;    _Out_ PHANDLE ProcessHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ HANDLE ParentProcess,&#10;    _In_ BOOLEAN InheritObjectTable,&#10;    _In_opt_ HANDLE SectionHandle,&#10;    _In_opt_ HANDLE DebugPort,&#10;    _In_opt_ HANDLE TokenHandle&#10;    );">NtCreateProcess</a></code></li>
-<li><code><a href="ntterminateprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtTerminateProcess(&#10;    _In_opt_ HANDLE ProcessHandle,&#10;    _In_ NTSTATUS ExitStatus&#10;    );">NtTerminateProcess</a></code></li>
+<li><code><a href="ntcreateuserprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateUserProcess(&#10;    _Out_ PHANDLE ProcessHandle,&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK ProcessDesiredAccess,&#10;    _In_ ACCESS_MASK ThreadDesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ProcessObjectAttributes,&#10;    _In_opt_ POBJECT_ATTRIBUTES ThreadObjectAttributes,&#10;    _In_ ULONG ProcessFlags, // PROCESS_CREATE_FLAGS_*&#10;    _In_ ULONG ThreadFlags, // THREAD_CREATE_FLAGS_*&#10;    _In_opt_ PVOID ProcessParameters, // PRTL_USER_PROCESS_PARAMETERS&#10;    _Inout_ PPS_CREATE_INFO CreateInfo,&#10;    _In_opt_ PPS_ATTRIBUTE_LIST AttributeList&#10;    );">NtCreateUserProcess</a></code></li>
+<li><code><a href="ntqueryinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationProcess</a></code></li>
+<li><code><a href="ntsetinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength&#10;    );">NtSetInformationProcess</a></code></li>
+<li><code><a href="ntopenthread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThread(&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PCLIENT_ID ClientId&#10;    );">NtOpenThread</a></code></li>
 </ul>
 </div>
 <div class="ntdoc-description-links">
