@@ -323,8 +323,11 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     # Tabs to spaces, only at the beginning of the line.
     code = re.sub(r'^\t+', lambda x: 4 * ' ' * len(x.group(0)), code, flags=re.MULTILINE)
 
+    # Make sure no tabs are left.
     assert '\t' not in code
-    assert '@' not in code
+
+    # Make sure no line starts with @, which is used as a marker.
+    assert not re.search(r'^\s*@', code, flags=re.MULTILINE)
 
     # Remove block comments.
     code = re.sub(r'/\*.*?\*/', lambda x: re.sub(r'[^\n]', '', x.group(0)), code, flags=re.DOTALL)
