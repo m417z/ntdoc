@@ -341,9 +341,6 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     # Remove other stuff.
     code = code.replace('\n// Options\n\n//#define PHNT_NO_INLINE_INIT_STRING\n', '\n\n\n\n')
 
-    # Fix indentation.
-    code = code.replace('\n\n    _When_(_Old_(*ppszSrc) != NULL, _Unchanged_(*ppszSrc))\n', '\n\n_When_(_Old_(*ppszSrc) != NULL, _Unchanged_(*ppszSrc))\n')
-
     # Add custom markers.
     code = re.sub(r'^// (begin|end)_', r'@\g<0>', code, flags=re.MULTILINE)
     code = re.sub(r'^#include <(pshpack\d+|poppack)\.h>$', r'@\g<0>', code, flags=re.MULTILINE)
