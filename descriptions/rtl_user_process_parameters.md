@@ -12,10 +12,35 @@ Length of valid structure.
 
 ### Flags
 
-Currently only one flag is known:
+Currently these flags are known:
 
-```
-PPF_NORMALIZED  (1)     // Means that structure is normalized by call RtlNormalizeProcessParams
+```cpp
+// Means that the structure is normalized by RtlNormalizeProcessParams.
+#define RTL_USER_PROCESS_PARAMETERS_NORMALIZED              0x01
+
+// Source:
+// https://github.com/arizvisa/ndk/blob/6851da4ab49ca07ddae29b6d4d255726ad04ef86/ndk/rtltypes.h#L39
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_USER            0x02
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_KERNEL          0x04
+#define RTL_USER_PROCESS_PARAMETERS_PROFILE_SERVER          0x08
+#define RTL_USER_PROCESS_PARAMETERS_UNKNOWN                 0x10
+#define RTL_USER_PROCESS_PARAMETERS_RESERVE_1MB             0x20
+#define RTL_USER_PROCESS_PARAMETERS_RESERVE_16MB            0x40
+#define RTL_USER_PROCESS_PARAMETERS_CASE_SENSITIVE          0x80
+#define RTL_USER_PROCESS_PARAMETERS_DISABLE_HEAP_CHECKS     0x100
+#define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_1            0x200
+#define RTL_USER_PROCESS_PARAMETERS_PROCESS_OR_2            0x400
+#define RTL_USER_PROCESS_PARAMETERS_PRIVATE_DLL_PATH        0x1000
+#define RTL_USER_PROCESS_PARAMETERS_LOCAL_DLL_PATH          0x2000
+#define RTL_USER_PROCESS_PARAMETERS_IMAGE_KEY_MISSING       0x4000
+
+// Documented by sixtyvividtails, source:
+// https://x.com/sixtyvividtails/status/1719785195086266581
+// This flag is needed on certain codepath for DotLocal to work. Conditions for
+// getting this flag are not yet known.
+#define RTL_USER_PROCESS_PARAMETERS_ALLOW_DOTLOCAL          0x8000
+
+#define RTL_USER_PROCESS_PARAMETERS_NX                      0x20000
 ```
 
 ### DebugFlags
