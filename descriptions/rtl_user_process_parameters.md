@@ -36,9 +36,11 @@ Currently these flags are known:
 
 // Documented by sixtyvividtails, source:
 // https://x.com/sixtyvividtails/status/1719785195086266581
-// This flag is needed on certain codepath for DotLocal to work. Conditions for
-// getting this flag are not yet known.
-#define RTL_USER_PROCESS_PARAMETERS_ALLOW_DOTLOCAL          0x8000
+// This flag is needed on certain codepath for DotLocal to work. Set in
+// PspSetupUserProcessAddressSpace from PspGlobalFlags.DevOverrideEnabled
+// (bit0). And that comes off system-global (not per image) IFEO
+// "DevOverrideEnable" (def absent). Old flag, but was mostly ignored.
+#define RTL_USER_PROCESS_PARAMETERS_DEVOVERRIDE_ENABLED     0x8000
 
 #define RTL_USER_PROCESS_PARAMETERS_NX                      0x20000
 ```
