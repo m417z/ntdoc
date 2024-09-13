@@ -341,6 +341,16 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     # Remove other stuff.
     code = code.replace('\n// Options\n\n//#define PHNT_NO_INLINE_INIT_STRING\n', '\n\n\n\n')
 
+    # Temporary fix.
+    if path.name == 'ntregapi.h':
+        code = code.replace(R'''#define REG_OPEN_LEGAL_OPTION 
+    (REG_OPTION_RESERVED | REG_OPTION_BACKUP_RESTORE |
+     REG_OPTION_OPEN_LINK | REG_OPTION_DONT_VIRTUALIZE)
+''', R'''#define REG_OPEN_LEGAL_OPTION \
+    (REG_OPTION_RESERVED | REG_OPTION_BACKUP_RESTORE | \
+     REG_OPTION_OPEN_LINK | REG_OPTION_DONT_VIRTUALIZE)
+''')
+
     # Add custom markers.
     code = re.sub(r'^// (begin|end)_', r'@\g<0>', code, flags=re.MULTILINE)
     code = re.sub(r'^#include <(pshpack\d+|poppack)\.h>$', r'@\g<0>', code, flags=re.MULTILINE)
