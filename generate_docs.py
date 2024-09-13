@@ -331,8 +331,19 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     # Make sure no line starts with @, which is used as a marker.
     assert not re.search(r'^\s*@', code, flags=re.MULTILINE)
 
-    # Remove block comments.
-    code = re.sub(r'/\*.*?\*/', lambda x: re.sub(r'[^\n]', '', x.group(0)), code, flags=re.DOTALL)
+    # Remove block comments at the top of the file.
+    code = re.sub(r'^/\*.*?\*/', lambda x: re.sub(r'[^\n]', '', x.group(0)), code, flags=re.DOTALL)
+
+    # Turn block comments into single-line comments with markers for easier parsing.
+    assert '//@' not in code  # Used as a marker.
+    code = re.sub(
+        r'/\*.*?\*/ *$',
+        lambda x: '\n'.join([f'//@{line}' for line in x.group(0).split('\n')]),
+        code,
+        flags=re.DOTALL | re.MULTILINE,
+    )
+    assert '/*' not in re.sub(r'//.*', '', code)
+    assert '*/' not in re.sub(r'//.*', '', code)
 
     # Remove extern "C" declarations.
     code = code.replace('\n#ifdef __cplusplus\nextern "C" {\n#endif\n', '\n\n\n\n')
@@ -431,7 +442,18 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
         if len(idents) == 0:
             continue
 
-        result.append(Chunk(path.name, line_number, idents, before.copy(), intro, body, after.copy()))
+        def remove_markers(code: str):
+            return re.sub(r'//@', '', code)
+
+        result.append(Chunk(
+            path.name,
+            line_number,
+            idents,
+            [(remove_markers(x), remove_markers(y)) for x, y in before],
+            remove_markers(intro),
+            remove_markers(body),
+            [remove_markers(x) for x in after],
+        ))
 
     assert len(before) == 0, before
     assert len(after) == 0, after
