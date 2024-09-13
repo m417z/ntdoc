@@ -45,7 +45,77 @@
 #ifndef NTSTRSAFE_LIB_IMPL
 #ifndef NTSTRSAFE_NO_CB_FUNCTIONS
 
-</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
+</span><span class="ntdoc-code-intro">/*++
+
+  <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  RtlStringCbCopyN(
+  _Out_writes_bytes_(cbDest) LPTSTR  pszDest,
+  _In_  <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  cbDest,
+  _In_  LPCTSTR pszSrc,
+  _In_  <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  cbToCopy
+  );
+
+  Routine Description:
+
+  This routine is a safer version of the C built-in function &#x27;strncpy&#x27;.
+  The size of the destination buffer (in bytes) is a parameter and this
+  function will not write past the end of this buffer and it will ALWAYS
+  null terminate the destination buffer (unless it is zero length).
+
+  This routine is meant as a replacement for strncpy, but it does behave
+  differently. This function will not pad the destination buffer with extra
+  null termination characters if cbToCopy is greater than the size of pszSrc.
+
+  This function returns an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value, and not a pointer.  It returns
+  <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the entire string or the first cbToCopy characters were
+  copied without truncation and the resultant destination string was null
+  terminated, otherwise it will return a failure code. In failure cases as
+  much of pszSrc will be copied to pszDest as possible, and pszDest will be
+  null terminated.
+
+Arguments:
+
+pszDest        -   destination string
+
+cbDest         -   size of destination buffer in bytes.
+length must be = ((_tcslen(src) + 1) * sizeof(TCHAR)) to
+hold all of the source including the null terminator
+
+pszSrc         -   source string
+
+cbToCopy       -   maximum number of bytes to copy from source string,
+not including the null terminator.
+
+Notes:
+Behavior is undefined if source and destination strings overlap.
+
+pszDest and pszSrc should not be NULL.  See RtlStringCbCopyEx if you require
+the handling of NULL values.
+
+Return Value:
+
+<a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> -   if there was source data and it was all copied and the
+resultant dest string was null terminated
+
+failure        -   you can use the macro NTSTATUS_CODE() to get a win32
+error code for all hresult failure cases
+
+STATUS_BUFFER_OVERFLOW /
+NTSTATUS_CODE(status) == ERROR_INSUFFICIENT_BUFFER
+-   this return value is an indication that the copy
+operation failed due to insufficient space. When this
+error occurs, the destination buffer is modified to
+contain a truncated version of the ideal result and is
+null terminated. This is useful for situations where
+truncation is ok
+
+It is strongly recommended to use the <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>() macro to test the
+return value of this function.
+
+--*/
+
+
+</span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
     RtlStringCbCopyNA(
             _Out_writes_bytes_(cbDest) <a href="ntstrsafe_pstr" title="typedef _Null_terminated_ char* NTSTRSAFE_PSTR;">NTSTRSAFE_PSTR</a> pszDest,
             _In_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cbDest,

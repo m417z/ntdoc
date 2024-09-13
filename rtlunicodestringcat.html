@@ -45,7 +45,57 @@
 #ifndef NTSTRSAFE_LIB_IMPL
 #ifndef NTSTRSAFE_NO_UNICODE_STRING_FUNCTIONS
 
-</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
+</span><span class="ntdoc-code-intro">/*++
+
+  <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  RtlUnicodeStringCat(
+  _Inout_  <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">PUNICODE_STRING</a>     DestinationString,
+  _In_     <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a>    SourceString
+  );
+
+  Routine Description:
+
+  This routine is a safer version of the C built-in function &#x27;strcat&#x27; for
+  UNICODE_STRINGs.
+
+  This function returns an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value, and not a pointer.  It returns
+  <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the string was concatenated without truncation, otherwise
+  it will return a failure code. In failure cases as much of SourceString will be
+  appended to DestinationString as possible.
+
+Arguments:
+
+DestinationString   -   pointer to the counted unicode destination string
+
+SourceString        -   pointer to the counted unicode source string
+
+Notes:
+Behavior is undefined if source and destination strings overlap.
+
+DestinationString and pszSrc should not be NULL.  See <a href="rtlunicodestringcatex" title="NTSTRSAFEDDI&#10;RtlUnicodeStringCatEx(&#10;        _Inout_ PUNICODE_STRING DestinationString,&#10;        _In_ PCUNICODE_STRING SourceString,&#10;        _Out_opt_ PUNICODE_STRING RemainingString,&#10;        _In_ DWORD dwFlags)&#10;{&#10;    NTSTATUS status;&#10;    wchar_t* pszDest;&#10;    size_t cchDest;&#10;    size_t cchDestLength;&#10;&#10;    status = RtlUnicodeStringValidateDestWorker(DestinationString,&#10;            &amp;pszDest,&#10;            &amp;cchDest,&#10;            &amp;cchDestLength,&#10;            NTSTRSAFE_UNICODE_STRING_MAX_CCH,&#10;            dwFlags);&#10;&#10;    if (NT_SUCCESS(status))&#10;...">RtlUnicodeStringCatEx</a>
+if you require the handling of NULL values.
+
+Return Value:
+
+<a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> -   if there was source data and it was all concatenated
+
+failure        -   the operation did not succeed
+
+STATUS_BUFFER_OVERFLOW
+Note: This status has the severity class Warning - IRPs completed with this
+status do have their data copied back to user mode
+-   this return value is an indication that the
+operation failed due to insufficient space. When this
+error occurs, the destination buffer is modified to
+contain a truncated version of the ideal result.
+This is useful for situations where truncation is ok.
+
+It is strongly recommended to use the <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>() macro to test the
+return value of this function.
+
+--*/
+
+</span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
 RtlUnicodeStringCat(
         _Inout_ <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">PUNICODE_STRING</a> DestinationString,
         _In_ <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a> SourceString)

@@ -45,7 +45,74 @@
 #ifndef NTSTRSAFE_LIB_IMPL
 #ifndef NTSTRSAFE_NO_CB_FUNCTIONS
 
-</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
+</span><span class="ntdoc-code-intro">/*++
+
+  <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  RtlStringCbCatN(
+  _Inout_updates_bytes_(cbDest) _Always_(_Post_z_) LPTSTR  pszDest,
+  _In_     <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  cbDest,
+  _In_     LPCTSTR pszSrc,
+  _In_     <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  cbToAppend
+  );
+
+  Routine Description:
+
+  This routine is a safer version of the C built-in function &#x27;strncat&#x27;.
+  The size of the destination buffer (in bytes) is a parameter as well as
+  the maximum number of bytes to append, excluding the null terminator.
+  This function will not write past the end of the destination buffer and it will
+  ALWAYS null terminate pszDest (unless it is zero length).
+
+  This function returns an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value, and not a pointer.  It returns
+  <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if all of pszSrc or the first cbToAppend bytes were appended
+  to the destination string and it was null terminated, otherwise it will
+  return a failure code. In failure cases as much of pszSrc will be appended
+  to pszDest as possible, and pszDest will be null terminated.
+
+Arguments:
+
+pszDest         -   destination string which must be null terminated
+
+cbDest          -   size of destination buffer in bytes.
+length must be ((_tcslen(pszDest) + min(cbToAppend / sizeof(TCHAR), _tcslen(pszSrc)) + 1) * sizeof(TCHAR)
+to hold all of the combine string plus the null
+terminator.
+
+pszSrc          -   source string
+
+cbToAppend      -   maximum number of bytes to append
+
+Notes:
+Behavior is undefined if source and destination strings overlap.
+
+pszDest and pszSrc should not be NULL. See RtlStringCbCatNEx if you require
+the handling of NULL values.
+
+Return Value:
+
+<a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> -   if all of pszSrc or the first cbToAppend bytes were
+concatenated to pszDest and the resultant dest string
+was null terminated
+
+failure        -   you can use the macro NTSTATUS_CODE() to get a win32
+error code for all hresult failure cases
+
+STATUS_BUFFER_OVERFLOW /
+NTSTATUS_CODE(status) == ERROR_INSUFFICIENT_BUFFER
+-   this return value is an indication that the operation
+failed due to insufficient space. When this error
+occurs, the destination buffer is modified to contain
+a truncated version of the ideal result and is null
+terminated. This is useful for situations where
+truncation is ok.
+
+It is strongly recommended to use the <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>() macro to test the
+return value of this function
+
+--*/
+
+
+</span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
     RtlStringCbCatNA(
             _Inout_updates_bytes_(cbDest) _Always_(_Post_z_) <a href="ntstrsafe_pstr" title="typedef _Null_terminated_ char* NTSTRSAFE_PSTR;">NTSTRSAFE_PSTR</a> pszDest,
             _In_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cbDest,

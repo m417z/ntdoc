@@ -46,7 +46,89 @@
 #ifndef NTSTRSAFE_NO_UNICODE_STRING_FUNCTIONS
 #ifndef NTSTRSAFE_NO_CB_FUNCTIONS
 
-</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
+</span><span class="ntdoc-code-intro">/*++
+
+  <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  RtlUnicodeStringCbCopyNEx(
+  _Inout_ <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">PUNICODE_STRING</a>     DestinationString   OPTIONAL,
+  _In_  <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a>    SourceString        OPTIONAL,
+  _In_  <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>              cbToCopy,
+  _Out_opt_ <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">PUNICODE_STRING</a> RemainingString     OPTIONAL,
+  _In_  <a href="dword" title="typedef unsigned long DWORD;">DWORD</a>               dwFlags
+  );
+
+  Routine Description:
+
+  This routine is a safer version of the C built-in function &#x27;strncpy&#x27; with
+  some additional parameters and for PUNICODE_STRINGs. In addition to the
+  functionality provided by <a href="rtlunicodestringcbcopyn" title="NTSTRSAFEDDI&#10;RtlUnicodeStringCbCopyN(&#10;        _Inout_ PUNICODE_STRING DestinationString,&#10;        _In_ PCUNICODE_STRING SourceString,&#10;        _In_ size_t cbToCopy)&#10;{&#10;    NTSTATUS status;&#10;    wchar_t* pszDest;&#10;    size_t cchDest;&#10;&#10;    status = RtlUnicodeStringValidateDestWorker(DestinationString,&#10;            &amp;pszDest,&#10;            &amp;cchDest,&#10;            NULL,&#10;            NTSTRSAFE_UNICODE_STRING_MAX_CCH,&#10;            0);&#10;&#10;    if (NT_SUCCESS(status))&#10;    {&#10;        wchar_t* pszSrc;&#10;...">RtlUnicodeStringCbCopyN</a>, this
+  routine also returns a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">PUNICODE_STRING</a> which points to the end of the
+  destination string. The flags parameter allows additional controls.
+
+Arguments:
+
+DestinationString   -   pointer to the counted unicode destination string
+
+SourceString        -   pointer to the counted unicode source string
+
+cbToCopy            -   maximum number of bytes to copy from source string
+
+RemainingString     -   if RemainingString is non-null, the function will format
+the pointer with the remaining buffer and number of
+bytes left in the destination string
+
+dwFlags             -   controls some details of the string copy:
+
+<a href="strsafe_fill_behind" title="#define STRSAFE_FILL_BEHIND 0x00000200 // on success, fill in extra space at the end of the UNICODE_STRING Buffer with fill pattern">STRSAFE_FILL_BEHIND</a>
+if the function succeeds, the low byte of dwFlags will be
+used to fill the uninitialize part of destination buffer
+
+<a href="strsafe_ignore_nulls" title="#define STRSAFE_IGNORE_NULLS 0x00000100 // treat null string pointers as TEXT(&quot;&quot;) -- don&#x27;t fault on NULL buffers">STRSAFE_IGNORE_NULLS</a>
+do not fault if DestinationString is null and treat NULL SourceString like
+empty strings (L&quot;&quot;). This flag is useful for emulating
+functions like lstrcpy
+
+<a href="strsafe_fill_on_failure" title="#define STRSAFE_FILL_ON_FAILURE 0x00000400 // on failure, overwrite pszDest with fill pattern and null terminate it">STRSAFE_FILL_ON_FAILURE</a>
+if the function fails, the low byte of dwFlags will be
+used to fill all of the destination buffer. This will
+overwrite any truncated string returned when the failure is
+STATUS_BUFFER_OVERFLOW
+
+<a href="strsafe_no_truncation" title="#define STRSAFE_NO_TRUNCATION 0x00001000 // instead of returning a truncated result, copy/append nothing to pszDest and null terminate it">STRSAFE_NO_TRUNCATION</a> /
+<a href="strsafe_zero_length_on_failure" title="#define STRSAFE_ZERO_LENGTH_ON_FAILURE 0x00000800 // on failure, set the UNICODE_STRING Length to 0">STRSAFE_ZERO_LENGTH_ON_FAILURE</a>
+if the function fails, the destination Length will be set
+to zero. This will overwrite any truncated string
+returned when the failure is STATUS_BUFFER_OVERFLOW.
+
+Notes:
+Behavior is undefined if source and destination strings overlap.
+
+DestinationString and SourceString should not be NULL unless the <a href="strsafe_ignore_nulls" title="#define STRSAFE_IGNORE_NULLS 0x00000100 // treat null string pointers as TEXT(&quot;&quot;) -- don&#x27;t fault on NULL buffers">STRSAFE_IGNORE_NULLS</a> flag
+is specified.  If <a href="strsafe_ignore_nulls" title="#define STRSAFE_IGNORE_NULLS 0x00000100 // treat null string pointers as TEXT(&quot;&quot;) -- don&#x27;t fault on NULL buffers">STRSAFE_IGNORE_NULLS</a> is passed, both DestinationString and SourceString
+may be NULL.  An error may still be returned even though NULLS are ignored
+due to insufficient space.
+
+Return Value:
+
+<a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> -   if there was source data and it was all copied
+
+failure        -   the operation did not succeed
+
+STATUS_BUFFER_OVERFLOW
+Note: This status has the severity class Warning - IRPs completed with this
+status do have their data copied back to user mode
+-   this return value is an indication that the copy
+operation failed due to insufficient space. When this
+error occurs, the destination buffer is modified to
+contain a truncated version of the ideal result.
+This is useful for situations where truncation is ok.
+
+It is strongly recommended to use the <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>() macro to test the
+return value of this function
+
+--*/
+
+</span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
 RtlUnicodeStringCbCopyNEx(
         _Inout_ <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">PUNICODE_STRING</a> DestinationString,
         _In_ <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a> SourceString,

@@ -45,7 +45,101 @@
 #ifndef NTSTRSAFE_LIB_IMPL
 #ifndef NTSTRSAFE_NO_CCH_FUNCTIONS
 
-</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
+</span><span class="ntdoc-code-intro">/*++
+
+  <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  RtlStringCchCopyEx(
+  _Out_writes_(cchDest) _Always_(_Post_z_) LPTSTR  pszDest         OPTIONAL,
+  _In_  <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  cchDest,
+  _In_  LPCTSTR pszSrc          OPTIONAL,
+  _Outptr_opt_result_buffer_(*pcchRemaining) LPTSTR* ppszDestEnd     OPTIONAL,
+  _Out_opt_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>* pcchRemaining   OPTIONAL,
+  _In_  <a href="dword" title="typedef unsigned long DWORD;">DWORD</a>   dwFlags
+  );
+
+  Routine Description:
+
+  This routine is a safer version of the C built-in function &#x27;strcpy&#x27; with
+  some additional parameters.  In addition to functionality provided by
+  RtlStringCchCopy, this routine also returns a pointer to the end of the
+  destination string and the number of characters left in the destination string
+  including the null terminator. The flags parameter allows additional controls.
+
+Arguments:
+
+pszDest         -   destination string
+
+cchDest         -   size of destination buffer in characters.
+length must be = (_tcslen(pszSrc) + 1) to hold all of
+the source including the null terminator
+
+pszSrc          -   source string which must be null terminated
+
+ppszDestEnd     -   if ppszDestEnd is non-null, the function will return a
+pointer to the end of the destination string.  If the
+function copied any data, the result will point to the
+null termination character
+
+pcchRemaining   -   if pcchRemaining is non-null, the function will return the
+number of characters left in the destination string,
+including the null terminator
+
+dwFlags         -   controls some details of the string copy:
+
+<a href="strsafe_fill_behind_null" title="#define STRSAFE_FILL_BEHIND_NULL 0x00000200 // on success, fill in extra space behind the null terminator with fill pattern">STRSAFE_FILL_BEHIND_NULL</a>
+if the function succeeds, the low byte of dwFlags will be
+used to fill the uninitialize part of destination buffer
+behind the null terminator
+
+<a href="strsafe_ignore_nulls" title="#define STRSAFE_IGNORE_NULLS 0x00000100 // treat null string pointers as TEXT(&quot;&quot;) -- don&#x27;t fault on NULL buffers">STRSAFE_IGNORE_NULLS</a>
+treat NULL string pointers like empty strings (TEXT(&quot;&quot;)).
+this flag is useful for emulating functions like lstrcpy
+
+<a href="strsafe_fill_on_failure" title="#define STRSAFE_FILL_ON_FAILURE 0x00000400 // on failure, overwrite pszDest with fill pattern and null terminate it">STRSAFE_FILL_ON_FAILURE</a>
+if the function fails, the low byte of dwFlags will be
+used to fill all of the destination buffer, and it will
+be null terminated. This will overwrite any truncated
+string returned when the failure is
+STATUS_BUFFER_OVERFLOW
+
+<a href="strsafe_no_truncation" title="#define STRSAFE_NO_TRUNCATION 0x00001000 // instead of returning a truncated result, copy/append nothing to pszDest and null terminate it">STRSAFE_NO_TRUNCATION</a> /
+<a href="strsafe_null_on_failure" title="#define STRSAFE_NULL_ON_FAILURE 0x00000800 // on failure, set *pszDest = TEXT(&#x27;\0&#x27;)">STRSAFE_NULL_ON_FAILURE</a>
+if the function fails, the destination buffer will be set
+to the empty string. This will overwrite any truncated string
+returned when the failure is STATUS_BUFFER_OVERFLOW.
+
+Notes:
+Behavior is undefined if source and destination strings overlap.
+
+pszDest and pszSrc should not be NULL unless the <a href="strsafe_ignore_nulls" title="#define STRSAFE_IGNORE_NULLS 0x00000100 // treat null string pointers as TEXT(&quot;&quot;) -- don&#x27;t fault on NULL buffers">STRSAFE_IGNORE_NULLS</a> flag
+is specified.  If <a href="strsafe_ignore_nulls" title="#define STRSAFE_IGNORE_NULLS 0x00000100 // treat null string pointers as TEXT(&quot;&quot;) -- don&#x27;t fault on NULL buffers">STRSAFE_IGNORE_NULLS</a> is passed, both pszDest and pszSrc
+may be NULL.  An error may still be returned even though NULLS are ignored
+due to insufficient space.
+
+Return Value:
+
+<a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> -   if there was source data and it was all copied and the
+resultant dest string was null terminated
+
+failure        -   you can use the macro NTSTATUS_CODE() to get a win32
+error code for all hresult failure cases
+
+STATUS_BUFFER_OVERFLOW /
+NTSTATUS_CODE(status) == ERROR_INSUFFICIENT_BUFFER
+-   this return value is an indication that the copy
+operation failed due to insufficient space. When this
+error occurs, the destination buffer is modified to
+contain a truncated version of the ideal result and is
+null terminated. This is useful for situations where
+truncation is ok.
+
+It is strongly recommended to use the <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>() macro to test the
+return value of this function
+
+--*/
+
+
+</span><span class="ntdoc-code-body"><a href="ntstrsafeddi" title="#define NTSTRSAFEDDI __inline NTSTATUS __clrcall">NTSTRSAFEDDI</a>
     RtlStringCchCopyExA(
             _Out_writes_(cchDest) _Always_(_Post_z_) <a href="ntstrsafe_pstr" title="typedef _Null_terminated_ char* NTSTRSAFE_PSTR;">NTSTRSAFE_PSTR</a> pszDest,
             _In_ <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchDest,
