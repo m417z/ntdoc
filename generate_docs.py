@@ -286,10 +286,8 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     if chunk == 'EXTERN_C IMAGE_DOS_HEADER __ImageBase;':
         return ['__ImageBase']
 
-    if chunk.startswith('DEFINE_GUID'):
-        if match := re.match(r'^DEFINE_GUID\(\s*(\w+),', chunk):
-            return [match.group(1)]
-        assert False, chunk
+    if match := re.match(r'^DEFINE_GUID\(\s*(\w+),', chunk):
+        return [match.group(1)]
 
     if match := re.match(r'^EXTERN_C DECLSPEC_SELECTANY CONST GUID (\w+) =', chunk):
         return [match.group(1)]
@@ -299,6 +297,17 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     if match := re.match(r'^(?:enum|struct) (\w+);$', chunk):
         return [match.group(1)]
+
+    if match := re.match(r'^(DEFINE_ENUM_FLAG_OPERATORS|C_ASSERT)\s*\(', chunk):
+        return []
+
+    if match := re.match(r'^\s*(\w+)\s*\(', chunk):
+        assert match.group(1) in [
+            '_At_',
+            '_Post_satisfies_',
+            '_Success_',
+            '_When_',
+        ], chunk
 
     # Functions.
     if ident := get_function_identifier(chunk):
@@ -743,6 +752,9 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
             id_to_body[id] = chunk.body
 
     for id, html_contents in id_to_html_contents.items():
+        if len(html_contents) > 4:
+            print(f'Warning: Many elements for {id}: {len(html_contents)}')
+
         if ids_pattern and not re.search(ids_pattern, id, flags=re.IGNORECASE):
             continue
 
