@@ -286,8 +286,10 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     if chunk == 'EXTERN_C IMAGE_DOS_HEADER __ImageBase;':
         return ['__ImageBase']
 
-    if match := re.match(r'^DEFINE_GUID\((\w+),', chunk):
-        return [match.group(1)]
+    if chunk.startswith('DEFINE_GUID'):
+        if match := re.match(r'^DEFINE_GUID\(\s*(\w+),', chunk):
+            return [match.group(1)]
+        assert False, chunk
 
     if match := re.match(r'^EXTERN_C DECLSPEC_SELECTANY CONST GUID (\w+) =', chunk):
         return [match.group(1)]
