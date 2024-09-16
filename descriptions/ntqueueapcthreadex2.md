@@ -12,7 +12,7 @@ Queues a user-mode Asynchronous Procedure Call (APC) on the specified thread.
 # Supported flags
  - `QUEUE_USER_APC_FLAGS_NONE` - indicates that none of the flags listed below are used. The behavior defaults to regular APCs that require the thread to first enter an alertable wait via `NtDelayExecution` (or a similar function) or call `NtTestAlert`.
  - `QUEUE_USER_APC_FLAGS_SPECIAL_USER_APC` - queue a *special user-mode APC* that does not require the thread to enter an alertable state. The APC will be executed on the next thread's transition to user mode.
- - `QUEUE_USER_APC_CALLBACK_DATA_CONTEXT` - let the callback routine receive the context (set of registers) that was interrupted when the thread was directed to call the APC function.
+ - `QUEUE_USER_APC_FLAGS_CALLBACK_DATA_CONTEXT` - let the callback routine receive the context (set of registers) that was interrupted when the thread was directed to call the APC function.
 
 # Remarks
 To queue a WoW64 APC, encode the `ApcRoutine` parameter using the `Wow64EncodeApcRoutine` macro or use `RtlQueueApcWow64Thread`.
