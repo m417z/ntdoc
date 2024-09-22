@@ -257,6 +257,8 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return ['FREE_VIRTUAL_MEMORY_EX_CALLBACK']
     if chunk.startswith('typedef NTSTATUS QUERY_VIRTUAL_MEMORY_CALLBACK('):
         return ['QUERY_VIRTUAL_MEMORY_CALLBACK']
+    if chunk == 'typedef typeof(nullptr) nullptr_t;':
+        return ['nullptr_t']
     if re.match(r'^typedef .*? NTAPI RTL_RUN_ONCE_INIT_FN\(', chunk, flags=re.DOTALL):
         return ['RTL_RUN_ONCE_INIT_FN']
     if re.search(r'^typedef .*? NTAPI WNF_USER_CALLBACK\(', chunk, flags=re.DOTALL | re.MULTILINE):
@@ -497,6 +499,8 @@ def organize_idents_to_ids(chunks: List[Chunk]):
     id_update_from_to_collisions: Dict[str, str] = {
         # Collides with function WinStationShadow.
         'WINSTATIONSHADOW': 'winstationshadow-struct',
+        # Collides with function ConsoleControl.
+        'CONSOLECONTROL': 'consolecontrol-struct',
         # Collides with size_t (lowercase).
         'SIZE_T': 'size_t-win',
         # Collides with RtlXxxToSizeT.
