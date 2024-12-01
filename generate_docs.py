@@ -168,9 +168,9 @@ def pop_next_chunk(code: list) -> Tuple[str, str, int] | None:
         chunk = pop_next_chunk_custom_marker(code)
     elif code[0].startswith('#'):
         chunk = pop_next_chunk_macro(code)
-    elif (code[0].startswith('typedef struct ') or
+    elif (code[0].startswith('typedef struct') or
           code[0].startswith('_Struct_size_bytes_(') or
-          code[0].startswith('typedef union ')):
+          code[0].startswith('typedef union')):
         chunk = pop_next_chunk_struct_union(code)
     elif starts_with_function_definition(code):
         chunk = pop_next_chunk_function_definition(code)
@@ -495,6 +495,8 @@ def organize_idents_to_ids(chunks: List[Chunk]):
         'PERFINFO_TRACE_ENTRY': 'PERFINFO_TRACE_HEADER',
         'WMI_DISKIO_READWRITE': 'ETW_DISKIO_READWRITE_V3',
         'WMI_DISKIO_FLUSH_BUFFERS': 'ETW_DISKIO_FLUSH_BUFFERS_V3',
+        'MOFRESOURCEINFOA': 'MOFRESOURCEINFO',
+        'MOFRESOURCEINFOW': 'MOFRESOURCEINFO',
     }
     id_update_from_to_collisions: Dict[str, str] = {
         # Collides with function WinStationShadow.
