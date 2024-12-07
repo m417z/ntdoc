@@ -280,7 +280,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     assert not chunk.startswith('typedef '), chunk
 
-    if match := re.search(r'(?:NTAPI|NTAPI_INLINE)\n(\w+)\s*\(', chunk):
+    if match := re.search(r'(?:NTAPI|NTAPI_INLINE)\s+(\w+)\s*\(', chunk):
         return [match.group(1)]
 
     assert 'NTAPI' not in chunk, chunk
