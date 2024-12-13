@@ -259,9 +259,9 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return ['QUERY_VIRTUAL_MEMORY_CALLBACK']
     if chunk == 'typedef typeof(nullptr) nullptr_t;':
         return ['nullptr_t']
-    if re.match(r'^typedef .*? NTAPI RTL_RUN_ONCE_INIT_FN\(', chunk, flags=re.DOTALL):
+    if re.match(r'^typedef [\s\S]*?NTAPI\s+RTL_RUN_ONCE_INIT_FN\(', chunk):
         return ['RTL_RUN_ONCE_INIT_FN']
-    if re.search(r'^typedef .*? NTAPI WNF_USER_CALLBACK\(', chunk, flags=re.DOTALL | re.MULTILINE):
+    if re.search(r'^typedef [\s\S]*?NTAPI\s+WNF_USER_CALLBACK\(', chunk):
         return ['WNF_USER_CALLBACK']
 
     # Example:
