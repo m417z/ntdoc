@@ -1,4 +1,4 @@
-Queries various information about the specified thread. This function is partially documented in [Windows Driver Kit](https://learn.microsoft.com/en-us/previous-versions/windows/hardware/kernel/mt629133%28v=vs.85%29) and [Winodws SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryinformationthread).
+Queries various information about the specified thread. This function is partially documented in [Windows Driver Kit](https://learn.microsoft.com/en-us/previous-versions/windows/hardware/kernel/mt629133%28v=vs.85%29) and [Windows SDK](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryinformationthread).
 
 # Parameters
  - `ThreadHandle` - a handle to the thread or the `NtCurrentThread` pseudo-handle. For most information classes, the handle must grant either `THREAD_QUERY_INFORMATION` or `THREAD_QUERY_LIMITED_INFORMATION` access.
