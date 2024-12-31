@@ -318,6 +318,7 @@ When using `PROCESS_DEVICEMAP_INFORMATION_EX` to query information, the caller m
 
 ### Related Win32 API
  - [`DriveType`](https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-drivetype)
+ - [`GetLogicalDrives`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getlogicaldrives)
 
 ### See also
  - `OBJ_IGNORE_IMPERSONATED_DEVICEMAP`
