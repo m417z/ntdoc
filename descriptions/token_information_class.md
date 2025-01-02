@@ -574,3 +574,12 @@ This info class value was previously known as `TokenOriginatingProcessTrustLevel
 ### See also
  - `RtlIsCapabilitySid`
  - `RtlDeriveCapabilitySidsFromName`
+
+## TokenLoggingInformation (49)
+Returns logging information associated with the token.
+
+|                 | Query                       | Set
+| --------------- | --------------------------- | ---
+| Type            | `TOKEN_LOGGING_INFORMATION` | N/A
+| Required access | `TOKEN_QUERY`               | N/A
+| Minimal version | Windows 11 24H2             | N/A
