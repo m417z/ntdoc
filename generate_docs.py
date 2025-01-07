@@ -553,6 +553,8 @@ def organize_idents_to_ids(chunks: List[Chunk]):
         'RtlSIZETToULong': 'rtlsizettoulong-win',
         'RtlSIZETToUShort': 'rtlsizettoushort-win',
         'RtlSIZETToWord': 'rtlsizettoword-win',
+        'SMBIOS_PROCESSOR_FAMILY_ULTRASPARC_Iii': 'smbios_processor_family_ultrasparc_iii-1',
+        'SMBIOS_PROCESSOR_FAMILY_ULTRASPARC_III': 'smbios_processor_family_ultrasparc_iii-2',
     }
     id_update_from_to = id_update_from_to_collisions.copy()
 
