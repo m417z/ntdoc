@@ -43,197 +43,531 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">#ifndef _NTPEBTEB_H
 
-</span><span class="ntdoc-code-intro">// symbols
+</span><span class="ntdoc-code-intro">/**
+ * Process Environment Block (PEB) structure.
+ *
+ * \remarks https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-peb
+ */
 </span><span class="ntdoc-code-body">typedef struct _PEB
 {
+    //
+    // The process was cloned with an inherited address space.
+    //
     BOOLEAN InheritedAddressSpace;
+
+    //
+    // The process has image file execution options (IFEO).
+    //
     BOOLEAN ReadImageFileExecOptions;
+
+    //
+    // The process has a debugger attached.
+    //
     BOOLEAN BeingDebugged;
+
     union
     {
         BOOLEAN BitField;
         struct
         {
-            BOOLEAN ImageUsesLargePages : 1;
-            BOOLEAN IsProtectedProcess : 1;
-            BOOLEAN IsImageDynamicallyRelocated : 1;
-            BOOLEAN SkipPatchingUser32Forwarders : 1;
-            BOOLEAN IsPackagedProcess : 1;
-            BOOLEAN IsAppContainer : 1;
-            BOOLEAN IsProtectedProcessLight : 1;
-            BOOLEAN IsLongPathAwareProcess : 1;
+            BOOLEAN ImageUsesLargePages : 1;            // The process uses large image regions (4 MB).  
+            BOOLEAN IsProtectedProcess : 1;             // The process is a protected process.
+            BOOLEAN IsImageDynamicallyRelocated : 1;    // The process image base address was relocated.         
+            BOOLEAN SkipPatchingUser32Forwarders : 1;   // The process skipped forwarders for User32.dll functions. 1 for 64-bit, 0 for 32-bit.            
+            BOOLEAN IsPackagedProcess : 1;              // The process is a packaged store process (APPX/MSIX).
+            BOOLEAN IsAppContainer : 1;                 // The process has an AppContainer token.      
+            BOOLEAN IsProtectedProcessLight : 1;        // The process is a protected process (light).            
+            BOOLEAN IsLongPathAwareProcess : 1;         // The process is long path aware.
         };
     };
+
+    //
+    // Handle to a mutex for synchronization.
+    //
     HANDLE Mutant;
 
+    //
+    // Pointer to the base address of the process image.
+    //
     PVOID ImageBaseAddress;
+
+    //
+    // Pointer to the process loader data.
+    //
     <a href="peb_ldr_data" title="typedef struct _PEB_LDR_DATA&#10;{&#10;    ULONG Length;&#10;    BOOLEAN Initialized;&#10;    HANDLE SsHandle;&#10;    LIST_ENTRY InLoadOrderModuleList;&#10;    LIST_ENTRY InMemoryOrderModuleList;&#10;    LIST_ENTRY InInitializationOrderModuleList;&#10;    PVOID EntryInProgress;&#10;    BOOLEAN ShutdownInProgress;&#10;    HANDLE ShutdownThreadId;&#10;} PEB_LDR_DATA, *PPEB_LDR_DATA;">PPEB_LDR_DATA</a> Ldr;
+
+    //
+    // Pointer to the process parameters.
+    //
     <a href="rtl_user_process_parameters" title="typedef struct _RTL_USER_PROCESS_PARAMETERS&#10;{&#10;    ULONG MaximumLength;&#10;    ULONG Length;&#10;&#10;    ULONG Flags;&#10;    ULONG DebugFlags;&#10;&#10;    HANDLE ConsoleHandle;&#10;    ULONG ConsoleFlags;&#10;    HANDLE StandardInput;&#10;    HANDLE StandardOutput;&#10;    HANDLE StandardError;&#10;&#10;    CURDIR CurrentDirectory;&#10;    UNICODE_STRING DllPath;&#10;    UNICODE_STRING ImagePathName;&#10;    UNICODE_STRING CommandLine;&#10;    PVOID Environment;&#10;&#10;...">PRTL_USER_PROCESS_PARAMETERS</a> ProcessParameters;
+
+    //
+    // Reserved.
+    //
     PVOID SubSystemData;
+
+    //
+    // Pointer to the process default heap.
+    //
     PVOID ProcessHeap;
+
+    //
+    // Pointer to a critical section used to synchronize access to the PEB.
+    //
     <a href="prtl_critical_section" title="typedef struct _RTL_CRITICAL_SECTION *PRTL_CRITICAL_SECTION;">PRTL_CRITICAL_SECTION</a> FastPebLock;
+
+    //
+    // Pointer to a singly linked list used by ATL.
+    //
     PSLIST_HEADER AtlThunkSListPtr;
+
+    //
+    // Pointer to the Image File Execution Options key.
+    //
     PVOID IFEOKey;
 
+    //
+    // Cross process flags.
+    //
     union
     {
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CrossProcessFlags;
         struct
         {
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessInJob : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessInitializing : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessUsingVEH : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessUsingVCH : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessUsingFTH : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessPreviouslyThrottled : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessCurrentlyThrottled : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessImagesHotPatched : 1; // REDSTONE5
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessInJob : 1;                 // The process is part of a job.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessInitializing : 1;          // The process is initializing. 
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessUsingVEH : 1;              // The process is using VEH.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessUsingVCH : 1;              // The process is using VCH.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessUsingFTH : 1;              // The process is using FTH.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessPreviouslyThrottled : 1;   // The process was previously throttled.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessCurrentlyThrottled : 1;    // The process is currently throttled.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessImagesHotPatched : 1;      // The process images are hot patched. // RS5
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ReservedBits0 : 24;
         };
     };
+
+    //
+    // User32 <a href="kernel_callback_table" title="typedef struct _KERNEL_CALLBACK_TABLE&#10;{&#10;    ULONG_PTR __fnCOPYDATA;&#10;    ULONG_PTR __fnCOPYGLOBALDATA;&#10;    ULONG_PTR __fnEMPTY1;&#10;    ULONG_PTR __fnNCDESTROY;&#10;    ULONG_PTR __fnDWORDOPTINLPMSG;&#10;    ULONG_PTR __fnINOUTDRAG;&#10;    ULONG_PTR __fnGETTEXTLENGTHS1;&#10;    ULONG_PTR __fnINCNTOUTSTRING;&#10;    ULONG_PTR __fnINCNTOUTSTRINGNULL;&#10;    ULONG_PTR __fnINLPCOMPAREITEMSTRUCT;&#10;    ULONG_PTR __fnINLPCREATESTRUCT;&#10;    ULONG_PTR __fnINLPDELETEITEMSTRUCT;&#10;    ULONG_PTR __fnINLPDRAWITEMSTRUCT;&#10;    ULONG_PTR __fnPOPTINLPUINT1;&#10;    ULONG_PTR __fnPOPTINLPUINT2;&#10;    ULONG_PTR __fnINLPMDICREATESTRUCT;&#10;    ULONG_PTR __fnINOUTLPMEASUREITEMSTRUCT;&#10;    ULONG_PTR __fnINLPWINDOWPOS;&#10;...">KERNEL_CALLBACK_TABLE</a> (ntuser.h)
+    //
     union
     {
         PVOID KernelCallbackTable;
         PVOID UserSharedInfoPtr;
     };
 
+    //
+    // Reserved.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SystemReserved;
+
+    //
+    // Pointer to the Active Template Library (ATL) singly linked list (32-bit)
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> AtlThunkSListPtr32;
+
+    //
+    // Pointer to the API Set Schema.
+    //
     <a href="api_set_namespace" title="typedef struct _API_SET_NAMESPACE&#10;{&#10;    ULONG Version;&#10;    ULONG Size;&#10;    ULONG Flags;&#10;    ULONG Count;&#10;    ULONG EntryOffset;&#10;    ULONG HashOffset;&#10;    ULONG HashFactor;&#10;} API_SET_NAMESPACE, *PAPI_SET_NAMESPACE;">PAPI_SET_NAMESPACE</a> ApiSetMap;
+
+    //
+    // Counter for TLS expansion.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TlsExpansionCounter;
+
+    //
+    // Pointer to the TLS bitmap.
+    //
     <a href="rtl_bitmap" title="typedef struct _RTL_BITMAP&#10;{&#10;    ULONG SizeOfBitMap;&#10;    PULONG Buffer;&#10;} RTL_BITMAP, *PRTL_BITMAP;">PRTL_BITMAP</a> TlsBitmap;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TlsBitmapBits[2]; // <a href="tls_minimum_available" title="#define TLS_MINIMUM_AVAILABLE 64">TLS_MINIMUM_AVAILABLE</a>
 
+    //
+    // Bits for the TLS bitmap.
+    //
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TlsBitmapBits[2];
+
+    //
+    // Reserved for CSRSS.
+    //
     PVOID ReadOnlySharedMemoryBase;
-    <a href="silo_user_shared_data" title="typedef struct _SILO_USER_SHARED_DATA&#10;{&#10;    ULONG ServiceSessionId;&#10;    ULONG ActiveConsoleId;&#10;    LONGLONG ConsoleSessionForegroundProcessId;&#10;    NT_PRODUCT_TYPE NtProductType;&#10;    ULONG SuiteMask;&#10;    ULONG SharedUserSessionId; // since RS2&#10;    BOOLEAN IsMultiSessionSku;&#10;    BOOLEAN IsStateSeparationEnabled;&#10;    WCHAR NtSystemRoot[260];&#10;    USHORT UserModeGlobalLogger[16];&#10;    ULONG TimeZoneId; // since 21H2&#10;    LONG TimeZoneBiasStamp;&#10;    KSYSTEM_TIME TimeZoneBias;&#10;    LARGE_INTEGER TimeZoneBiasEffectiveStart;&#10;    LARGE_INTEGER TimeZoneBiasEffectiveEnd;&#10;} SILO_USER_SHARED_DATA, *PSILO_USER_SHARED_DATA;">PSILO_USER_SHARED_DATA</a> SharedData; // HotpatchInformation
-    PVOID *ReadOnlyStaticServerData;
 
-    PVOID AnsiCodePageData; // <a href="cptableinfo" title="typedef struct _CPTABLEINFO&#10;{&#10;    USHORT CodePage;&#10;    USHORT MaximumCharacterSize;&#10;    USHORT DefaultChar;&#10;    USHORT UniDefaultChar;&#10;    USHORT TransDefaultChar;&#10;    USHORT TransUniDefaultChar;&#10;    USHORT DBCSCodePage;&#10;    UCHAR LeadByte[MAXIMUM_LEADBYTES];&#10;    PUSHORT MultiByteTable;&#10;    PVOID WideCharTable;&#10;    PUSHORT DBCSRanges;&#10;    PUSHORT DBCSOffsets;&#10;} CPTABLEINFO, *PCPTABLEINFO;">PCPTABLEINFO</a>
-    PVOID OemCodePageData; // <a href="cptableinfo" title="typedef struct _CPTABLEINFO&#10;{&#10;    USHORT CodePage;&#10;    USHORT MaximumCharacterSize;&#10;    USHORT DefaultChar;&#10;    USHORT UniDefaultChar;&#10;    USHORT TransDefaultChar;&#10;    USHORT TransUniDefaultChar;&#10;    USHORT DBCSCodePage;&#10;    UCHAR LeadByte[MAXIMUM_LEADBYTES];&#10;    PUSHORT MultiByteTable;&#10;    PVOID WideCharTable;&#10;    PUSHORT DBCSRanges;&#10;    PUSHORT DBCSOffsets;&#10;} CPTABLEINFO, *PCPTABLEINFO;">PCPTABLEINFO</a>
-    PVOID UnicodeCaseTableData; // <a href="nlstableinfo" title="typedef struct _NLSTABLEINFO&#10;{&#10;    CPTABLEINFO OemTableInfo;&#10;    CPTABLEINFO AnsiTableInfo;&#10;    PUSHORT UpperCaseTable;&#10;    PUSHORT LowerCaseTable;&#10;} NLSTABLEINFO, *PNLSTABLEINFO;">PNLSTABLEINFO</a>
+    //
+    // Pointer to the <a href="user_shared_data" title="#define USER_SHARED_DATA ((KUSER_SHARED_DATA * const)0x7ffe0000)">USER_SHARED_DATA</a> for the current SILO.
+    //
+    <a href="silo_user_shared_data" title="typedef struct _SILO_USER_SHARED_DATA&#10;{&#10;    ULONG ServiceSessionId;&#10;    ULONG ActiveConsoleId;&#10;    LONGLONG ConsoleSessionForegroundProcessId;&#10;    NT_PRODUCT_TYPE NtProductType;&#10;    ULONG SuiteMask;&#10;    ULONG SharedUserSessionId; // since RS2&#10;    BOOLEAN IsMultiSessionSku;&#10;    BOOLEAN IsStateSeparationEnabled;&#10;    WCHAR NtSystemRoot[260];&#10;    USHORT UserModeGlobalLogger[16];&#10;    ULONG TimeZoneId; // since 21H2&#10;    LONG TimeZoneBiasStamp;&#10;    KSYSTEM_TIME TimeZoneBias;&#10;    LARGE_INTEGER TimeZoneBiasEffectiveStart;&#10;    LARGE_INTEGER TimeZoneBiasEffectiveEnd;&#10;} SILO_USER_SHARED_DATA, *PSILO_USER_SHARED_DATA;">PSILO_USER_SHARED_DATA</a> SharedData;
 
-    // Information for LdrpInitialize
+    //
+    // Reserved for CSRSS.
+    //
+    PVOID* ReadOnlyStaticServerData;
+
+    //
+    // Pointer to the ANSI code page data. (<a href="cptableinfo" title="typedef struct _CPTABLEINFO&#10;{&#10;    USHORT CodePage;&#10;    USHORT MaximumCharacterSize;&#10;    USHORT DefaultChar;&#10;    USHORT UniDefaultChar;&#10;    USHORT TransDefaultChar;&#10;    USHORT TransUniDefaultChar;&#10;    USHORT DBCSCodePage;&#10;    UCHAR LeadByte[MAXIMUM_LEADBYTES];&#10;    PUSHORT MultiByteTable;&#10;    PVOID WideCharTable;&#10;    PUSHORT DBCSRanges;&#10;    PUSHORT DBCSOffsets;&#10;} CPTABLEINFO, *PCPTABLEINFO;">PCPTABLEINFO</a>)
+    //
+    PVOID AnsiCodePageData;
+
+    //
+    // Pointer to the OEM code page data. (<a href="cptableinfo" title="typedef struct _CPTABLEINFO&#10;{&#10;    USHORT CodePage;&#10;    USHORT MaximumCharacterSize;&#10;    USHORT DefaultChar;&#10;    USHORT UniDefaultChar;&#10;    USHORT TransDefaultChar;&#10;    USHORT TransUniDefaultChar;&#10;    USHORT DBCSCodePage;&#10;    UCHAR LeadByte[MAXIMUM_LEADBYTES];&#10;    PUSHORT MultiByteTable;&#10;    PVOID WideCharTable;&#10;    PUSHORT DBCSRanges;&#10;    PUSHORT DBCSOffsets;&#10;} CPTABLEINFO, *PCPTABLEINFO;">PCPTABLEINFO</a>)
+    //
+    PVOID OemCodePageData;
+
+    //
+    // Pointer to the Unicode case table data. (<a href="nlstableinfo" title="typedef struct _NLSTABLEINFO&#10;{&#10;    CPTABLEINFO OemTableInfo;&#10;    CPTABLEINFO AnsiTableInfo;&#10;    PUSHORT UpperCaseTable;&#10;    PUSHORT LowerCaseTable;&#10;} NLSTABLEINFO, *PNLSTABLEINFO;">PNLSTABLEINFO</a>)
+    //
+    PVOID UnicodeCaseTableData;
+
+    //
+    // The total number of system processors.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfProcessors;
+
+    //
+    // Global flags for the system.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NtGlobalFlag;
 
-    // Passed up from MmCreatePeb from Session Manager registry key
+    //
+    // Timeout for critical sections.
+    //
     LARGE_INTEGER CriticalSectionTimeout;
+
+    //
+    // Reserved size for heap segments.
+    //
     <a href="size_t-win" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> HeapSegmentReserve;
+
+    //
+    // Committed size for heap segments.
+    //
     <a href="size_t-win" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> HeapSegmentCommit;
+
+    //
+    // Threshold for decommitting total free heap.
+    //
     <a href="size_t-win" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> HeapDeCommitTotalFreeThreshold;
+
+    //
+    // Threshold for decommitting free heap blocks.
+    //
     <a href="size_t-win" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> HeapDeCommitFreeBlockThreshold;
 
     //
-    // Where heap manager keeps track of all heaps created for a process
-    // Fields initialized by MmCreatePeb.  ProcessHeaps is initialized
+    // Number of process heaps.
+    //
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfHeaps;        
+
+    //
+    // Maximum number of process heaps.
+    //
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MaximumNumberOfHeaps;
+
+    //
+    // Pointer to an array of process heaps. ProcessHeaps is initialized
     // to point to the first free byte after the PEB and MaximumNumberOfHeaps
     // is computed from the page size used to hold the PEB, less the fixed
     // size of this data structure.
     //
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfHeaps;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MaximumNumberOfHeaps;
-    PVOID *ProcessHeaps; // PHEAP
+    PVOID* ProcessHeaps;
 
-    PVOID GdiSharedHandleTable; // <a href="gdi_shared_memory" title="typedef struct _GDI_SHARED_MEMORY&#10;{&#10;    GDI_HANDLE_ENTRY Handles[GDI_MAX_HANDLE_COUNT];&#10;} GDI_SHARED_MEMORY, *PGDI_SHARED_MEMORY;">PGDI_SHARED_MEMORY</a>
+    //
+    // Pointer to the system GDI shared handle table.
+    //
+    PVOID GdiSharedHandleTable;
+
+    //
+    // Pointer to the process starter helper.
+    //
     PVOID ProcessStarterHelper;
+
+    //
+    // The maximum number of GDI function calls during batch operations (GdiSetBatchLimit)
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> GdiDCAttributeList;
 
+    //
+    // Pointer to the loader lock critical section.
+    //
     <a href="prtl_critical_section" title="typedef struct _RTL_CRITICAL_SECTION *PRTL_CRITICAL_SECTION;">PRTL_CRITICAL_SECTION</a> LoaderLock;
 
     //
-    // Following fields filled in by MmCreatePeb from system values and/or
-    // image header.
+    // Major version of the operating system.
     //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OSMajorVersion;
+
+    //
+    // Minor version of the operating system.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OSMinorVersion;
+
+    //
+    // Build number of the operating system.
+    //
     <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> OSBuildNumber;
+
+    //
+    // CSD version of the operating system.
+    //
     <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> OSCSDVersion;
+
+    //
+    // Platform ID of the operating system.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OSPlatformId;
+
+    //
+    // Subsystem version of the current process image (PE Headers).
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ImageSubsystem;
+
+    //
+    // Major version of the current process image subsystem (PE Headers).
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ImageSubsystemMajorVersion;
+
+    //
+    // Minor version of the current process image subsystem (PE Headers).
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ImageSubsystemMinorVersion;
+
+    //
+    // Affinity mask for the current process.
+    //
     KAFFINITY ActiveProcessAffinityMask;
+
+    //
+    // Temporary buffer for GDI handles accumulated in the current batch.
+    //
     <a href="gdi_handle_buffer" title="typedef ULONG GDI_HANDLE_BUFFER[GDI_HANDLE_BUFFER_SIZE];">GDI_HANDLE_BUFFER</a> GdiHandleBuffer;
-    PVOID PostProcessInitRoutine;
 
+    //
+    // Pointer to the post-process initialization routine available for use by the application.
+    //
+    <a href="pps_post_process_init_routine" title="typedef VOID (NTAPI* PPS_POST_PROCESS_INIT_ROUTINE)(&#10;    VOID&#10;    );">PPS_POST_PROCESS_INIT_ROUTINE</a> PostProcessInitRoutine;
+
+    //
+    // Pointer to the TLS expansion bitmap.
+    //
     <a href="rtl_bitmap" title="typedef struct _RTL_BITMAP&#10;{&#10;    ULONG SizeOfBitMap;&#10;    PULONG Buffer;&#10;} RTL_BITMAP, *PRTL_BITMAP;">PRTL_BITMAP</a> TlsExpansionBitmap;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TlsExpansionBitmapBits[32]; // <a href="tls_expansion_slots" title="#define TLS_EXPANSION_SLOTS 1024">TLS_EXPANSION_SLOTS</a>
 
+    //
+    // Bits for the TLS expansion bitmap. <a href="tls_expansion_slots" title="#define TLS_EXPANSION_SLOTS 1024">TLS_EXPANSION_SLOTS</a>
+    //
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TlsExpansionBitmapBits[32];
+
+    //
+    // Session ID of the current process.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SessionId;
 
-    ULARGE_INTEGER AppCompatFlags; // KACF_*
-    ULARGE_INTEGER AppCompatFlagsUser;
-    PVOID pShimData;
-    PVOID AppCompatInfo; // APPCOMPAT_EXE_DATA
+    //
+    // Application compatibility flags. KACF_*
+    //
+    ULARGE_INTEGER AppCompatFlags;
 
+    //
+    // Application compatibility flags. KACF_*
+    //
+    ULARGE_INTEGER AppCompatFlagsUser;
+
+    //
+    // Pointer to the Application SwitchBack Compatibility Engine.
+    //
+    PVOID pShimData;
+
+    //
+    // Pointer to the Application Compatibility Engine. // APPCOMPAT_EXE_DATA
+    //
+    PVOID AppCompatInfo;
+
+    //
+    // CSD version string of the operating system.
+    //
     <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> CSDVersion;
 
+    //
+    // Pointer to the process activation context.
+    //
     <a href="activation_context_data" title="typedef struct _ACTIVATION_CONTEXT_DATA&#10;{&#10;    ULONG Magic;&#10;    ULONG HeaderSize;&#10;    ULONG FormatVersion;&#10;    ULONG TotalSize;&#10;    ULONG DefaultTocOffset; // to ACTIVATION_CONTEXT_DATA_TOC_HEADER&#10;    ULONG ExtendedTocOffset; // to ACTIVATION_CONTEXT_DATA_EXTENDED_TOC_HEADER&#10;    ULONG AssemblyRosterOffset; // to ACTIVATION_CONTEXT_DATA_ASSEMBLY_ROSTER_HEADER&#10;    ULONG Flags; // ACTIVATION_CONTEXT_FLAG_*&#10;} ACTIVATION_CONTEXT_DATA, *PACTIVATION_CONTEXT_DATA;">PACTIVATION_CONTEXT_DATA</a> ActivationContextData;
+
+    //
+    // Pointer to the process assembly storage map.
+    //
     <a href="assembly_storage_map" title="typedef struct _ASSEMBLY_STORAGE_MAP&#10;{&#10;    ULONG Flags;&#10;    ULONG AssemblyCount;&#10;    PASSEMBLY_STORAGE_MAP_ENTRY *AssemblyArray;&#10;} ASSEMBLY_STORAGE_MAP, *PASSEMBLY_STORAGE_MAP;">PASSEMBLY_STORAGE_MAP</a> ProcessAssemblyStorageMap;
+
+    //
+    // Pointer to the system default activation context.
+    //
     <a href="activation_context_data" title="typedef struct _ACTIVATION_CONTEXT_DATA&#10;{&#10;    ULONG Magic;&#10;    ULONG HeaderSize;&#10;    ULONG FormatVersion;&#10;    ULONG TotalSize;&#10;    ULONG DefaultTocOffset; // to ACTIVATION_CONTEXT_DATA_TOC_HEADER&#10;    ULONG ExtendedTocOffset; // to ACTIVATION_CONTEXT_DATA_EXTENDED_TOC_HEADER&#10;    ULONG AssemblyRosterOffset; // to ACTIVATION_CONTEXT_DATA_ASSEMBLY_ROSTER_HEADER&#10;    ULONG Flags; // ACTIVATION_CONTEXT_FLAG_*&#10;} ACTIVATION_CONTEXT_DATA, *PACTIVATION_CONTEXT_DATA;">PACTIVATION_CONTEXT_DATA</a> SystemDefaultActivationContextData;
+
+    //
+    // Pointer to the system assembly storage map.
+    //
     <a href="assembly_storage_map" title="typedef struct _ASSEMBLY_STORAGE_MAP&#10;{&#10;    ULONG Flags;&#10;    ULONG AssemblyCount;&#10;    PASSEMBLY_STORAGE_MAP_ENTRY *AssemblyArray;&#10;} ASSEMBLY_STORAGE_MAP, *PASSEMBLY_STORAGE_MAP;">PASSEMBLY_STORAGE_MAP</a> SystemAssemblyStorageMap;
 
+    //
+    // Minimum stack commit size.
+    //
     <a href="size_t-win" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> MinimumStackCommit;
 
-    PVOID SparePointers[2]; // 19H1 (previously FlsCallback to FlsHighIndex)
-    PVOID PatchLoaderData;
-    PVOID ChpeV2ProcessInfo; // _CHPEV2_PROCESS_INFO
+    //
+    // since 19H1 (previously FlsCallback to FlsHighIndex)
+    //
+    PVOID SparePointers[2];
 
+    //
+    // Pointer to the patch loader data.
+    //
+    PVOID PatchLoaderData;
+
+    //
+    // Pointer to the CHPE V2 process information. CHPEV2_PROCESS_INFO
+    //
+    PVOID ChpeV2ProcessInfo;
+
+    //
+    // Packaged process feature state.
+    // 
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> AppModelFeatureState;
+
+    //
+    // SpareUlongs
+    // 
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SpareUlongs[2];
 
+    //
+    // Active code page.
+    //
     <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> ActiveCodePage;
+
+    //
+    // OEM code page.
+    //
     <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> OemCodePage;
+
+    //
+    // Code page case mapping.
+    //
     <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> UseCaseMapping;
+
+    //
+    // Unused NLS field.
+    //
     <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> UnusedNlsField;
 
+    //
+    // Pointer to the application WER registration data.
+    //
     <a href="wer_peb_header_block" title="typedef struct _WER_PEB_HEADER_BLOCK&#10;{&#10;    LONG Length;&#10;    WCHAR Signature[16];&#10;    WCHAR AppDataRelativePath[64];&#10;    WCHAR RestartCommandLine[RESTART_MAX_CMD_LINE];&#10;    WER_RECOVERY_INFO RecoveryInfo;&#10;    PWER_GATHER Gather;&#10;    PWER_METADATA MetaData;&#10;    PWER_RUNTIME_DLL RuntimeDll;&#10;    PWER_DUMP_COLLECTION DumpCollection;&#10;    LONG GatherCount;&#10;    LONG MetaDataCount;&#10;    LONG DumpCount;&#10;    LONG Flags;&#10;    WER_HEAP_MAIN_HEADER MainHeader;&#10;    PVOID Reserved;&#10;} WER_PEB_HEADER_BLOCK, *PWER_PEB_HEADER_BLOCK;">PWER_PEB_HEADER_BLOCK</a> WerRegistrationData;
+
+    //
+    // Pointer to the application WER assert pointer.
+    //
     PVOID WerShipAssertPtr;
 
+    //
+    // Pointer to the EC bitmap on ARM64. (Windows 11 and above)
+    //
     union
     {
-        PVOID pContextData; // WIN7
-        PVOID pUnused; // WIN10
-        PVOID EcCodeBitMap; // WIN11
+        PVOID pContextData; // Pointer to the switchback compatibility engine (Windows 7 and below)
+        PVOID EcCodeBitMap; // Pointer to the EC bitmap on ARM64 (Windows 11 and above) // since WIN11
     };
 
+    //
+    // Reserved.
+    //
     PVOID pImageHeaderHash;
+
+    //
+    // ETW tracing flags.
+    //
     union
     {
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TracingFlags;
         struct
         {
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HeapTracingEnabled : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CritSecTracingEnabled : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LibLoaderTracingEnabled : 1;
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HeapTracingEnabled : 1;       // ETW heap tracing enabled.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CritSecTracingEnabled : 1;    // ETW lock tracing enabled.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LibLoaderTracingEnabled : 1;  // ETW loader tracing enabled.
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SpareTracingBits : 29;
         };
     };
+
+    //
+    // Reserved for CSRSS.
+    //
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> CsrServerReadOnlySharedMemoryBase;
+
+    //
+    // Pointer to the thread pool worker list lock.
+    //
     <a href="prtl_critical_section" title="typedef struct _RTL_CRITICAL_SECTION *PRTL_CRITICAL_SECTION;">PRTL_CRITICAL_SECTION</a> TppWorkerpListLock;
+
+    //
+    // Pointer to the thread pool worker list.
+    //
     <a href="list_entry" title="typedef struct _LIST_ENTRY LIST_ENTRY, *PLIST_ENTRY;">LIST_ENTRY</a> TppWorkerpList;
+
+    //
+    // Wait on address hash table. (<a href="rtlwaitonaddress" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlWaitOnAddress(&#10;    _In_reads_bytes_(AddressSize) volatile VOID *Address,&#10;    _In_reads_bytes_(AddressSize) PVOID CompareAddress,&#10;    _In_ SIZE_T AddressSize,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">RtlWaitOnAddress</a>)
+    //
     PVOID WaitOnAddressHashTable[128];
-    <a href="telemetry_coverage_header" title="typedef struct _TELEMETRY_COVERAGE_HEADER&#10;{&#10;    UCHAR MajorVersion;&#10;    UCHAR MinorVersion;&#10;    struct&#10;    {&#10;        USHORT TracingEnabled : 1;&#10;        USHORT Reserved1 : 15;&#10;    };&#10;    ULONG HashTableEntries;&#10;    ULONG HashIndexMask;&#10;    ULONG TableUpdateVersion;&#10;    ULONG TableSizeInBytes;&#10;    ULONG LastResetTick;&#10;    ULONG ResetRound;&#10;    ULONG Reserved2;&#10;    ULONG RecordedCount;&#10;    ULONG Reserved3[4];&#10;    ULONG HashTable[ANYSIZE_ARRAY];&#10;} TELEMETRY_COVERAGE_HEADER, *PTELEMETRY_COVERAGE_HEADER;">PTELEMETRY_COVERAGE_HEADER</a> TelemetryCoverageHeader; // REDSTONE3
+
+    //
+    // Pointer to the telemetry coverage header. // since RS3
+    //
+    <a href="telemetry_coverage_header" title="typedef struct _TELEMETRY_COVERAGE_HEADER&#10;{&#10;    UCHAR MajorVersion;&#10;    UCHAR MinorVersion;&#10;    struct&#10;    {&#10;        USHORT TracingEnabled : 1;&#10;        USHORT Reserved1 : 15;&#10;    };&#10;    ULONG HashTableEntries;&#10;    ULONG HashIndexMask;&#10;    ULONG TableUpdateVersion;&#10;    ULONG TableSizeInBytes;&#10;    ULONG LastResetTick;&#10;    ULONG ResetRound;&#10;    ULONG Reserved2;&#10;    ULONG RecordedCount;&#10;    ULONG Reserved3[4];&#10;    ULONG HashTable[ANYSIZE_ARRAY];&#10;} TELEMETRY_COVERAGE_HEADER, *PTELEMETRY_COVERAGE_HEADER;">PTELEMETRY_COVERAGE_HEADER</a> TelemetryCoverageHeader;
+
+    //
+    // Cloud file flags. (ProjFs and Cloud Files) // since RS4
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CloudFileFlags;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CloudFileDiagFlags; // REDSTONE4
+
+    //
+    // Cloud file diagnostic flags.
+    //
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CloudFileDiagFlags;
+
+    //
+    // Placeholder compatibility mode. (ProjFs and Cloud Files)
+    //
     <a href="char" title="typedef char CHAR;">CHAR</a> PlaceholderCompatibilityMode;
+
+    //
+    // Reserved for placeholder compatibility mode.
+    //
     <a href="char" title="typedef char CHAR;">CHAR</a> PlaceholderCompatibilityModeReserved[7];
-    <a href="pleap_second_data" title="typedef struct _LEAP_SECOND_DATA *PLEAP_SECOND_DATA;">PLEAP_SECOND_DATA</a> LeapSecondData; // REDSTONE5
+
+    //
+    // Pointer to leap second data. // since RS5
+    //
+    <a href="pleap_second_data" title="typedef struct _LEAP_SECOND_DATA *PLEAP_SECOND_DATA;">PLEAP_SECOND_DATA</a> LeapSecondData;
+
+    //
+    // Leap second flags.
+    //
     union
     {
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LeapSecondFlags;
         struct
         {
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SixtySecondEnabled : 1;
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SixtySecondEnabled : 1; // Leap seconds enabled.
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved : 31;
         };
     };
+
+    //
+    // Global flags for the process.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NtGlobalFlag2;
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ExtendedFeatureDisableMask; // since WIN11
-} PEB, *PPEB;
+
+    //
+    // Extended feature disable mask (AVX). // since WIN11
+    //
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ExtendedFeatureDisableMask;
+} PEB, * PPEB;
 </span><span class="ntdoc-code-footer">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/75935032c72f1ad8cf15246b073b15b1906cf8d9/phnt/include/ntpebteb.h#L221">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/5ab40ff1f953e0fb5ca91edebbe8e9109012eabe/phnt/include/ntpebteb.h#L230">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
 <p>This structure is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-peb">documented in Windows SDK</a>.</p>
@@ -386,9 +720,9 @@
 <li><code><a href="ntqueryinformationprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationProcess</a></code></li>
 <li><code>PEB_FREE_BLOCK</code></li>
 <li><code><a href="peb_ldr_data" title="typedef struct _PEB_LDR_DATA&#10;{&#10;    ULONG Length;&#10;    BOOLEAN Initialized;&#10;    HANDLE SsHandle;&#10;    LIST_ENTRY InLoadOrderModuleList;&#10;    LIST_ENTRY InMemoryOrderModuleList;&#10;    LIST_ENTRY InInitializationOrderModuleList;&#10;    PVOID EntryInProgress;&#10;    BOOLEAN ShutdownInProgress;&#10;    HANDLE ShutdownThreadId;&#10;} PEB_LDR_DATA, *PPEB_LDR_DATA;">PEB_LDR_DATA</a></code></li>
-<li><code><a href="process_basic_information" title="typedef struct _PROCESS_BASIC_INFORMATION&#10;{&#10;    NTSTATUS ExitStatus;&#10;    PPEB PebBaseAddress;&#10;    KAFFINITY AffinityMask;&#10;    KPRIORITY BasePriority;&#10;    HANDLE UniqueProcessId;&#10;    HANDLE InheritedFromUniqueProcessId;&#10;} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;">PROCESS_BASIC_INFORMATION</a></code></li>
+<li><code><a href="process_basic_information" title="typedef struct _PROCESS_BASIC_INFORMATION&#10;{&#10;    NTSTATUS ExitStatus;                    // The exit status of the process. (GetExitCodeProcess)&#10;    PPEB PebBaseAddress;                    // A pointer to the process environment block (PEB) of the process.&#10;    KAFFINITY AffinityMask;                 // The affinity mask of the process. (GetProcessAffinityMask) (deprecated)&#10;    KPRIORITY BasePriority;                 // The base priority of the process. (GetPriorityClass)&#10;    HANDLE UniqueProcessId;                 // The unique identifier of the process. (GetProcessId)&#10;    HANDLE InheritedFromUniqueProcessId;    // The unique identifier of the parent process.&#10;} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;">PROCESS_BASIC_INFORMATION</a></code></li>
 <li><code><a href="rtl_user_process_parameters" title="typedef struct _RTL_USER_PROCESS_PARAMETERS&#10;{&#10;    ULONG MaximumLength;&#10;    ULONG Length;&#10;&#10;    ULONG Flags;&#10;    ULONG DebugFlags;&#10;&#10;    HANDLE ConsoleHandle;&#10;    ULONG ConsoleFlags;&#10;    HANDLE StandardInput;&#10;    HANDLE StandardOutput;&#10;    HANDLE StandardError;&#10;&#10;    CURDIR CurrentDirectory;&#10;    UNICODE_STRING DllPath;&#10;    UNICODE_STRING ImagePathName;&#10;    UNICODE_STRING CommandLine;&#10;    PVOID Environment;&#10;&#10;...">RTL_USER_PROCESS_PARAMETERS</a></code></li>
-<li><code><a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // A pointer to the environment block for the thread.&#10;    //&#10;&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;&#10;    CLIENT_ID ClientId;&#10;&#10;...">TEB</a></code></li>
+<li><code><a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a></code></li>
 </ul>
 </div>
 <div class="ntdoc-description-links">
