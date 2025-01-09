@@ -271,7 +271,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     # Example:
     # typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
-    if match := re.match(r'^typedef(?:\s+(?:const|signed|unsigned|\[public\]|_W64|_Null_terminated_))*\s+\w+(?: const| UNALIGNED)*(.*?)(?:\[.*?\])?;$', chunk):
+    if match := re.match(r'^typedef(?:\s+(?:const|CONST|signed|unsigned|\[public\]|_W64|_Null_terminated_))*\s+\w+(?: const| CONST| UNALIGNED)*(.*?)(?:\[.*?\])?;$', chunk):
         idents = match.group(1).split(',')
         idents = [x.lstrip('* ').rstrip() for x in idents]
         assert len(idents) > 0, chunk
