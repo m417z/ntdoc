@@ -259,14 +259,19 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return ['QUERY_VIRTUAL_MEMORY_CALLBACK']
     if chunk == 'typedef typeof(nullptr) nullptr_t;':
         return ['nullptr_t']
-    if re.match(r'^typedef [\s\S]*?NTAPI\s+RTL_RUN_ONCE_INIT_FN\(', chunk):
-        return ['RTL_RUN_ONCE_INIT_FN']
-    if re.search(r'^typedef [\s\S]*?NTAPI\s+WNF_USER_CALLBACK\(', chunk):
-        return ['WNF_USER_CALLBACK']
 
     # Example:
     # typedef VOID (NTAPI *PACTIVATION_CONTEXT_NOTIFY_ROUTINE)(...
-    if chunk.startswith('typedef ') and (match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL|WINAPI)\s*(?:\*\s*)?(\w+)\)', chunk)):
+    if chunk.startswith('typedef') and (match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL|WINAPI)\s*(?:\*\s*)?(\w+)\)', chunk)):
+        return [match.group(1)]
+
+    # Example:
+    # typedef _Function_class_(WNF_USER_CALLBACK)
+    # NTSTATUS 
+    # NTAPI 
+    # WNF_USER_CALLBACK(
+    # ...
+    if match := re.search(r'^typedef[\s\S]*?NTAPI\s+(\w+)\(', chunk):
         return [match.group(1)]
 
     # Example:
@@ -278,7 +283,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         assert all(re.match(r'^\w+$', x) for x in idents), idents
         return idents
 
-    assert not chunk.startswith('typedef '), chunk
+    assert not chunk.startswith('typedef'), chunk
 
     if match := re.search(r'(?:NTAPI|NTAPI_INLINE)\s+(\w+)\s*\(', chunk):
         return [match.group(1)]
@@ -683,7 +688,8 @@ def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str | 
             # Remove extra whitespace in lines such as:
             # #define FILE_CREATED                    0x00000002
             # typedef long                LONG;
-            if tooltip_text.startswith('#define ') or tooltip_text.startswith('typedef '):
+            if (tooltip_text.startswith('#define ') or
+                (tooltip_text.startswith('typedef ') and ';' in tooltip_text)):
                 tooltip_text = re.sub(r'\s+', ' ', tooltip_text)
 
         tooltip_text_escaped = escape(tooltip_text).replace('\n', '&#10;')
