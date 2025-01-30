@@ -290,7 +290,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     assert 'NTAPI' not in chunk, chunk
 
-    if chunk == 'EXTERN_C IMAGE_DOS_HEADER __ImageBase;':
+    if chunk == 'EXTERN_C CONST IMAGE_DOS_HEADER __ImageBase;':
         return ['__ImageBase']
 
     if match := re.match(r'^DEFINE_GUID\(\s*(\w+),', chunk):
