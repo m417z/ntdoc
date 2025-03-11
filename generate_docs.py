@@ -107,6 +107,7 @@ def get_function_identifier(chunk: str) -> str:
             '_Out_writes_',
             '_Out_writes_bytes_',
             '_Out_writes_bytes_all_',
+            '_Out_writes_bytes_opt_',
             '_Out_writes_to_',
             '_Outptr_opt_result_buffer_',
             '_Outptr_opt_result_bytebuffer_',
