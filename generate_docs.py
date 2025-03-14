@@ -704,8 +704,7 @@ def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str | 
             # Remove extra whitespace in lines such as:
             # #define FILE_CREATED                    0x00000002
             # typedef long                LONG;
-            if (tooltip_text.startswith('#define ') or
-                (tooltip_text.startswith('typedef ') and ';' in tooltip_text)):
+            if tooltip_text.startswith('#define ') or tooltip_text.startswith('typedef '):
                 tooltip_text = re.sub(r'\s+', ' ', tooltip_text)
 
         tooltip_text_escaped = escape(tooltip_text).replace('\n', '&#10;')
