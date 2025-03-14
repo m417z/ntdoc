@@ -240,7 +240,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
             idents = match.group(3)
 
         idents = idents.split(',')
-        idents = [x.lstrip('* ').rstrip() for x in idents]
+        idents = [re.sub(r'^(\s*(FAR\s*)?\*)+', '', x).strip() for x in idents]
         assert len(idents) > 0, chunk
         assert all(re.match(r'^\w+$', x) for x in idents), idents
         return idents + ([ident_full] if ident_full is not None else [])
