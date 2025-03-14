@@ -851,12 +851,30 @@ def validate_description_files():
         print('To update, run:')
         print()
 
-        for p in sorted(descriptions_ids - docs_ids):
-            size = Path('descriptions', p + '.md').stat().st_size
-            print(f'rm descriptions/{p}.md # size={size}')
+        non_empty = set()
+        empty = set()
 
-        for p in sorted(docs_ids - descriptions_ids):
-            print(f'touch descriptions/{p}.md')
+        for p in descriptions_ids - docs_ids:
+            size = Path('descriptions', p + '.md').stat().st_size
+            if size > 0:
+                non_empty.add(p)
+            else:
+                empty.add(p)
+
+        if non_empty:
+            print('# Non-empty description files (!!!):')
+            for p in sorted(non_empty):
+                print(f'rm descriptions/{p}.md')
+
+        if empty:
+            print('# Empty description files:')
+            for p in sorted(empty):
+                print(f'rm descriptions/{p}.md')
+
+        if docs_ids - descriptions_ids:
+            print('# Missing description files:')
+            for p in sorted(docs_ids - descriptions_ids):
+                print(f'touch descriptions/{p}.md')
 
 
 def main():
