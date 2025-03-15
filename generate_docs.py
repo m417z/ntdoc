@@ -339,21 +339,6 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     code = path.read_text()
     original_newline_count = code.count('\n')
 
-    # Temporary workaround for:
-    # https://github.com/winsiderss/systeminformer/pull/2455
-    if path.name == 'ntrtl.h':
-        code = code.replace("""#if (PHNT_VERSION >= PHNT_WINDOWS_VISTA)
-
-// rev
-#define BOUNDARY_DESCRIPTOR_ADD_APPCONTAINER_SID 0x0001
-
-// begin_private""", """// begin_private
-
-#if (PHNT_VERSION >= PHNT_WINDOWS_VISTA)
-
-// rev
-#define BOUNDARY_DESCRIPTOR_ADD_APPCONTAINER_SID 0x0001""")
-
     # Tabs to spaces, only at the beginning of the line.
     code = re.sub(r'^\t+', lambda x: 4 * ' ' * len(x.group(0)), code, flags=re.MULTILINE)
 
