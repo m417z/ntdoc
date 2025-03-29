@@ -371,6 +371,24 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     # Remove other stuff.
     code = code.replace('\n// Options\n\n//#define PHNT_NO_INLINE_INIT_STRING\n', '\n\n\n\n')
 
+    code = code.replace(R"""#ifdef __cplusplus
+extern "C++"
+{
+template <size_t N> char _RTL_CONSTANT_STRING_type_check(const char  (&s)[N]);
+template <size_t N> char _RTL_CONSTANT_STRING_type_check(const WCHAR (&s)[N]);
+// __typeof would be desirable here instead of sizeof.
+template <size_t N> class _RTL_CONSTANT_STRING_remove_const_template_class;
+template <> class _RTL_CONSTANT_STRING_remove_const_template_class<sizeof(char)>  {public: typedef  char T; };
+template <> class _RTL_CONSTANT_STRING_remove_const_template_class<sizeof(WCHAR)> {public: typedef WCHAR T; };
+#define _RTL_CONSTANT_STRING_remove_const_macro(s) \
+    (const_cast<_RTL_CONSTANT_STRING_remove_const_template_class<sizeof((s)[0])>::T*>(s))
+}
+#else
+char _RTL_CONSTANT_STRING_type_check(const void *s);
+#define _RTL_CONSTANT_STRING_remove_const_macro(s) (s)
+#endif
+""", "\n" * 16)
+
     # Add custom markers.
     code = re.sub(r'^// (begin|end)_', r'@\g<0>', code, flags=re.MULTILINE)
     code = re.sub(r'^#include <(pshpack\d+|poppack)\.h>$', r'@\g<0>', code, flags=re.MULTILINE)
