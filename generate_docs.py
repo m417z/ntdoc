@@ -6,7 +6,7 @@ import time
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import markdown2
 
@@ -30,18 +30,18 @@ def rstrip_line_with_comment(code: str) -> str:
     return code.rstrip()
 
 
-def pop_next_chunk_custom_marker(code: list) -> str:
+def pop_next_chunk_custom_marker(code: list[str]) -> str:
     return code.pop(0)
 
 
-def pop_next_chunk_macro(code: list) -> str:
+def pop_next_chunk_macro(code: list[str]) -> str:
     macro = code.pop(0)
     while macro.rstrip('\n').endswith('\\'):
         macro += code.pop(0)
     return macro
 
 
-def pop_next_chunk_struct_union(code: list) -> str:
+def pop_next_chunk_struct_union(code: list[str]) -> str:
     line = code.pop(0)
     chunk = line
     if rstrip_line_with_comment(line).endswith(';'):
@@ -58,7 +58,7 @@ def pop_next_chunk_struct_union(code: list) -> str:
     return chunk
 
 
-def starts_with_function_definition(code: list) -> bool:
+def starts_with_function_definition(code: list[str]) -> bool:
     had_brackets = False
     for line in code:
         line = rstrip_line_with_comment(line)
@@ -127,7 +127,7 @@ def get_function_identifier(chunk: str) -> str:
     assert False, chunk
 
 
-def pop_next_chunk_function_definition(code: list) -> str:
+def pop_next_chunk_function_definition(code: list[str]) -> str:
     chunk = ''
     while True:
         line = code.pop(0)
@@ -138,7 +138,7 @@ def pop_next_chunk_function_definition(code: list) -> str:
     return chunk
 
 
-def pop_next_chunk_default(code: list) -> str:
+def pop_next_chunk_default(code: list[str]) -> str:
     chunk = ''
     while True:
         line = code.pop(0)
@@ -149,7 +149,7 @@ def pop_next_chunk_default(code: list) -> str:
     return chunk
 
 
-def pop_next_chunk(code: list) -> Tuple[str, str, int] | None:
+def pop_next_chunk(code: list[str]) -> Optional[Tuple[str, str, int]]:
     intro = ''
 
     while len(code) > 0 and rstrip_line_with_comment(code[0]) == '':
@@ -684,7 +684,7 @@ def chunk_to_html(chunk: Chunk) -> str:
     return html
 
 
-def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: str | None, id_to_body: Dict[str, str]) -> str:
+def html_add_id_links(html: str, ident_to_id: Dict[str, str], exclude_id: Optional[str], id_to_body: Dict[str, str]) -> str:
     # Sort by length to avoid matching substrings, e.g. "struct ABC" should
     # match before "ABC".
     ids_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
@@ -743,7 +743,7 @@ def changelog_to_html(ident_to_id: Dict[str, str], id_to_body: Dict[str, str]) -
     return changelog_short, changelog_full
 
 
-def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], assets_path: Path, out_path: Path, ids_pattern: str | None):
+def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], assets_path: Path, out_path: Path, ids_pattern: Optional[str]):
     shutil.copytree(assets_path, out_path)
 
     html_page_template_path = out_path / 'page-template.html'
@@ -829,7 +829,7 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
     (out_path / f'changelog.html').write_text(html_page)
 
 
-def generate_docs(phnt_include_path: Path, ids_pattern: str | None):
+def generate_docs(phnt_include_path: Path, ids_pattern: Optional[str]):
     chunks: List[Chunk] = []
     for p in sorted(phnt_include_path.glob('*.h')):
         chunks += split_header_to_chunks(p)
