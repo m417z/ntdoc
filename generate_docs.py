@@ -204,7 +204,8 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     # Remove comments and noise, then strip.
     chunk = re.sub(r'\s*//.*$', '', chunk, flags=re.MULTILINE)
-    chunk = re.sub(r'^_Function_class_\(\w+\)\s*', '', chunk)
+    # For WNF_USER_CALLBACK:
+    chunk = chunk.replace('_Always_(_Post_satisfies_(return == STATUS_NO_MEMORY || return == STATUS_RETRY || return == STATUS_SUCCESS))', '')
     chunk = chunk.strip()
 
     if re.match(r'^#define +\w+$', chunk):
@@ -250,30 +251,28 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return ['NTSTATUS']
     if chunk == 'typedef _Return_type_success_(return >= 0) long NTSTATUS;':
         return ['NTSTATUS']
-    if chunk.startswith('typedef NTSTATUS (*PSYSTEM_WATCHDOG_HANDLER)('):
-        return ['PSYSTEM_WATCHDOG_HANDLER']
-    if chunk.startswith('typedef NTSTATUS ALLOCATE_VIRTUAL_MEMORY_EX_CALLBACK('):
-        return ['ALLOCATE_VIRTUAL_MEMORY_EX_CALLBACK']
-    if chunk.startswith('typedef NTSTATUS FREE_VIRTUAL_MEMORY_EX_CALLBACK('):
-        return ['FREE_VIRTUAL_MEMORY_EX_CALLBACK']
-    if chunk.startswith('typedef NTSTATUS QUERY_VIRTUAL_MEMORY_CALLBACK('):
-        return ['QUERY_VIRTUAL_MEMORY_CALLBACK']
-    if chunk == 'typedef typeof(nullptr) nullptr_t;':
-        return ['nullptr_t']
 
-    # Example:
-    # typedef VOID (NTAPI *PACTIVATION_CONTEXT_NOTIFY_ROUTINE)(...
-    if chunk.startswith('typedef') and (match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL|WINAPI)\s*(?:\*\s*)?(\w+)\)', chunk)):
-        return [match.group(1)]
+    if match := re.match(r'(typedef\s+)_Function_class_\((\w+)\)', chunk):
+        ident = match.group(2)
+        chunk = re.sub(r'(typedef\s+)_Function_class_\((\w+)\)', r'\g<1>', chunk)
 
-    # Example:
-    # typedef _Function_class_(WNF_USER_CALLBACK)
-    # NTSTATUS 
-    # NTAPI 
-    # WNF_USER_CALLBACK(
-    # ...
-    if match := re.search(r'^typedef[\s\S]*?NTAPI\s+(\w+)\(', chunk):
-        return [match.group(1)]
+        # Example:
+        # typedef _Function_class_(PROCESSOR_IDLE_HANDLER)
+        # NTSTATUS FASTCALL PROCESSOR_IDLE_HANDLER(...
+        if match := re.match(r'typedef\s+(?:\w+\s+NTAPI\s+|NTSTATUS\s+(?:FASTCALL\s+)?)(\w+)\(', chunk):
+            assert match.group(1) == ident, (match.group(1), ident)
+        else:
+            assert False, chunk
+
+        return [ident]
+
+    assert '_Function_class_' not in chunk, chunk
+
+    if chunk.startswith('typedef'):
+        # Example:
+        # typedef VOID (NTAPI *PACTIVATION_CONTEXT_NOTIFY_ROUTINE)(...
+        if match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL|WINAPI)\s*(?:\*\s*)?(\w+)\)', chunk):
+            return [match.group(1)]
 
     # Example:
     # typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
@@ -284,7 +283,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         assert all(re.match(r'^\w+$', x) for x in idents), idents
         return idents
 
-    assert not chunk.startswith('typedef'), chunk
+    assert 'typedef' not in chunk, chunk
 
     if match := re.search(r'(?:NTAPI|NTAPI_INLINE)\s+(\w+)\s*\(', chunk):
         return [match.group(1)]
