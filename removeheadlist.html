@@ -50,19 +50,27 @@ RemoveHeadList(
     _Inout_ <a href="list_entry" title="typedef struct _LIST_ENTRY LIST_ENTRY, *PLIST_ENTRY;">PLIST_ENTRY</a> ListHead
     )
 {
-    <a href="list_entry" title="typedef struct _LIST_ENTRY LIST_ENTRY, *PLIST_ENTRY;">PLIST_ENTRY</a> Flink;
     <a href="list_entry" title="typedef struct _LIST_ENTRY LIST_ENTRY, *PLIST_ENTRY;">PLIST_ENTRY</a> Entry;
+    <a href="list_entry" title="typedef struct _LIST_ENTRY LIST_ENTRY, *PLIST_ENTRY;">PLIST_ENTRY</a> NextEntry;
 
     Entry = ListHead-&gt;Flink;
-    Flink = Entry-&gt;Flink;
-    ListHead-&gt;Flink = Flink;
-    Flink-&gt;Blink = ListHead;
+    NextEntry = Entry-&gt;Flink;
+
+#if !defined(NO_LIST_ENTRY_CHECKS)
+    if ((Entry-&gt;Blink != ListHead) || (NextEntry-&gt;Blink != Entry)) 
+    {
+        <a href="rtlfatallistentryerror" title="FORCEINLINE&#10;VOID&#10;RtlFatalListEntryError(&#10;    _In_ PVOID p1,&#10;    _In_ PVOID p2,&#10;    _In_ PVOID p3&#10;    )&#10;{&#10;    //++&#10;    //    This routine reports a fatal list entry error.  It is implemented here as a&#10;    //    wrapper around RtlFailFast so that alternative reporting mechanisms (such&#10;    //    as simply logging and trying to continue) can be easily switched in.&#10;    //--&#10;    &#10;    UNREFERENCED_PARAMETER(p1);&#10;    UNREFERENCED_PARAMETER(p2);&#10;    UNREFERENCED_PARAMETER(p3);&#10;&#10;    RtlFailFast(FAST_FAIL_CORRUPT_LIST_ENTRY);&#10;}">RtlFatalListEntryError</a>((PVOID)ListHead, (PVOID)Entry, (PVOID)NextEntry);
+    }
+#endif
+
+    ListHead-&gt;Flink = NextEntry;
+    NextEntry-&gt;Blink = ListHead;
 
     return Entry;
 }
 </span><span class="ntdoc-code-footer">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/02c680b9fdf86f488541e03c712e3f1bdd3331bd/phnt/include/ntrtl.h#L95">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/b060a07cc1b1ddedf50e7f22be5bdd4ca42c41f5/phnt/include/ntrtl.h#L182">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-removeheadlist">documented in Windows Driver Kit</a>.</p>
