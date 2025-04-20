@@ -196,6 +196,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         chunk.startswith('#pragma region') or
         chunk.startswith('#pragma endregion') or
         chunk.startswith('#pragma warning') or
+        chunk.startswith('#pragma prefast') or
         chunk.startswith('#pragma intrinsic') or
         chunk.startswith('#pragma deprecated') or
         chunk.startswith('#pragma comment(lib,') or
