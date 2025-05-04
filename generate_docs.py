@@ -53,8 +53,15 @@ def pop_next_chunk_struct_union(code: list[str]) -> str:
         line = code.pop(0)
         chunk += line
         if line.startswith('}'):
-            assert line.rstrip('\n').endswith(';'), line
             break
+
+    last_char = line.rstrip('\n')[-1]
+    while last_char != ';':
+        assert last_char == ',', line
+        line = code.pop(0)
+        chunk += line
+        last_char = line.rstrip('\n')[-1]
+
     return chunk
 
 
@@ -277,7 +284,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     # Example:
     # typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
-    if match := re.match(r'^typedef(?:\s+(?:const|CONST|signed|unsigned|\[public\]|_W64|_Null_terminated_))*\s+\w+(?: const| CONST| UNALIGNED)*(.*?)(?:\[.*?\])?;$', chunk):
+    if match := re.match(r'^typedef(?:\s+(?:const|CONST|signed|unsigned|\[public\]|_W64|_Null_terminated_))*\s+\w+(?: const| CONST| UNALIGNED)*\s*(.*?)(?:\[.*?\])?;$', chunk):
         idents = match.group(1).split(',')
         idents = [x.lstrip('* ').rstrip() for x in idents]
         assert len(idents) > 0, chunk
