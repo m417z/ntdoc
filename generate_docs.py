@@ -46,7 +46,7 @@ def starts_with_struct_union(code: list[str]) -> bool:
     if line.rstrip('\n') == '_Struct_size_bytes_(sizeof(SYSTEM_POWER_STATE_DISABLE_REASON) + PowerReasonLength)':
         line = code[1]
 
-    return re.match(r'^typedef\s+(DECLSPEC_ALIGN\(\d+\)\s+)?(struct|union|enum)\b', line) is not None
+    return re.match(r'typedef\s+(DECLSPEC_ALIGN\(\d+\)\s+)?(struct|union|enum)\b', line) is not None
 
 
 def pop_next_chunk_struct_union(code: list[str]) -> str:
@@ -222,15 +222,15 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     chunk = chunk.replace('_Always_(_Post_satisfies_(return == STATUS_NO_MEMORY || return == STATUS_RETRY || return == STATUS_SUCCESS))', '')
     chunk = chunk.strip()
 
-    if re.match(r'^#define +\w+$', chunk):
+    if re.match(r'#define +\w+$', chunk):
         return []
 
-    if match := re.match(r'^#define +(\w+)[( ]', chunk):
+    if match := re.match(r'#define +(\w+)[( ]', chunk):
         return [match.group(1)]
 
     assert not chunk.startswith('#define '), chunk
 
-    if re.match(r'^(?:_Struct_size_bytes_\(.*?\)\s+)?typedef\s+(?:DECLSPEC_ALIGN\(\d+\)\s+)?(struct|union|enum)\b', chunk):
+    if re.match(r'(?:_Struct_size_bytes_\(.*?\)\s+)?typedef\s+(?:DECLSPEC_ALIGN\(\d+\)\s+)?(struct|union|enum)\b', chunk):
         last_index = chunk.rfind('}')
         if last_index != -1:
             assert '{' in chunk, chunk
@@ -246,7 +246,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         else:
             # Forward declaration.
             assert '{' not in chunk, chunk
-            match = re.match(r'^typedef (struct|union|enum) (\w+)(.*);$', chunk)
+            match = re.match(r'typedef (struct|union|enum) (\w+)(.*);$', chunk)
             assert match, chunk
             ident_full = match.group(1) + ' ' + match.group(2)
             idents = match.group(3)
@@ -254,7 +254,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         idents = idents.split(',')
         idents = [re.sub(r'^(\s*(FAR\s*)?\*)+', '', x).strip() for x in idents]
         assert len(idents) > 0, chunk
-        assert all(re.match(r'^\w+$', x) for x in idents), idents
+        assert all(re.match(r'\w+$', x) for x in idents), idents
         return idents + ([ident_full] if ident_full is not None else [])
 
     # Special cases.
@@ -287,11 +287,11 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     # Example:
     # typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
-    if match := re.match(r'^typedef(?:\s+(?:const|CONST|signed|unsigned|\[public\]|_W64|_Null_terminated_))*\s+\w+(?: const| CONST| UNALIGNED)*\s*(.*?)(?:\[.*?\])?;$', chunk):
+    if match := re.match(r'typedef(?:\s+(?:const|CONST|signed|unsigned|\[public\]|_W64|_Null_terminated_))*\s+\w+(?: const| CONST| UNALIGNED)*\s*(.*?)(?:\[.*?\])?;$', chunk):
         idents = match.group(1).split(',')
         idents = [x.lstrip('* ').rstrip() for x in idents]
         assert len(idents) > 0, chunk
-        assert all(re.match(r'^\w+$', x) for x in idents), idents
+        assert all(re.match(r'\w+$', x) for x in idents), idents
         return idents
 
     assert 'typedef' not in chunk, chunk
@@ -304,22 +304,22 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     if chunk == 'EXTERN_C CONST IMAGE_DOS_HEADER __ImageBase;':
         return ['__ImageBase']
 
-    if match := re.match(r'^DEFINE_GUID\(\s*(\w+),', chunk):
+    if match := re.match(r'DEFINE_GUID\(\s*(\w+),', chunk):
         return [match.group(1)]
 
-    if match := re.match(r'^EXTERN_C DECLSPEC_SELECTANY CONST GUID (\w+) =', chunk):
+    if match := re.match(r'EXTERN_C DECLSPEC_SELECTANY CONST GUID (\w+) =', chunk):
         return [match.group(1)]
 
-    if match := re.match(r'^NTSYSAPI \w+ (\w+);$', chunk):
+    if match := re.match(r'NTSYSAPI \w+ (\w+);$', chunk):
         return [match.group(1)]
 
-    if match := re.match(r'^(?:enum|struct) (\w+);$', chunk):
+    if match := re.match(r'(?:enum|struct) (\w+);$', chunk):
         return [match.group(1)]
 
-    if match := re.match(r'^(DEFINE_ENUM_FLAG_OPERATORS|C_ASSERT)\s*\(', chunk):
+    if match := re.match(r'(DEFINE_ENUM_FLAG_OPERATORS|C_ASSERT)\s*\(', chunk):
         return []
 
-    if match := re.match(r'^\s*(\w+)\s*\(', chunk):
+    if match := re.match(r'\s*(\w+)\s*\(', chunk):
         assert match.group(1) in [
             '_At_',
             '_Post_satisfies_',
@@ -498,7 +498,7 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
 
 def remove_redundant_forward_declaration_chunks(chunks: List[Chunk]) -> List[Chunk]:
     def is_forward_declaration(chunk: Chunk) -> bool:
-        return re.match(r'^(typedef )?(struct|union|enum) (\w+).*;(\s*//.*)?$', chunk.body) is not None
+        return re.match(r'(typedef )?(struct|union|enum) (\w+).*;(\s*//.*)?$', chunk.body) is not None
 
     result: List[Chunk] = []
 
@@ -632,7 +632,7 @@ def organize_idents_to_ids(chunks: List[Chunk]):
             id_lower_case_mapping[id_lower_case] = id_original_case
 
         ident_to_id[k] = id_lower_case
-        assert re.match(r'^[a-z0-9_]+$', ident_to_id[k]) or ident_to_id[k] in id_update_from_to_collisions.values(), ident_to_id[k]
+        assert re.match(r'[a-z0-9_]+$', ident_to_id[k]) or ident_to_id[k] in id_update_from_to_collisions.values(), ident_to_id[k]
 
     for chunk in chunks:
         id = ident_to_id[chunk.idents[0]]
