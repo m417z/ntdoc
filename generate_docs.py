@@ -206,6 +206,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         chunk.startswith('#define PHNT_') or
         chunk.startswith('C_ASSERT(') or
         chunk.startswith('static_assert(') or
+        chunk.startswith('static_assert (') or
         chunk.startswith('#pragma region') or
         chunk.startswith('#pragma endregion') or
         chunk.startswith('#pragma warning') or
@@ -262,6 +263,8 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return ['NTSTATUS']
     if chunk == 'typedef _Return_type_success_(return >= 0) long NTSTATUS;':
         return ['NTSTATUS']
+    if chunk == 'typedef NTSTATUS FN_DISPATCH(PVOID);':
+        return ['FN_DISPATCH']
 
     if match := re.match(r'(typedef\s+)_Function_class_\((\w+)\)', chunk):
         ident = match.group(2)
@@ -282,7 +285,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     if chunk.startswith('typedef'):
         # Example:
         # typedef VOID (NTAPI *PACTIVATION_CONTEXT_NOTIFY_ROUTINE)(...
-        if match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL|WINAPI)\s*(?:\*\s*)?(\w+)\)', chunk):
+        if match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL|WINAPI|STDAPIVCALLTYPE)\s*(?:\*\s*)?(\w+)\)', chunk):
             return [match.group(1)]
 
     # Example:
