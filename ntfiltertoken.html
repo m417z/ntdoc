@@ -43,7 +43,19 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">#ifndef _NTSEAPI_H
 
-</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">NTSYSCALLAPI
+</span><span class="ntdoc-code-intro">/**
+ * The NtFilterToken routine creates a new access token that is a restricted version of an existing access token.
+ *
+ * \param ExistingTokenHandle Handle to a primary or impersonation token. The token can also be a restricted token. This token must already be open for TOKEN_DUPLICATE access.
+ * \param Flags Specifies additional privilege options.
+ * \param SidsToDisable The deny-only SIDs to include in the restricted token. The system uses a deny-only SID to deny access to a securable object. The absence of a deny-only SID does not allow access.
+ * \param PrivilegesToDelete The privileges to delete in the restricted token. This parameter is optional and can be NULL.
+ * \param RestrictedSids The list of restricting SIDs for the new token. This parameter is optional and can be NULL.
+ * \param NewTokenHandle The new restricted token. The new token is the same type, primary or impersonation, as the existing token.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \sa https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-sefiltertoken
+ */
+</span><span class="ntdoc-code-body">NTSYSCALLAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NTAPI
 NtFilterToken(
@@ -56,7 +68,7 @@ NtFilterToken(
     );
 </span><span class="ntdoc-code-footer">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/cc58b9a202931912a81bf6ace541cc624790ef86/phnt/include/ntseapi.h#L592">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0f203cd64ef752cd7c5ad9fb0b09b969f4a32a10/phnt/include/ntseapi.h#L678">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">#ifndef _NTZWAPI_H
 
@@ -73,7 +85,7 @@ ZwFilterToken(
     );
 </span><span class="ntdoc-code-footer">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/cc58b9a202931912a81bf6ace541cc624790ef86/phnt/include/ntzwapi.h#L1821">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0f203cd64ef752cd7c5ad9fb0b09b969f4a32a10/phnt/include/ntzwapi.h#L1821">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
 <p>Creates a restricted (filtered) copy of a token.</p>
@@ -92,10 +104,10 @@ ZwFilterToken(
 <h1 id="supported-flags">Supported flags</h1>
 
 <ul>
-<li><code>DISABLE_MAX_PRIVILEGE</code> (0x01) - remove all privileges from the new token except for <code>SeChangeNotifyPrivilege</code>.</li>
-<li><code>SANDBOX_INERT</code> (0x02) - allow the new token to bypass Software Restriction Policies and AppLocker rules. Note that the caller must have system-level privileges; otherwise, the function silently ignores this flag. To verify that the new token received the sandbox inert status, use <code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code> with <code><a href="tokensandboxinert" title="#define TokenSandBoxInert 15 // q: ULONG">TokenSandBoxInert</a></code> info class.</li>
-<li><code>LUA_TOKEN</code> (0x04) - perform UAC-like filtration by disabling administrative-equivalent SIDs (see <code><a href="rtliselevatedrid" title="NTSYSAPI&#10;BOOLEAN&#10;NTAPI&#10;RtlIsElevatedRid(&#10;    _In_ PSID_AND_ATTRIBUTES SidAttr&#10;    );">RtlIsElevatedRid</a></code>) and privileges.</li>
-<li><code>WRITE_RESTRICTED</code> (0x08) - use the secondary access check (against restricting SIDs) only when evaluating parts of <code>GENERIC_WRITE</code> access.</li>
+<li><code><a href="disable_max_privilege" title="#define DISABLE_MAX_PRIVILEGE 0x1 // Disables all privileges in the new token except SE_CHANGE_NOTIFY_PRIVILEGE.">DISABLE_MAX_PRIVILEGE</a></code> (0x01) - remove all privileges from the new token except for <code>SeChangeNotifyPrivilege</code>.</li>
+<li><code><a href="sandbox_inert" title="#define SANDBOX_INERT 0x2 // Stores the TOKEN_SANDBOX_INERT flag in the token.">SANDBOX_INERT</a></code> (0x02) - allow the new token to bypass Software Restriction Policies and AppLocker rules. Note that the caller must have system-level privileges; otherwise, the function silently ignores this flag. To verify that the new token received the sandbox inert status, use <code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code> with <code><a href="tokensandboxinert" title="#define TokenSandBoxInert 15 // q: ULONG">TokenSandBoxInert</a></code> info class.</li>
+<li><code><a href="lua_token" title="#define LUA_TOKEN 0x4">LUA_TOKEN</a></code> (0x04) - perform UAC-like filtration by disabling administrative-equivalent SIDs (see <code><a href="rtliselevatedrid" title="NTSYSAPI&#10;BOOLEAN&#10;NTAPI&#10;RtlIsElevatedRid(&#10;    _In_ PSID_AND_ATTRIBUTES SidAttr&#10;    );">RtlIsElevatedRid</a></code>) and privileges.</li>
+<li><code><a href="write_restricted" title="#define WRITE_RESTRICTED 0x8">WRITE_RESTRICTED</a></code> (0x08) - use the secondary access check (against restricting SIDs) only when evaluating parts of <code>GENERIC_WRITE</code> access.</li>
 </ul>
 
 <h1 id="remarks">Remarks</h1>
