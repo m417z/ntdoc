@@ -46,7 +46,7 @@
 </span><span class="ntdoc-code-intro">/**
  * Thread Environment Block (TEB) structure.
  *
- * @remarks https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-teb
+ * \sa https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-teb
  */
 </span><span class="ntdoc-code-body">typedef struct _TEB
 {
@@ -96,18 +96,10 @@
     PVOID CsrClientThread;
 
     //
-    // Reserved.
+    // Reserved for GDI/USER (Win32k).
     //
     PVOID Win32ThreadInfo;
-
-    //
-    // Reserved.
-    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> User32Reserved[26];
-
-    //
-    // Reserved.
-    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UserReserved[5];
 
     //
@@ -163,7 +155,7 @@
     BOOLEAN PlaceholderHydrationAlwaysExplicit;
 
     //
-    // Reserved.
+    // ProjFs and Cloud Files (reparse point) file virtualization.
     //
     <a href="char" title="typedef char CHAR;">CHAR</a> PlaceholderReserved[10];
 
@@ -239,7 +231,7 @@
 #endif
 
     //
-    // Reserved for GDI.
+    // Reserved for GDI (Win32k).
     //
     <a href="gdi_teb_batch" title="typedef struct _GDI_TEB_BATCH&#10;{&#10;    ULONG Offset;&#10;    ULONG_PTR HDC;&#10;    ULONG Buffer[GDI_BATCH_BUFFER_SIZE];&#10;} GDI_TEB_BATCH, *PGDI_TEB_BATCH;">GDI_TEB_BATCH</a> GdiTebBatch;
     <a href="client_id" title="typedef struct _CLIENT_ID&#10;{&#10;    HANDLE UniqueProcess;&#10;    HANDLE UniqueThread;&#10;} CLIENT_ID, *PCLIENT_ID;">CLIENT_ID</a> RealClientId;
@@ -249,7 +241,7 @@
     PVOID GdiThreadLocalInfo;
 
     //
-    // Reserved for User32.
+    // Reserved for User32 (Win32k).
     //
     <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> Win32ClientInfo[<a href="win32_client_info_length" title="#define WIN32_CLIENT_INFO_LENGTH 62">WIN32_CLIENT_INFO_LENGTH</a>];
 
@@ -291,7 +283,7 @@
     PVOID TlsSlots[<a href="tls_minimum_available" title="#define TLS_MINIMUM_AVAILABLE 64">TLS_MINIMUM_AVAILABLE</a>];
 
     //
-    // Reserved.
+    // Reserved for TLS.
     //
     <a href="list_entry" title="typedef struct _LIST_ENTRY LIST_ENTRY, *PLIST_ENTRY;">LIST_ENTRY</a> TlsLinks;
 
@@ -301,12 +293,12 @@
     PVOID Vdm;
 
     //
-    // Reserved.
+    // Reserved for RPC.
     //
     PVOID ReservedForNtRpc;
 
     //
-    // Reserved.
+    // Reserved for Debugging (DebugActiveProcess).
     //
     PVOID DbgSsReserved[2];
 
@@ -330,7 +322,7 @@
     GUID ActivityId;
 
     //
-    // The service creating the thread (svchost).
+    // The identifier of the service that created the thread. (svchost)
     //
     PVOID SubProcessTag;
 
@@ -381,9 +373,9 @@
     PVOID ReservedForPerf;
 
     //
-    // Per-thread COM/OLE state
+    // Reserved for Object Linking and Embedding (OLE)
     //
-    <a href="soletlsdata" title="typedef struct tagSOleTlsData&#10;{&#10;    PVOID ThreadBase;&#10;    PVOID SmAllocator;&#10;    ULONG ApartmentID;&#10;    OLETLSFLAGS Flags;&#10;    LONG TlsMapIndex;&#10;    PVOID *TlsSlot;&#10;    ULONG ComInits;&#10;    ULONG OleInits;&#10;    ULONG Calls;&#10;    PVOID ServerCall; // previously CallInfo (before TH1)&#10;    PVOID CallObjectCache; // previously FreeAsyncCall (before TH1)&#10;    PVOID ContextStack; // previously FreeClientCall (before TH1)&#10;    PVOID ObjServer;&#10;    ULONG TIDCaller;&#10;    // ... (other fields are version-dependant)&#10;} SOleTlsData, *PSOleTlsData;">PSOleTlsData</a> ReservedForOle;
+    <a href="soletlsdata" title="typedef struct tagSOleTlsData&#10;{&#10;    PVOID ThreadBase;&#10;    PVOID SmAllocator;&#10;    ULONG ApartmentID;&#10;    ULONG Flags; // OLETLSFLAGS&#10;    LONG TlsMapIndex;&#10;    PVOID *TlsSlot;&#10;    ULONG ComInits;&#10;    ULONG OleInits;&#10;    ULONG Calls;&#10;    PVOID ServerCall; // previously CallInfo (before TH1)&#10;    PVOID CallObjectCache; // previously FreeAsyncCall (before TH1)&#10;    PVOID ContextStack; // previously FreeClientCall (before TH1)&#10;    PVOID ObjServer;&#10;    ULONG TIDCaller;&#10;    // ... (other fields are version-dependant)&#10;} SOleTlsData, *PSOleTlsData;">PSOleTlsData</a> ReservedForOle;
 
     //
     // Indicates whether the thread is waiting on the loader lock.
@@ -455,54 +447,111 @@
     //
     PVOID FlsData;
 
+    // 
+    // Pointer to the preferred languages for the current thread. (GetThreadPreferredUILanguages)
+    // 
     PVOID PreferredLanguages;
+
+    // 
+    // Pointer to the user-preferred languages for the current thread. (GetUserPreferredUILanguages)
+    // 
     PVOID UserPrefLanguages;
+
+    //
+    // Pointer to the merged preferred languages for the current thread. (MUI_MERGE_USER_FALLBACK)
+    //
     PVOID MergedPrefLanguages;
+
+    //
+    // Indicates whether the thread is impersonating another user&#x27;s language settings.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MuiImpersonation;
 
+    //
+    // Reserved.
+    //
     union
     {
         <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CrossTebFlags;
         <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SpareCrossTebBits : 16;
     };
+
+    //
+    // SameTebFlags modify the state and behavior of the current thread.
+    //
     union
     {
         <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SameTebFlags;
         struct
         {
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SafeThunkCall : 1;
-            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> InDebugPrint : 1;
-            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> HasFiberData : 1;
-            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SkipThreadAttach : 1;
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> InDebugPrint : 1;            // Indicates if the thread is currently in a debug print routine.
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> HasFiberData : 1;            // Indicates if the thread has local fiber-local storage (FLS).
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SkipThreadAttach : 1;        // Indicates if the thread should suppress DLL_THREAD_ATTACH notifications.
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> WerInShipAssertCode : 1;
-            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> RanProcessInit : 1;
-            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> ClonedThread : 1;
-            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SuppressDebugMsg : 1;
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> RanProcessInit : 1;          // Indicates if the thread has run process initialization code.
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> ClonedThread : 1;            // Indicates if the thread is a clone of a different thread.
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SuppressDebugMsg : 1;        // Indicates if the thread should suppress LOAD_DLL_DEBUG_INFO notifications.
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> DisableUserStackWalk : 1;
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> RtlExceptionAttached : 1;
-            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> InitialThread : 1;
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> InitialThread : 1;           // Indicates if the thread is the initial thread of the process.
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SessionAware : 1;
-            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> LoadOwner : 1;
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> LoadOwner : 1;               // Indicates if the thread is the owner of the process loader lock.
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> LoaderWorker : 1;
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SkipLoaderInit : 1;
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SkipFileAPIBrokering : 1;
         };
     };
 
+    //
+    // Pointer to the callback function that is called when a KTM transaction scope is entered.
+    //
     PVOID TxnScopeEnterCallback;
+
+    //
+    // Pointer to the callback function that is called when a KTM transaction scope is exited.
+    ///
     PVOID TxnScopeExitCallback;
+
+    //
+    // Pointer to optional context data for use by the application when a KTM transaction scope callback is called.
+    //
     PVOID TxnScopeContext;
+
+    //
+    // The lock count of critical sections for the current thread.
+    //
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LockCount;
+
+    //
+    // The offset to the WOW64 (Windows on Windows) TEB for the current thread.
+    //
     <a href="long" title="typedef long LONG;">LONG</a> WowTebOffset;
+
+    //
+    // Reserved.
+    //
     PVOID ResourceRetValue;
+
+    //
+    // Reserved for Windows Driver Framework (WDF).
+    //
     PVOID ReservedForWdf;
+
+    //
+    // Reserved for the Microsoft C runtime (CRT).
+    //
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ReservedForCrt;
+
+    //
+    // The Host Compute Service (HCS) container identifier.
+    //
     GUID EffectiveContainerId;
 
     //
     // Reserved for Kernel32!Sleep (SpinWait).
     //
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> LastSleepCounter; // Win11
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> LastSleepCounter; // since Win11
 
     //
     // Reserved for Kernel32!Sleep (SpinWait).
@@ -517,7 +566,7 @@
     //
     // Reserved.
     //
-    PVOID SchedulerSharedDataSlot; // 24H2
+    PVOID SchedulerSharedDataSlot; // since 24H2
 
     //
     // Reserved.
@@ -536,7 +585,7 @@
 } TEB, *PTEB;
 </span><span class="ntdoc-code-footer">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/cec9c08551d6f6f57db4e2a1065179b687923779/phnt/include/ntpebteb.h#L1010">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/6d8a13ef92b82f3b27ccdfb0088592bd8aa2c568/phnt/include/ntpebteb.h#L958">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-description">
 <p>This structure is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winternl/ns-winternl-teb">documented in Windows SDK</a>.</p>
