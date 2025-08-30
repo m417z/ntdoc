@@ -5,14 +5,17 @@ This function allows iterating over threads in a process without incurring any r
  - `ThreadHandle` - a handle to the previous thread to continue enumeration from or `NULL` to restart enumeration. The handle doesn't need to grant any particular access.
  - `DesiredAccess` - the thread access mask expected on the opened handle.
  - `HandleAttributes` - flags that control the property of the handle, such as its inheritance (`OBJ_INHERIT`).
- - `Flags` - this parameter is unused and should be set to zero.
+ - `Flags` - the bit mask that controls the operation. See below for known values.
  - `NewThreadHandle` - a pointer to a variable that receives a handle to the opened thread.
+
+# Known flags
+ - `THREAD_GET_NEXT_FLAGS_PREVIOUS_THREAD` - reverses enumeration order by opening the previous thread instead of the next one.
 
 # Access masks
 For the list of thread-specific access masks, see `NtOpenThread`.
 
 # Notable return values
- - `STATUS_SUCCESS` - the function opened the next thread.
+ - `STATUS_SUCCESS` - the function opened the next/previous thread.
  - `STATUS_NO_MORE_ENTRIES` - the function failed because there are no more accessible threads to enumerate.
 
 # Remarks
