@@ -1,12 +1,12 @@
 This function allows iterating over processes on the system without incurring any race conditions inherent to enumerating or opening processes by ID. Call this function repeatedly to open processes one by one.
 
 # Parameters
- - `ProcessHandle` - a handle to the previous process to continue enumeration from or `NULL` to restart enumeration.  The handle doesn't need to grant any particular access.
+ - `ProcessHandle` - a handle to the previous process to continue enumeration from or `NULL` to restart enumeration. The handle doesn't need to grant any particular access.
  - `DesiredAccess` - the process access mask expected on the opened handle.
  - `HandleAttributes` - flags that control the property of the handle, such as its inheritance (`OBJ_INHERIT`).
  - `Flags` - the bit mask that controls the operation. See below for known values.
  - `NewProcessHandle` - a pointer to a variable that receives a handle to the opened process.
-    
+
 # Known flags
  - `PROCESS_GET_NEXT_FLAGS_PREVIOUS_PROCESS` - reverses enumeration order by opening the previous process instead of the next one.
 

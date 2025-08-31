@@ -41,7 +41,7 @@ Offset from beginning of file, where write starts.
 ??? (See `NtReadFile`).
 
 # Related Win32 API
- - [`WriteFile`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile) (Although it does more than just forwarding the arguments and invoking this procedure.) 
+ - [`WriteFile`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile) (Although it does more than just forwarding the arguments and invoking this procedure.)
 
 # Documented by
 

@@ -77,7 +77,7 @@ An offset from the start of this structure to the full package name for processe
  - `RtlQueryPackageIdentity`
 
 ## RelativeAppNameOffset
-An offset from the start of this structure to the relative application user model ID  for processes with package identity.
+An offset from the start of this structure to the relative application user model ID for processes with package identity.
 
 ### See also
  - `RtlQueryPackageIdentity`

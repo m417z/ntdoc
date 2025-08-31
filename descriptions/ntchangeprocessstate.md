@@ -1,5 +1,5 @@
 Adjusts the state of a process via a process state object. This function offers a more resilient alternative mechanism to suspending processes, tying the duration of the operation to the lifetime of the state object.
-    
+
 # Parameters
  - `ProcessStateChangeHandle` - a handle to the process state object created via `NtCreateProcessStateChange`. The handle must grant `PROCESS_STATE_CHANGE_STATE` access.
  - `ProcessHandle` - a handle to the associated process which state should be changed. For suspend and resume operations, this handle must grant `PROCESS_SUSPEND_RESUME` access.

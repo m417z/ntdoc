@@ -8,7 +8,7 @@ If you put pointer to *NULL* value as `RegionSize`, system will free all region,
 
 ### FreeType
 
-Can be one of the values:  `MEM_DECOMMIT`, or `MEM_RELEASE`.
+Can be one of the values: `MEM_DECOMMIT`, or `MEM_RELEASE`.
 
 # Documented by
 

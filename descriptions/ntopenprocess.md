@@ -18,7 +18,7 @@ Access mask                         | Use
 `PROCESS_VM_WRITE`                  | Writing to the process's memory via `NtWriteVirtualMemory`
 `PROCESS_DUP_HANDLE`                | Duplicating and closing process handles via `NtDuplicateObject`.
 `PROCESS_CREATE_PROCESS`            | Specifying the process as the parent in `NtCreateProcess` and `NtCreateUserProcess`.
-`PROCESS_SET_QUOTA`                 | Adjusting  quota limits via `NtSetInformationProcess`.
+`PROCESS_SET_QUOTA`                 | Adjusting quota limits via `NtSetInformationProcess`.
 `PROCESS_SET_INFORMATION`           | Setting most information classes via `NtSetInformationProcess`.
 `PROCESS_QUERY_INFORMATION`         | Querying most information classes via `NtQueryInformationProcess` and `NtQueryVirtualMemory`.
 `PROCESS_SUSPEND_RESUME`            | Suspending and resuming all threads in the process via `NtSuspendProcess` and `NtResumeThread`.
@@ -35,7 +35,7 @@ Instead of opening the current process, consider using the `NtCurrentProcess` ps
 
 # Related Win32 API
  - [`OpenProcess`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openprocess)
- 
+
 # See also
  - `CLIENT_ID`
  - `NtGetNextProcess`

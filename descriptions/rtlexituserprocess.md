@@ -8,7 +8,7 @@ This function detaches from DLLs, shuts down various ntdll facilities, and uses 
 
 # Related Win32 API
  - [`ExitProcess`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-exitprocess)
- 
+
 # See also
  - `NtTerminateProcess`
  - `NtTerminateThread`

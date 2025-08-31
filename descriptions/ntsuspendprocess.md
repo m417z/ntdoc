@@ -10,7 +10,7 @@ The function ignores threads created with the `THREAD_CREATE_FLAGS_BYPASS_PROCES
 
 # Related Win32 API
 This functionality is not exposed in Win32 API.
- 
+
 # See also
  - `NtOpenProcess`
  - `NtResumeProcess`

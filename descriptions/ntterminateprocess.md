@@ -15,7 +15,7 @@ The process object becomes signalled after termination.
 
 # Related Win32 API
  - [`TerminateProcess`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-terminateprocess)
- 
+
 # See also
  - `NtOpenProcess`
  - `NtCreateProcess`

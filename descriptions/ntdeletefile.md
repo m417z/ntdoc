@@ -8,11 +8,11 @@ It's very interesting NT System Call... Normally, file deletion is realised as `
 
 You can manipulate **ObjectName** and **RootDirectory** members. \
 Example: \
-  If you have only file name as Unicode string, use it as **ObjectName**. \
-  If you have only a `HANDLE` to file, set it as **RootDirectory**. Set **ObjectName** as empty string.
+If you have only file name as Unicode string, use it as **ObjectName**. \
+If you have only a `HANDLE` to file, set it as **RootDirectory**. Set **ObjectName** as empty string.
 
 # Related Win32 API
- - [`DeleteFile`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-deletefile) (Although it does more than just forwarding the arguments and invoking this procedure.) 
+ - [`DeleteFile`](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-deletefile) (Although it does more than just forwarding the arguments and invoking this procedure.)
 
 # Documented by
 

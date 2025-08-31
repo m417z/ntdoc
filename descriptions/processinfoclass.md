@@ -401,7 +401,7 @@ Retrieves or sets the critical status for the process. Termination of a critical
 
 ### Related Win32 API
  - [`IsProcessCritical`](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-isprocesscritical)
- 
+
 ### See also
  - `RtlSetProcessIsCritical`
 
