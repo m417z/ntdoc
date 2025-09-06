@@ -273,7 +273,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         # Example:
         # typedef _Function_class_(PROCESSOR_IDLE_HANDLER)
         # NTSTATUS FASTCALL PROCESSOR_IDLE_HANDLER(...
-        if match := re.match(r'typedef\s+(?:\w+\s+NTAPI\s+|NTSTATUS\s+(?:FASTCALL\s+)?)(\w+)\(', chunk):
+        if match := re.match(r'typedef\s+(?:\w+\s+NTAPI\s+|NTSTATUS\s+(?:(?:FASTCALL|STDAPIVCALLTYPE)\s+)?)(\w+)\(', chunk):
             assert match.group(1) == ident, (match.group(1), ident)
         else:
             assert False, chunk
