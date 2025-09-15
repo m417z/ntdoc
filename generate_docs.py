@@ -4,6 +4,7 @@ import re
 import shutil
 import time
 from dataclasses import dataclass
+from enum import IntEnum
 from html import escape
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -13,6 +14,8 @@ import markdown2
 URL_PHNT_REPOSITORY = 'https://github.com/winsiderss/systeminformer'
 URL_DESCRIPTIONS = 'https://github.com/m417z/ntdoc/blob/main/descriptions'
 PHNT_REPOSITORY_COMMIT = 'master'  # Updated from command line.
+
+URL_MSDN_DRIVER_DOCS = 'https://learn.microsoft.com/windows-hardware/drivers/ddi'
 
 MARKDOWN2_EXTRAS = {
     'breaks': {'on_backslash': True},
@@ -337,10 +340,15 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     assert False, chunk
 
 
+class ChunkOrigin(IntEnum):
+    PHNT = 1
+    MSDN = 2
+
+
 @dataclass
 class Chunk:
-    header_name: str
-    line_number: int
+    origin: ChunkOrigin
+    code_url: str
     idents: List[str]
     before: List[Tuple[str, str]]
     intro: str
@@ -483,18 +491,102 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
         def remove_markers(code: str):
             return re.sub(r'//@', '', code)
 
+        code_url = f'{path.name}#L{line_number}'
+
         result.append(Chunk(
-            path.name,
-            line_number,
-            idents,
-            [(remove_markers(x), remove_markers(y)) for x, y in before],
-            remove_markers(intro),
-            remove_markers(body),
-            [remove_markers(x) for x in after],
+            origin=ChunkOrigin.PHNT,
+            code_url=code_url,
+            idents=idents,
+            before=[(remove_markers(x), remove_markers(y)) for x, y in before],
+            intro=remove_markers(intro),
+            body=remove_markers(body),
+            after=[remove_markers(x) for x in after],
         ))
 
     assert len(before) == 0, before
     assert len(after) == 0, after
+
+    return result
+
+
+def msdn_docs_to_chunks(msdn_docs_path: Path) -> List[Chunk]:
+    result: List[Chunk] = []
+
+    for json_path in sorted(msdn_docs_path.rglob('*.json')):
+        header_name = json_path.relative_to(msdn_docs_path).parts[0] + '.h'
+        if header_name.lower() in ['dbgeng.h', 'dbgmodel.h', 'portcls.h']:
+            # Contains mostly C++ stuff.
+            continue
+
+        c_path = json_path.with_suffix('.c')
+        if not c_path.exists():
+            continue
+
+        with json_path.open('r', encoding='utf-8') as f:
+            doc_metadata = json.load(f)
+
+        if json_path.stem not in [
+            'nf-ntifs-selocateprocessimagename',
+            'ne-ucmucsispec-_ucsi_usb_operation_role',
+            'nf-wdm-keinitializetriagedumpdataarray',
+        ]:
+            api_type = doc_metadata.get('api_type', None)
+            assert isinstance(api_type, list), json_path
+            assert len(api_type) == 1, json_path
+            api_type = api_type[0]
+            if api_type in ['COM', 'UserDefined']:
+                continue
+            assert api_type in ['DllExport', 'DLLExport', 'HeaderDef', 'LibDef'], (json_path, api_type)
+
+        idents = doc_metadata.get('api_name', [])
+        assert isinstance(idents, list), json_path
+        assert idents, json_path
+
+        body = c_path.read_text(encoding='utf-8')
+
+        match = re.search(r'\btypedef\s+(struct|union|enum)\s+(\w+)\s*(?::\s*\w+\s*)?(\S)', body)
+        if match:
+            assert match.group(3) == '{', json_path
+            ident_type = match.group(1)
+            ident = match.group(2)
+            if not (ident_type == 'struct' and ident == '_NDIS_QOS_SQ_PARAMETERS_ENUM_ARRAY'):
+                assert match.start() == 0, json_path
+            # Best effort removal of idents which are supposed to have a prefix.
+            if ident.startswith('_') or ident.startswith('tag'):
+                if ident in idents:
+                    idents.remove(ident)
+            idents.append(f'{ident_type} {ident}')
+
+        # Move pointer typedefs to the end of the list.
+        ident_ptr = [x for x in idents if x.startswith('P') and x[1:] in idents]
+        if len(ident_ptr) == 1:
+            idents.remove(ident_ptr[0])
+            idents.append(ident_ptr[0])
+        else:
+            assert len(ident_ptr) == 0, json_path
+
+        # Remove A/W variants if the non-suffixed version exists.
+        idents = [x for x in idents if not ((x.endswith('A') or x.endswith('W')) and x[:-1] in idents)]
+
+        if 'wiauDbgLegacyError2' in idents and 'wiauDbgLegacyError' in idents:
+            idents.remove('wiauDbgLegacyError')
+
+        if 'wiauDbgLegacyTrace2' in idents and 'wiauDbgLegacyTrace' in idents:
+            idents.remove('wiauDbgLegacyTrace')
+
+        header_name_comment = '// ' + header_name + '\n'
+
+        code_url = json_path.relative_to(msdn_docs_path).with_suffix('').as_posix()
+
+        result.append(Chunk(
+            origin=ChunkOrigin.MSDN,
+            code_url=code_url,
+            idents=idents,
+            before=[(header_name_comment, '')],
+            intro='',
+            body=body,
+            after=[],
+        ))
 
     return result
 
@@ -508,6 +600,10 @@ def remove_redundant_forward_declaration_chunks(chunks: List[Chunk]) -> List[Chu
 
     for chunk in chunks:
         if is_forward_declaration(chunk):
+            # Conflicts with MSDN docs.
+            if chunk.idents[0] == 'PIRP':
+                continue
+
             idents_unique = set(chunk.idents)
 
             for chunk_other in chunks:
@@ -538,59 +634,67 @@ def organize_idents_to_ids(chunks: List[Chunk]):
     }
     id_update_from_to_collisions: Dict[str, str] = {
         # Collides with function WinStationShadow.
-        'WINSTATIONSHADOW': 'winstationshadow-struct',
+        'WINSTATIONSHADOW': 'winstationshadow-2',
         # Collides with function ConsoleControl.
-        'CONSOLECONTROL': 'consolecontrol-struct',
+        'CONSOLECONTROL': 'consolecontrol-2',
+        # Collides with function OEMMemoryUsage.
+        'OEMMEMORYUSAGE': 'oemmemoryusage-2',
+        # Collides with function ReadControlSpace.
+        'READCONTROLSPACE': 'readcontrolspace-2',
+        # Collides with function ReadControlSpace64.
+        'READCONTROLSPACE64': 'readcontrolspace64-2',
+        # Collides with function SearchMemory.
+        'SEARCHMEMORY': 'searchmemory-2',
         # Collides with size_t (lowercase).
-        'SIZE_T': 'size_t-win',
+        'SIZE_T': 'size_t-2',
         # Collides with RtlXxxToSizeT.
-        'RtlDWord64ToSIZET': 'rtldword64tosizet-win',
-        'RtlDWordLongToSIZET': 'rtldwordlongtosizet-win',
-        'RtlInt16ToSIZET': 'rtlint16tosizet-win',
-        'RtlInt32ToSIZET': 'rtlint32tosizet-win',
-        'RtlInt64ToSIZET': 'rtlint64tosizet-win',
-        'RtlInt8ToSIZET': 'rtlint8tosizet-win',
-        'RtlIntPtrToSIZET': 'rtlintptrtosizet-win',
-        'RtlIntToSIZET': 'rtlinttosizet-win',
-        'RtlLong64ToSIZET': 'rtllong64tosizet-win',
-        'RtlLongLongToSIZET': 'rtllonglongtosizet-win',
-        'RtlLongPtrToSIZET': 'rtllongptrtosizet-win',
-        'RtlLongToSIZET': 'rtllongtosizet-win',
-        'RtlPtrdiffTToSIZET': 'rtlptrdiffttosizet-win',
-        'RtlShortToSIZET': 'rtlshorttosizet-win',
-        'RtlSSIZETToSIZET': 'rtlssizettosizet-win',
-        'RtlUInt64ToSIZET': 'rtluint64tosizet-win',
-        'RtlULong64ToSIZET': 'rtlulong64tosizet-win',
-        'RtlULongLongToSIZET': 'rtlulonglongtosizet-win',
+        'RtlDWord64ToSIZET': 'rtldword64tosizet-2',
+        'RtlDWordLongToSIZET': 'rtldwordlongtosizet-2',
+        'RtlInt16ToSIZET': 'rtlint16tosizet-2',
+        'RtlInt32ToSIZET': 'rtlint32tosizet-2',
+        'RtlInt64ToSIZET': 'rtlint64tosizet-2',
+        'RtlInt8ToSIZET': 'rtlint8tosizet-2',
+        'RtlIntPtrToSIZET': 'rtlintptrtosizet-2',
+        'RtlIntToSIZET': 'rtlinttosizet-2',
+        'RtlLong64ToSIZET': 'rtllong64tosizet-2',
+        'RtlLongLongToSIZET': 'rtllonglongtosizet-2',
+        'RtlLongPtrToSIZET': 'rtllongptrtosizet-2',
+        'RtlLongToSIZET': 'rtllongtosizet-2',
+        'RtlPtrdiffTToSIZET': 'rtlptrdiffttosizet-2',
+        'RtlShortToSIZET': 'rtlshorttosizet-2',
+        'RtlSSIZETToSIZET': 'rtlssizettosizet-2',
+        'RtlUInt64ToSIZET': 'rtluint64tosizet-2',
+        'RtlULong64ToSIZET': 'rtlulong64tosizet-2',
+        'RtlULongLongToSIZET': 'rtlulonglongtosizet-2',
         # Collides with RtlSizeTXXX.
-        'RtlSIZETAdd': 'rtlsizetadd-win',
-        'RtlSIZETMult': 'rtlsizetmult-win',
-        'RtlSIZETSub': 'rtlsizetsub-win',
+        'RtlSIZETAdd': 'rtlsizetadd-2',
+        'RtlSIZETMult': 'rtlsizetmult-2',
+        'RtlSIZETSub': 'rtlsizetsub-2',
         # Collides with RtlSizeTToXXX.
-        'RtlSIZETToByte': 'rtlsizettobyte-win',
-        'RtlSIZETToChar': 'rtlsizettochar-win',
-        'RtlSIZETToDWord': 'rtlsizettodword-win',
-        'RtlSIZETToInt': 'rtlsizettoint-win',
-        'RtlSIZETToInt16': 'rtlsizettoint16-win',
-        'RtlSIZETToInt32': 'rtlsizettoint32-win',
-        'RtlSIZETToInt64': 'rtlsizettoint64-win',
-        'RtlSIZETToInt8': 'rtlsizettoint8-win',
-        'RtlSIZETToIntPtr': 'rtlsizettointptr-win',
-        'RtlSIZETToLong': 'rtlsizettolong-win',
-        'RtlSIZETToLong64': 'rtlsizettolong64-win',
-        'RtlSIZETToLongLong': 'rtlsizettolonglong-win',
-        'RtlSIZETToLongPtr': 'rtlsizettolongptr-win',
-        'RtlSIZETToPtrdiffT': 'rtlsizettoptrdifft-win',
-        'RtlSIZETToShort': 'rtlsizettoshort-win',
-        'RtlSIZETToSSIZET': 'rtlsizettossizet-win',
-        'RtlSIZETToUChar': 'rtlsizettouchar-win',
-        'RtlSIZETToUInt': 'rtlsizettouint-win',
-        'RtlSIZETToUInt16': 'rtlsizettouint16-win',
-        'RtlSIZETToUInt32': 'rtlsizettouint32-win',
-        'RtlSIZETToUInt8': 'rtlsizettouint8-win',
-        'RtlSIZETToULong': 'rtlsizettoulong-win',
-        'RtlSIZETToUShort': 'rtlsizettoushort-win',
-        'RtlSIZETToWord': 'rtlsizettoword-win',
+        'RtlSIZETToByte': 'rtlsizettobyte-2',
+        'RtlSIZETToChar': 'rtlsizettochar-2',
+        'RtlSIZETToDWord': 'rtlsizettodword-2',
+        'RtlSIZETToInt': 'rtlsizettoint-2',
+        'RtlSIZETToInt16': 'rtlsizettoint16-2',
+        'RtlSIZETToInt32': 'rtlsizettoint32-2',
+        'RtlSIZETToInt64': 'rtlsizettoint64-2',
+        'RtlSIZETToInt8': 'rtlsizettoint8-2',
+        'RtlSIZETToIntPtr': 'rtlsizettointptr-2',
+        'RtlSIZETToLong': 'rtlsizettolong-2',
+        'RtlSIZETToLong64': 'rtlsizettolong64-2',
+        'RtlSIZETToLongLong': 'rtlsizettolonglong-2',
+        'RtlSIZETToLongPtr': 'rtlsizettolongptr-2',
+        'RtlSIZETToPtrdiffT': 'rtlsizettoptrdifft-2',
+        'RtlSIZETToShort': 'rtlsizettoshort-2',
+        'RtlSIZETToSSIZET': 'rtlsizettossizet-2',
+        'RtlSIZETToUChar': 'rtlsizettouchar-2',
+        'RtlSIZETToUInt': 'rtlsizettouint-2',
+        'RtlSIZETToUInt16': 'rtlsizettouint16-2',
+        'RtlSIZETToUInt32': 'rtlsizettouint32-2',
+        'RtlSIZETToUInt8': 'rtlsizettouint8-2',
+        'RtlSIZETToULong': 'rtlsizettoulong-2',
+        'RtlSIZETToUShort': 'rtlsizettoushort-2',
+        'RtlSIZETToWord': 'rtlsizettoword-2',
         'SMBIOS_PROCESSOR_FAMILY_ULTRASPARC_Iii': 'smbios_processor_family_ultrasparc_iii-1',
         'SMBIOS_PROCESSOR_FAMILY_ULTRASPARC_III': 'smbios_processor_family_ultrasparc_iii-2',
     }
@@ -598,6 +702,8 @@ def organize_idents_to_ids(chunks: List[Chunk]):
 
     for chunk in chunks:
         id = chunk.idents[0]
+        id = re.sub(r'(struct|union|enum) (.*)', r'\2-\1', id)
+
         for ident in chunk.idents:
             if ident not in ident_to_id:
                 ident_to_id[ident] = id
@@ -636,7 +742,7 @@ def organize_idents_to_ids(chunks: List[Chunk]):
             id_lower_case_mapping[id_lower_case] = id_original_case
 
         ident_to_id[k] = id_lower_case
-        assert re.fullmatch(r'[a-z0-9_]+', ident_to_id[k]) or ident_to_id[k] in id_update_from_to_collisions.values(), ident_to_id[k]
+        assert re.fullmatch(r'[a-z0-9_]+(-(struct|union|enum))?', ident_to_id[k]) or ident_to_id[k] in id_update_from_to_collisions.values(), ident_to_id[k]
 
     for chunk in chunks:
         id = ident_to_id[chunk.idents[0]]
@@ -647,8 +753,8 @@ def organize_idents_to_ids(chunks: List[Chunk]):
 
 
 def chunk_to_html(chunk: Chunk) -> str:
-    header_name = chunk.header_name
-    line_number = chunk.line_number
+    origin = chunk.origin
+    code_url = chunk.code_url
     before = chunk.before
     intro = chunk.intro
     body = chunk.body
@@ -672,7 +778,14 @@ def chunk_to_html(chunk: Chunk) -> str:
 
     html_after = '\n' + html_after
 
-    code_url = URL_PHNT_REPOSITORY + f'/blob/{PHNT_REPOSITORY_COMMIT}/phnt/include/{header_name}#L{line_number}'
+    code_full_url = code_url
+    code_link_title = 'View code'
+    if origin == ChunkOrigin.PHNT:
+        code_full_url = URL_PHNT_REPOSITORY + f'/blob/{PHNT_REPOSITORY_COMMIT}/phnt/include/' + code_url
+        code_link_title = 'View code on GitHub'
+    elif origin == ChunkOrigin.MSDN:
+        code_full_url = URL_MSDN_DRIVER_DOCS + '/' + code_url
+        code_link_title = 'View Windows driver documentation'
 
     html = '<pre class="ntdoc-code-pre">'
     html += '<code class="ntdoc-code">'
@@ -690,7 +803,7 @@ def chunk_to_html(chunk: Chunk) -> str:
     html += '</span>'
     html += '<span class="ntdoc-code-links">'
     html += '<hr>'
-    html += f'<a target="_blank" href="{code_url}">View code on GitHub</a>'
+    html += f'<a target="_blank" href="{code_full_url}">{escape(code_link_title)}</a>'
     html += '</span>'
     html += '</code>'
     html += '</pre>'
@@ -774,8 +887,15 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
         id_to_html_contents.setdefault(id, []).append(html)
 
         id_parts = id.split('-')
-        assert 1 <= len(id_parts) <= 2, id
-        id_to_match = id_parts[0]
+        if len(id_parts) == 1:
+            id_to_match = id_parts[0]
+        else:
+            assert len(id_parts) == 2, id
+            if id_parts[1].rstrip('0123456789'):
+                assert id_parts[1] in ['struct', 'union', 'enum'], id_parts
+                id_to_match = id_parts[1] + ' ' + id_parts[0]
+            else:
+                id_to_match = id_parts[0]
 
         id_human_candidates = [x for x in chunk.idents if x.lower() == id_to_match.lower()]
         assert len(id_human_candidates) <= 1, (id, chunk.idents)
@@ -843,10 +963,13 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
     (out_path / f'changelog.html').write_text(html_page)
 
 
-def generate_docs(phnt_include_path: Path, ids_pattern: Optional[str]):
+def generate_docs(phnt_include_path: Path, msdn_docs_path: Optional[Path], ids_pattern: Optional[str]):
     chunks: List[Chunk] = []
     for p in sorted(phnt_include_path.glob('*.h')):
         chunks += split_header_to_chunks(p)
+
+    if msdn_docs_path:
+        chunks += msdn_docs_to_chunks(msdn_docs_path)
 
     chunks = remove_redundant_forward_declaration_chunks(chunks)
 
@@ -898,6 +1021,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--path", help="phnt include path", required=True)
     parser.add_argument("-c", "--commit", help="phnt commit")
+    parser.add_argument("-m", "--msdn-docs-path")
     parser.add_argument("-i", "--ids-pattern",
                         help="generate only the ids matching the regex pattern, "
                              "useful for testing to quickly generate a subset of the docs")
@@ -909,9 +1033,11 @@ def main():
     if args.commit is not None:
         PHNT_REPOSITORY_COMMIT = args.commit
 
+    msdn_docs_path = Path(args.msdn_docs_path) if args.msdn_docs_path else None
+
     start = time.time()
 
-    generate_docs(phnt_include_path, args.ids_pattern)
+    generate_docs(phnt_include_path, msdn_docs_path, args.ids_pattern)
     validate_description_files()
 
     end = time.time()
