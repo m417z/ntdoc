@@ -92,14 +92,14 @@ def starts_with_function_definition(code: list[str]) -> bool:
         assert ';' not in line, line
 
         if '{' in line:
-            assert line == '{', line
+            assert line.endswith('{'), line
             return had_brackets
 
     assert False, code
 
 
 def get_function_identifier(chunk: str) -> str:
-    if match := re.search(r'^{\s*(?://.*)?$', chunk, flags=re.MULTILINE):
+    if match := re.search(r'\{\s*(?://.*)?$', chunk, flags=re.MULTILINE):
         chunk = chunk[:match.start()]
     elif match := re.search(r';\s*(?://.*)?$', chunk, flags=re.MULTILINE):
         chunk = chunk[:match.start()]
