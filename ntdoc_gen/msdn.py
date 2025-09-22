@@ -21,18 +21,13 @@ def msdn_docs_header_to_chunk(json_path: Path, msdn_docs_path: Path) -> Optional
     with json_path.open('r', encoding='utf-8') as f:
         doc_metadata = json.load(f)
 
-    if json_path.stem not in [
-        'nf-ntifs-selocateprocessimagename',
-        'ne-ucmucsispec-_ucsi_usb_operation_role',
-        'nf-wdm-keinitializetriagedumpdataarray',
-    ]:
-        api_type = doc_metadata.get('api_type', None)
-        assert isinstance(api_type, list), json_path
-        assert len(api_type) == 1, json_path
-        api_type = api_type[0]
-        if api_type in ['COM', 'UserDefined']:
-            return None
-        assert api_type in ['DllExport', 'DLLExport', 'HeaderDef', 'LibDef'], (json_path, api_type)
+    api_type = doc_metadata.get('api_type')
+    assert isinstance(api_type, list), json_path
+    assert len(api_type) == 1, json_path
+    api_type = api_type[0]
+    if api_type in ['COM', 'UserDefined']:
+        return None
+    assert api_type in ['DllExport', 'DLLExport', 'HeaderDef', 'LibDef'], (json_path, api_type)
 
     idents = doc_metadata.get('api_name', [])
     assert isinstance(idents, list), json_path
