@@ -3,6 +3,7 @@
 import json
 import re
 import shutil
+from collections import defaultdict
 from html import escape
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -137,14 +138,13 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
     html_page_template = html_page_template_path.read_text()
     html_page_template_path.unlink()
 
-    id_to_html_contents: Dict[str, List[str]] = {}
+    id_to_chunks: Dict[str, List[Chunk]] = {}
     id_to_id_human: Dict[str, str] = {}
     id_to_body: Dict[str, str] = {}
 
     for chunk in chunks:
         id = ident_to_id[chunk.idents[0]]
-        html = chunk_to_html(chunk)
-        id_to_html_contents.setdefault(id, []).append(html)
+        id_to_chunks.setdefault(id, []).append(chunk)
 
         id_parts = id.split('-')
         if len(id_parts) == 1:
@@ -167,16 +167,18 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
         if id not in id_to_body:
             id_to_body[id] = chunk.body
 
-    for id, html_contents in id_to_html_contents.items():
-        if len(html_contents) > 4:
-            print(f'Warning: Many elements for {id}: {len(html_contents)}')
+    for id, chunks in id_to_chunks.items():
+        # Warn if there are too many chunks for a single id. This may indicate a
+        # bug which assigns the same id to multiple unrelated chunks.
+        validate_chunks_amount(id, chunks)
 
         if ids_pattern and not re.search(ids_pattern, id, flags=re.IGNORECASE):
             continue
 
         html = '<div class="ntdoc-code-elements">\n'
 
-        for html_content in html_contents:
+        for chunk in chunks:
+            html_content = chunk_to_html(chunk)
             html += '<div class="ntdoc-code-element">\n'
             html += html_add_id_links(html_content, ident_to_id, id, id_to_body)
             html += '</div>\n'
@@ -226,3 +228,40 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
 
     html_page = html_page_template.replace('{{id}}', 'Content changes').replace('{{content}}', changelog_full)
     (out_path / f'changelog.html').write_text(html_page)
+
+
+def validate_chunks_amount(id: str, chunks: List[Chunk]):
+    chunks_per_origin = defaultdict(int)
+    for chunk in chunks:
+        chunks_per_origin[chunk.origin] += 1
+
+    known_high_amounts = {
+        # phnt.
+        ('c_assert', ChunkOrigin.PHNT): 4,
+        ('context_ex_padding', ChunkOrigin.PHNT): 4,
+        ('context_frame_length', ChunkOrigin.PHNT): 4,
+        ('mofresourceinfo', ChunkOrigin.PHNT): 4,
+        ('size_t_max', ChunkOrigin.PHNT): 4,
+        ('size_t', ChunkOrigin.PHNT): 4,
+        # msdn.
+        ('barrierafterread', ChunkOrigin.MSDN): 6,
+        ('field_offset', ChunkOrigin.MSDN): 5,
+        ('read_port_uchar', ChunkOrigin.MSDN): 4,
+        ('read_port_ulong', ChunkOrigin.MSDN): 4,
+        ('read_port_ushort', ChunkOrigin.MSDN): 4,
+        ('read_register_uchar', ChunkOrigin.MSDN): 4,
+        ('read_register_ulong', ChunkOrigin.MSDN): 4,
+        ('read_register_ushort', ChunkOrigin.MSDN): 4,
+        ('rtlzeromemory', ChunkOrigin.MSDN): 6,
+        ('write_port_uchar', ChunkOrigin.MSDN): 4,
+        ('write_port_ulong', ChunkOrigin.MSDN): 4,
+        ('write_port_ushort', ChunkOrigin.MSDN): 4,
+        ('write_register_uchar', ChunkOrigin.MSDN): 4,
+        ('write_register_ulong', ChunkOrigin.MSDN): 4,
+        ('write_register_ushort', ChunkOrigin.MSDN): 4,
+    }
+
+    max_origin, max_origin_count = max(chunks_per_origin.items(), key=lambda x: x[1])
+    max_origin_count_threshold = known_high_amounts.get((id, max_origin), 3)
+    if max_origin_count > max_origin_count_threshold:
+        print(f'Warning: Many elements for {id}: {max_origin_count} from {max_origin.name}')
