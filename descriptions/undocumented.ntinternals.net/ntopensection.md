@@ -2,8 +2,6 @@ This function is [documented in Windows Driver Kit](https://learn.microsoft.com/
 
 ---
 
-
-
 # See also
 
 * `NtCreateSection`

@@ -6,7 +6,6 @@ Defines common types of information that can be queried or set for kernel handle
 
 # Members
 
-
 ## ObjectBasicInformation (0)
 Retrieves basic information about the handle and the underlying object, such as the granted access mask and handle count.
 
