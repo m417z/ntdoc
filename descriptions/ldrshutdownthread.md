@@ -1,3 +1,0 @@
-# See also
-
-* `LdrShutdownProcess`

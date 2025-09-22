@@ -1,0 +1,14 @@
+
+
+# Documented by
+
+* Tomasz Nowak
+
+# See also
+
+* `NtQueryObject`
+* `OBJECT_ALL_INFORMATION`
+* `OBJECT_BASIC_INFORMATION`
+* `OBJECT_DATA_INFORMATION`
+* `OBJECT_NAME_INFORMATION`
+* `OBJECT_TYPE_INFORMATION`

@@ -187,6 +187,11 @@ def organize_chunks_to_dir(chunks: List[Chunk], ident_to_id: Dict[str, str], ass
 
         description_path = Path('descriptions', f'{id}.md')
         description = description_path.read_text().strip() if description_path.exists() else ''
+
+        if description == '':
+            description_path = Path('descriptions', 'undocumented.ntinternals.net', f'{id}.md')
+            description = description_path.read_text().strip() if description_path.exists() else ''
+
         if description != '':
             html_description = markdown_to_html(description)
 
