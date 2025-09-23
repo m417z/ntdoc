@@ -2,15 +2,18 @@
 
 import markdown2
 
-MARKDOWN2_EXTRAS = {
-    'breaks': {'on_backslash': True},
-    'cuddled-lists': None,
-    'fenced-code-blocks': None,
-    'header-ids': None,
-    'target-blank-links': None,
-    'tables': None,
-}
 
+def markdown_to_html(text: str, header_ids=True) -> str:
+    extras = {
+        'breaks': {'on_backslash': True},
+        'code-friendly': None,
+        'cuddled-lists': None,
+        'fenced-code-blocks': None,
+        'tables': None,
+        'target-blank-links': None,
+    }
 
-def markdown_to_html(text: str) -> str:
-    return markdown2.markdown(text, extras=MARKDOWN2_EXTRAS)
+    if header_ids:
+        extras['header-ids'] = None
+
+    return markdown2.markdown(text, extras=extras)
