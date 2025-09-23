@@ -80,10 +80,13 @@ def msdn_docs_header_to_chunk(json_path: Path, msdn_docs_path: Path) -> Optional
     )
 
 
-def msdn_docs_to_chunks(msdn_docs_path: Path) -> List[Chunk]:
+def msdn_docs_to_chunks(msdn_docs_path: Path, ids_pattern: Optional[str]) -> List[Chunk]:
     result: List[Chunk] = []
 
     for json_path in sorted(msdn_docs_path.rglob('*.json')):
+        if ids_pattern and not re.search(ids_pattern, json_path.stem, flags=re.IGNORECASE):
+            continue
+
         chunk = msdn_docs_header_to_chunk(json_path, msdn_docs_path)
         if chunk:
             result.append(chunk)

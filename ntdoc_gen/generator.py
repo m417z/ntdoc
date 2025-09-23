@@ -17,7 +17,7 @@ def generate_docs(phnt_include_path: Path, msdn_docs_path: Optional[Path], ids_p
         chunks += split_header_to_chunks(p)
 
     if msdn_docs_path:
-        chunks += msdn_docs_to_chunks(msdn_docs_path)
+        chunks += msdn_docs_to_chunks(msdn_docs_path, ids_pattern)
 
     chunks = remove_redundant_forward_declaration_chunks(chunks)
 
