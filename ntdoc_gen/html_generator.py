@@ -338,7 +338,7 @@ def changelog_to_html(ident_to_id: Dict[str, str], id_to_tooltip_text: Dict[str,
     changelog_short = re.sub(r'(</?h)2\b', r'\g<1>3', changelog_short)
     changelog_short = re.sub(r'(</?h)1\b', r'\g<1>2', changelog_short)
 
-    changelog_full = '<div class="ntdoc-description ntdoc-changelog-full">\n'
+    changelog_full = '<div class="ntdoc-description ntdoc-description-selected ntdoc-changelog-full">\n'
     changelog_full += markdown_to_html(changelog_markdown)
     changelog_full += '</div>\n'
 
