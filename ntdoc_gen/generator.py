@@ -25,6 +25,6 @@ def generate_docs(phnt_include_path: Path, msdn_docs_path: Optional[Path], ids_p
 
     assets_path = Path('assets')
     out_path = Path('docs')
-    organize_chunks_to_dir(chunks, ident_to_id, assets_path, out_path, ids_pattern)
+    organize_chunks_to_dir(chunks, ident_to_id, assets_path, out_path, ids_pattern, msdn_docs_path)
 
     validate_description_files()

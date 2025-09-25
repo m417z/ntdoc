@@ -2,13 +2,14 @@
 
 import re
 from dataclasses import dataclass
-from enum import IntEnum
+from enum import IntEnum, auto
 from typing import Dict, List, Tuple
 
 
 class ChunkOrigin(IntEnum):
-    PHNT = 1
-    MSDN = 2
+    PHNT = auto()
+    MSDN_DDI = auto()
+    MSDN_WIN32 = auto()
 
 
 @dataclass

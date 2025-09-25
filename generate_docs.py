@@ -13,10 +13,21 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--path", help="phnt include path", required=True)
     parser.add_argument("-c", "--commit", help="phnt commit")
-    parser.add_argument("-m", "--msdn-docs-path")
-    parser.add_argument("-i", "--ids-pattern",
-                        help="generate only the ids matching the regex pattern, "
-                             "useful for testing to quickly generate a subset of the docs")
+    parser.add_argument(
+        "-m",
+        "--msdn-docs-path",
+        help=(
+            "path to the output files of https://github.com/m417z/windows-docs-scraper"
+        ),
+    )
+    parser.add_argument(
+        "-i",
+        "--ids-pattern",
+        help=(
+            "generate only the ids matching the regex pattern, useful for testing to"
+            " quickly generate a subset of the docs"
+        ),
+    )
     args = parser.parse_args()
 
     phnt_include_path = Path(args.path)
