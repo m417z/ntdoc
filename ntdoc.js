@@ -17,6 +17,12 @@
         }
 
         try {
+            addDescriptionSwitching();
+        } catch (e) {
+            console.error(e);
+        }
+
+        try {
             if (typeof tippy !== 'undefined') {
                 // https://stackoverflow.com/a/66726233
                 const calculateScrollbarWidth = () => {
@@ -45,7 +51,7 @@
 
         try {
             if (typeof anchors !== 'undefined') {
-                anchors.add('.ntdoc-description :is(h1, h2, h3, h4, h5, h6)');
+                anchors.add('.ntdoc-description-selected :is(h1, h2, h3, h4, h5, h6)');
             }
         } catch (e) {
             console.error(e);
@@ -217,5 +223,61 @@
         }
 
         codeElementsContainer.append(controlButtonsContainer);
+    }
+
+    function addDescriptionSwitching() {
+        const descriptionsContainer = document.querySelector('.ntdoc-descriptions');
+        if (!descriptionsContainer) {
+            return;
+        }
+
+        const titleElements = descriptionsContainer.querySelectorAll('.ntdoc-description-title');
+        const descriptionElements = descriptionsContainer.querySelectorAll('.ntdoc-description');
+
+        // Need at least 2 descriptions to show a switcher.
+        if (titleElements.length < 2 || descriptionElements.length < 2) {
+            return;
+        }
+
+        // Create the select element.
+        const selectElement = document.createElement('select');
+        selectElement.className = 'ntdoc-description-selector';
+
+        // Find currently selected description index.
+        let selectedIndex = 0;
+        for (let i = 0; i < descriptionElements.length; i++) {
+            if (descriptionElements[i].classList.contains('ntdoc-description-selected')) {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+        // Populate select options from title elements.
+        titleElements.forEach((titleElement, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = titleElement.textContent.trim();
+            if (index === selectedIndex) {
+                option.selected = true;
+            }
+            selectElement.appendChild(option);
+        });
+
+        // Add change event listener.
+        selectElement.addEventListener('change', (event) => {
+            const newIndex = parseInt(event.target.value);
+
+            // Remove selected class from all descriptions.
+            descriptionElements.forEach((desc) => {
+                desc.classList.remove('ntdoc-description-selected');
+            });
+
+            // Add selected class to the chosen description.
+            if (descriptionElements[newIndex]) {
+                descriptionElements[newIndex].classList.add('ntdoc-description-selected');
+            }
+        });
+
+        descriptionsContainer.prepend(selectElement);
     }
 })();
