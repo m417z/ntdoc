@@ -15,6 +15,11 @@ headers](https://github.com/winsiderss/systeminformer/tree/master/phnt).
   An archive of the undocumented.ntinternals.net website by Tomasz Nowak, which
   isn't online anymore. Used for the initial descriptions.
 
+* https://github.com/m417z/windows-docs-scraper \
+  A tool that converts the official Windows Driver/Win32 documentation to a
+  convenient format with scraped code definitions. Used to include the official
+  documentation where available.
+
 ## Content contribution
 
 Contributions are welcome. By submitting documentation changes, you agree to

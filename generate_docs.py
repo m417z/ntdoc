@@ -14,8 +14,8 @@ def main():
     parser.add_argument("-p", "--path", help="phnt include path", required=True)
     parser.add_argument("-c", "--commit", help="phnt commit")
     parser.add_argument(
-        "-m",
-        "--msdn-docs-path",
+        "-w",
+        "--windows-docs-path",
         help=(
             "path to the output files of https://github.com/m417z/windows-docs-scraper"
         ),
@@ -35,11 +35,11 @@ def main():
     if args.commit is not None:
         config.PHNT_REPOSITORY_COMMIT = args.commit
 
-    msdn_docs_path = Path(args.msdn_docs_path) if args.msdn_docs_path else None
+    windows_docs_path = Path(args.windows_docs_path) if args.windows_docs_path else None
 
     start = time.time()
 
-    generate_docs(phnt_include_path, msdn_docs_path, args.ids_pattern)
+    generate_docs(phnt_include_path, windows_docs_path, args.ids_pattern)
 
     end = time.time()
     print(f'Finished in {end - start:.2f}s')
