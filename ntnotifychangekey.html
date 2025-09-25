@@ -97,6 +97,22 @@ ZwNotifyChangeKey(
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntzwapi.h#L2453">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">NTSYSAPI <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ZwNotifyChangeKey(
+  [in]            HANDLE           KeyHandle,
+  [in, optional]  HANDLE           Event,
+  [in, optional]  <a href="pio_apc_routine" title="typedef IO_APC_ROUTINE* PIO_APC_ROUTINE;">PIO_APC_ROUTINE</a>  ApcRoutine,
+  [in, optional]  PVOID            ApcContext,
+  [out]           <a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">PIO_STATUS_BLOCK</a> IoStatusBlock,
+  [in]            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>            CompletionFilter,
+  [in]            BOOLEAN          WatchTree,
+  [out, optional] PVOID            Buffer,
+  [in]            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>            BufferSize,
+  [in]            BOOLEAN          Asynchronous
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwnotifychangekey">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -111,14 +127,138 @@ ZwNotifyChangeKey(
 </div>
 </div>
 <div class="ntdoc-description-title">
-<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+<h1>Windows Driver Kit DDI reference (nf-ntifs-zwnotifychangekey)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
+<h1 id="zwnotifychangekey-function">ZwNotifyChangeKey function</h1>
+
+<h2 id="description">Description</h2>
+
+<p>The <strong>ZwNotifyChangeKey</strong> routine allows a driver to request notification when a registry key changes.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="keyhandle-in"><code>KeyHandle</code> [in]</h3>
+
+<p>Handle to the key to register a notification routine for. This handle is created by a successful call to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatekey"><strong>ZwCreateKey</strong></a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopenkey"><strong>ZwOpenKey</strong></a>. The caller must have specified KEY_NOTIFY access.</p>
+
+<h3 id="event-in-optional"><code>Event</code> [in, optional]</h3>
+
+<p>Optional handle to a caller-created event to be set to the Signaled state when the operation completes. If not NULL, the caller is placed into a wait state until the operation succeeds, at which time the event is set to the Signaled state.</p>
+
+<h3 id="apcroutine-in-optional"><code>ApcRoutine</code> [in, optional]</h3>
+
+<p>Pointer to a caller-supplied APC routine to run after the operation completes. This parameter is optional and can be NULL.</p>
+
+<ul>
+<li>For a kernel-mode call, set this parameter to a pointer to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_work_queue_item"><strong>WORK_QUEUE_ITEM</strong></a> struct</li>
+</ul>
+
+<h3 id="apccontext-in-optional"><code>ApcContext</code> [in, optional]</h3>
+
+<p>Pointer to pass as an argument to the APC routine that <strong>ApcRoutine</strong> points to. This argument is required if <strong>ApcRoutine</strong> isn't NULL, and must be cast to type PVOID. Otherwise, if <strong>ApcRoutine</strong> is NULL, set this parameter to NULL, too.</p>
+
+<p>The meaning of this parameter depends on whether the routine is called from kernel mode or from user mode:</p>
+
+<ul>
+<li><p>For a kernel-mode call, set this parameter to one of the following <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ne-wdm-_work_queue_type"><strong>WORK_QUEUE_TYPE</strong></a> enumeration values:</p>
+
+<ul>
+<li>CriticalWorkQueue</li>
+<li>DelayedWorkQueue</li>
+</ul></li>
+<li><p>For a user-mode call, this parameter points to a caller-specified context for the APC routine.</p></li>
+</ul>
+
+<h3 id="iostatusblock-out"><code>IoStatusBlock</code> [out]</h3>
+
+<p>Pointer to an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_io_status_block"><strong>IO_STATUS_BLOCK</strong></a> structure that contains the final status and information about the operation. For successful calls that return data, the number of bytes written to <strong>Buffer</strong> is supplied in <strong>IoStatusBlock</strong>-><strong>Information</strong>.</p>
+
+<h3 id="completionfilter-in"><code>CompletionFilter</code> [in]</h3>
+
+<p>Bitmask of operations that cause the driver to be notified. Specify one or more of the following flags:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Value</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>REG_NOTIFY_CHANGE_NAME</td>
+  <td>Notify the caller if a subkey is added or deleted.</td>
+</tr>
+<tr>
+  <td>REG_NOTIFY_CHANGE_ATTRIBUTES</td>
+  <td>Notify the caller of changes to the attributes of the key, such as the security descriptor information.</td>
+</tr>
+<tr>
+  <td>REG_NOTIFY_CHANGE_LAST_SET</td>
+  <td>Notify the caller of changes to a value of the key. This can include adding or deleting a value, or changing an existing value. (The caller receives no notification if the new value written to the key matches the previous value of the key.)</td>
+</tr>
+<tr>
+  <td>REG_NOTIFY_CHANGE_SECURITY</td>
+  <td>Notify the caller of changes to the security descriptor of the key.</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="watchtree-in"><code>WatchTree</code> [in]</h3>
+
+<p>If TRUE, the driver is notified about changes to all subkeys of the specified key. If FALSE, the driver is only notified for changes to the specified key.</p>
+
+<h3 id="buffer-out-optional"><code>Buffer</code> [out, optional]</h3>
+
+<p>Reserved. Specify NULL.</p>
+
+<h3 id="buffersize-in"><code>BufferSize</code> [in]</h3>
+
+<p>Reserved. Specify zero.</p>
+
+<h3 id="asynchronous-in"><code>Asynchronous</code> [in]</h3>
+
+<p>If FALSE, the routine does not return until the specified event occurs. If TRUE, the routine returns immediately.</p>
+
+<h2 id="return-value">Return value</h2>
+
+<p>The <strong>ZwNotifyChangeKey</strong> routine returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success, or the appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value otherwise. If the caller specifies TRUE for the **Asynchronous** parameter, and the event has not yet occurred, the routine returns STATUS_PENDING.</p>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>If the call to the <strong>ZwNotifyChangeKey</strong> function occurs in user mode, you should use the name "<strong>NtNotifyChangeKey</strong>" instead of "<strong>ZwNotifyChangeKey</strong>".</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_io_status_block"><strong>IO_STATUS_BLOCK</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_work_queue_item"><strong>WORK_QUEUE_ITEM</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ne-wdm-_work_queue_type"><strong>WORK_QUEUE_TYPE</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatekey"><strong>ZwCreateKey</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopenkey"><strong>ZwOpenKey</strong></a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwnotifychangekey">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/nf-ntifs-zwnotifychangekey.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+</div>
+<div class="ntdoc-description">
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwnotifychangekey">documented in Windows Driver Kit</a>.</p>
 
 <hr />
 
-<h1 id="see-also">See also</h1>
+<h1>See also</h1>
 
 <ul>
 <li><code><a href="ntopenkey" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">NtOpenKey</a></code></li>

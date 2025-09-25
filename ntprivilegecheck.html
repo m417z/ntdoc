@@ -47,7 +47,7 @@
  * The NtPrivilegeCheck routine determines whether a specified set of privileges are enabled in the access token of a client.
  *
  * \param ClientToken Handle to the access token of the client whose privileges are to be checked. The handle must have TOKEN_QUERY access.
- * \param RequiredPrivileges Pointer to a PRIVILEGE_SET structure that specifies the set of privileges to be checked. On input, this structure contains the privileges to check.
+ * \param RequiredPrivileges Pointer to a <a href="privilege_set" title="typedef struct _PRIVILEGE_SET {&#10;  ULONG               PrivilegeCount;&#10;  ULONG               Control;&#10;  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];&#10;} PRIVILEGE_SET, *PPRIVILEGE_SET;">PRIVILEGE_SET</a> structure that specifies the set of privileges to be checked. On input, this structure contains the privileges to check.
  * \param Result Pointer to a BOOLEAN variable that receives TRUE if all specified privileges are enabled, or FALSE otherwise.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
  * \sa https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-privilegecheck
@@ -57,7 +57,7 @@
 NTAPI
 NtPrivilegeCheck(
     _In_ HANDLE ClientToken,
-    _Inout_ PPRIVILEGE_SET RequiredPrivileges,
+    _Inout_ <a href="privilege_set" title="typedef struct _PRIVILEGE_SET {&#10;  ULONG               PrivilegeCount;&#10;  ULONG               Control;&#10;  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];&#10;} PRIVILEGE_SET, *PPRIVILEGE_SET;">PPRIVILEGE_SET</a> RequiredPrivileges,
     _Out_ PBOOLEAN Result
     );
 </span><span class="ntdoc-code-footer">
@@ -71,12 +71,21 @@ NtPrivilegeCheck(
 NTAPI
 ZwPrivilegeCheck(
     _In_ HANDLE ClientToken,
-    _Inout_ PPRIVILEGE_SET RequiredPrivileges,
+    _Inout_ <a href="privilege_set" title="typedef struct _PRIVILEGE_SET {&#10;  ULONG               PrivilegeCount;&#10;  ULONG               Control;&#10;  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];&#10;} PRIVILEGE_SET, *PPRIVILEGE_SET;">PPRIVILEGE_SET</a> RequiredPrivileges,
     _Out_ PBOOLEAN Result
     );
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntzwapi.h#L2873">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">__kernel_entry NTSYSCALLAPI <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NtPrivilegeCheck(
+  [in]      HANDLE         ClientToken,
+  [in, out] <a href="privilege_set" title="typedef struct _PRIVILEGE_SET {&#10;  ULONG               PrivilegeCount;&#10;  ULONG               Control;&#10;  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];&#10;} PRIVILEGE_SET, *PPRIVILEGE_SET;">PPRIVILEGE_SET</a> RequiredPrivileges,
+  [out]     PBOOLEAN       Result
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntprivilegecheck">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -91,41 +100,113 @@ ZwPrivilegeCheck(
 </div>
 </div>
 <div class="ntdoc-description-title">
-<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+<h1>Windows Driver Kit DDI reference (nf-ntifs-ntprivilegecheck)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
+<h2 id="description">Description</h2>
+
+<p><strong>NtPrivilegeCheck</strong> is reserved for system use.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="clienttoken-in"><code>ClientToken</code> [in]</h3>
+
+<p>A handle to a token object representing a client attempting access. This handle must be obtained from a communication session layer, such as from an LPC Port or Local Named Pipe, to prevent possible security policy violations.</p>
+
+<h3 id="requiredprivileges-in-out"><code>RequiredPrivileges</code> [in, out]</h3>
+
+<p>Pointer to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_privilege_set"><strong>PRIVILEGE_SET</strong></a> structure. The <strong>Privilege<em>* member of this structure is an array of <a href="luid_and_attributes" title="typedef struct _LUID_AND_ATTRIBUTES {&#10;  LUID  Luid;&#10;  ULONG Attributes;&#10;} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;">LUID_AND_ATTRIBUTES</a> structures. Before calling *</em><a href="seprivilegecheck" title="BOOLEAN SePrivilegeCheck(&#10;  [in, out] PPRIVILEGE_SET            RequiredPrivileges,&#10;  [in]      PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,&#10;  [in]      KPROCESSOR_MODE           AccessMode&#10;);">SePrivilegeCheck</a></strong>, use the <strong>Privilege</strong> array to indicate the set of privileges to check. Set the <strong>Control</strong> member to PRIVILEGE_SET_ALL_NECESSARY if all of the privileges must be enabled; or set it to zero if it is sufficient that any one of the privileges be enabled.</p>
+
+<h3 id="result-out"><code>Result</code> [out]</h3>
+
+<p>Receives a boolean flag indicating whether the client has all the specified privileges. A value of TRUE indicates the client has all the specified privileges; otherwise a value of FALSE is returned.</p>
+
+<h2 id="return-value">Return value</h2>
+
+<p><strong>NtPrivilegeCheck</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on successful completion. Otherwise, it returns an error code, such as the following.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Return code</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>STATUS_PRIVILEGE_NOT_HELD</td>
+  <td>The caller does not have sufficient privilege to use this privileged system service.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>An access token contains a list of the privileges held by the account associated with the token. These privileges can be enabled or disabled; most are disabled by default. <strong>NtPrivilegeCheck</strong> checks only for enabled privileges. To get a list of all the enabled and disabled privileges held by an access token, call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-sequeryinformationtoken"><strong>SeQueryInformationToken</strong></a>.</p>
+
+<p>For more information about security and access control, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/driversecurity/windows-security-model">Windows security model for driver developers</a> and the documentation on these topics in the Windows SDK.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_luid_and_attributes"><strong>LUID_AND_ATTRIBUTES</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_privilege_set"><strong>PRIVILEGE_SET</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess#security_subject_context"><strong>SECURITY_SUBJECT_CONTEXT</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-seaccesscheck"><strong>SeAccessCheck</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-seappendprivileges"><strong>SeAppendPrivileges</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-sefreeprivileges"><strong>SeFreePrivileges</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-sequeryinformationtoken"><strong>SeQueryInformationToken</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nf-ntddk-sesingleprivilegecheck"><strong>SeSinglePrivilegeCheck</strong></a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntprivilegecheck">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/nf-ntifs-ntprivilegecheck.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+</div>
+<div class="ntdoc-description">
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntprivilegecheck">documented in Windows Driver Kit</a>.</p>
 
 <hr />
 
 <p>Function <code>NtPrivilegeCheck</code> is used to check state of any privileges in Token Object. It's also described in <em>Microsoft SDK</em> as <strong>PrivilegeCheck</strong>.</p>
 
-<h3 id="tokenhandle">TokenHandle</h3>
+<h3>TokenHandle</h3>
 
 <p><code>HANDLE</code> to Token Object opened with <code>TOKEN_QUERY</code> access.</p>
 
-<h3 id="requiredprivileges">RequiredPrivileges</h3>
+<h3>RequiredPrivileges</h3>
 
-<p>Pointer to <code>PRIVILEGE_SET</code> structure contains definitions of privileges to check.</p>
+<p>Pointer to <code><a href="privilege_set" title="typedef struct _PRIVILEGE_SET {&#10;  ULONG               PrivilegeCount;&#10;  ULONG               Control;&#10;  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];&#10;} PRIVILEGE_SET, *PPRIVILEGE_SET;">PRIVILEGE_SET</a></code> structure contains definitions of privileges to check.</p>
 
-<h3 id="result">Result</h3>
+<h3>Result</h3>
 
 <p>Result of call - pointer to <code>BOOLEAN</code> value containing <em>TRUE</em> is all asked privileges are enabled.</p>
 
-<h1 id="documented-by">Documented by</h1>
+<h1>Documented by</h1>
 
 <ul>
 <li>Tomasz Nowak</li>
 </ul>
 
-<h1 id="see-also">See also</h1>
+<h1>See also</h1>
 
 <ul>
 <li><code><a href="ntadjustprivilegestoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAdjustPrivilegesToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ BOOLEAN DisableAllPrivileges,&#10;    _In_opt_ PTOKEN_PRIVILEGES NewState,&#10;    _In_ ULONG BufferLength,&#10;    _Out_writes_bytes_to_opt_(BufferLength, *ReturnLength) PTOKEN_PRIVILEGES PreviousState,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtAdjustPrivilegesToken</a></code></li>
 <li><code><a href="ntcreatetoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateToken(&#10;    _Out_ PHANDLE TokenHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ TOKEN_TYPE Type,&#10;    _In_ PLUID AuthenticationId,&#10;    _In_ PLARGE_INTEGER ExpirationTime,&#10;    _In_ PTOKEN_USER User,&#10;    _In_ PTOKEN_GROUPS Groups,&#10;    _In_ PTOKEN_PRIVILEGES Privileges,&#10;    _In_opt_ PTOKEN_OWNER Owner,&#10;    _In_ PTOKEN_PRIMARY_GROUP PrimaryGroup,&#10;    _In_opt_ PTOKEN_DEFAULT_DACL DefaultDacl,&#10;    _In_ PTOKEN_SOURCE Source&#10;    );">NtCreateToken</a></code></li>
 <li><code><a href="ntopenprocesstoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenProcessToken(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenProcessToken</a></code></li>
 <li><code><a href="ntopenthreadtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThreadToken(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ BOOLEAN OpenAsSelf,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenThreadToken</a></code></li>
-<li><code>PRIVILEGE_SET</code></li>
+<li><code><a href="privilege_set" title="typedef struct _PRIVILEGE_SET {&#10;  ULONG               PrivilegeCount;&#10;  ULONG               Control;&#10;  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];&#10;} PRIVILEGE_SET, *PPRIVILEGE_SET;">PRIVILEGE_SET</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntprivilegecheck.md">Edit description on GitHub</a>

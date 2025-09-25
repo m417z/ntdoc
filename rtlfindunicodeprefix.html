@@ -54,15 +54,106 @@ RtlFindUnicodePrefix(
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntrtl.h#L3085">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">NTSYSAPI <a href="unicode_prefix_table_entry" title="typedef struct _UNICODE_PREFIX_TABLE_ENTRY&#10;{&#10;    CSHORT NodeTypeCode;&#10;    CSHORT NameLength;&#10;    struct _UNICODE_PREFIX_TABLE_ENTRY *NextPrefixTree;&#10;    struct _UNICODE_PREFIX_TABLE_ENTRY *CaseMatch;&#10;    RTL_SPLAY_LINKS Links;&#10;    PUNICODE_STRING Prefix;&#10;} UNICODE_PREFIX_TABLE_ENTRY, *PUNICODE_PREFIX_TABLE_ENTRY;">PUNICODE_PREFIX_TABLE_ENTRY</a> RtlFindUnicodePrefix(
+  [in] <a href="unicode_prefix_table" title="typedef struct _UNICODE_PREFIX_TABLE&#10;{&#10;    CSHORT NodeTypeCode;&#10;    CSHORT NameLength;&#10;    PUNICODE_PREFIX_TABLE_ENTRY NextPrefixTree;&#10;    PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;&#10;} UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;">PUNICODE_PREFIX_TABLE</a> PrefixTable,
+  [in] <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a>      FullName,
+  [in] <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                 CaseInsensitiveIndex
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlfindunicodeprefix">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
 <h1>NtDoc</h1>
 </div>
-<div class="ntdoc-description ntdoc-description-selected">
+<div class="ntdoc-description">
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlfindunicodeprefix">documented in Windows Driver Kit</a>.</p>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/rtlfindunicodeprefix.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows Driver Kit DDI reference (nf-ntifs-rtlfindunicodeprefix)</h1>
+</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<h1 id="rtlfindunicodeprefix-function">RtlFindUnicodePrefix function</h1>
+
+<h2 id="description">Description</h2>
+
+<p>The <strong>RtlFindUnicodePrefix</strong> routine searches for the best match for a given Unicode file name in a prefix table.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="prefixtable-in"><code>PrefixTable</code> [in]</h3>
+
+<p>Pointer to the prefix table. The table must have been initialized by calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlinitializeunicodeprefix">RtlInitializeUnicodePrefix</a>.</p>
+
+<h3 id="fullname-in"><code>FullName</code> [in]</h3>
+
+<p>Pointer to a Unicode string containing the full pathname for a file.</p>
+
+<h3 id="caseinsensitiveindex-in"><code>CaseInsensitiveIndex</code> [in]</h3>
+
+<p>Position in the file name and prefix strings at which the comparison is to become case-insensitive. The string comparison is case-sensitive for the first <em>CaseInsensitiveIndex</em> characters in each string, case-insensitive for the remainder of the string.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Value</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>0</td>
+  <td>String comparison is case-insensitive.</td>
+</tr>
+<tr>
+  <td>1..<em>FullName.Length</em>-1</td>
+  <td>String comparison is case-sensitive for characters at positions 0 through <em>CaseInsensitiveIndex</em>-1, case-insensitive for characters from position <em>CaseInsensitiveIndex</em> to the end of the string.</td>
+</tr>
+<tr>
+  <td><em>FullName.Length</em></td>
+  <td>String comparison is case-sensitive.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="return-value">Return value</h2>
+
+<p><strong>RtlFindUnicodePrefix</strong> returns a pointer to the longest proper prefix found for the given string at <em>FullName</em>. If no matching prefix is found, <strong>RtlFindUnicodePrefix</strong> returns <strong>NULL</strong>.</p>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>Each prefix entry in the table is a pathname relative to the root directory of a file system volume. To be well-formed, the prefix must begin with a single backslash ().</p>
+
+<p>When it finds a matching prefix, <strong>RtlFindUnicodePrefix</strong> rebalances the prefix table's splay tree.</p>
+
+<p>File systems must call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlinitializeunicodeprefix">RtlInitializeUnicodePrefix</a> to initialize the prefix table before using any other <strong>Rtl..UnicodePrefix</strong> routines on it. The initialized prefix table structure should be considered opaque.</p>
+
+<p>Callers of the <strong>Rtl..UnicodePrefix</strong> routines are responsible for synchronizing access to the prefix table. A fast mutex is the most efficient synchronization mechanism to use for this purpose.</p>
+
+<p>For information about other string-handling routines, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#run-time-library-rtl-routines">Run-Time Library (RTL) Routines</a>.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlinitializeunicodeprefix">RtlInitializeUnicodePrefix</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlinsertunicodeprefix">RtlInsertUnicodePrefix</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlnextunicodeprefix">RtlNextUnicodePrefix</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlremoveunicodeprefix">RtlRemoveUnicodePrefix</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ntdef/ns-ntdef-_unicode_string">UNICODE_STRING</a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlfindunicodeprefix">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/nf-ntifs-rtlfindunicodeprefix.md">Edit description on GitHub</a>
 </div>
 </div>
 </div>

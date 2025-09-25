@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="ExSetTimerResolution - NtDoc, the native NT API online documentation">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>ExSetTimerResolution - NtDoc</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="manifest" href="icons/site.webmanifest">
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="icons/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+    <noscript id="dark-mode-toggle-stylesheets">
+        <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+    </noscript>
+    <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
+    <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
+    <link rel="stylesheet" href="modules/pygments-css.css">
+    <link rel="stylesheet" href="ntdoc.css">
+    <noscript>
+        <link rel="stylesheet" href="ntdoc-noscript.css">
+    </noscript>
+</head>
+<body>
+    <header>
+        <a href="."><img class="ntdoc-title-logo" src="logo.png" alt="logo"></a>
+        <h1 class="ntdoc-title">
+            ExSetTimerResolution - NtDoc
+        </h1>
+        <div class="ntdoc-subtitle">
+            Native API online documentation, based on the System Informer
+            (formerly Process Hacker) <a target="_blank"
+            href="https://github.com/winsiderss/systeminformer/tree/master/phnt">phnt
+            headers</a>
+        </div>
+        <div id="ntdoc-search-select"></div>
+    </header>
+    <div class="ntdoc-code-elements">
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// wdm.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ExSetTimerResolution(
+  [in] <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>   DesiredTime,
+  [in] BOOLEAN SetResolution
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-exsettimerresolution">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
+</div>
+<div class="ntdoc-descriptions">
+<div class="ntdoc-description-title">
+<h1>NtDoc</h1>
+</div>
+<div class="ntdoc-description">
+<div class="ntdoc-description-none">
+<p>No description available.</p>
+</div>
+<div class="ntdoc-description-links">
+<a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/exsettimerresolution.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows Driver Kit DDI reference (nf-wdm-exsettimerresolution)</h1>
+</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<h2 id="description">Description</h2>
+
+<p>The <strong>ExSetTimerResolution</strong> routine modifies the frequency at which the system clock interrupts. Use this routine with extreme caution (see the following Remarks section).</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="desiredtime-in"><code>DesiredTime</code> [in]</h3>
+
+<p>Specifies the amount of time that should elapse between each timer interrupt, in 100-nanosecond units. The minimum value is approximately 10,000 (1 millisecond) but can vary slightly by platform. (This parameter is ignored if <em>SetResolution</em> is <strong>FALSE</strong>.)</p>
+
+<h3 id="setresolution-in"><code>SetResolution</code> [in]</h3>
+
+<p>If <strong>TRUE</strong>, the call is a request to set the clock interrupt frequency to the value specified by <em>DesiredTime</em>. If <strong>FALSE</strong>, the call is a request to restore the clock interrupt frequency to the system's default value, which is platform-specific.</p>
+
+<h2 id="return-value">Return value</h2>
+
+<p><strong>ExSetTimerResolution</strong> returns the new timer resolution, in 100-nanosecond units.</p>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>To set the timer resolution, a driver calls this routine passing <strong>TRUE</strong> as the parameter for <em>SetResolution</em>. The following rules apply:</p>
+
+<ul>
+<li><p>The routine changes the clock interrupt frequency only if the specified <em>DesiredTime</em> value is less than the current setting.</p></li>
+<li><p>If a driver requests a <em>DesiredTime</em> value that is greater than what is currently set, the routine just returns the current setting.</p></li>
+<li><p>If a driver requests a <em>DesiredTime</em> value that is less than the system clock can support, the routine uses the smallest resolution the system can support, and returns that value.</p></li>
+</ul>
+
+<p>If you use this routine to change the clock interrupt frequency, your driver must restore the default interrupt frequency, typically by making the following call before being unloaded:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">ExSetTimerResolution</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">FALSE</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<p>If multiple drivers have attempted to modify the clock interrupt frequency, the system does not restore the default frequency until all of these drivers have called this routine with a <em>SetResolution</em> value of <strong>FALSE</strong>.</p>
+
+<p>The result of changing the clock interrupt frequency is system-wide and can have a severely negative effect on system performance. Also note that higher clock interrupt frequencies can shorten a system's battery life.</p>
+
+<p>During the processing of an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-power">IRP_MJ_POWER</a> request, the power manager holds a lock on a resource that <strong>ExSetTimerResolution</strong> must acquire to complete. Consequently, a deadlock will occur if a driver directly or indirectly calls <strong>ExSetTimerResolution</strong> while processing a power request, and then waits for the call to <strong>ExSetTimerResolution</strong> to return before the driver completes the power request. For more information about safely calling <strong>ExSetTimerResolution</strong> while processing a power <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/calling-exsettimerresolution-while-processing-a-power-irp">Calling ExSetTimerResolution While Processing a Power IRP</a>.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-kesettimerex">KeSetTimerEx</a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-exsettimerresolution">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/wdm/nf-wdm-exsettimerresolution.md">Edit description on GitHub</a>
+</div>
+</div>
+</div>
+
+    <!-- For sticky footer: https://stackoverflow.com/a/34146411 -->
+    <div class="spacer"></div>
+    <footer>
+        By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
+        <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
+        <dark-mode-toggle permanent></dark-mode-toggle>
+    </footer>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YWF4NP61SX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YWF4NP61SX');
+    </script>
+    <script src="modules/jquery-3.7.0.min.js"></script>
+    <script src="modules/q-1.5.1.js"></script>
+    <script src="modules/virtual-select/virtual-select-jquery.min.js"></script>
+    <script src="modules/popper-2.11.8.min.js"></script>
+    <script src="modules/tippy-6.3.7.min.js"></script>
+    <script src="modules/anchor-5.0.0.min.js"></script>
+    <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
+    <script src="ntdoc.js"></script>
+</body>
+</html>

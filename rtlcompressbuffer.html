@@ -59,6 +59,20 @@ RtlCompressBuffer(
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntrtl.h#L3185">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">NT_RTL_COMPRESS_API <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> RtlCompressBuffer(
+  [in]  <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CompressionFormatAndEngine,
+  [in]  PUCHAR UncompressedBuffer,
+  [in]  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  UncompressedBufferSize,
+  [out] PUCHAR CompressedBuffer,
+  [in]  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  CompressedBufferSize,
+  [in]  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  UncompressedChunkSize,
+  [out] PULONG FinalCompressedSize,
+  [in]  PVOID  WorkSpace
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlcompressbuffer">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -73,14 +87,169 @@ RtlCompressBuffer(
 </div>
 </div>
 <div class="ntdoc-description-title">
-<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+<h1>Windows Driver Kit DDI reference (nf-ntifs-rtlcompressbuffer)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
+<h1 id="rtlcompressbuffer-function">RtlCompressBuffer function</h1>
+
+<h2 id="description">Description</h2>
+
+<p>The <strong>RtlCompressBuffer</strong> function compresses a buffer and can be used by a file system driver to facilitate the implementation of file compression.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="compressionformatandengine-in"><code>CompressionFormatAndEngine</code> [in]</h3>
+
+<p>A bitmask that specifies the compression format and engine type. This parameter must be set to a valid bitwise OR combination of one format type and one engine type. For example, <a href="compression_format_lznt1" title="#define COMPRESSION_FORMAT_LZNT1 (0x0002)">COMPRESSION_FORMAT_LZNT1</a> | <a href="compression_engine_standard" title="#define COMPRESSION_ENGINE_STANDARD (0x0000)">COMPRESSION_ENGINE_STANDARD</a>.</p>
+
+<p>The meanings of these, and other related values, are as follows.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Value</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><a href="compression_format_none" title="#define COMPRESSION_FORMAT_NONE (0x0000)">COMPRESSION_FORMAT_NONE</a></td>
+  <td>Not supported by this function.</td>
+</tr>
+<tr>
+  <td><a href="compression_format_default" title="#define COMPRESSION_FORMAT_DEFAULT (0x0001)">COMPRESSION_FORMAT_DEFAULT</a></td>
+  <td>Not supported by this function.</td>
+</tr>
+<tr>
+  <td><a href="compression_format_lznt1" title="#define COMPRESSION_FORMAT_LZNT1 (0x0002)">COMPRESSION_FORMAT_LZNT1</a></td>
+  <td>The function will perform LZ compression.</td>
+</tr>
+<tr>
+  <td><a href="compression_format_xpress" title="#define COMPRESSION_FORMAT_XPRESS (0x0003)">COMPRESSION_FORMAT_XPRESS</a></td>
+  <td>The function will perform Xpress compression.</td>
+</tr>
+<tr>
+  <td><a href="compression_format_xpress_huff" title="#define COMPRESSION_FORMAT_XPRESS_HUFF (0x0004)">COMPRESSION_FORMAT_XPRESS_HUFF</a></td>
+  <td>The function will perform Xpress Huffman compression.</td>
+</tr>
+<tr>
+  <td><a href="compression_engine_standard" title="#define COMPRESSION_ENGINE_STANDARD (0x0000)">COMPRESSION_ENGINE_STANDARD</a></td>
+  <td>The <strong>UncompressedBuffer</strong> buffer is compressed using an algorithm that provides a balance between data compression and performance. This value cannot be used with <a href="compression_engine_maximum" title="#define COMPRESSION_ENGINE_MAXIMUM (0x0100)">COMPRESSION_ENGINE_MAXIMUM</a>.</td>
+</tr>
+<tr>
+  <td><a href="compression_engine_maximum" title="#define COMPRESSION_ENGINE_MAXIMUM (0x0100)">COMPRESSION_ENGINE_MAXIMUM</a></td>
+  <td>The <strong>UncompressedBuffer</strong> buffer is compressed using an algorithm that provides maximum data compression but with relatively slower performance. This value cannot be used with <a href="compression_engine_standard" title="#define COMPRESSION_ENGINE_STANDARD (0x0000)">COMPRESSION_ENGINE_STANDARD</a>.</td>
+</tr>
+<tr>
+  <td><a href="compression_engine_hiber" title="#define COMPRESSION_ENGINE_HIBER (0x0200)">COMPRESSION_ENGINE_HIBER</a></td>
+  <td>Not supported by this function.</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="uncompressedbuffer-in"><code>UncompressedBuffer</code> [in]</h3>
+
+<p>A pointer to a caller-allocated buffer (allocated from paged or non-paged pool) that contains the data to be compressed. This parameter is required and cannot be NULL.</p>
+
+<h3 id="uncompressedbuffersize-in"><code>UncompressedBufferSize</code> [in]</h3>
+
+<p>The size, in bytes, of the <strong>UncompressedBuffer</strong> buffer.</p>
+
+<h3 id="compressedbuffer-out"><code>CompressedBuffer</code> [out]</h3>
+
+<p>A pointer to a caller-allocated buffer (allocated from paged or non-paged pool) that receives the compressed data. This parameter is required and cannot be NULL.</p>
+
+<h3 id="compressedbuffersize-in"><code>CompressedBufferSize</code> [in]</h3>
+
+<p>The size, in bytes, of the <strong>CompressedBuffer</strong> buffer.</p>
+
+<h3 id="uncompressedchunksize-in"><code>UncompressedChunkSize</code> [in]</h3>
+
+<p>The chunk size to use when compressing the <strong>UncompressedBuffer</strong> buffer. This parameter must be one of the following values: 512, 1024, 2048, or 4096. The operating system uses 4096, and the recommended value for this parameter is also 4096.</p>
+
+<h3 id="finalcompressedsize-out"><code>FinalCompressedSize</code> [out]</h3>
+
+<p>A pointer to a caller-allocated variable that receives the size, in bytes, of the compressed data stored in <strong>CompressedBuffer</strong>. This parameter is required and cannot be NULL.</p>
+
+<h3 id="workspace-in"><code>WorkSpace</code> [in]</h3>
+
+<p>A pointer to a caller-allocated work space buffer used by the <strong>RtlCompressBuffer</strong> function during compression. Use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlgetcompressionworkspacesize"><strong>RtlGetCompressionWorkSpaceSize</strong></a> function to determine the correct work space buffer size.</p>
+
+<h2 id="return-value">Return value</h2>
+
+<p><strong>RtlCompressBuffer</strong> returns an appropriate error status value, such as one of the following.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Return code</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
+  <td>The <strong>UncompressedBuffer</strong> buffer was successfully compressed.</td>
+</tr>
+<tr>
+  <td>STATUS_BUFFER_ALL_ZEROS</td>
+  <td>The <strong>UncompressedBuffer</strong> buffer was successfully compressed, but this buffer contains only zeros.</td>
+</tr>
+<tr>
+  <td>STATUS_INVALID_PARAMETER</td>
+  <td>An invalid compression format was specified through the <strong>CompressionFormat</strong> parameter. If <strong>CompressionFormat</strong> is either <a href="compression_format_none" title="#define COMPRESSION_FORMAT_NONE (0x0000)">COMPRESSION_FORMAT_NONE</a> or <a href="compression_format_default" title="#define COMPRESSION_FORMAT_DEFAULT (0x0001)">COMPRESSION_FORMAT_DEFAULT</a> (but not both), this value is returned.</td>
+</tr>
+<tr>
+  <td>STATUS_UNSUPPORTED_COMPRESSION</td>
+  <td>An invalid compression format was specified through the <strong>CompressionFormat</strong> parameter. If <strong>CompressionFormat</strong> is not one of the following, STATUS_UNSUPPORTED_COMPRESSION is returned: <a href="compression_format_lznt1" title="#define COMPRESSION_FORMAT_LZNT1 (0x0002)">COMPRESSION_FORMAT_LZNT1</a>, <a href="compression_format_xpress" title="#define COMPRESSION_FORMAT_XPRESS (0x0003)">COMPRESSION_FORMAT_XPRESS</a>, <a href="compression_format_xpress_huff" title="#define COMPRESSION_FORMAT_XPRESS_HUFF (0x0004)">COMPRESSION_FORMAT_XPRESS_HUFF</a></td>
+</tr>
+<tr>
+  <td>STATUS_NOT_SUPPORTED</td>
+  <td>An invalid compression engine was specified through the <strong>CompressionFormatAndEngine</strong> parameter. If <strong>CompressionFormatAndEngine</strong> is not <a href="compression_engine_standard" title="#define COMPRESSION_ENGINE_STANDARD (0x0000)">COMPRESSION_ENGINE_STANDARD</a> or <a href="compression_engine_maximum" title="#define COMPRESSION_ENGINE_MAXIMUM (0x0100)">COMPRESSION_ENGINE_MAXIMUM</a> (but not both), this value is returned.</td>
+</tr>
+<tr>
+  <td>STATUS_BUFFER_TOO_SMALL</td>
+  <td>The compressed buffer is too small to hold the compressed data. That is, <strong>FinalCompressedSize</strong> is greater than <strong>CompressedBufferSize</strong>.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>The <strong>RtlCompressBuffer</strong> function takes as input an uncompressed buffer and produces its compressed equivalent provided that the compressed data fits within the specified destination buffer.</p>
+
+<p>To determine the correct buffer size for the <strong>WorkSpace</strong> parameter, use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlgetcompressionworkspacesize"><strong>RtlGetCompressionWorkSpaceSize</strong></a> function.</p>
+
+<p>To decompress a compressed buffer, use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtldecompressbuffer"><strong>RtlDecompressBuffer</strong></a> function.</p>
+
+<p>To extract an uncompressed fragment from a compressed buffer, use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtldecompressfragment"><strong>RtlDecompressFragment</strong></a> function.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_compression_information"><strong>FILE_COMPRESSION_INFORMATION</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtldecompressbuffer"><strong>RtlDecompressBuffer</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtldecompressfragment"><strong>RtlDecompressFragment</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlgetcompressionworkspacesize"><strong>RtlGetCompressionWorkSpaceSize</strong></a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlcompressbuffer">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/nf-ntifs-rtlcompressbuffer.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+</div>
+<div class="ntdoc-description">
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlcompressbuffer">documented in Windows Driver Kit</a>.</p>
 
 <hr />
 
-<h3 id="compressionformat">CompressionFormat</h3>
+<h3>CompressionFormat</h3>
 
 <p>Only lower 2 bytes are supported. Higher byte means Compression Engine. Lower byte means Compressing Format.</p>
 
@@ -112,19 +281,19 @@ In NT 4.0 sp6 engines works only with compression (specified in <code><a href="r
 </code></pre>
 </div>
 
-<h3 id="unknown">Unknown</h3>
+<h3>Unknown</h3>
 
 <p>Put 0x1000 here. Probably means page size.</p>
 
-<h3 id="pdestinationsize">pDestinationSize</h3>
+<h3>pDestinationSize</h3>
 
 <p>Size of data after compression.</p>
 
-<h3 id="workspacebuffer">WorkspaceBuffer</h3>
+<h3>WorkspaceBuffer</h3>
 
 <p>See <code><a href="rtlgetcompressionworkspacesize" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlGetCompressionWorkSpaceSize(&#10;    _In_ USHORT CompressionFormatAndEngine,&#10;    _Out_ PULONG CompressBufferWorkSpaceSize,&#10;    _Out_ PULONG CompressFragmentWorkSpaceSize&#10;    );">RtlGetCompressionWorkSpaceSize</a></code> for more information.</p>
 
-<h1 id="see-also">See also</h1>
+<h1>See also</h1>
 
 <ul>
 <li><code><a href="rtldecompressbuffer" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlDecompressBuffer(&#10;    _In_ USHORT CompressionFormat,&#10;    _Out_writes_bytes_to_(UncompressedBufferSize, *FinalUncompressedSize) PUCHAR UncompressedBuffer,&#10;    _In_ ULONG UncompressedBufferSize,&#10;    _In_reads_bytes_(CompressedBufferSize) PUCHAR CompressedBuffer,&#10;    _In_ ULONG CompressedBufferSize,&#10;    _Out_ PULONG FinalUncompressedSize&#10;    );">RtlDecompressBuffer</a></code></li>

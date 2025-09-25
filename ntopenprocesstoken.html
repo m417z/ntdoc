@@ -77,6 +77,15 @@ ZwOpenProcessToken(
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntzwapi.h#L2683">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">__kernel_entry NTSYSCALLAPI <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NtOpenProcessToken(
+  [in]  HANDLE      ProcessHandle,
+  [in]  ACCESS_MASK DesiredAccess,
+  [out] PHANDLE     TokenHandle
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenprocesstoken">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -177,6 +186,104 @@ ZwOpenProcessToken(
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/ntopenprocesstoken.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows Driver Kit DDI reference (nf-ntifs-ntopenprocesstoken)</h1>
+</div>
+<div class="ntdoc-description">
+<h2>Description</h2>
+
+<p>The <strong>NtOpenProcessToken</strong> routine opens the access token associated with a process, and returns a handle that can be used to access that token.</p>
+
+<h2>Parameters</h2>
+
+<h3><code>ProcessHandle</code> [in]</h3>
+
+<p>Handle to the process whose access token is to be opened. The handle must have <a href="process_query_information" title="#define PROCESS_QUERY_INFORMATION 0x0400">PROCESS_QUERY_INFORMATION</a> access. Use the <strong><a href="ntcurrentprocess" title="#define NtCurrentProcess() ((HANDLE)(LONG_PTR)-1)">NtCurrentProcess</a></strong> macro, defined in <em>Ntddk.h</em>, to specify the current process.</p>
+
+<h3><code>DesiredAccess</code> [in]</h3>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/access-mask"><strong>ACCESS_MASK</strong></a> structure specifying the requested types of access to the access token. These requested access types are compared with the token's discretionary access-control list (<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_acl"><strong>DACL</strong></a>) to determine which accesses are granted or denied.</p>
+
+<h3><code>TokenHandle</code> [out]</h3>
+
+<p>Pointer to a caller-allocated variable that receives a handle to the newly opened access token.</p>
+
+<h2>Return value</h2>
+
+<p><strong>NtOpenProcessToken</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate error status. Possible error status codes include the following:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Return code</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>STATUS_ACCESS_DENIED</td>
+  <td><em>ProcessHandle</em> did not have <a href="process_query_information" title="#define PROCESS_QUERY_INFORMATION 0x0400">PROCESS_QUERY_INFORMATION</a> access.</td>
+</tr>
+<tr>
+  <td>STATUS_INSUFFICIENT_RESOURCES</td>
+  <td>A new token handle could not be allocated.</td>
+</tr>
+<tr>
+  <td>STATUS_INVALID_HANDLE</td>
+  <td><em>ProcessHandle</em> was not a valid handle.</td>
+</tr>
+<tr>
+  <td>STATUS_OBJECT_TYPE_MISMATCH</td>
+  <td><em>ProcessHandle</em> was not a process handle.</td>
+</tr>
+<tr>
+  <td>STATUS_PRIVILEGE_NOT_HELD</td>
+  <td>The caller does not have the privilege (<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/secauthz/privilege-constants">SeSecurityPrivilege</a>) necessary to create a token handle with the access specified in the <em>DesiredAccess</em> parameter.</td>
+</tr>
+<tr>
+  <td>STATUS_QUOTA_EXCEEDED</td>
+  <td>The process's memory quota is not sufficient to allocate the token handle.</td>
+</tr>
+<tr>
+  <td>STATUS_UNSUCCESSFUL</td>
+  <td>The token handle could not be created.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Remarks</h2>
+
+<p>To specify attributes for the access token handle, use <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenprocesstokenex"><strong>NtOpenProcessTokenEx</strong></a> instead.</p>
+
+<p>The handle can be accessed by the process in whose context the driver is running.</p>
+
+<p>Any handle obtained by calling <strong>NtOpenProcessToken</strong> must eventually be released by calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntclose"><strong>NtClose</strong></a>.</p>
+
+<p>For more information about security and access control, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/driversecurity/windows-security-model">Windows security model for driver developers</a> and the documentation on these topics in the Windows SDK.</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<h2>See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/access-mask"><strong>ACCESS_MASK</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_acl"><strong>ACL</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-psdereferenceprimarytoken"><strong>PsDereferencePrimaryToken</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntclose"><strong>NtClose</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenprocesstokenex"><strong>NtOpenProcessTokenEx</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff567032(v=vs.85)"><strong>NtOpenThreadTokenEx</strong></a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenprocesstoken">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/nf-ntifs-ntopenprocesstoken.md">Edit description on GitHub</a>
 </div>
 </div>
 <div class="ntdoc-description-title">

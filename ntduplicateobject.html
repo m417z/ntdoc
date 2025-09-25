@@ -94,6 +94,19 @@ ZwDuplicateObject(
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntzwapi.h#L1710">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">NTSYSAPI <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ZwDuplicateObject(
+  [in]            HANDLE      SourceProcessHandle,
+  [in]            HANDLE      SourceHandle,
+  [in, optional]  HANDLE      TargetProcessHandle,
+  [out, optional] PHANDLE     TargetHandle,
+  [in]            ACCESS_MASK DesiredAccess,
+  [in]            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>       HandleAttributes,
+  [in]            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>       Options
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwduplicateobject">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -150,6 +163,98 @@ ZwDuplicateObject(
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/ntduplicateobject.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows Driver Kit DDI reference (nf-ntifs-zwduplicateobject)</h1>
+</div>
+<div class="ntdoc-description">
+<h1>ZwDuplicateObject function</h1>
+
+<h2>Description</h2>
+
+<p>The <strong>ZwDuplicateObject</strong> routine creates a handle that is a duplicate of the specified source handle.</p>
+
+<h2>Parameters</h2>
+
+<h3><code>SourceProcessHandle</code> [in]</h3>
+
+<p>A handle to the source process for the handle being duplicated.</p>
+
+<h3><code>SourceHandle</code> [in]</h3>
+
+<p>The handle to duplicate.</p>
+
+<h3><code>TargetProcessHandle</code> [in, optional]</h3>
+
+<p>A handle to the target process that is to receive the new handle. This parameter is optional and can be specified as NULL if the <strong><a href="duplicate_close_source" title="#define DUPLICATE_CLOSE_SOURCE 0x00000001 // Close the source handle.">DUPLICATE_CLOSE_SOURCE</a></strong> flag is set in <em>Options</em>.</p>
+
+<h3><code>TargetHandle</code> [out, optional]</h3>
+
+<p>A pointer to a HANDLE variable into which the routine writes the new duplicated handle. The duplicated handle is valid in the specified target process. This parameter is optional and can be specified as NULL if no duplicate handle is to be created.</p>
+
+<h3><code>DesiredAccess</code> [in]</h3>
+
+<p>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/access-mask">ACCESS_MASK</a> value that specifies the desired access for the new handle.</p>
+
+<h3><code>HandleAttributes</code> [in]</h3>
+
+<p>A <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> that specifies the desired attributes for the new handle. For more information about attributes, see the description of the <strong>Attributes</strong> member in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ntdef/ns-ntdef-_object_attributes">OBJECT_ATTRIBUTES</a>.</p>
+
+<h3><code>Options</code> [in]</h3>
+
+<p>A set of flags to control the behavior of the duplication operation. Set this parameter to zero or to the bitwise OR of one or more of the following flags.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Flag name</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong><a href="duplicate_same_attributes" title="#define DUPLICATE_SAME_ATTRIBUTES 0x00000004 // Instead of using the HandleAttributes parameter, copy the attributes from the source handle to the target handle.">DUPLICATE_SAME_ATTRIBUTES</a></strong></td>
+  <td>Instead of using the <em>HandleAttributes</em> parameter, copy the attributes from the source handle to the target handle.</td>
+</tr>
+<tr>
+  <td><strong><a href="duplicate_same_access" title="#define DUPLICATE_SAME_ACCESS 0x00000002 // Instead of using the DesiredAccess parameter, copy the access rights from the source handle to the target handle.">DUPLICATE_SAME_ACCESS</a></strong></td>
+  <td>Instead of using the <em>DesiredAccess</em> parameter, copy the access rights from the source handle to the target handle.</td>
+</tr>
+<tr>
+  <td><strong><a href="duplicate_close_source" title="#define DUPLICATE_CLOSE_SOURCE 0x00000001 // Close the source handle.">DUPLICATE_CLOSE_SOURCE</a></strong></td>
+  <td>Close the source handle.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Return value</h2>
+
+<p><strong>ZwDuplicateObject</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call is successful. Otherwise, it returns an appropriate error status code.</p>
+
+<h2>Remarks</h2>
+
+<p>The source handle is evaluated in the context of the specified source process. The calling process must have <strong><a href="process_dup_handle" title="#define PROCESS_DUP_HANDLE 0x0040">PROCESS_DUP_HANDLE</a></strong> access to the source process. The duplicate handle is created in the handle table of the specified target process. The calling process must have <strong><a href="process_dup_handle" title="#define PROCESS_DUP_HANDLE 0x0040">PROCESS_DUP_HANDLE</a></strong> access to the target process.</p>
+
+<p>By default, the duplicate handle is created with the attributes specified by the <em>HandleAttributes</em> parameter, and with the access rights specified by the <em>DesiredAccess</em> parameter. If necessary, the caller can override one or both defaults by setting the <strong><a href="duplicate_same_attributes" title="#define DUPLICATE_SAME_ATTRIBUTES 0x00000004 // Instead of using the HandleAttributes parameter, copy the attributes from the source handle to the target handle.">DUPLICATE_SAME_ATTRIBUTES</a></strong> and <strong><a href="duplicate_same_access" title="#define DUPLICATE_SAME_ACCESS 0x00000002 // Instead of using the DesiredAccess parameter, copy the access rights from the source handle to the target handle.">DUPLICATE_SAME_ACCESS</a></strong> flags in the <em>Options</em> parameter.</p>
+
+<p>If the call to this function occurs in user mode, you should use the name "<strong>NtDuplicateObject</strong>" instead of "<strong>ZwDuplicateObject</strong>".</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<h2>See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/access-mask">ACCESS_MASK</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ntdef/ns-ntdef-_object_attributes">OBJECT_ATTRIBUTES</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwduplicateobject">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/nf-ntifs-zwduplicateobject.md">Edit description on GitHub</a>
 </div>
 </div>
 <div class="ntdoc-description-title">

@@ -82,6 +82,15 @@ ZwOpenSection(
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntzwapi.h#L2722">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// wdm.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">NTSYSAPI <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ZwOpenSection(
+  [out] PHANDLE            SectionHandle,
+  [in]  ACCESS_MASK        DesiredAccess,
+  [in]  <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PVOID SecurityDescriptor; // PSECURITY_DESCRIPTOR;&#10;    PVOID SecurityQualityOfService; // PSECURITY_QUALITY_OF_SERVICE&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">POBJECT_ATTRIBUTES</a> ObjectAttributes
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopensection">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -96,14 +105,73 @@ ZwOpenSection(
 </div>
 </div>
 <div class="ntdoc-description-title">
-<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+<h1>Windows Driver Kit DDI reference (nf-wdm-zwopensection)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
+<h2 id="description">Description</h2>
+
+<p>The <strong>ZwOpenSection</strong> routine opens a handle for an existing <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/">section object</a>.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="sectionhandle-out"><code>SectionHandle</code> [out]</h3>
+
+<p>Pointer to a HANDLE variable that receives a handle to the section object.</p>
+
+<h3 id="desiredaccess-in"><code>DesiredAccess</code> [in]</h3>
+
+<p>Specifies an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/access-mask">ACCESS_MASK</a> value that determines the requested access to the object. For more information, see the <em>DesiredAccess</em> parameter of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatesection">ZwCreateSection</a>.</p>
+
+<h3 id="objectattributes-in"><code>ObjectAttributes</code> [in]</h3>
+
+<p>Pointer to an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ntdef/ns-ntdef-_object_attributes"><strong>OBJECT_ATTRIBUTES</strong></a> structure that specifies the object name and other attributes. Use <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ntdef/nf-ntdef-initializeobjectattributes">InitializeObjectAttributes</a> to initialize this structure. If the caller is not running in a system thread context, it must set the <a href="obj_kernel_handle" title="#define OBJ_KERNEL_HANDLE 0x00000200L">OBJ_KERNEL_HANDLE</a> attribute when it calls *<em><a href="initializeobjectattributes" title="#define InitializeObjectAttributes(p, n, a, r, s) { \&#10;    (p)-&gt;Length = sizeof(OBJECT_ATTRIBUTES); \&#10;    (p)-&gt;RootDirectory = r; \&#10;    (p)-&gt;Attributes = a; \&#10;    (p)-&gt;ObjectName = n; \&#10;    (p)-&gt;SecurityDescriptor = s; \&#10;    (p)-&gt;SecurityQualityOfService = NULL; \&#10;    }">InitializeObjectAttributes</a></em>*.</p>
+
+<h2 id="return-value">Return value</h2>
+
+<p><strong>ZwOpenSection</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success, or the appropriate error code on failure. Possible return values include:</p>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>If the section does not exist or the system did not grant the requested access, the operation fails.</p>
+
+<p>Once the handle pointed to by <em>SectionHandle</em> is no longer in use, the driver must call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntclose">ZwClose</a> to close it.</p>
+
+<p>If the caller is not running in a system thread context, it must ensure that any handles it creates are private handles. Otherwise, the handle can be accessed by the process in whose context the driver is running. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/object-handles">Object Handles</a>.</p>
+
+<p>If the call to this function occurs in user mode, you should use the name "<strong>NtOpenSection</strong>" instead of "<strong>ZwOpenSection</strong>".</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/access-mask">ACCESS_MASK</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ntdef/nf-ntdef-initializeobjectattributes">InitializeObjectAttributes</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatesection">ZwCreateSection</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwmapviewofsection">ZwMapViewOfSection</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwunmapviewofsection">ZwUnmapViewOfSection</a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopensection">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/wdm/nf-wdm-zwopensection.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+</div>
+<div class="ntdoc-description">
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopensection">documented in Windows Driver Kit</a>.</p>
 
 <hr />
 
-<h1 id="see-also">See also</h1>
+<h1>See also</h1>
 
 <ul>
 <li><code><a href="ntcreatesection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PLARGE_INTEGER MaximumSize,&#10;    _In_ ULONG SectionPageProtection,&#10;    _In_ ULONG AllocationAttributes,&#10;    _In_opt_ HANDLE FileHandle&#10;    );">NtCreateSection</a></code></li>

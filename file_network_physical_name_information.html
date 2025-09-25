@@ -55,15 +55,150 @@
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntioapi.h#L782">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">typedef struct _FILE_NETWORK_PHYSICAL_NAME_INFORMATION {
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FileNameLength;
+  WCHAR FileName[1];
+} FILE_NETWORK_PHYSICAL_NAME_INFORMATION, *PFILE_NETWORK_PHYSICAL_NAME_INFORMATION;</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_network_physical_name_information">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
 <h1>NtDoc</h1>
 </div>
-<div class="ntdoc-description ntdoc-description-selected">
+<div class="ntdoc-description">
 <p>This structure is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_network_physical_name_information">documented in Windows Driver Kit</a>.</p>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/file_network_physical_name_information.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows Driver Kit DDI reference (ns-ntifs-_file_network_physical_name_information)</h1>
+</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<h1 id="file_network_physical_name_information-structure">FILE_NETWORK_PHYSICAL_NAME_INFORMATION structure</h1>
+
+<h2 id="description">Description</h2>
+
+<p>The <strong>FILE_NETWORK_PHYSICAL_NAME_INFORMATION</strong> structure contains the full UNC physical pathname for a file or directory on a remote file share.</p>
+
+<h2 id="members">Members</h2>
+
+<h3 id="filenamelength"><code>FileNameLength</code></h3>
+
+<p>The length, in bytes, of the physical name in <strong>FileName</strong>.</p>
+
+<h3 id="filename"><code>FileName</code></h3>
+
+<p>The full UNC path of the network file share of the target.</p>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>The <strong>FILE_NETWORK_PHYSICAL_NAME_INFORMATION</strong> structure is used to retrieve the network physical name information for a file. This operation can be performed in either of the following ways:</p>
+
+<ul>
+<li><p>Call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile"><strong>ZwQueryInformationFile</strong></a>, passing <strong>FileNetworkPhysicalNameInformation</strong> as the value of <strong>FileInformationClass</strong> and passing a caller-allocated buffer formatted as a <strong>FILE_NETWORK_PHYSICAL_NAME_INFORMATION</strong> structure for the value of <strong>FileInformation</strong>. The <strong>FileHandle</strong> parameter specifies the file target for the name information.</p>
+
+<p>File system minifilters must use <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nf-fltkernel-fltqueryinformationfile"><strong>FltQueryInformationFile</strong></a> to query the physical name information.</p></li>
+<li><p>Create an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with major function code <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-query-information"><strong>IRP_MJ_QUERY_INFORMATION</strong></a>.</p></li>
+</ul>
+
+<p>The <strong>FileName</strong> of <strong>FILE_NETWORK_PHYSICAL_NAME_INFORMATION</strong> will contain the network name of the file target handle passed to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile"><strong>ZwQueryInformationFile</strong></a>. The physical network name returned is in the format of <strong>\;X:\Server\ShareName\Dir1\Dir2...\FileName</strong>.</p>
+
+<p>If the physical name is longer than the length set in <strong>FileNameLength</strong>, then STATUS_BUFFER_OVERFLOW is returned from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile"><strong>ZwQueryInformationFile</strong></a> and <strong>FileNameLength</strong> is updated with the number of bytes required to hold the entire name string. The count of characters in the name is <strong>FileNameLength</strong> / <strong>sizeof</strong>(WCHAR).</p>
+
+<p>In the case where a file is cached on a client and its network physical name is queried, the path returned in <strong>FileName</strong> may not be known to the client cache. The caching system may not associate the cached file with the file opened using the path returned in <strong>FileName</strong>.</p>
+
+<p>The following is an example of querying the network physical name information of a file target using <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile"><strong>ZwQueryInformationFile</strong></a>.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="nf">GetPhysicalNetworkName</span><span class="p">(</span><span class="n">HANDLE</span><span class="w"> </span><span class="n">Target</span><span class="p">,</span><span class="w"> </span><span class="n">WCHAR</span><span class="w"> </span><span class="o">*</span><span class="n">NetworkName</span><span class="p">,</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">MaxNetworkNameLength</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></span><span class="w"> </span><span class="n">IoStatus</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">NameInfoLength</span><span class="p">;</span>
+<span class="w">    </span><span class="n">PFILE_NETWORK_PHYSICAL_NAME_INFORMATION</span><span class="w"> </span><span class="n">NetFileNameInfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">MaxNetworkNameLength</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">WCHAR</span><span class="p">)</span><span class="w"> </span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">STATUS_NAME_TOO_LONG</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">NetworkName</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">STATUS_INVALID_PARAMETER</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">NetworkName</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">WCHAR</span><span class="p">)</span><span class="mi">0</span><span class="p">;</span><span class="w">  </span><span class="c1">// initially terminate the output string;</span>
+
+<span class="w">    </span><span class="c1">// set the initial name length, the one WCHAR in NetFileNameInfo.FileName is reserved for the terminating NULL</span>
+<span class="w">    </span><span class="n">NameInfoLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">PFILE_NETWORK_PHYSICAL_NAME_INFORMATION</span><span class="p">)</span><span class="w"> </span><span class="o">+</span>
+<span class="w">                     </span><span class="n">min</span><span class="p">(</span><span class="mi">1024</span><span class="p">,</span><span class="w"> </span><span class="n">MaxNetworkNameLength</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">WCHAR</span><span class="p">));</span>
+<span class="w">    </span><span class="n">NetFileNameInfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">PFILE_NETWORK_PHYSICAL_NAME_INFORMATION</span><span class="p">)</span><span class="n"><a href="exallocatepool" title="PVOID ExAllocatePool(&#10;  _In_ POOL_TYPE a,&#10;  _In_ SIZE_T b&#10;);">ExAllocatePool</a></span><span class="p">(</span><span class="n">PagedPool</span><span class="p">,</span><span class="w"> </span><span class="n">NameInfoLength</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">NetFileNameInfo</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STATUS_NO_MEMORY</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="ntqueryinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass&#10;    );">ZwQueryInformationFile</a></span><span class="p">(</span><span class="n">Target</span><span class="p">,</span>
+<span class="w">                                        </span><span class="o">&amp;</span><span class="n">IoStatus</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">NetFileNameInfo</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">NameInfoLength</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">FileNetworkPhysicalNameInformation</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">STATUS_BUFFER_OVERFLOW</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">NetFileNameInfo</span><span class="o">-&gt;</span><span class="n">FileNameLength</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="p">(</span><span class="n">MaxNetworkNameLength</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">WCHAR</span><span class="p">)))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">NameInfoLength</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">PFILE_NETWORK_PHYSICAL_NAME_INFORMATION</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">NetFileNameInfo</span><span class="o">-&gt;</span><span class="n">FileNameLength</span><span class="p">;</span>
+<span class="w">            </span><span class="n"><a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a></span><span class="p">(</span><span class="n">NetFileNameInfo</span><span class="p">);</span>
+<span class="w">            </span><span class="n">NetFileNameInfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">PFILE_NETWORK_PHYSICAL_NAME_INFORMATION</span><span class="p">)</span><span class="n"><a href="exallocatepool" title="PVOID ExAllocatePool(&#10;  _In_ POOL_TYPE a,&#10;  _In_ SIZE_T b&#10;);">ExAllocatePool</a></span><span class="p">(</span><span class="n">PagedPool</span><span class="p">,</span><span class="w"> </span><span class="n">NameInfoLength</span><span class="p">);</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">NetFileNameInfo</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STATUS_NO_MEMORY</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">else</span>
+<span class="w">            </span><span class="p">{</span>
+<span class="w">                </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="ntqueryinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass&#10;    );">ZwQueryInformationFile</a></span><span class="p">(</span><span class="n">Target</span><span class="p">,</span>
+<span class="w">                                                </span><span class="o">&amp;</span><span class="n">IoStatus</span><span class="p">,</span>
+<span class="w">                                                </span><span class="n">NetFileNameInfo</span><span class="p">,</span>
+<span class="w">                                                </span><span class="n">NameInfoLength</span><span class="p">,</span>
+<span class="w">                                                </span><span class="n">FileNetworkPhysicalNameInformation</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">NetFileNameInfo</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">NameInfoLength</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">min</span><span class="p">(</span><span class="n">NameInfoLength</span><span class="p">,</span><span class="w"> </span><span class="n">NetFileNameInfo</span><span class="o">-&gt;</span><span class="n">FileNameLength</span><span class="p">);</span>
+<span class="w">            </span><span class="n"><a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a></span><span class="p">(</span><span class="n">NetworkName</span><span class="p">,</span><span class="w"> </span><span class="n">NetFileNameInfo</span><span class="o">-&gt;</span><span class="n">FileName</span><span class="p">,</span><span class="w"> </span><span class="n">NameInfoLength</span><span class="p">);</span>
+<span class="w">            </span><span class="n">NetworkName</span><span class="p">[</span><span class="n">NameInfoLength</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">WCHAR</span><span class="p">)]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">WCHAR</span><span class="p">)</span><span class="mi">0</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="n"><a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a></span><span class="p">(</span><span class="n">NetFileNameInfo</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ne-wdm-_file_information_class"><strong>FILE_INFORMATION_CLASS</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-query-information"><strong>IRP_MJ_QUERY_INFORMATION</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntqueryinformationfile"><strong>ZwQueryInformationFile</strong></a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_network_physical_name_information">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/ns-ntifs-_file_network_physical_name_information.md">Edit description on GitHub</a>
 </div>
 </div>
 </div>

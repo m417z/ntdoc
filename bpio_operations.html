@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="BPIO_OPERATIONS - NtDoc, the native NT API online documentation">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>BPIO_OPERATIONS - NtDoc</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="manifest" href="icons/site.webmanifest">
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="icons/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+    <noscript id="dark-mode-toggle-stylesheets">
+        <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+    </noscript>
+    <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
+    <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
+    <link rel="stylesheet" href="modules/pygments-css.css">
+    <link rel="stylesheet" href="ntdoc.css">
+    <noscript>
+        <link rel="stylesheet" href="ntdoc-noscript.css">
+    </noscript>
+</head>
+<body>
+    <header>
+        <a href="."><img class="ntdoc-title-logo" src="logo.png" alt="logo"></a>
+        <h1 class="ntdoc-title">
+            BPIO_OPERATIONS - NtDoc
+        </h1>
+        <div class="ntdoc-subtitle">
+            Native API online documentation, based on the System Informer
+            (formerly Process Hacker) <a target="_blank"
+            href="https://github.com/winsiderss/systeminformer/tree/master/phnt">phnt
+            headers</a>
+        </div>
+        <div id="ntdoc-search-select"></div>
+    </header>
+    <div class="ntdoc-code-elements">
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntddstor.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">typedef enum _BPIO_OPERATIONS {
+  BPIO_OP_ENABLE,
+  BPIO_OP_DISABLE,
+  BPIO_OP_QUERY
+} BPIO_OPERATIONS;</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddstor/ne-ntddstor-bpio_operations">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
+</div>
+<div class="ntdoc-descriptions">
+<div class="ntdoc-description-title">
+<h1>NtDoc</h1>
+</div>
+<div class="ntdoc-description">
+<div class="ntdoc-description-none">
+<p>No description available.</p>
+</div>
+<div class="ntdoc-description-links">
+<a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/bpio_operations.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows Driver Kit DDI reference (ne-ntddstor-bpio_operations)</h1>
+</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<h2 id="description">Description</h2>
+
+<p><strong>BPIO_OPERATIONS</strong> defines the various BypassIO operations supported by the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddstor/ni-ntddstor-ioctl_storage_manage_bypass_io"><strong>IOCTL_STORAGE_MANAGE_BYPASS_IO</strong></a> control code.</p>
+
+<h2 id="constants">Constants</h2>
+
+<h3 id="bpio_op_enable"><code>BPIO_OP_ENABLE</code></h3>
+
+<p>Requests that BypassIO be enabled for the given volume or disk (device), which means that a driver might not see all reads/writes for that stack.</p>
+
+<blockquote>
+  <p>[!NOTE]
+  All drivers in the volume and storage stacks have the opportunity to veto the BypassIO enable request, but are encouraged to keep it enabled as much as possible.</p>
+</blockquote>
+
+<p>On the pre-operation:</p>
+
+<ul>
+<li>If a driver can support BypassIO for the given device, it should forward the request down the stack.</li>
+<li>If a driver cannot support BypassIO for the given device, it should:
+<ul>
+<li>Update the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddstor/ns-ntddstor-bpio_output"><strong>BPIO_OUTPUT</strong></a> structure, including the operation <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> describing why the enable request was vetoed, the driver's name, and a unique, descriptive string with additional details about why it vetoed the enable request.</li>
+<li>Complete <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddstor/ni-ntddstor-ioctl_storage_manage_bypass_io"><strong>IOCTL_STORAGE_MANAGE_BYPASS_IO</strong></a> with <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</li>
+</ul></li>
+</ul>
+
+<p>During the post-operation, the driver can see if all drivers below it are capable of supporting BypassIO. If yes, the driver should preserve any needed state for the file and continue completion processing. It is the driver's responsibility to maintain state to properly handle requests that might not be compatible with the BypassIO-enabled state.</p>
+
+<p>The file system maintains a per-volume count of how many files have BypassIO currently enabled. The <strong>BPIO_OP_ENABLE</strong> operation is sent only when this count transitions from zero to one.</p>
+
+<p>Even if a volume or storage stack driver vetoes BypassIO, the file system stack can continue to do BypassIO. This is because if someone has vetoed BypassIO on the volume stack, the file system can still bypass filters.</p>
+
+<h3 id="bpio_op_disable"><code>BPIO_OP_DISABLE</code></h3>
+
+<p>Requests that BypassIO be disabled for the given volume/disk. It allows a driver to cleanup any associated BypassIO state.</p>
+
+<p>The file system sends this operation when the last BypassIO-enabled file is disabled or closed (its per-volume count transitions from one to zero).</p>
+
+<p>If a driver receives <strong>BPIO_OP_DISABLE</strong> but does not currently have BypassIO enabled, it should ignore the request.</p>
+
+<p>This operation should not be failed.</p>
+
+<h3 id="bpio_op_query"><code>BPIO_OP_QUERY</code></h3>
+
+<p>Queries whether BypassIO can be enabled for the given volume or disk.</p>
+
+<p>A storage driver should process this request similar to a <strong>BPIO_OP_ENABLE</strong> operation, filling in the same diagnostic information in the appropriate fields in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddstor/ns-ntddstor-bpio_output"><strong>BPIO_OUTPUT</strong></a> structure. The major difference is that the driver does not enter the BypassIO ENABLE state during a QUERY.</p>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>See <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/bypassio">BypassIO for storage drivers</a> for more information.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddstor/ni-ntddstor-ioctl_storage_manage_bypass_io"><strong>IOCTL_STORAGE_MANAGE_BYPASS_IO</strong></a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddstor/ne-ntddstor-bpio_operations">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntddstor/ne-ntddstor-bpio_operations.md">Edit description on GitHub</a>
+</div>
+</div>
+</div>
+
+    <!-- For sticky footer: https://stackoverflow.com/a/34146411 -->
+    <div class="spacer"></div>
+    <footer>
+        By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
+        <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
+        <dark-mode-toggle permanent></dark-mode-toggle>
+    </footer>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YWF4NP61SX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YWF4NP61SX');
+    </script>
+    <script src="modules/jquery-3.7.0.min.js"></script>
+    <script src="modules/q-1.5.1.js"></script>
+    <script src="modules/virtual-select/virtual-select-jquery.min.js"></script>
+    <script src="modules/popper-2.11.8.min.js"></script>
+    <script src="modules/tippy-6.3.7.min.js"></script>
+    <script src="modules/anchor-5.0.0.min.js"></script>
+    <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
+    <script src="ntdoc.js"></script>
+</body>
+</html>

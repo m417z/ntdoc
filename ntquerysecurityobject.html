@@ -88,6 +88,28 @@ ZwQuerySecurityObject(
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntzwapi.h#L3411">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">__kernel_entry NTSYSCALLAPI <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NtQuerySecurityObject(
+  [in]  HANDLE               Handle,
+  [in]  SECURITY_INFORMATION SecurityInformation,
+  [out] PSECURITY_DESCRIPTOR SecurityDescriptor,
+  [in]  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                Length,
+  [out] PULONG               LengthNeeded
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntquerysecurityobject">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">NTSYSAPI <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ZwQuerySecurityObject(
+  [in]  HANDLE               Handle,
+  [in]  SECURITY_INFORMATION SecurityInformation,
+  [out] PSECURITY_DESCRIPTOR SecurityDescriptor,
+  [in]  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                Length,
+  [out] PULONG               LengthNeeded
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwquerysecurityobject">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -102,20 +124,268 @@ ZwQuerySecurityObject(
 </div>
 </div>
 <div class="ntdoc-description-title">
-<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+<h1>Windows Driver Kit DDI reference (nf-ntifs-ntquerysecurityobject)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
+<h1 id="ntquerysecurityobject-function">NtQuerySecurityObject function</h1>
+
+<h2 id="description">Description</h2>
+
+<p>The <strong>NtQuerySecurityObject</strong> routine retrieves a copy of an object's security descriptor.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="handle-in"><code>Handle</code> [in]</h3>
+
+<p>Handle for the object whose security descriptor is to be queried. This handle must have the access specified in the Meaning column of the table shown in the description of the <strong>SecurityInformation</strong> parameter.</p>
+
+<h3 id="securityinformation-in"><code>SecurityInformation</code> [in]</h3>
+
+<p>A <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/security-information"><strong>SECURITY_INFORMATION</strong></a> value specifying the information to be queried as a combination of one or more of the following.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Value</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>OWNER_SECURITY_INFORMATION</td>
+  <td>The object's owner identifier is being queried. Requires READ_CONTROL access.</td>
+</tr>
+<tr>
+  <td>GROUP_SECURITY_INFORMATION</td>
+  <td>The object's primary group identifier is being queried. Requires READ_CONTROL access.</td>
+</tr>
+<tr>
+  <td>SACL_SECURITY_INFORMATION</td>
+  <td>The object's system <a href="acl" title="typedef struct _ACL {&#10;  UCHAR  AclRevision;&#10;  UCHAR  Sbz1;&#10;  USHORT AclSize;&#10;  USHORT AceCount;&#10;  USHORT Sbz2;&#10;} ACL;">ACL</a> (SACL) is being queried. Requires ACCESS_SYSTEM_SECURITY access.</td>
+</tr>
+<tr>
+  <td>DACL_SECURITY_INFORMATION</td>
+  <td>The object's discretionary access control list (DACL) is being queried. Requires READ_CONTROL access.</td>
+</tr>
+</tbody>
+</table>
+
+<h3 id="securitydescriptor-out"><code>SecurityDescriptor</code> [out]</h3>
+
+<p>Caller-allocated buffer that <strong>NtQuerySecurityObject</strong> fills with a copy of the specified security descriptor. The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_security_descriptor"><strong>SECURITY_DESCRIPTOR</strong></a> structure is returned in self-relative format.</p>
+
+<h3 id="length-in"><code>Length</code> [in]</h3>
+
+<p>Size, in bytes, of the buffer pointed to by <strong>SecurityDescriptor</strong>.</p>
+
+<h3 id="lengthneeded-out"><code>LengthNeeded</code> [out]</h3>
+
+<p>Pointer to a caller-allocated variable that receives the number of bytes required to store the copied security descriptor.</p>
+
+<h2 id="return-value">Return value</h2>
+
+<p><strong>NtQuerySecurityObject</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate error status. Possible error status codes include the following:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Return code</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>STATUS_ACCESS_DENIED</td>
+  <td><strong>Handle</strong> did not have the required access.</td>
+</tr>
+<tr>
+  <td>STATUS_BUFFER_TOO_SMALL</td>
+  <td>The buffer is too small for the security descriptor. None of the security information was copied to the buffer.</td>
+</tr>
+<tr>
+  <td>STATUS_INVALID_HANDLE</td>
+  <td><strong>Handle</strong> was not a valid handle.</td>
+</tr>
+<tr>
+  <td>STATUS_OBJECT_TYPE_MISMATCH</td>
+  <td><strong>Handle</strong> was not a handle of the expected type.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>Minifilters should call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nf-fltkernel-fltquerysecurityobject"><strong>FltQuerySecurityObject</strong></a>.</p>
+
+<p>A security descriptor can be in absolute or self-relative form. In self-relative form, all members of the structure are located contiguously in memory. In absolute form, the structure only contains pointers to the members. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/secauthz/absolute-and-self-relative-security-descriptors">Absolute and Self-Relative Security Descriptors</a>.</p>
+
+<p>The NTFS file system imposes a 64K limit on the size of the security descriptor that is written to disk for a file. (The FAT file system does not support security descriptors for files.) Thus a 64K <strong>SecurityDescriptor</strong> buffer is guaranteed to be large enough to hold the returned <strong><a href="pisecurity_descriptor" title="typedef struct _SECURITY_DESCRIPTOR {&#10;  UCHAR                       Revision;&#10;  UCHAR                       Sbz1;&#10;  SECURITY_DESCRIPTOR_CONTROL Control;&#10;  PSID                        Owner;&#10;  PSID                        Group;&#10;  PACL                        Sacl;&#10;  PACL                        Dacl;&#10;} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;">SECURITY_DESCRIPTOR</a></strong> structure.</p>
+
+<p>For more information about security and access control, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/driversecurity/windows-security-model">Windows security model for driver developers</a> and the documentation on these topics in the Windows SDK.</p>
+
+<blockquote>
+  <p>[!NOTE]
+  If the call to the <strong>NtQuerySecurityObject</strong> function occurs in user mode, you should use the name "<strong>NtQuerySecurityObject</strong>" instead of "<strong>ZwQuerySecurityObject</strong>".</p>
+</blockquote>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nf-fltkernel-fltquerysecurityobject"><strong>FltQuerySecurityObject</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_security_descriptor"><strong>SECURITY_DESCRIPTOR</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/security-information"><strong>SECURITY_INFORMATION</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetsecurityobject"><strong>NtSetSecurityObject</strong></a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntquerysecurityobject">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/nf-ntifs-ntquerysecurityobject.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows Driver Kit DDI reference (nf-ntifs-zwquerysecurityobject)</h1>
+</div>
+<div class="ntdoc-description">
+<h1>ZwQuerySecurityObject function</h1>
+
+<h2>Description</h2>
+
+<p>The <strong>ZwQuerySecurityObject</strong> routine retrieves a copy of an object's security descriptor.</p>
+
+<h2>Parameters</h2>
+
+<h3><code>Handle</code> [in]</h3>
+
+<p>Handle for the object whose security descriptor is to be queried. This handle must have the access specified in the Meaning column of the table shown in the description of the <strong>SecurityInformation</strong> parameter.</p>
+
+<h3><code>SecurityInformation</code> [in]</h3>
+
+<p>A <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/security-information"><strong>SECURITY_INFORMATION</strong></a> value specifying the information to be queried as a combination of one or more of the following.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Value</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>OWNER_SECURITY_INFORMATION</td>
+  <td>The object's owner identifier is being queried. Requires READ_CONTROL access.</td>
+</tr>
+<tr>
+  <td>GROUP_SECURITY_INFORMATION</td>
+  <td>The object's primary group identifier is being queried. Requires READ_CONTROL access.</td>
+</tr>
+<tr>
+  <td>SACL_SECURITY_INFORMATION</td>
+  <td>The object's system <a href="acl" title="typedef struct _ACL {&#10;  UCHAR  AclRevision;&#10;  UCHAR  Sbz1;&#10;  USHORT AclSize;&#10;  USHORT AceCount;&#10;  USHORT Sbz2;&#10;} ACL;">ACL</a> (SACL) is being queried. Requires ACCESS_SYSTEM_SECURITY access.</td>
+</tr>
+<tr>
+  <td>DACL_SECURITY_INFORMATION</td>
+  <td>The object's discretionary access control list (DACL) is being queried. Requires READ_CONTROL access.</td>
+</tr>
+</tbody>
+</table>
+
+<h3><code>SecurityDescriptor</code> [out]</h3>
+
+<p>Caller-allocated buffer that <strong>ZwQuerySecurityObject</strong> fills with a copy of the specified security descriptor. The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_security_descriptor"><strong>SECURITY_DESCRIPTOR</strong></a> structure is returned in self-relative format.</p>
+
+<h3><code>Length</code> [in]</h3>
+
+<p>Size, in bytes, of the buffer pointed to by <strong>SecurityDescriptor</strong>.</p>
+
+<h3><code>LengthNeeded</code> [out]</h3>
+
+<p>Pointer to a caller-allocated variable that receives the number of bytes required to store the copied security descriptor.</p>
+
+<h2>Return value</h2>
+
+<p><strong>ZwQuerySecurityObject</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate error status. Possible error status codes include the following:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Return code</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>STATUS_ACCESS_DENIED</td>
+  <td><strong>Handle</strong> did not have the required access.</td>
+</tr>
+<tr>
+  <td>STATUS_BUFFER_TOO_SMALL</td>
+  <td>The buffer is too small for the security descriptor. None of the security information was copied to the buffer.</td>
+</tr>
+<tr>
+  <td>STATUS_INVALID_HANDLE</td>
+  <td><strong>Handle</strong> was not a valid handle.</td>
+</tr>
+<tr>
+  <td>STATUS_OBJECT_TYPE_MISMATCH</td>
+  <td><strong>Handle</strong> was not a handle of the expected type.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Remarks</h2>
+
+<p>A security descriptor can be in absolute or self-relative form. In self-relative form, all members of the structure are located contiguously in memory. In absolute form, the structure only contains pointers to the members. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/secauthz/absolute-and-self-relative-security-descriptors">Absolute and Self-Relative Security Descriptors</a>.</p>
+
+<p>The NTFS file system imposes a 64K limit on the size of the security descriptor that is written to disk for a file. (The FAT file system does not support security descriptors for files.) Thus a 64K <strong>SecurityDescriptor</strong> buffer is guaranteed to be large enough to hold the returned <strong><a href="pisecurity_descriptor" title="typedef struct _SECURITY_DESCRIPTOR {&#10;  UCHAR                       Revision;&#10;  UCHAR                       Sbz1;&#10;  SECURITY_DESCRIPTOR_CONTROL Control;&#10;  PSID                        Owner;&#10;  PSID                        Group;&#10;  PACL                        Sacl;&#10;  PACL                        Dacl;&#10;} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;">SECURITY_DESCRIPTOR</a></strong> structure.</p>
+
+<p>For more information about security and access control, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/driversecurity/windows-security-model">Windows security model for driver developers</a> and the documentation on these topics in the Windows SDK.</p>
+
+<p>Minifilters should call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nf-fltkernel-fltquerysecurityobject"><strong>FltQuerySecurityObject</strong></a> instead of <strong>ZwQuerySecurityObject</strong>.</p>
+
+<blockquote>
+  <p>[!NOTE]
+  If the call to the <strong>ZwQuerySecurityObject</strong> function occurs in user mode, you should use the name "<strong>NtQuerySecurityObject</strong>" instead of "<strong>ZwQuerySecurityObject</strong>".</p>
+</blockquote>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<h2>See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nf-fltkernel-fltquerysecurityobject"><strong>FltQuerySecurityObject</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_security_descriptor"><strong>SECURITY_DESCRIPTOR</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/security-information"><strong>SECURITY_INFORMATION</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwsetsecurityobject"><strong>ZwSetSecurityObject</strong></a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwquerysecurityobject">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/nf-ntifs-zwquerysecurityobject.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+</div>
+<div class="ntdoc-description">
 <p>This function is documented in Windows Driver Kit <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntquerysecurityobject">here</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwquerysecurityobject">here</a>.</p>
 
 <hr />
 
 <p>Function <code>NtQuerySecurityObject</code> retrieve object's Security Descriptor.</p>
 
-<h3 id="objecthandle">ObjectHandle</h3>
+<h3>ObjectHandle</h3>
 
 <p><code>HANDLE</code> to any object opened with <code>READ_CONTROL</code> access.</p>
 
-<h3 id="securityinformationclass">SecurityInformationClass</h3>
+<h3>SecurityInformationClass</h3>
 
 <p>Can be combination of:</p>
 
@@ -126,29 +396,29 @@ ZwQuerySecurityObject(
 <li><code>SACL_SECURITY_INFORMATION</code></li>
 </ul>
 
-<h3 id="descriptorbuffer">DescriptorBuffer</h3>
+<h3>DescriptorBuffer</h3>
 
-<p>Result of call - pointer to <code>SECURITY_DESCRIPTOR</code> structure.</p>
+<p>Result of call - pointer to <code><a href="pisecurity_descriptor" title="typedef struct _SECURITY_DESCRIPTOR {&#10;  UCHAR                       Revision;&#10;  UCHAR                       Sbz1;&#10;  SECURITY_DESCRIPTOR_CONTROL Control;&#10;  PSID                        Owner;&#10;  PSID                        Group;&#10;  PACL                        Sacl;&#10;  PACL                        Dacl;&#10;} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;">SECURITY_DESCRIPTOR</a></code> structure.</p>
 
-<h3 id="descriptorbufferlength">DescriptorBufferLength</h3>
+<h3>DescriptorBufferLength</h3>
 
 <p>Size of buffer, in bytes.</p>
 
-<h3 id="requiredlength">RequiredLength</h3>
+<h3>RequiredLength</h3>
 
 <p>Pointer to value receiving required length of buffer.</p>
 
-<h1 id="documented-by">Documented by</h1>
+<h1>Documented by</h1>
 
 <ul>
 <li>Tomasz Nowak</li>
 </ul>
 
-<h1 id="see-also">See also</h1>
+<h1>See also</h1>
 
 <ul>
 <li><code><a href="ntsetsecurityobject" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetSecurityObject(&#10;    _In_ HANDLE Handle,&#10;    _In_ SECURITY_INFORMATION SecurityInformation,&#10;    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor&#10;    );">NtSetSecurityObject</a></code></li>
-<li><code>SECURITY_DESCRIPTOR</code></li>
+<li><code><a href="pisecurity_descriptor" title="typedef struct _SECURITY_DESCRIPTOR {&#10;  UCHAR                       Revision;&#10;  UCHAR                       Sbz1;&#10;  SECURITY_DESCRIPTOR_CONTROL Control;&#10;  PSID                        Owner;&#10;  PSID                        Group;&#10;  PACL                        Sacl;&#10;  PACL                        Dacl;&#10;} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;">SECURITY_DESCRIPTOR</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntquerysecurityobject.md">Edit description on GitHub</a>

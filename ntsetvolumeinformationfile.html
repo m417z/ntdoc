@@ -83,6 +83,17 @@ ZwSetVolumeInformationFile(
 </span><span class="ntdoc-code-footer">
 #endif
 </span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/66e9024965df1192a53aee9b345a8df8f08d8beb/phnt/include/ntzwapi.h#L4563">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">NTSYSAPI <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ZwSetVolumeInformationFile(
+  [in]  HANDLE               FileHandle,
+  [out] <a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">PIO_STATUS_BLOCK</a>     IoStatusBlock,
+  [in]  PVOID                FsInformation,
+  [in]  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                Length,
+  [in]  <a href="fs_information_class" title="typedef enum _FSINFOCLASS&#10;{&#10;    FileFsVolumeInformation = 1, // q: FILE_FS_VOLUME_INFORMATION&#10;    FileFsLabelInformation, // s: FILE_FS_LABEL_INFORMATION (requires FILE_WRITE_DATA to volume)&#10;    FileFsSizeInformation, // q: FILE_FS_SIZE_INFORMATION&#10;    FileFsDeviceInformation, // q: FILE_FS_DEVICE_INFORMATION&#10;    FileFsAttributeInformation, // q: FILE_FS_ATTRIBUTE_INFORMATION&#10;    FileFsControlInformation, // q, s: FILE_FS_CONTROL_INFORMATION  (q: requires FILE_READ_DATA; s: requires FILE_WRITE_DATA to volume)&#10;    FileFsFullSizeInformation, // q: FILE_FS_FULL_SIZE_INFORMATION&#10;    FileFsObjectIdInformation, // q; s: FILE_FS_OBJECTID_INFORMATION (s: requires FILE_WRITE_DATA to volume)&#10;    FileFsDriverPathInformation, // q: FILE_FS_DRIVER_PATH_INFORMATION&#10;    FileFsVolumeFlagsInformation, // q; s: FILE_FS_VOLUME_FLAGS_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES to volume) // 10&#10;    FileFsSectorSizeInformation, // q: FILE_FS_SECTOR_SIZE_INFORMATION // since WIN8&#10;    FileFsDataCopyInformation, // q: FILE_FS_DATA_COPY_INFORMATION&#10;    FileFsMetadataSizeInformation, // q: FILE_FS_METADATA_SIZE_INFORMATION // since THRESHOLD&#10;    FileFsFullSizeInformationEx, // q: FILE_FS_FULL_SIZE_INFORMATION_EX // since REDSTONE5&#10;    FileFsGuidInformation, // q: FILE_FS_GUID_INFORMATION // since 23H2&#10;    FileFsMaximumInformation&#10;} FSINFOCLASS, *PFSINFOCLASS;">FS_INFORMATION_CLASS</a> FsInformationClass
+);</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwsetvolumeinformationfile">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -97,30 +108,149 @@ ZwSetVolumeInformationFile(
 </div>
 </div>
 <div class="ntdoc-description-title">
-<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+<h1>Windows Driver Kit DDI reference (nf-ntifs-zwsetvolumeinformationfile)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
+<h1 id="zwsetvolumeinformationfile-function">ZwSetVolumeInformationFile function</h1>
+
+<h2 id="description">Description</h2>
+
+<p>The <strong>ZwSetVolumeInformationFile</strong> routine modifies information about the volume associated with a given file, directory, storage device, or volume.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="filehandle-in"><code>FileHandle</code> [in]</h3>
+
+<p>Handle to a file object for an open file, directory, storage device, or volume whose volume information is to be modified.</p>
+
+<h3 id="iostatusblock-out"><code>IoStatusBlock</code> [out]</h3>
+
+<p>Pointer to an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_io_status_block">IO_STATUS_BLOCK</a> structure that receives the final completion status and information about the operation.</p>
+
+<h3 id="fsinformation-in"><code>FsInformation</code> [in]</h3>
+
+<p>Pointer to a caller-allocated buffer containing the volume information to be modified. The structure of the information in this buffer depends on the value of <em>FsInformationClass</em>, as shown in the following table.</p>
+
+<h3 id="length-in"><code>Length</code> [in]</h3>
+
+<p>Size in bytes of the buffer pointed to by <em>FsInformation</em>. The caller should set this parameter according to the given <em>FsInformationClass</em>.</p>
+
+<h3 id="fsinformationclass-in"><code>FsInformationClass</code> [in]</h3>
+
+<p>Type of volume information to be set. One of the following:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Value</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>FileFsControlInformation</strong></td>
+  <td>Set <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_fs_control_information">FILE_FS_CONTROL_INFORMATION</a> for the volume.</td>
+</tr>
+<tr>
+  <td><strong>FileFsLabelInformation</strong></td>
+  <td>Set <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/ns-ntddk-_file_fs_label_information">FILE_FS_LABEL_INFORMATION</a> for the volume.</td>
+</tr>
+<tr>
+  <td><strong>FileFsObjectIdInformation</strong></td>
+  <td>Set <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/ns-ntddk-_file_fs_objectid_information">FILE_FS_OBJECTID_INFORMATION</a> for the volume.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="return-value">Return value</h2>
+
+<p><strong>ZwSetVolumeInformationFile</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value such as one of the following:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Return code</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>STATUS_INFO_LENGTH_MISMATCH</strong></td>
+  <td>An invalid value was specified for <em>Length</em>. This is an error code.</td>
+</tr>
+<tr>
+  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+  <td><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwsetvolumeinformationfile">ZwSetVolumeInformationFile</a> encountered a pool allocation failure. This is an error code.</td>
+</tr>
+<tr>
+  <td><strong>STATUS_INVALID_INFO_CLASS</strong></td>
+  <td>An invalid value was specified for <em>FsInformationClass</em>. This is an error code.</td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="remarks">Remarks</h2>
+
+<p>To query volume information, call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwqueryvolumeinformationfile">ZwQueryVolumeInformationFile</a>.</p>
+
+<p>To change information about a file, call <strong>ZwSetVolumeInformationFile</strong>.</p>
+
+<p>Minifilters should use <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nf-fltkernel-fltsetinformationfile">FltSetInformationFile</a> instead of <strong>ZwSetVolumeInformationFile</strong>.</p>
+
+<p><strong>Note</strong> If the call to the <strong>ZwSetVolumeInformationFile</strong>function occurs in user mode, you should use the name "<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetinformationfile">NtSetInformationFile</a>" instead of "<strong>ZwSetVolumeInformationFile</strong>".</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_fs_control_information">FILE_FS_CONTROL_INFORMATION</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/ns-ntddk-_file_fs_label_information">FILE_FS_LABEL_INFORMATION</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/ns-ntddk-_file_fs_objectid_information">FILE_FS_OBJECTID_INFORMATION</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nf-fltkernel-fltsetinformationfile">FltSetInformationFile</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-set-volume-information">IRP_MJ_SET_VOLUME_INFORMATION</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwqueryvolumeinformationfile">ZwQueryVolumeInformationFile</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntsetinformationfile">ZwSetInformationFile</a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwsetvolumeinformationfile">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ntifs/nf-ntifs-zwsetvolumeinformationfile.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>NTinternals.net (undocumented.ntinternals.net)</h1>
+</div>
+<div class="ntdoc-description">
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwsetvolumeinformationfile">documented in Windows Driver Kit</a>.</p>
 
 <hr />
 
-<h3 id="filehandle">FileHandle</h3>
+<h3>FileHandle</h3>
 
 <p><code>HANDLE</code> to File Object.</p>
 
-<h3 id="iostatusblock">IoStatusBlock</h3>
+<h3>IoStatusBlock</h3>
 
 <p>IO result of call.</p>
 
-<h3 id="filesysteminformation">FileSystemInformation</h3>
+<h3>FileSystemInformation</h3>
 
 <p>Buffer containing information to set, depending on <code>FileSystemInformationClass</code> parameter.</p>
 
-<h3 id="length">Length</h3>
+<h3>Length</h3>
 
 <p>Length of <code>FileSystemInformation</code> buffer, in bytes.</p>
 
-<h3 id="filesysteminformationclass">FileSystemInformationClass</h3>
+<h3>FileSystemInformationClass</h3>
 
 <p>Class of information to set. See <code><a href="fs_information_class" title="typedef enum _FSINFOCLASS&#10;{&#10;    FileFsVolumeInformation = 1, // q: FILE_FS_VOLUME_INFORMATION&#10;    FileFsLabelInformation, // s: FILE_FS_LABEL_INFORMATION (requires FILE_WRITE_DATA to volume)&#10;    FileFsSizeInformation, // q: FILE_FS_SIZE_INFORMATION&#10;    FileFsDeviceInformation, // q: FILE_FS_DEVICE_INFORMATION&#10;    FileFsAttributeInformation, // q: FILE_FS_ATTRIBUTE_INFORMATION&#10;    FileFsControlInformation, // q, s: FILE_FS_CONTROL_INFORMATION  (q: requires FILE_READ_DATA; s: requires FILE_WRITE_DATA to volume)&#10;    FileFsFullSizeInformation, // q: FILE_FS_FULL_SIZE_INFORMATION&#10;    FileFsObjectIdInformation, // q; s: FILE_FS_OBJECTID_INFORMATION (s: requires FILE_WRITE_DATA to volume)&#10;    FileFsDriverPathInformation, // q: FILE_FS_DRIVER_PATH_INFORMATION&#10;    FileFsVolumeFlagsInformation, // q; s: FILE_FS_VOLUME_FLAGS_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES to volume) // 10&#10;    FileFsSectorSizeInformation, // q: FILE_FS_SECTOR_SIZE_INFORMATION // since WIN8&#10;    FileFsDataCopyInformation, // q: FILE_FS_DATA_COPY_INFORMATION&#10;    FileFsMetadataSizeInformation, // q: FILE_FS_METADATA_SIZE_INFORMATION // since THRESHOLD&#10;    FileFsFullSizeInformationEx, // q: FILE_FS_FULL_SIZE_INFORMATION_EX // since REDSTONE5&#10;    FileFsGuidInformation, // q: FILE_FS_GUID_INFORMATION // since 23H2&#10;    FileFsMaximumInformation&#10;} FSINFOCLASS, *PFSINFOCLASS;">FS_INFORMATION_CLASS</a></code> for valid information classes.</p>
 
@@ -128,14 +258,14 @@ ZwSetVolumeInformationFile(
 
 <p><code>NtSetVolumeInformationFile</code> sets information to volume (device) containing file specified in <code>FileHandle</code> parameter.</p>
 
-<h1 id="documented-by">Documented by</h1>
+<h1>Documented by</h1>
 
 <ul>
 <li>Tomasz Nowak</li>
 <li>Bo Branten</li>
 </ul>
 
-<h1 id="see-also">See also</h1>
+<h1>See also</h1>
 
 <ul>
 <li><code><a href="fs_information_class" title="typedef enum _FSINFOCLASS&#10;{&#10;    FileFsVolumeInformation = 1, // q: FILE_FS_VOLUME_INFORMATION&#10;    FileFsLabelInformation, // s: FILE_FS_LABEL_INFORMATION (requires FILE_WRITE_DATA to volume)&#10;    FileFsSizeInformation, // q: FILE_FS_SIZE_INFORMATION&#10;    FileFsDeviceInformation, // q: FILE_FS_DEVICE_INFORMATION&#10;    FileFsAttributeInformation, // q: FILE_FS_ATTRIBUTE_INFORMATION&#10;    FileFsControlInformation, // q, s: FILE_FS_CONTROL_INFORMATION  (q: requires FILE_READ_DATA; s: requires FILE_WRITE_DATA to volume)&#10;    FileFsFullSizeInformation, // q: FILE_FS_FULL_SIZE_INFORMATION&#10;    FileFsObjectIdInformation, // q; s: FILE_FS_OBJECTID_INFORMATION (s: requires FILE_WRITE_DATA to volume)&#10;    FileFsDriverPathInformation, // q: FILE_FS_DRIVER_PATH_INFORMATION&#10;    FileFsVolumeFlagsInformation, // q; s: FILE_FS_VOLUME_FLAGS_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES to volume) // 10&#10;    FileFsSectorSizeInformation, // q: FILE_FS_SECTOR_SIZE_INFORMATION // since WIN8&#10;    FileFsDataCopyInformation, // q: FILE_FS_DATA_COPY_INFORMATION&#10;    FileFsMetadataSizeInformation, // q: FILE_FS_METADATA_SIZE_INFORMATION // since THRESHOLD&#10;    FileFsFullSizeInformationEx, // q: FILE_FS_FULL_SIZE_INFORMATION_EX // since REDSTONE5&#10;    FileFsGuidInformation, // q: FILE_FS_GUID_INFORMATION // since 23H2&#10;    FileFsMaximumInformation&#10;} FSINFOCLASS, *PFSINFOCLASS;">FS_INFORMATION_CLASS</a></code></li>
