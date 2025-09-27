@@ -78,7 +78,7 @@
 
 <h3 id="hxcv-in"><code>hXcv</code> [in]</h3>
 
-<p>Caller-supplied printer handle, obtained by calling <strong>OpenPrinter</strong> (described in the Microsoft Windows SDK documentation). This handle is created and returned by the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-xcvopenport">XcvOpenPort</a> function.</p>
+<p>Caller-supplied printer handle, obtained by calling <strong>OpenPrinter</strong> (described in the Microsoft Windows SDK documentation). This handle is created and returned by the <a rel="noopener" target="_blank" href="xcvopenport">XcvOpenPort</a> function.</p>
 
 <h3 id="pszdataname-in"><code>pszDataName</code> [in]</h3>
 
@@ -125,7 +125,7 @@
 
 <h2 id="remarks">Remarks</h2>
 
-<p>Port monitor server DLLs are required to define an <strong>XcvDataPort</strong> function so they can receive information from, and return information to, a port monitor UI DLL. The function's address must be included in a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/ns-winsplp-_monitor2"><strong>MONITOR2</strong></a> structure.</p>
+<p>Port monitor server DLLs are required to define an <strong>XcvDataPort</strong> function so they can receive information from, and return information to, a port monitor UI DLL. The function's address must be included in a <a rel="noopener" target="_blank" href="monitor2"><strong>MONITOR2</strong></a> structure.</p>
 
 <p>The <strong>XcvDataPort</strong> function is called by the spooler's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a> function. The function parameters for <strong>XcvDataPort</strong> and <strong>XcvData</strong> are almost identical. (<strong>XcvData</strong> has an additional parameter, <em>pdwStatus</em>, that is not present in <strong>XcvDataPort</strong>.)</p>
 
@@ -141,11 +141,11 @@
 <tbody>
 <tr>
   <td>L"AddPort"</td>
-  <td>All information needed for adding a port has been sent. The function should perform operations necessary to add the specified port, including writing the port name in the registry under the Ports key. The <em>pInputData</em> parameter points to a NULL-terminated port name string. If the function returns ERROR_SUCCESS, the spooler marks the port as added. This string is specified by the print monitor UI DLL, from within its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-addportui">AddPortUI</a> function.</td>
+  <td>All information needed for adding a port has been sent. The function should perform operations necessary to add the specified port, including writing the port name in the registry under the Ports key. The <em>pInputData</em> parameter points to a NULL-terminated port name string. If the function returns ERROR_SUCCESS, the spooler marks the port as added. This string is specified by the print monitor UI DLL, from within its <a rel="noopener" target="_blank" href="addportui">AddPortUI</a> function.</td>
 </tr>
 <tr>
   <td>L"DeletePort"</td>
-  <td>All information needed for deleting a port has been sent. The function should perform operations necessary to delete the specified port, including removing the port name from the registry's Ports key. The <em>pInputData</em> parameter points to a NULL-terminated port name string. If the function returns ERROR_SUCCESS, the spooler marks the port as deleted. This string is specified by the print monitor UI DLL, from within its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-deleteportui">DeletePortUI</a> function.</td>
+  <td>All information needed for deleting a port has been sent. The function should perform operations necessary to delete the specified port, including removing the port name from the registry's Ports key. The <em>pInputData</em> parameter points to a NULL-terminated port name string. If the function returns ERROR_SUCCESS, the spooler marks the port as deleted. This string is specified by the print monitor UI DLL, from within its <a rel="noopener" target="_blank" href="deleteportui">DeletePortUI</a> function.</td>
 </tr>
 <tr>
   <td>L"MonitorUI"</td>
@@ -154,14 +154,14 @@
 </tbody>
 </table>
 
-<p>Typically, the function is written to recognize additional, customized strings that are sent by the UI DLL from within its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-addportui">AddPortUI</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-configureportui">ConfigurePortUI</a>, and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-deleteportui">DeletePortUI</a> functions. These strings might represent commands that request current configuration values from the server DLL, or that deliver new values. For example, your <strong>XcvDataPort</strong> function might recognize the string "GetTransmissionRetryTimeout", which your UI DLL could send to your server DLL to request the currently stored transmission retry time-out value. Or, you might define a set of strings that must be sent before "AddPort" or "DeletePort" is sent, where the strings are used to supply information identifying the port to add or delete.</p>
+<p>Typically, the function is written to recognize additional, customized strings that are sent by the UI DLL from within its <a rel="noopener" target="_blank" href="addportui">AddPortUI</a>, <a rel="noopener" target="_blank" href="configureportui">ConfigurePortUI</a>, and <a rel="noopener" target="_blank" href="deleteportui">DeletePortUI</a> functions. These strings might represent commands that request current configuration values from the server DLL, or that deliver new values. For example, your <strong>XcvDataPort</strong> function might recognize the string "GetTransmissionRetryTimeout", which your UI DLL could send to your server DLL to request the currently stored transmission retry time-out value. Or, you might define a set of strings that must be sent before "AddPort" or "DeletePort" is sent, where the strings are used to supply information identifying the port to add or delete.</p>
 
 <p>For a given <em>pszDataName</em> string and input buffer, <strong>XcvDataPort</strong> might first be called with a <em>cbOutputData</em> value of zero. The function should return a required buffer size in <em>pcbOutputNeeded</em>, along with a return value of ERROR_INSUFFICIENT_BUFFER. The caller can use the value received in <em>pcbOutputNeeded</em> to allocate an output buffer of adequate size, and can then call <strong>XcvDataPort</strong> again, this time specifying the allocated buffer size in <em>cbOutputData</em>.</p>
 
 <p>The <strong>XcvDataPort</strong> function must validate all input arguments. Specifically, the function must:</p>
 
 <ul>
-<li><p>Validate the contents of the string pointed to by the <em>pszDataName</em> parameter. If this string represents an administrative operation (typically adding, deleting, or configuring a port), the <strong>XcvDataPort</strong> function should compare the granted access mask that was previously received by the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-xcvopenport">XcvOpenPort</a> function with SERVER_ACCESS_ADMINISTER. If the comparison fails, <strong>XcvDataPort</strong> must return ERROR_ACCESS_DENIED.</p></li>
+<li><p>Validate the contents of the string pointed to by the <em>pszDataName</em> parameter. If this string represents an administrative operation (typically adding, deleting, or configuring a port), the <strong>XcvDataPort</strong> function should compare the granted access mask that was previously received by the <a rel="noopener" target="_blank" href="xcvopenport">XcvOpenPort</a> function with SERVER_ACCESS_ADMINISTER. If the comparison fails, <strong>XcvDataPort</strong> must return ERROR_ACCESS_DENIED.</p></li>
 <li><p>Validate the contents of the buffer pointed to by the <em>pInputData</em> parameter. When the spooler calls the <strong><a href="xcvopenport" title="BOOL XcvOpenPort(&#10;  LPCWSTR     pszObject,&#10;  ACCESS_MASK GrantedAccess,&#10;  PHANDLE     phXcv&#10;);">XcvOpenPort</a></strong> function, it performs no validation on the contents of this buffer. The monitor can make no assumptions about the validity of this data, which can come from a malicious application.</p></li>
 </ul>
 
@@ -169,13 +169,13 @@
 
 <h2 id="see-also">See also</h2>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-xcvopenport">XcvOpenPort</a></p>
+<p><a rel="noopener" target="_blank" href="xcvopenport">XcvOpenPort</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-deleteportui">DeletePortUI</a></p>
+<p><a rel="noopener" target="_blank" href="deleteportui">DeletePortUI</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-configureportui">ConfigurePortUI</a></p>
+<p><a rel="noopener" target="_blank" href="configureportui">ConfigurePortUI</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/winsplp/nf-winsplp-addportui">AddPortUI</a></p>
+<p><a rel="noopener" target="_blank" href="addportui">AddPortUI</a></p>
 
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a></p>
 <hr>

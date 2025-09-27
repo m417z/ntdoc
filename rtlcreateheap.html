@@ -114,7 +114,7 @@ RtlCreateHeap(
 
 <h3 id="flags-in"><code>Flags</code> [in]</h3>
 
-<p>Flags specifying optional attributes of the heap. These options affect subsequent access to the new heap through calls to the heap functions (<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlallocateheap"><strong>RtlAllocateHeap</strong></a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlfreeheap"><strong>RtlFreeHeap</strong></a>).</p>
+<p>Flags specifying optional attributes of the heap. These options affect subsequent access to the new heap through calls to the heap functions (<a rel="noopener" target="_blank" href="rtlallocateheap"><strong>RtlAllocateHeap</strong></a> and <a rel="noopener" target="_blank" href="rtlfreeheap"><strong>RtlFreeHeap</strong></a>).</p>
 
 <p>Callers should set this parameter to zero if no optional attributes are requested.</p>
 
@@ -192,11 +192,11 @@ RtlCreateHeap(
 
 <h3 id="lock-in-optional"><code>Lock</code> [in, optional]</h3>
 
-<p>Pointer to an opaque ERESOURCE structure to be used as a resource lock. This parameter is optional and can be NULL. When provided by the caller, the structure must be allocated from nonpaged pool and initialized by calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-exinitializeresourcelite"><strong>ExInitializeResourceLite</strong></a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-exreinitializeresourcelite"><strong>ExReinitializeResourceLite</strong></a>. If the HEAP_NO_SERIALIZE flag is set, this parameter must be NULL.</p>
+<p>Pointer to an opaque ERESOURCE structure to be used as a resource lock. This parameter is optional and can be NULL. When provided by the caller, the structure must be allocated from nonpaged pool and initialized by calling <a rel="noopener" target="_blank" href="exinitializeresourcelite"><strong>ExInitializeResourceLite</strong></a> or <a rel="noopener" target="_blank" href="exreinitializeresourcelite"><strong>ExReinitializeResourceLite</strong></a>. If the HEAP_NO_SERIALIZE flag is set, this parameter must be NULL.</p>
 
 <h3 id="parameters-in-optional"><code>Parameters</code> [in, optional]</h3>
 
-<p>Pointer to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-rtl_heap_parameters"><strong>RTL_HEAP_PARAMETERS</strong></a> structure that contains parameters to be applied when creating the heap. This parameter is optional and can be NULL.</p>
+<p>Pointer to a <a rel="noopener" target="_blank" href="rtl_heap_parameters"><strong>RTL_HEAP_PARAMETERS</strong></a> structure that contains parameters to be applied when creating the heap. This parameter is optional and can be NULL.</p>
 
 <h2 id="return-value">Return value</h2>
 
@@ -213,19 +213,19 @@ RtlCreateHeap(
 
 <h2 id="remarks">Remarks</h2>
 
-<p><strong>RtlCreateHeap</strong> creates a private heap object from which the calling process can allocate memory blocks by calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlallocateheap"><strong>RtlAllocateHeap</strong></a>. The initial commit size determines the number of pages that are initially allocated for the heap. The initial reserve size determines the number of pages that are initially reserved for the heap. Pages that are reserved but uncommitted create a block in the process's virtual address space into which the heap can expand.</p>
+<p><strong>RtlCreateHeap</strong> creates a private heap object from which the calling process can allocate memory blocks by calling <a rel="noopener" target="_blank" href="rtlallocateheap"><strong>RtlAllocateHeap</strong></a>. The initial commit size determines the number of pages that are initially allocated for the heap. The initial reserve size determines the number of pages that are initially reserved for the heap. Pages that are reserved but uncommitted create a block in the process's virtual address space into which the heap can expand.</p>
 
-<p>If allocation requests made by <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlallocateheap"><strong>RtlAllocateHeap</strong></a> exceed the heap's initial commit size, the system commits additional pages of physical storage for the heap, up to the heap's maximum size. If the heap is nongrowable, its maximum size is limited to its initial reserve size.</p>
+<p>If allocation requests made by <a rel="noopener" target="_blank" href="rtlallocateheap"><strong>RtlAllocateHeap</strong></a> exceed the heap's initial commit size, the system commits additional pages of physical storage for the heap, up to the heap's maximum size. If the heap is nongrowable, its maximum size is limited to its initial reserve size.</p>
 
-<p>If the heap is growable, its size is limited only by available memory. If requests by <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlallocateheap"><strong>RtlAllocateHeap</strong></a> exceed the current size of committed pages, the system calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwallocatevirtualmemory"><strong>ZwAllocateVirtualMemory</strong></a> to obtain the memory needed, assuming that the physical storage is available.</p>
+<p>If the heap is growable, its size is limited only by available memory. If requests by <a rel="noopener" target="_blank" href="rtlallocateheap"><strong>RtlAllocateHeap</strong></a> exceed the current size of committed pages, the system calls <a rel="noopener" target="_blank" href="ntallocatevirtualmemory"><strong>ZwAllocateVirtualMemory</strong></a> to obtain the memory needed, assuming that the physical storage is available.</p>
 
 <p>In addition, if the heap is nongrowable, an absolute limitation arises: the maximum size of a memory block in the heap is 0x7F000 bytes. The virtual memory threshold of the heap is equal to the maximum heap block size or the value of the <strong>VirtualMemoryThreshold</strong> member of the <strong>Parameters</strong> structure, whichever is less. The heap also may need to pad the request size for metadata and alignment purposes so requests to allocate blocks within 4096 Bytes (1 Page) of the <strong>VirtualMemoryThreshold</strong> may fail even if the maximum size of the heap is large enough to contain the block. (For more information about <strong>VirtualMemoryThreshold</strong>, see the members of the <strong>Parameters</strong> parameter to <strong>RtlCreateHeap</strong>.)</p>
 
-<p>If the heap is growable, requests to allocate blocks larger than the heap's virtual memory threshold do not automatically fail; the system calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwallocatevirtualmemory"><strong>ZwAllocateVirtualMemory</strong></a> to obtain the memory needed for such large blocks.</p>
+<p>If the heap is growable, requests to allocate blocks larger than the heap's virtual memory threshold do not automatically fail; the system calls <a rel="noopener" target="_blank" href="ntallocatevirtualmemory"><strong>ZwAllocateVirtualMemory</strong></a> to obtain the memory needed for such large blocks.</p>
 
 <p>The memory of a private heap object is accessible only to the process that created it.</p>
 
-<p>The system uses memory from the private heap to store heap support structures, so not all of the specified heap size is available to the process. For example, if <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlallocateheap"><strong>RtlAllocateHeap</strong></a> requests 64 kilobytes (K) from a heap with a maximum size of 64K, the request may fail because of system overhead.</p>
+<p>The system uses memory from the private heap to store heap support structures, so not all of the specified heap size is available to the process. For example, if <a rel="noopener" target="_blank" href="rtlallocateheap"><strong>RtlAllocateHeap</strong></a> requests 64 kilobytes (K) from a heap with a maximum size of 64K, the request may fail because of system overhead.</p>
 
 <p>If HEAP_NO_SERIALIZE is not specified (the simple default), the heap will serialize access within the calling process. Serialization ensures mutual exclusion when two or more threads attempt to simultaneously allocate or free blocks from the same heap. There is a small performance cost to serialization, but it must be used whenever multiple threads allocate and free memory from the same heap.</p>
 
@@ -244,11 +244,11 @@ RtlCreateHeap(
 
 <h2 id="see-also">See also</h2>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlallocateheap"><strong>RtlAllocateHeap</strong></a></p>
+<p><a rel="noopener" target="_blank" href="rtlallocateheap"><strong>RtlAllocateHeap</strong></a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtldestroyheap"><strong>RtlDestroyHeap</strong></a></p>
+<p><a rel="noopener" target="_blank" href="rtldestroyheap"><strong>RtlDestroyHeap</strong></a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlfreeheap"><strong>RtlFreeHeap</strong></a></p>
+<p><a rel="noopener" target="_blank" href="rtlfreeheap"><strong>RtlFreeHeap</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

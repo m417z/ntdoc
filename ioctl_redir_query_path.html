@@ -80,7 +80,7 @@
 
 <p>For network redirectors that conform to the Windows Vista redirector model, MUP is involved even when a mapped network drive is used. File operations performed on the mapped drive go through MUP to the network redirector. Note that in this case, MUP simply passes the operation to the network redirector that is involved.</p>
 
-<p>The <strong>IOCTL_REDIR_QUERY_PATH</strong> control code is sent to network redirectors that have registered with MUP as Universal Naming Convention (UNC) providers by calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-_fsrtl_advanced_fcb_header-fsrtlregisteruncprovider"><strong>FsRtlRegisterUncProvider</strong></a>. There can be multiple UNC providers registered with MUP.</p>
+<p>The <strong>IOCTL_REDIR_QUERY_PATH</strong> control code is sent to network redirectors that have registered with MUP as Universal Naming Convention (UNC) providers by calling <a rel="noopener" target="_blank" href="fsrtlregisteruncprovider"><strong>FsRtlRegisterUncProvider</strong></a>. There can be multiple UNC providers registered with MUP.</p>
 
 <p>The prefix resolution operation serves two purposes:</p>
 
@@ -97,7 +97,7 @@
 
 <h3 id="input-buffer">Input buffer</h3>
 
-<p><strong>IrpSp->Parameters.DeviceIoControl.Type3InputBuffer</strong> is set to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-query_path_request"><strong>QUERY_PATH_REQUEST</strong></a> data structure that contains the request.</p>
+<p><strong>IrpSp->Parameters.DeviceIoControl.Type3InputBuffer</strong> is set to a <a rel="noopener" target="_blank" href="query_path_request"><strong>QUERY_PATH_REQUEST</strong></a> data structure that contains the request.</p>
 
 <h3 id="input-buffer-length">Input buffer length</h3>
 
@@ -105,7 +105,7 @@
 
 <h3 id="output-buffer">Output buffer</h3>
 
-<p><strong><a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>->UserBuffer</strong> is set to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-query_path_response"><strong>QUERY_PATH_RESPONSE</strong></a> data structure that contains the response.</p>
+<p><strong><a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>->UserBuffer</strong> is set to a <a rel="noopener" target="_blank" href="query_path_response"><strong>QUERY_PATH_RESPONSE</strong></a> data structure that contains the response.</p>
 
 <h3 id="output-buffer-length">Output buffer length</h3>
 
@@ -149,7 +149,7 @@
 </tr>
 <tr>
   <td>STATUS_INVALID_PARAMETER</td>
-  <td>The <strong>PathNameLength</strong> member in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-query_path_request"><strong>QUERY_PATH_REQUEST</strong></a> structure exceeds the maximum allowable length, UNICODE_STRING_MAX_BYTES, for a Unicode string.</td>
+  <td>The <strong>PathNameLength</strong> member in the <a rel="noopener" target="_blank" href="query_path_request"><strong>QUERY_PATH_REQUEST</strong></a> structure exceeds the maximum allowable length, UNICODE_STRING_MAX_BYTES, for a Unicode string.</td>
 </tr>
 <tr>
   <td>STATUS_LOGON_FAILURE or STATUS_ACCESS_DENIED</td>
@@ -166,7 +166,7 @@
 
 <p>Note that IOCTL_REDIR_QUERY_PATH is a METHOD_NEITHER IOCTL. This means that the input and output buffers might not be at the same address. A common mistake by UNC providers is to assume that the input buffer and the output buffer are the same and to use the input buffer pointer to provide the response.</p>
 
-<p>When a UNC provider receives an IOCTL_REDIR_QUERY_PATH request, it has to determine whether it can handle the UNC path specified in the **FilePathName** member of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-query_path_request">**QUERY_PATH_REQUEST**</a> structure. If so, it has to update the **LengthAccepted** member of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-query_path_response">**QUERY_PATH_RESPONSE**</a> structure with the length, in bytes, of the prefix it has claimed and complete the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. If the provider cannot handle the UNC path specified, it must fail the IOCTL_REDIR_QUERY_PATH request with an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code and must not update the <strong>LengthAccepted</strong> member of the <strong><a href="query_path_response" title="typedef struct _QUERY_PATH_RESPONSE {&#10;  ULONG LengthAccepted;&#10;} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;">QUERY_PATH_RESPONSE</a></strong> structure. Providers must not modify any of the other members or the <strong>FilePathName</strong> string under any condition.</p>
+<p>When a UNC provider receives an IOCTL_REDIR_QUERY_PATH request, it has to determine whether it can handle the UNC path specified in the **FilePathName** member of the <a rel="noopener" target="_blank" href="query_path_request">**QUERY_PATH_REQUEST**</a> structure. If so, it has to update the **LengthAccepted** member of the <a rel="noopener" target="_blank" href="query_path_response">**QUERY_PATH_RESPONSE**</a> structure with the length, in bytes, of the prefix it has claimed and complete the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. If the provider cannot handle the UNC path specified, it must fail the IOCTL_REDIR_QUERY_PATH request with an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code and must not update the <strong>LengthAccepted</strong> member of the <strong><a href="query_path_response" title="typedef struct _QUERY_PATH_RESPONSE {&#10;  ULONG LengthAccepted;&#10;} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;">QUERY_PATH_RESPONSE</a></strong> structure. Providers must not modify any of the other members or the <strong>FilePathName</strong> string under any condition.</p>
 
 <p>The length of the prefix claimed by the provider depends on an individual UNC provider. Most providers usually claim the \\<em>servername</em>\<em>sharename</em> part of a path of the form \\<em>servername</em>\<em>sharename</em>\<em>path</em>. For example, if a provider claimed \\<em>server</em>\<em>public</em> given a path \\<em>server</em>\<em>public</em>\<em>dir1</em>\<em>dir2</em>, all name-based operations for the prefix \\<em>server</em>\<em>public</em> (\\<em>server</em>\<em>public</em>\<em>file1</em>, for example) will be routed to that provider automatically without any prefix resolution because the prefix is already in the prefix cache. However, a path with the prefix \\<em>server</em>\<em>marketing</em>\<em>presentation</em> will go through prefix resolution.</p>
 
@@ -181,13 +181,13 @@
 
 <h2 id="see-also">See also</h2>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-fsrtlderegisteruncprovider"><strong>FsRtlDeregisterUncProvider</strong></a></p>
+<p><a rel="noopener" target="_blank" href="fsrtlderegisteruncprovider"><strong>FsRtlDeregisterUncProvider</strong></a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-_fsrtl_advanced_fcb_header-fsrtlregisteruncprovider"><strong>FsRtlRegisterUncProvider</strong></a></p>
+<p><a rel="noopener" target="_blank" href="fsrtlregisteruncprovider"><strong>FsRtlRegisterUncProvider</strong></a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-_fsrtl_advanced_fcb_header-fsrtlregisteruncproviderex"><strong>FsRtlRegisterUncProviderEx</strong></a></p>
+<p><a rel="noopener" target="_blank" href="fsrtlregisteruncproviderex"><strong>FsRtlRegisterUncProviderEx</strong></a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ni-ntifs-ioctl_redir_query_path_ex"><strong>IOCTL_REDIR_QUERY_PATH_EX</strong></a></p>
+<p><a rel="noopener" target="_blank" href="ioctl_redir_query_path_ex"><strong>IOCTL_REDIR_QUERY_PATH_EX</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

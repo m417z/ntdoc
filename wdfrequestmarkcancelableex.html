@@ -112,7 +112,7 @@
 
 <h2 id="remarks">Remarks</h2>
 
-<p>After your driver has <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/receiving-i-o-requests">received an I/O request</a> from the framework, the driver can call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestmarkcancelable">WdfRequestMarkCancelable</a> or, starting with KMDF version 1.9, <strong>WdfRequestMarkCancelableEx</strong> to make the request cancelable. For info on choosing between the two methods, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestmarkcancelable">WdfRequestMarkCancelable</a>.</p>
+<p>After your driver has <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/receiving-i-o-requests">received an I/O request</a> from the framework, the driver can call <a rel="noopener" target="_blank" href="wdfrequestmarkcancelable">WdfRequestMarkCancelable</a> or, starting with KMDF version 1.9, <strong>WdfRequestMarkCancelableEx</strong> to make the request cancelable. For info on choosing between the two methods, see <a rel="noopener" target="_blank" href="wdfrequestmarkcancelable">WdfRequestMarkCancelable</a>.</p>
 
 <p>When calling <strong>WdfRequestMarkCancelableEx</strong>, your driver must specify an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function. The framework calls the callback function if the I/O manager or another driver is attempting to cancel the I/O request.</p>
 
@@ -120,28 +120,28 @@
 
 <ol>
 <li>Finish or stop processing the request, along with subrequests that it might have created.</li>
-<li>Call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestcomplete">WdfRequestComplete</a>, specifying a status value of STATUS_CANCELLED.</li>
+<li>Call <a rel="noopener" target="_blank" href="wdfrequestcomplete">WdfRequestComplete</a>, specifying a status value of STATUS_CANCELLED.</li>
 </ol>
 
 <p>See the code examples below for implementation.</p>
 
-<p>Because <strong>WdfRequestMarkCancelableEx</strong> never calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a>, this method is safe from the deadlock risk described in the Remarks of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestmarkcancelable">WdfRequestMarkCancelable</a>.</p>
+<p>Because <strong>WdfRequestMarkCancelableEx</strong> never calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a>, this method is safe from the deadlock risk described in the Remarks of <a rel="noopener" target="_blank" href="wdfrequestmarkcancelable">WdfRequestMarkCancelable</a>.</p>
 
 <h3 id="processing-a-request-after-enabling-cancellation">Processing a request after enabling cancellation</h3>
 
-<p>After a driver calls <strong>WdfRequestMarkCancelableEx</strong> to enable canceling, the request remains cancelable while the driver <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/request-ownership">owns</a> the request object, unless the driver calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a>.</p>
+<p>After a driver calls <strong>WdfRequestMarkCancelableEx</strong> to enable canceling, the request remains cancelable while the driver <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/request-ownership">owns</a> the request object, unless the driver calls <a rel="noopener" target="_blank" href="wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a>.</p>
 
-<p>If a driver has called <strong>WdfRequestMarkCancelableEx</strong>, and if the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function has not executed and called <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestcomplete">WdfRequestComplete</a>, the driver must call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a> before it calls <strong><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></strong> outside of the <em>EvtRequestCancel</em> callback function.</p>
+<p>If a driver has called <strong>WdfRequestMarkCancelableEx</strong>, and if the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function has not executed and called <a rel="noopener" target="_blank" href="wdfrequestcomplete">WdfRequestComplete</a>, the driver must call <a rel="noopener" target="_blank" href="wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a> before it calls <strong><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></strong> outside of the <em>EvtRequestCancel</em> callback function.</p>
 
-<p>If the driver calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestforwardtoioqueue">WdfRequestForwardToIoQueue</a> to forward the request to a different queue, the following rules apply:</p>
+<p>If the driver calls <a rel="noopener" target="_blank" href="wdfrequestforwardtoioqueue">WdfRequestForwardToIoQueue</a> to forward the request to a different queue, the following rules apply:</p>
 
 <ul>
 <li><p>I/O requests cannot be cancelable when your driver forwards them to a different queue.</p>
 
-<p>Generally, your driver should not call <strong>WdfRequestMarkCancelableEx</strong> to enable canceling the request before calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestforwardtoioqueue">WdfRequestForwardToIoQueue</a>. If the driver does make the request cancelable, it must call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a> to disable cancellation before calling <strong><a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a></strong>.</p></li>
+<p>Generally, your driver should not call <strong>WdfRequestMarkCancelableEx</strong> to enable canceling the request before calling <a rel="noopener" target="_blank" href="wdfrequestforwardtoioqueue">WdfRequestForwardToIoQueue</a>. If the driver does make the request cancelable, it must call <a rel="noopener" target="_blank" href="wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a> to disable cancellation before calling <strong><a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a></strong>.</p></li>
 <li><p>While the request is in the second queue, the framework owns it and can cancel it without notifying the driver.</p>
 
-<p>If the driver requires cancellation notification (so that it can deallocate any resources that it might have allocated before calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestforwardtoioqueue">WdfRequestForwardToIoQueue</a>), the driver should register an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_canceled_on_queue">EvtIoCanceledOnQueue</a> callback function, and it should use request-specific context memory to store information about the request's resources.</p></li>
+<p>If the driver requires cancellation notification (so that it can deallocate any resources that it might have allocated before calling <a rel="noopener" target="_blank" href="wdfrequestforwardtoioqueue">WdfRequestForwardToIoQueue</a>), the driver should register an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_canceled_on_queue">EvtIoCanceledOnQueue</a> callback function, and it should use request-specific context memory to store information about the request's resources.</p></li>
 <li>After the framework has dequeued the request from the second queue and delivered it to the driver, the driver can call <strong>WdfRequestMarkCancelableEx</strong> to enable canceling.</li>
 </ul>
 
@@ -263,13 +263,13 @@
 
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestcomplete">WdfRequestComplete</a></p>
+<p><a rel="noopener" target="_blank" href="wdfrequestcomplete">WdfRequestComplete</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestforwardtoioqueue">WdfRequestForwardToIoQueue</a></p>
+<p><a rel="noopener" target="_blank" href="wdfrequestforwardtoioqueue">WdfRequestForwardToIoQueue</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestmarkcancelable">WdfRequestMarkCancelable</a></p>
+<p><a rel="noopener" target="_blank" href="wdfrequestmarkcancelable">WdfRequestMarkCancelable</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nf-wdfrequest-wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a></p>
+<p><a rel="noopener" target="_blank" href="wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

@@ -75,11 +75,11 @@
 
 <h3 id="dpc-in-out"><code>Dpc</code> [in, out]</h3>
 
-<p>A pointer to the caller's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-dpc-objects">DPC object</a>. This parameter points to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess">KDPC</a> structure, which is an opaque, system structure that represents the DPC object. This object must previously have been initialized by the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-keinitializedpc">KeInitializeDpc</a> routine.</p>
+<p>A pointer to the caller's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-dpc-objects">DPC object</a>. This parameter points to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess">KDPC</a> structure, which is an opaque, system structure that represents the DPC object. This object must previously have been initialized by the <a rel="noopener" target="_blank" href="keinitializedpc">KeInitializeDpc</a> routine.</p>
 
 <h3 id="procnumber-in"><code>ProcNumber</code> [in]</h3>
 
-<p>A pointer to a caller-allocated <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/miniport/ns-miniport-_processor_number">PROCESSOR_NUMBER</a> structure that identifies the target processor on which the DPC will be queued and executed. This structure specifies a group and a processor within this group.</p>
+<p>A pointer to a caller-allocated <a rel="noopener" target="_blank" href="processor_number">PROCESSOR_NUMBER</a> structure that identifies the target processor on which the DPC will be queued and executed. This structure specifies a group and a processor within this group.</p>
 
 <h2 id="return-value">Return value</h2>
 
@@ -102,11 +102,11 @@
 
 <h2 id="remarks">Remarks</h2>
 
-<p>Each processor in a multiprocessor system has its own DPC queue. <strong>KeSetTargetProcessorDpcEx</strong> specifies which processor's queue the system should use when the driver calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-keinsertqueuedpc">KeInsertQueueDpc</a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-iorequestdpc">IoRequestDpc</a> routine to queue a DPC to be run later.</p>
+<p>Each processor in a multiprocessor system has its own DPC queue. <strong>KeSetTargetProcessorDpcEx</strong> specifies which processor's queue the system should use when the driver calls the <a rel="noopener" target="_blank" href="keinsertqueuedpc">KeInsertQueueDpc</a> or <a rel="noopener" target="_blank" href="iorequestdpc">IoRequestDpc</a> routine to queue a DPC to be run later.</p>
 
 <p><strong>KeSetTargetProcessorDpcEx</strong> can specify the target processor for both ordinary DPCs and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/threaded-dpcs">threaded DPCs</a>. An ordinary DPC cannot be preempted by even a high-priority thread, but a threaded DPC can be preempted by time-critical threads that have sufficiently high priorities.</p>
 
-<p>A related routine, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kesettargetprocessordpc">KeSetTargetProcessorDpc</a>, specifies a target processor for a DPC, but this routine, unlike <strong>KeSetTargetProcessorDpcEx</strong>, does not specify a group for the target processor. Starting with Windows 7, <strong><a href="kesettargetprocessordpc" title="VOID KeSetTargetProcessorDpc(&#10;  [in, out] PRKDPC Dpc,&#10;  [in]      CCHAR  Number&#10;);">KeSetTargetProcessorDpc</a></strong> assumes that the target processor belongs to group 0. This behavior ensures that existing drivers that call <strong><a href="kesettargetprocessordpc" title="VOID KeSetTargetProcessorDpc(&#10;  [in, out] PRKDPC Dpc,&#10;  [in]      CCHAR  Number&#10;);">KeSetTargetProcessorDpc</a></strong> and that use no group-oriented features will run correctly in multiprocessor systems that have two or more groups. However, drivers that use any group-oriented features in Windows 7 and later versions of the Windows operating system should call <strong>KeSetTargetProcessorDpcEx</strong> instead of <strong><a href="kesettargetprocessordpc" title="VOID KeSetTargetProcessorDpc(&#10;  [in, out] PRKDPC Dpc,&#10;  [in]      CCHAR  Number&#10;);">KeSetTargetProcessorDpc</a></strong>.</p>
+<p>A related routine, <a rel="noopener" target="_blank" href="kesettargetprocessordpc">KeSetTargetProcessorDpc</a>, specifies a target processor for a DPC, but this routine, unlike <strong>KeSetTargetProcessorDpcEx</strong>, does not specify a group for the target processor. Starting with Windows 7, <strong><a href="kesettargetprocessordpc" title="VOID KeSetTargetProcessorDpc(&#10;  [in, out] PRKDPC Dpc,&#10;  [in]      CCHAR  Number&#10;);">KeSetTargetProcessorDpc</a></strong> assumes that the target processor belongs to group 0. This behavior ensures that existing drivers that call <strong><a href="kesettargetprocessordpc" title="VOID KeSetTargetProcessorDpc(&#10;  [in, out] PRKDPC Dpc,&#10;  [in]      CCHAR  Number&#10;);">KeSetTargetProcessorDpc</a></strong> and that use no group-oriented features will run correctly in multiprocessor systems that have two or more groups. However, drivers that use any group-oriented features in Windows 7 and later versions of the Windows operating system should call <strong>KeSetTargetProcessorDpcEx</strong> instead of <strong><a href="kesettargetprocessordpc" title="VOID KeSetTargetProcessorDpc(&#10;  [in, out] PRKDPC Dpc,&#10;  [in]      CCHAR  Number&#10;);">KeSetTargetProcessorDpc</a></strong>.</p>
 
 <p>A call to <strong>KeSetTargetProcessorDpcEx</strong> that occurs after a DPC object has been queued has no effect on the selection of a processor for the DPC routine to run on. To control the selection of the target processor, a <strong>KeSetTargetProcessorDpcEx</strong> call must occur before the call to <strong><a href="keinsertqueuedpc" title="BOOLEAN KeInsertQueueDpc(&#10;  [in, out]      PRKDPC                 Dpc,&#10;  [in, optional] PVOID                  SystemArgument1,&#10;  [in, optional] __drv_aliasesMem PVOID SystemArgument2&#10;);">KeInsertQueueDpc</a></strong> or <strong><a href="iorequestdpc" title="VOID IoRequestDpc(&#10;  [in] PDEVICE_OBJECT         DeviceObject,&#10;  [in] PIRP                   Irp,&#10;  [in] __drv_aliasesMem PVOID Context&#10;);">IoRequestDpc</a></strong> that queues the DPC object.</p>
 
@@ -114,17 +114,17 @@
 
 <h2 id="see-also">See also</h2>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-iorequestdpc">IoRequestDpc</a></p>
+<p><a rel="noopener" target="_blank" href="iorequestdpc">IoRequestDpc</a></p>
 
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess">KDPC</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-keinitializedpc">KeInitializeDpc</a></p>
+<p><a rel="noopener" target="_blank" href="keinitializedpc">KeInitializeDpc</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-keinsertqueuedpc">KeInsertQueueDpc</a></p>
+<p><a rel="noopener" target="_blank" href="keinsertqueuedpc">KeInsertQueueDpc</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nf-ntddk-kesettargetprocessordpc">KeSetTargetProcessorDpc</a></p>
+<p><a rel="noopener" target="_blank" href="kesettargetprocessordpc">KeSetTargetProcessorDpc</a></p>
 
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/miniport/ns-miniport-_processor_number">PROCESSOR_NUMBER</a></p>
+<p><a rel="noopener" target="_blank" href="processor_number">PROCESSOR_NUMBER</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>
