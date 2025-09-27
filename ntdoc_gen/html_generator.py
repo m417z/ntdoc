@@ -242,11 +242,21 @@ def get_msdn_description_html(
     ident_to_id: Dict[str, str],
     id_to_body: Dict[str, str],
     msdn_docs_path: Path,
+    msdn_url_to_chunk_id: Dict[str, str],
 ) -> str:
     description_path = get_msdn_doc_path(msdn_docs_path, chunk)
     description = description_path.read_text().strip() if description_path.exists() else ''
     if description == '':
         raise RuntimeError(f'MSDN description not found: {description_path}')
+
+    def link_sub(match):
+        url = match.group(1)
+        url_id = msdn_url_to_chunk_id.get(url)
+        if not url_id or url_id == id:
+            return match.group(0)
+        return f']({url_id})'
+
+    description = re.sub(r'\]\((https?://.*?)\)', link_sub, description)
 
     html_description = markdown_to_html(description, header_ids=is_selected)
     html = html_add_id_links(html_description, ident_to_id, id, id_to_body)
@@ -271,6 +281,7 @@ def get_descriptions_html(
     id: str,
     id_to_body: Dict[str, str],
     msdn_docs_path: Optional[Path],
+    msdn_url_to_chunk_id: Dict[str, str],
 ) -> str:
     html = '<div class="ntdoc-descriptions">\n'
 
@@ -282,7 +293,13 @@ def get_descriptions_html(
         if chunk.origin in [ChunkOrigin.MSDN_DDI, ChunkOrigin.MSDN_WIN32] and msdn_docs_path:
             is_selected = not prefer_ntdoc_over_fallback and len(descriptions) == 0
             description_msdn = get_msdn_description_html(
-                chunk, is_selected, id, ident_to_id, id_to_body, msdn_docs_path
+                chunk,
+                is_selected,
+                id,
+                ident_to_id,
+                id_to_body,
+                msdn_docs_path,
+                msdn_url_to_chunk_id,
             )
             title_msdn = f'{get_msdn_origin_title(chunk.origin)} ({chunk.code_url.split("/")[-1]})'
             descriptions.append((title_msdn, description_msdn))
@@ -364,6 +381,7 @@ def organize_chunks_to_dir(
     id_to_chunks: Dict[str, List[Chunk]] = {}
     id_to_id_human: Dict[str, str] = {}
     id_to_tooltip_text: Dict[str, str] = {}
+    msdn_url_to_chunk_id: Dict[str, str] = {}
 
     for chunk in chunks:
         id = ident_to_id[chunk.idents[0]]
@@ -390,16 +408,26 @@ def organize_chunks_to_dir(
         if id not in id_to_tooltip_text:
             id_to_tooltip_text[id] = chunk.body
 
-    for id, chunks in id_to_chunks.items():
+        if chunk.origin in [ChunkOrigin.MSDN_DDI, ChunkOrigin.MSDN_WIN32]:
+            msdn_url_to_chunk_id[get_msdn_doc_url(chunk)] = id
+
+    for id, id_chunks in id_to_chunks.items():
         # Warn if there are too many chunks for a single id. This may indicate a
         # bug which assigns the same id to multiple unrelated chunks.
-        validate_chunks_amount(id, chunks)
+        validate_chunks_amount(id, id_chunks)
 
         if ids_pattern and not re.search(ids_pattern, id, flags=re.IGNORECASE):
             continue
 
-        html = get_code_elements_html(chunks, ident_to_id, id, id_to_tooltip_text)
-        html += get_descriptions_html(chunks, ident_to_id, id, id_to_tooltip_text, msdn_docs_path)
+        html = get_code_elements_html(id_chunks, ident_to_id, id, id_to_tooltip_text)
+        html += get_descriptions_html(
+            id_chunks,
+            ident_to_id,
+            id,
+            id_to_tooltip_text,
+            msdn_docs_path,
+            msdn_url_to_chunk_id,
+        )
 
         html_page = html_page_template.replace('{{id}}', id_to_id_human[id]).replace('{{content}}', html)
         (out_path / f'{id}.html').write_text(html_page)
