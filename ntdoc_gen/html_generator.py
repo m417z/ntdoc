@@ -76,51 +76,53 @@ def chunk_to_html(chunk: Chunk) -> str:
     return html
 
 
-def html_add_id_links(
-    html: str,
-    ident_to_id: Dict[str, str],
-    exclude_id: Optional[str],
-    id_to_tooltip_text: Dict[str, str],
-) -> str:
-    # Sort by length to avoid matching substrings, e.g. "struct ABC" should
-    # match before "ABC".
-    idents_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
+class HtmlLinksAdder:
+    def __init__(self, ident_to_id: Dict[str, str], id_to_tooltip_text: Dict[str, str]):
+        self.ident_to_id = ident_to_id
+        self.id_to_tooltip_text = id_to_tooltip_text
 
-    regex = rf'\b({"|".join(idents_sorted_by_length)})\b'
+        # Sort by length to avoid matching substrings, e.g. "struct ABC" should
+        # match before "ABC".
+        self.idents_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
 
-    def repl(match):
-        start_index = match.start()
-        a_open_count = html.count('<a', 0, start_index)
-        a_end_count = html.count('</a>', 0, start_index)
-        if a_open_count > a_end_count:
-            # Already inside a link, skip.
-            return match.group(0)
+        regex = rf'\b({"|".join(re2.escape(x) for x in self.idents_sorted_by_length)})\b'
 
-        ident = match.group(1)
-        id = ident_to_id[ident]
-        if id == exclude_id:
-            return ident
+        re2_options = re2.Options()
+        re2_options.max_mem = 1024 * 1024 * 1024
+        self.regex_compiled = re2.compile(regex, options=re2_options)
 
-        tooltip_text = id_to_tooltip_text[id].strip()
+    def add_links(self, html: str, exclude_id: Optional[str]) -> str:
+        def repl(match):
+            start_index = match.start()
+            a_open_count = html.count('<a', 0, start_index)
+            a_end_count = html.count('</a>', 0, start_index)
+            if a_open_count > a_end_count:
+                # Already inside a link, skip.
+                return match.group(0)
 
-        tooltip_text_lines_max = 20
-        tooltip_text_lines = tooltip_text.splitlines()
-        if len(tooltip_text_lines) > tooltip_text_lines_max:
-            tooltip_text = '\n'.join(tooltip_text_lines[:tooltip_text_lines_max]) + '\n...'
-        elif len(tooltip_text_lines) == 1:
-            # Remove extra whitespace in lines such as:
-            # #define FILE_CREATED                    0x00000002
-            # typedef long                LONG;
-            if tooltip_text.startswith('#define ') or tooltip_text.startswith('typedef '):
-                tooltip_text = re.sub(r'\s+', ' ', tooltip_text)
+            ident = match.group(1)
+            id = self.ident_to_id[ident]
+            if id == exclude_id:
+                return ident
 
-        tooltip_text_escaped = escape(tooltip_text).replace('\n', '&#10;')
+            tooltip_text = self.id_to_tooltip_text[id].strip()
 
-        return f'<a href="{id}" title="{tooltip_text_escaped}">{ident}</a>'
+            tooltip_text_lines_max = 20
+            tooltip_text_lines = tooltip_text.splitlines()
+            if len(tooltip_text_lines) > tooltip_text_lines_max:
+                tooltip_text = '\n'.join(tooltip_text_lines[:tooltip_text_lines_max]) + '\n...'
+            elif len(tooltip_text_lines) == 1:
+                # Remove extra whitespace in lines such as:
+                # #define FILE_CREATED                    0x00000002
+                # typedef long                LONG;
+                if tooltip_text.startswith('#define ') or tooltip_text.startswith('typedef '):
+                    tooltip_text = re.sub(r'\s+', ' ', tooltip_text)
 
-    re2_options = re2.Options()
-    re2_options.max_mem = 1024 * 1024 * 1024
-    return re2.sub(regex, repl, html, options=re2_options)
+            tooltip_text_escaped = escape(tooltip_text).replace('\n', '&#10;')
+
+            return f'<a href="{id}" title="{tooltip_text_escaped}">{ident}</a>'
+
+        return self.regex_compiled.sub(repl, html)
 
 
 def validate_chunks_amount(id: str, chunks: List[Chunk]):
@@ -162,16 +164,15 @@ def validate_chunks_amount(id: str, chunks: List[Chunk]):
 
 def get_code_elements_html(
     chunks: List[Chunk],
-    ident_to_id: Dict[str, str],
     id: str,
-    id_to_body: Dict[str, str],
+    html_links_adder: HtmlLinksAdder,
 ) -> str:
     html = '<div class="ntdoc-code-elements">\n'
 
     for chunk in chunks:
         html_content = chunk_to_html(chunk)
         html += '<div class="ntdoc-code-element">\n'
-        html += html_add_id_links(html_content, ident_to_id, id, id_to_body)
+        html += html_links_adder.add_links(html_content, id)
         html += '</div>\n'
 
     html += '</div>\n'
@@ -203,12 +204,11 @@ def get_ntdoc_description_html(
     markdown: str,
     is_selected: bool,
     id: str,
-    ident_to_id: Dict[str, str],
-    id_to_body: Dict[str, str],
+    html_links_adder: HtmlLinksAdder,
 ) -> str:
     if markdown:
         html_description = markdown_to_html(markdown, header_ids=is_selected)
-        html = html_add_id_links(html_description, ident_to_id, id, id_to_body)
+        html = html_links_adder.add_links(html_description, id)
     else:
         html = '<div class="ntdoc-description-none">\n'
         html += '<p>No description available.</p>\n'
@@ -222,7 +222,9 @@ def get_ntdoc_description_html(
 
 
 def get_ntinternals_description_html(
-    is_selected: bool, id: str, ident_to_id: Dict[str, str], id_to_body: Dict[str, str]
+    is_selected: bool,
+    id: str,
+    html_links_adder: HtmlLinksAdder,
 ) -> Optional[str]:
     description_path = Path('descriptions', 'undocumented.ntinternals.net', f'{id}.md')
     description = description_path.read_text().strip() if description_path.exists() else ''
@@ -230,7 +232,7 @@ def get_ntinternals_description_html(
         return None
 
     html_description = markdown_to_html(description, header_ids=is_selected)
-    html = html_add_id_links(html_description, ident_to_id, id, id_to_body)
+    html = html_links_adder.add_links(html_description, id)
 
     html += '<div class="ntdoc-description-links">\n'
     html += f'<a target="_blank" href="{config.URL_DESCRIPTIONS}/undocumented.ntinternals.net/{id}.md">Edit description on GitHub</a>\n'
@@ -243,10 +245,9 @@ def get_msdn_description_html(
     chunk: Chunk,
     is_selected: bool,
     id: str,
-    ident_to_id: Dict[str, str],
-    id_to_body: Dict[str, str],
     msdn_docs_path: Path,
     msdn_url_to_chunk_id: Dict[str, str],
+    html_links_adder: HtmlLinksAdder,
 ) -> str:
     description_path = get_msdn_doc_path(msdn_docs_path, chunk)
     description = description_path.read_text().strip() if description_path.exists() else ''
@@ -263,7 +264,7 @@ def get_msdn_description_html(
     description = re.sub(r'\]\((https?://.*?)\)', link_sub, description)
 
     html_description = markdown_to_html(description, header_ids=is_selected)
-    html = html_add_id_links(html_description, ident_to_id, id, id_to_body)
+    html = html_links_adder.add_links(html_description, id)
 
     code_full_url = get_msdn_doc_url(chunk)
     code_link_title = f'View the official {get_msdn_origin_title(chunk.origin)}'
@@ -281,11 +282,10 @@ def get_msdn_description_html(
 
 def get_descriptions_html(
     chunks: List[Chunk],
-    ident_to_id: Dict[str, str],
     id: str,
-    id_to_body: Dict[str, str],
     msdn_docs_path: Optional[Path],
     msdn_url_to_chunk_id: Dict[str, str],
+    html_links_adder: HtmlLinksAdder,
 ) -> str:
     html = '<div class="ntdoc-descriptions">\n'
 
@@ -300,17 +300,16 @@ def get_descriptions_html(
                 chunk,
                 is_selected,
                 id,
-                ident_to_id,
-                id_to_body,
                 msdn_docs_path,
                 msdn_url_to_chunk_id,
+                html_links_adder,
             )
             title_msdn = f'{get_msdn_origin_title(chunk.origin)} ({chunk.code_url.split("/")[-1]})'
             descriptions.append((title_msdn, description_msdn))
 
     is_selected = not prefer_ntdoc_over_fallback and len(descriptions) == 0
     description_ntinternals = get_ntinternals_description_html(
-        is_selected, id, ident_to_id, id_to_body
+        is_selected, id, html_links_adder
     )
     if description_ntinternals:
         title_ntinternals = 'NTinternals.net (undocumented.ntinternals.net)'
@@ -321,7 +320,7 @@ def get_descriptions_html(
         selected_index = 1
 
     description_ntdoc = get_ntdoc_description_html(
-        markdown_ntdoc, selected_index == 0, id, ident_to_id, id_to_body
+        markdown_ntdoc, selected_index == 0, id, html_links_adder
     )
     descriptions.insert(0, ('NtDoc', description_ntdoc))
 
@@ -342,7 +341,7 @@ def get_descriptions_html(
     return html
 
 
-def changelog_to_html(ident_to_id: Dict[str, str], id_to_tooltip_text: Dict[str, str]) -> Tuple[str, str]:
+def changelog_to_html(html_links_adder: HtmlLinksAdder) -> Tuple[str, str]:
     changelog_path = Path('CHANGELOG.md')
     changelog = changelog_path.read_text()
 
@@ -363,7 +362,7 @@ def changelog_to_html(ident_to_id: Dict[str, str], id_to_tooltip_text: Dict[str,
     changelog_full += markdown_to_html(changelog_markdown)
     changelog_full += '</div>\n'
 
-    changelog_full = html_add_id_links(changelog_full, ident_to_id, None, id_to_tooltip_text)
+    changelog_full = html_links_adder.add_links(changelog_full, None)
 
     return changelog_short, changelog_full
 
@@ -415,6 +414,8 @@ def organize_chunks_to_dir(
         if chunk.origin in [ChunkOrigin.MSDN_DDI, ChunkOrigin.MSDN_WIN32]:
             msdn_url_to_chunk_id[get_msdn_doc_url(chunk)] = id
 
+    html_links_adder = HtmlLinksAdder(ident_to_id, id_to_tooltip_text)
+
     for id, id_chunks in id_to_chunks.items():
         # Warn if there are too many chunks for a single id. This may indicate a
         # bug which assigns the same id to multiple unrelated chunks.
@@ -423,14 +424,9 @@ def organize_chunks_to_dir(
         if ids_pattern and not re.search(ids_pattern, id, flags=re.IGNORECASE):
             continue
 
-        html = get_code_elements_html(id_chunks, ident_to_id, id, id_to_tooltip_text)
+        html = get_code_elements_html(id_chunks, id, html_links_adder)
         html += get_descriptions_html(
-            id_chunks,
-            ident_to_id,
-            id,
-            id_to_tooltip_text,
-            msdn_docs_path,
-            msdn_url_to_chunk_id,
+            id_chunks, id, msdn_docs_path, msdn_url_to_chunk_id, html_links_adder
         )
 
         html_page = html_page_template.replace('{{id}}', id_to_id_human[id]).replace('{{content}}', html)
@@ -446,7 +442,7 @@ def organize_chunks_to_dir(
     html_page = html_page_template.replace('{{id}}', 'Symbols').replace('{{content}}', html)
     (out_path / f'symbols.html').write_text(html_page)
 
-    changelog_short, changelog_full = changelog_to_html(ident_to_id, id_to_tooltip_text)
+    changelog_short, changelog_full = changelog_to_html(html_links_adder)
 
     index_html_path = out_path / 'index.html'
     index_html_path.write_text(index_html_path.read_text().replace('{{changelog}}', changelog_short))
