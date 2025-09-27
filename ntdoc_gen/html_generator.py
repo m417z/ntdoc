@@ -82,9 +82,9 @@ def html_add_id_links(
 ) -> str:
     # Sort by length to avoid matching substrings, e.g. "struct ABC" should
     # match before "ABC".
-    ids_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
+    idents_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
 
-    regex = rf'\b({"|".join(ids_sorted_by_length)})\b'
+    regex = rf'\b({"|".join(idents_sorted_by_length)})\b'
 
     def repl(match):
         start_index = match.start()
