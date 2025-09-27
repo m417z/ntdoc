@@ -8,6 +8,8 @@ from html import escape
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import re2
+
 from . import config
 from .chunk import Chunk, ChunkOrigin
 from .markdown import markdown_to_html
@@ -116,7 +118,9 @@ def html_add_id_links(
 
         return f'<a href="{id}" title="{tooltip_text_escaped}">{ident}</a>'
 
-    return re.sub(regex, repl, html)
+    re2_options = re2.Options()
+    re2_options.max_mem = 1024 * 1024 * 1024
+    return re2.sub(regex, repl, html, options=re2_options)
 
 
 def validate_chunks_amount(id: str, chunks: List[Chunk]):
