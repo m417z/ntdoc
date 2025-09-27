@@ -34,7 +34,12 @@ def msdn_docs_header_to_chunk(
         doc_metadata = json.load(f)
 
     if origin == ChunkOrigin.MSDN_WIN32:
-        if is_ioctl or header_name.lower() in ['winioctl.h', 'winternl.h', 'ntddkbd.h']:
+        if is_ioctl or header_name.lower() in [
+            'winioctl.h',
+            'winternl.h',
+            'ntddkbd.h',
+            'ntdef.h',
+        ]:
             # Always include.
             pass
         else:
