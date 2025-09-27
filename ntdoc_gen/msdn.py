@@ -113,6 +113,9 @@ def msdn_docs_header_to_chunk(
             if 'wiauDbgLegacyTrace2' in idents and 'wiauDbgLegacyTrace' in idents:
                 idents.remove('wiauDbgLegacyTrace')
         elif origin == ChunkOrigin.MSDN_WIN32:
+            if 'ANSI_STRING' in idents:
+                idents[idents.index('ANSI_STRING')] = 'STRING'
+
             # Remove non-Rtl variants if the Rtl one exists.
             idents = [x for x in idents if not f'Rtl{x}' in idents]
     else:
