@@ -90,8 +90,8 @@
 <p>If a driver registers an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_stop">EvtIoStop</a> callback function for an I/O queue, the framework calls it when the queue's underlying device is leaving its working (D0) state. The framework calls the <em>EvtIoStop</em> callback function for every I/O request that the driver has not <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">completed</a>, including requests that the driver <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/request-ownership">owns</a> and those that it has <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/forwarding-i-o-requests">forwarded</a> to an I/O target. The driver must complete, cancel, or postpone processing of each request by doing one of the following:</p>
 
 <ul>
-<li>If the driver owns the request, it can call <a rel="noopener" target="_blank" href="wdfrequestcomplete">WdfRequestComplete</a> to complete or cancel the request.</li>
-<li>If the driver has forwarded the request to an I/O target, it can call <a rel="noopener" target="_blank" href="wdfrequestcancelsentrequest">WdfRequestCancelSentRequest</a> to attempt to cancel the request.</li>
+<li>If the driver owns the request, it can call <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> to complete or cancel the request.</li>
+<li>If the driver has forwarded the request to an I/O target, it can call <a href="wdfrequestcancelsentrequest" title="BOOLEAN WdfRequestCancelSentRequest(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestCancelSentRequest</a> to attempt to cancel the request.</li>
 <li>If the driver postpones processing the request, it must call <strong>WdfRequestStopAcknowledge</strong>.</li>
 </ul>
 
@@ -110,7 +110,7 @@
 <p>When the underlying device returns to its working (D0) state, the framework will call the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_resume">EvtIoResume</a> callback function, so that the driver can continue processing the request.</p></li>
 </ul>
 
-<p>If the driver had previously called <a rel="noopener" target="_blank" href="wdfrequestmarkcancelable">WdfRequestMarkCancelable</a> or <a rel="noopener" target="_blank" href="wdfrequestmarkcancelableex">WdfRequestMarkCancelableEx</a>, it must call <a rel="noopener" target="_blank" href="wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a> before calling <strong>WdfRequestStopAcknowledge</strong> with <em>Requeue</em> set to <strong>TRUE</strong>.</p>
+<p>If the driver had previously called <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a> or <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a>, it must call <a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a> before calling <strong>WdfRequestStopAcknowledge</strong> with <em>Requeue</em> set to <strong>TRUE</strong>.</p>
 
 <p>Before calling <strong>WdfRequestStopAcknowledge</strong>, the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_stop">EvtIoStop</a> callback function must stop all processing of the I/O request that requires accessing the underlying device, because the device is about to enter a low-power state.</p>
 
@@ -118,9 +118,9 @@
 
 <h4 id="examples">Examples</h4>
 
-<p>If a driver calls <strong>WdfRequestStopAcknowledge</strong> with <em>Requeue</em> set to <strong>TRUE</strong>, it must previously call <a rel="noopener" target="_blank" href="wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a>.</p>
+<p>If a driver calls <strong>WdfRequestStopAcknowledge</strong> with <em>Requeue</em> set to <strong>TRUE</strong>, it must previously call <a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a>.</p>
 
-<p>The following code example is an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_stop">EvtIoStop</a> callback function that checks to see if a received request is cancelable and, if it is, calls <a rel="noopener" target="_blank" href="wdfrequestunmarkcancelable">WdfRequestUnmarkCancelable</a>. If <strong><a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a></strong> returns STATUS_CANCELLED, the example just returns because the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function will handle the request. Otherwise, the example calls <strong>WdfRequestStopAcknowledge</strong> and specifies <strong>TRUE</strong> so that the framework requeues the request when the underlying device returns to its working (D0) state.</p>
+<p>The following code example is an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_stop">EvtIoStop</a> callback function that checks to see if a received request is cancelable and, if it is, calls <a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a>. If <strong><a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a></strong> returns STATUS_CANCELLED, the example just returns because the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function will handle the request. Otherwise, the example calls <strong>WdfRequestStopAcknowledge</strong> and specifies <strong>TRUE</strong> so that the framework requeues the request when the underlying device returns to its working (D0) state.</p>
 
 <div class="codehilite">
 <pre><span></span><code><span class="n">VOID</span>
@@ -179,7 +179,7 @@
 
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a></p>
 
-<p><a rel="noopener" target="_blank" href="wdfrequestcomplete">WdfRequestComplete</a></p>
+<p><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>
