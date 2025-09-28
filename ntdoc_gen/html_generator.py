@@ -120,7 +120,6 @@ class HtmlLinksAdder:
                 return match.group(0)
 
             if self.ident_to_id.get(ident) != id:
-                print(f'Keeping MSDN link: {url}, {ident}, {id=}')
                 return match.group(0)
 
             return content
@@ -135,14 +134,7 @@ class HtmlLinksAdder:
             r'</a>'
         )
 
-        html = re.sub(regex, sub, html)
-
-        # Temporary
-        for url, id in self.msdn_url_to_chunk_id.items():
-            if f'href="{url}"' in html:
-                print(f'Keeping MSDN link 2: {url}, {id=}')
-
-        return html
+        return re.sub(regex, sub, html)
 
     def add_links(self, html: str, exclude_id: Optional[str]) -> str:
         def repl(match):
@@ -150,9 +142,6 @@ class HtmlLinksAdder:
             a_open_count = html.count('<a', 0, start_index)
             a_end_count = html.count('</a>', 0, start_index)
             if a_open_count > a_end_count:
-                # Temporary
-                print(f'Skipping already linked: {match.group(0)}, {exclude_id=}')
-                print(f'[[[' + html[start_index-30:start_index+30] + f']]]')
                 # Already inside a link, skip.
                 return match.group(0)
 
