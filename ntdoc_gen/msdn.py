@@ -164,10 +164,12 @@ def msdn_docs_to_chunks(msdn_docs_path: Path, ids_pattern: Optional[str]) -> Lis
 
 
 def get_msdn_doc_url(chunk: Chunk) -> str:
+    code_url = chunk.code_url
+    code_url = code_url.replace(',', '_').replace('&', '_').replace('~', '-').replace(' ', '')
     if chunk.origin == ChunkOrigin.MSDN_DDI:
-        return f'{URL_MSDN_DDI_DOCS}/{chunk.code_url}'
+        return f'{URL_MSDN_DDI_DOCS}/{code_url}'
     if chunk.origin == ChunkOrigin.MSDN_WIN32:
-        return f'{URL_MSDN_WIN32_DOCS}/{chunk.code_url}'
+        return f'{URL_MSDN_WIN32_DOCS}/{code_url}'
     raise RuntimeError(f'Unexpected chunk origin: {chunk.origin}')
 
 
