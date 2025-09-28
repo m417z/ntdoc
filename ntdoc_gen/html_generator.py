@@ -104,6 +104,17 @@ class HtmlLinksAdder:
             content = match.group(2)
             ident = match.group(3)
 
+            url_variants = [
+                (
+                    'https://learn.microsoft.com/windows/desktop/api/',
+                    'https://learn.microsoft.com/windows/win32/api/',
+                ),
+            ]
+            for a, b in url_variants:
+                if url.startswith(a):
+                    url = b + url[len(a):]
+                    break
+
             id = self.msdn_url_to_chunk_id.get(url)
             if id is None:
                 return match.group(0)
@@ -115,13 +126,13 @@ class HtmlLinksAdder:
             return content
 
         regex = (
-            rf'<a [^>]*?href="([^"]+)"[^>]*>'
-            rf'('
-                rf'(?:<strong>|<em>)*'
-                rf'([^<>]*)'
-                rf'(?:</strong>|</em>)*'
-            rf')'
-            rf'</a>'
+            r'<a [^>]*?href="([^"]+)"[^>]*>'
+            r'('
+                r'(?:<strong>|<em>)*'
+                r'([^<>]*)'
+                r'(?:</strong>|</em>)*'
+            r')'
+            r'</a>'
         )
 
         html = re.sub(regex, sub, html)
@@ -141,6 +152,7 @@ class HtmlLinksAdder:
             if a_open_count > a_end_count:
                 # Temporary
                 print(f'Skipping already linked: {match.group(0)}, {exclude_id=}')
+                print(f'[[[' + html[start_index-30:start_index+30] + f']]]')
                 # Already inside a link, skip.
                 return match.group(0)
 
