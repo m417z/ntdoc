@@ -77,19 +77,61 @@ def chunk_to_html(chunk: Chunk) -> str:
 
 
 class HtmlLinksAdder:
-    def __init__(self, ident_to_id: Dict[str, str], id_to_tooltip_text: Dict[str, str]):
+    def __init__(
+        self,
+        ident_to_id: Dict[str, str],
+        id_to_tooltip_text: Dict[str, str],
+        msdn_url_to_chunk_id: Dict[str, str],
+    ):
         self.ident_to_id = ident_to_id
         self.id_to_tooltip_text = id_to_tooltip_text
+
+        re2_options = re2.Options()
+        re2_options.max_mem = 1024 * 1024 * 1024
 
         # Sort by length to avoid matching substrings, e.g. "struct ABC" should
         # match before "ABC".
         self.idents_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
 
-        regex = rf'\b({"|".join(re2.escape(x) for x in self.idents_sorted_by_length)})\b'
+        add_links_regex = rf'\b(?:{"|".join(re2.escape(x) for x in self.idents_sorted_by_length)})\b'
+        self.add_links_regex_compiled = re2.compile(add_links_regex, options=re2_options)
 
-        re2_options = re2.Options()
-        re2_options.max_mem = 1024 * 1024 * 1024
-        self.regex_compiled = re2.compile(regex, options=re2_options)
+        self.msdn_url_to_chunk_id = msdn_url_to_chunk_id
+
+    def remove_unnecessary_msdn_links(self, html: str) -> str:
+        def sub(match):
+            url = match.group(1)
+            content = match.group(2)
+            ident = match.group(3)
+
+            id = self.msdn_url_to_chunk_id.get(url)
+            if id is None:
+                return match.group(0)
+
+            if self.ident_to_id.get(ident) != id:
+                print(f'Keeping MSDN link: {url}, {ident}, {id=}')
+                return match.group(0)
+
+            return content
+
+        regex = (
+            rf'<a [^>]*?href="([^"]+)"[^>]*>'
+            rf'('
+                rf'(?:<strong>|<em>)*'
+                rf'([^<>]*)'
+                rf'(?:</strong>|</em>)*'
+            rf')'
+            rf'</a>'
+        )
+
+        html = re.sub(regex, sub, html)
+
+        # Temporary
+        for url, id in self.msdn_url_to_chunk_id.items():
+            if f'href="{url}"' in html:
+                print(f'Keeping MSDN link 2: {url}, {id=}')
+
+        return html
 
     def add_links(self, html: str, exclude_id: Optional[str]) -> str:
         def repl(match):
@@ -97,10 +139,12 @@ class HtmlLinksAdder:
             a_open_count = html.count('<a', 0, start_index)
             a_end_count = html.count('</a>', 0, start_index)
             if a_open_count > a_end_count:
+                # Temporary
+                print(f'Skipping already linked: {match.group(0)}, {exclude_id=}')
                 # Already inside a link, skip.
                 return match.group(0)
 
-            ident = match.group(1)
+            ident = match.group(0)
             id = self.ident_to_id[ident]
             if id == exclude_id:
                 return ident
@@ -122,7 +166,7 @@ class HtmlLinksAdder:
 
             return f'<a href="{id}" title="{tooltip_text_escaped}">{ident}</a>'
 
-        return self.regex_compiled.sub(repl, html)
+        return self.add_links_regex_compiled.sub(repl, html)
 
 
 def validate_chunks_amount(id: str, chunks: List[Chunk]):
@@ -246,7 +290,6 @@ def get_msdn_description_html(
     is_selected: bool,
     id: str,
     msdn_docs_path: Path,
-    msdn_url_to_chunk_id: Dict[str, str],
     html_links_adder: HtmlLinksAdder,
 ) -> str:
     description_path = get_msdn_doc_path(msdn_docs_path, chunk)
@@ -254,17 +297,9 @@ def get_msdn_description_html(
     if description == '':
         raise RuntimeError(f'MSDN description not found: {description_path}')
 
-    def link_sub(match):
-        url = match.group(1)
-        url_id = msdn_url_to_chunk_id.get(url)
-        if not url_id or url_id == id:
-            return match.group(0)
-        return f']({url_id})'
-
-    description = re.sub(r'\]\((https?://.*?)\)', link_sub, description)
-
     html_description = markdown_to_html(description, header_ids=is_selected)
-    html = html_links_adder.add_links(html_description, id)
+    html = html_links_adder.remove_unnecessary_msdn_links(html_description)
+    html = html_links_adder.add_links(html, id)
 
     code_full_url = get_msdn_doc_url(chunk)
     code_link_title = f'View the official {get_msdn_origin_title(chunk.origin)}'
@@ -284,7 +319,6 @@ def get_descriptions_html(
     chunks: List[Chunk],
     id: str,
     msdn_docs_path: Optional[Path],
-    msdn_url_to_chunk_id: Dict[str, str],
     html_links_adder: HtmlLinksAdder,
 ) -> str:
     html = '<div class="ntdoc-descriptions">\n'
@@ -294,14 +328,14 @@ def get_descriptions_html(
     descriptions: List[Tuple[str, str]] = []
 
     for chunk in chunks:
-        if chunk.origin in [ChunkOrigin.MSDN_DDI, ChunkOrigin.MSDN_WIN32] and msdn_docs_path:
+        if chunk.origin in [ChunkOrigin.MSDN_DDI, ChunkOrigin.MSDN_WIN32]:
+            assert msdn_docs_path
             is_selected = not prefer_ntdoc_over_fallback and len(descriptions) == 0
             description_msdn = get_msdn_description_html(
                 chunk,
                 is_selected,
                 id,
                 msdn_docs_path,
-                msdn_url_to_chunk_id,
                 html_links_adder,
             )
             title_msdn = f'{get_msdn_origin_title(chunk.origin)} ({chunk.code_url.split("/")[-1]})'
@@ -414,7 +448,7 @@ def organize_chunks_to_dir(
         if chunk.origin in [ChunkOrigin.MSDN_DDI, ChunkOrigin.MSDN_WIN32]:
             msdn_url_to_chunk_id[get_msdn_doc_url(chunk)] = id
 
-    html_links_adder = HtmlLinksAdder(ident_to_id, id_to_tooltip_text)
+    html_links_adder = HtmlLinksAdder(ident_to_id, id_to_tooltip_text, msdn_url_to_chunk_id)
 
     for id, id_chunks in id_to_chunks.items():
         # Warn if there are too many chunks for a single id. This may indicate a
@@ -425,9 +459,7 @@ def organize_chunks_to_dir(
             continue
 
         html = get_code_elements_html(id_chunks, id, html_links_adder)
-        html += get_descriptions_html(
-            id_chunks, id, msdn_docs_path, msdn_url_to_chunk_id, html_links_adder
-        )
+        html += get_descriptions_html(id_chunks, id, msdn_docs_path, html_links_adder)
 
         html_page = html_page_template.replace('{{id}}', id_to_id_human[id]).replace('{{content}}', html)
         (out_path / f'{id}.html').write_text(html_page)
