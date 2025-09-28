@@ -91,9 +91,9 @@ class HtmlLinksAdder:
 
         # Sort by length to avoid matching substrings, e.g. "struct ABC" should
         # match before "ABC".
-        self.idents_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
+        idents_sorted_by_length = sorted(ident_to_id.keys(), key=lambda x: len(x), reverse=True)
 
-        add_links_regex = rf'\b(?:{"|".join(re2.escape(x) for x in self.idents_sorted_by_length)})\b'
+        add_links_regex = rf'\b(?:{"|".join(re2.escape(x) for x in idents_sorted_by_length)})\b'
         self.add_links_regex_compiled = re2.compile(add_links_regex, options=re2_options)
 
         self.msdn_url_to_chunk_id = msdn_url_to_chunk_id

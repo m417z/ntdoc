@@ -1544,6 +1544,7 @@ IOCTL_DEFINITIONS = {
     "SMART_SEND_DRIVE_COMMAND": 0x0007c084,
 }
 
+
 def get_ioctl_definition(name: str) -> Optional[int]:
     return IOCTL_DEFINITIONS.get(name, None)
 
