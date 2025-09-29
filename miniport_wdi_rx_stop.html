@@ -41,6 +41,18 @@
     </header>
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// dot11wdi.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">MINIPORT_WDI_RX_STOP MiniportWdiRxStop;
+
+void MiniportWdiRxStop(
+  [in]  TAL_TXRX_HANDLE MiniportTalTxRxContext,
+  [in]  WDI_PORT_ID PortId,
+  [out] NDIS_STATUS *pWifiStatus
+)
+{...}</span><span class="ntdoc-code-footer">
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dot11wdi/nc-dot11wdi-miniport_wdi_rx_stop">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
+<div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// dot11wificxintf.h
 
 </span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">MINIPORT_WDI_RX_STOP MiniportWdiRxStop;
@@ -66,10 +78,66 @@ void MiniportWdiRxStop(
 </div>
 </div>
 <div class="ntdoc-description-title">
-<h1>Windows Driver Kit DDI reference (nc-dot11wificxintf-miniport_wdi_rx_stop)</h1>
+<h1>Windows Driver Kit DDI reference (nc-dot11wdi-miniport_wdi_rx_stop)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
+<h1 id="miniport_wdi_rx_stop-callback-function">MINIPORT_WDI_RX_STOP callback function</h1>
+
 <h2 id="description">Description</h2>
+
+<blockquote>
+  <p>[!IMPORTANT]
+  This topic is part of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/wdi-miniport-driver-design-guide">WDI driver model</a> released in Windows 10. The WDI driver model is in maintenance mode and will only receive high priority fixes. <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/netcx/wifi-wdf-class-extension-wificx">WiFiCx</a> is the Wi-Fi driver model released in Windows 11. We recommend that you use WiFiCx to take advantage of the latest features.</p>
+</blockquote>
+
+<p>The
+MiniportWdiRxStop handler function stops RX on a given port and accepts the wildcard port ID to stop RX across the adapter. The TAL completes the RX stop operation by completing the request with a success status, or by completing it with a pending status and asynchronously indicating <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dot11wdi/nc-dot11wdi-ndis_wdi_rx_stop_confirm">RxStopConfirm</a>.</p>
+
+<p>This is a WDI miniport handler inside <a href="ndis_miniport_wdi_data_handlers" title="typedef struct _NDIS_MINIPORT_WDI_DATA_HANDLERS {&#10;  NDIS_OBJECT_HEADER                                Header;&#10;  MINIPORT_WDI_TX_ABORT_HANDLER                     TxAbortHandler;&#10;  MINIPORT_WDI_TX_TARGET_DESC_INIT_HANDLER          TxTargetDescInitHandler;&#10;  MINIPORT_WDI_TX_TARGET_DESC_DEINIT_HANDLER        TxTargetDescDeInitHandler;&#10;  MINIPORT_WDI_TX_DATA_SEND_HANDLER                 TxDataSendHandler;&#10;  MINIPORT_WDI_TX_TAL_SEND_HANDLER                  TxTalSendHandler;&#10;  MINIPORT_WDI_TX_TAL_SEND_COMPLETE_HANDLER         TxTalSendCompleteHandler;&#10;  MINIPORT_WDI_TX_TAL_QUEUE_IN_ORDER_HANDLER        TxTalQueueInOrderHandler;&#10;  MINIPORT_WDI_TX_PEER_BACKLOG_HANDLER              TxPeerBacklogHandler;&#10;  MINIPORT_WDI_RX_STOP_HANDLER                      RxStopHandler;&#10;  MINIPORT_WDI_RX_FLUSH_HANDLER                     RxFlushHandler;&#10;  MINIPORT_WDI_RX_RESTART_HANDLER                   RxRestartHandler;&#10;  MINIPORT_WDI_RX_GET_MPDUS_HANDLER                 RxGetMpdusHandler;&#10;  MINIPORT_WDI_RX_RETURN_FRAMES_HANDLER             RxReturnFramesHandler;&#10;  MINIPORT_WDI_RX_RESUME_HANDLER                    RxResumeHandler;&#10;  MINIPORT_WDI_RX_THROTTLE_HANDLER                  RxThrottleHandler;&#10;  MINIPORT_WDI_RX_PPDU_RSSI_HANDLER                 RxPpduRssiHandler;&#10;  MINIPORT_WDI_TAL_TXRX_START_HANDLER               TalTxRxStartHandler;&#10;  MINIPORT_WDI_TAL_TXRX_STOP_HANDLER                TalTxRxStopHandler;&#10;...">NDIS_MINIPORT_WDI_DATA_HANDLERS</a>.</p>
+
+<p>Prior to completing the indication, the target must be configured to stop indicating new traffic on the selected port or the entire adapter.</p>
+
+<p>This request is issued to the TAL as part of a transition to low power (adapter) and dot11 reset (port).</p>
+
+<p><strong>Note</strong> You must declare the function by using the <strong>MINIPORT_WDI_RX_STOP</strong> type. For more
+information, see the following Examples section.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="miniporttaltxrxcontext-in"><code>MiniportTalTxRxContext</code> [in]</h3>
+
+<p>TAL device handle returned by the IHV miniport in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dot11wdi/nc-dot11wdi-miniport_wdi_tal_txrx_initialize">MiniportWdiTalTxRxInitialize</a>.</p>
+
+<h3 id="portid-in"><code>PortId</code> [in]</h3>
+
+<p>The port ID.</p>
+
+<h3 id="pwifistatus-out"><code>pWifiStatus</code> [out]</h3>
+
+<p>Status from the IHV miniport. A success status indicates that the operation completion synchronously. A pending status indicates that the stop will be asynchronously confirmed.</p>
+
+<h2 id="see-also">See also</h2>
+
+<p><a href="ndis_miniport_wdi_data_handlers" title="typedef struct _NDIS_MINIPORT_WDI_DATA_HANDLERS {&#10;  NDIS_OBJECT_HEADER                                Header;&#10;  MINIPORT_WDI_TX_ABORT_HANDLER                     TxAbortHandler;&#10;  MINIPORT_WDI_TX_TARGET_DESC_INIT_HANDLER          TxTargetDescInitHandler;&#10;  MINIPORT_WDI_TX_TARGET_DESC_DEINIT_HANDLER        TxTargetDescDeInitHandler;&#10;  MINIPORT_WDI_TX_DATA_SEND_HANDLER                 TxDataSendHandler;&#10;  MINIPORT_WDI_TX_TAL_SEND_HANDLER                  TxTalSendHandler;&#10;  MINIPORT_WDI_TX_TAL_SEND_COMPLETE_HANDLER         TxTalSendCompleteHandler;&#10;  MINIPORT_WDI_TX_TAL_QUEUE_IN_ORDER_HANDLER        TxTalQueueInOrderHandler;&#10;  MINIPORT_WDI_TX_PEER_BACKLOG_HANDLER              TxPeerBacklogHandler;&#10;  MINIPORT_WDI_RX_STOP_HANDLER                      RxStopHandler;&#10;  MINIPORT_WDI_RX_FLUSH_HANDLER                     RxFlushHandler;&#10;  MINIPORT_WDI_RX_RESTART_HANDLER                   RxRestartHandler;&#10;  MINIPORT_WDI_RX_GET_MPDUS_HANDLER                 RxGetMpdusHandler;&#10;  MINIPORT_WDI_RX_RETURN_FRAMES_HANDLER             RxReturnFramesHandler;&#10;  MINIPORT_WDI_RX_RESUME_HANDLER                    RxResumeHandler;&#10;  MINIPORT_WDI_RX_THROTTLE_HANDLER                  RxThrottleHandler;&#10;  MINIPORT_WDI_RX_PPDU_RSSI_HANDLER                 RxPpduRssiHandler;&#10;  MINIPORT_WDI_TAL_TXRX_START_HANDLER               TalTxRxStartHandler;&#10;  MINIPORT_WDI_TAL_TXRX_STOP_HANDLER                TalTxRxStopHandler;&#10;...">NDIS_MINIPORT_WDI_DATA_HANDLERS</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/tal-txrx-handle">TAL_TXRX_HANDLE</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/wdi-rx-path">WDI RX path</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/wdi-port-id">WDI_PORT_ID</a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dot11wdi/nc-dot11wdi-miniport_wdi_rx_stop">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/dot11wdi/nc-dot11wdi-miniport_wdi_rx_stop.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows Driver Kit DDI reference (nc-dot11wificxintf-miniport_wdi_rx_stop)</h1>
+</div>
+<div class="ntdoc-description">
+<h2>Description</h2>
 
 <blockquote>
   <p>[!IMPORTANT]
@@ -83,23 +151,23 @@ void MiniportWdiRxStop(
 
 <p>This function is reserved for system use and should not be called in your code.</p>
 
-<h2 id="parameters">Parameters</h2>
+<h2>Parameters</h2>
 
-<h3 id="miniporttaltxrxcontext"><code>MiniportTalTxRxContext</code></h3>
-
-<p>Reserved.</p>
-
-<h3 id="portid"><code>PortId</code></h3>
+<h3><code>MiniportTalTxRxContext</code></h3>
 
 <p>Reserved.</p>
 
-<h3 id="pwifistatus"><code>pWifiStatus</code></h3>
+<h3><code>PortId</code></h3>
 
 <p>Reserved.</p>
 
-<h2 id="remarks">Remarks</h2>
+<h3><code>pWifiStatus</code></h3>
 
-<h2 id="see-also">See also</h2>
+<p>Reserved.</p>
+
+<h2>Remarks</h2>
+
+<h2>See also</h2>
 <hr>
 <div class="ntdoc-description-links">
 <p>
