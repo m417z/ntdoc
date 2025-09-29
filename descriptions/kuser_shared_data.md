@@ -241,7 +241,7 @@ struct _KUSER_SHARED_DATA
     // FSCTL_IS_VOLUME_MOUNTED ioctl (0x090028), it can simply check sameness of this field.
     // OS changes this value – interlocked-increments it – on two occasions:
     // 1) well-behaved filesystem driver invoked exported nt!FsRtlDismountComplete;
-    // 2) OS received FSCTL_DISMOUNT_VOLUME (0x090020) via NtFsControlFile/NtDeviceIoControl (+=1 or +=2 per call).
+    // 2) OS received FSCTL_DISMOUNT_VOLUME (0x090020) via NtFsControlFile/NtDeviceIoControlFile (+=1 or +=2 per call).
     volatile ULONG DismountCount;                   // 2DC ◷👋 changes at runtime on dismounts (rare), +manually
 
     // Lazy-mirrors HKLM\SOFTWARE\Microsoft\.NETFramework₄Enable64Bit. Value is a bitfield with only bit0 defined:
