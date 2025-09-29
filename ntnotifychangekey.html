@@ -227,6 +227,35 @@ ZwNotifyChangeKey(
 
 <h2 id="remarks">Remarks</h2>
 
+<p><strong>ZwNotifyChangeKey</strong> monitors a registry key for changes and notifies the caller when modifications occur.</p>
+
+<p>The routine monitors the specified key (and optionally its subtree) for changes based on the <strong>CompletionFilter</strong> flags. When a change occurs, the system notifies the caller via event signaling, APC callback, or synchronous completion.</p>
+
+<p>This is a one-time notification. After a registry change triggers the notification, you must call <strong>ZwNotifyChangeKey</strong> again to continue monitoring.</p>
+
+<p>The key must be opened with KEY_NOTIFY access before calling this routine.</p>
+
+<p>For asynchronous operation (<strong>Asynchronous</strong> = TRUE):</p>
+
+<ul>
+<li>If <strong>Event</strong> is specified, it will be signaled when changes occur. If <strong>Event</strong> is NULL, then <strong>KeyHandle</strong> is set to the Signaled state.</li>
+<li>If <strong>ApcRoutine</strong> is specified, it will be called with <strong>ApcContext</strong> and <strong>IoStatusBlock</strong>.</li>
+<li>If neither is specified, the <strong>KeyHandle</strong> itself becomes signalable.</li>
+</ul>
+
+<p>For synchronous operation (<strong>Asynchronous</strong> = FALSE):</p>
+
+<ul>
+<li>The call blocks until a change occurs.</li>
+<li><strong>Event</strong>, <strong>ApcRoutine</strong>, and <strong>ApcContext</strong> parameters are ignored.</li>
+</ul>
+
+<p>The notification session ends when <strong>KeyHandle</strong> is closed.</p>
+
+<p>Note: <strong>CompletionFilter</strong> and <strong>WatchTree</strong> are set on the first call and apply to all subsequent calls using the same <strong>KeyHandle</strong>. These parameters are ignored on subsequent calls.</p>
+
+<p>Registry notifications hold handles that will prevent hive unload operations (such as <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/winreg/nf-winreg-regunloadkeyw"><strong>RegUnloadKey</strong></a>) until closed. Currently, there is no mechanism for a driver to have a notification that won’t block <strong>RegUnloadKey</strong>. Drivers can try to proactively cancel notifications when the monitored process or user session ends to avoid blocking legitimate hive management operations.</p>
+
 <p>If the call to the <strong>ZwNotifyChangeKey</strong> function occurs in user mode, you should use the name "<strong>NtNotifyChangeKey</strong>" instead of "<strong>ZwNotifyChangeKey</strong>".</p>
 
 <p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
