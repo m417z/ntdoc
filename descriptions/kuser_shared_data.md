@@ -304,7 +304,7 @@ struct _KUSER_SHARED_DATA
             // returned by RtlQueryElevationFlags api (in both usermode and kernelmode). Fields set on boot from reg
             // data at HKLM\Software\Microsoft\Windows\CurrentVersion\Policies\System, they won't update until reboot
             // even if registry values change. Bad type or size of reg data, or a missing value, yields 1 (not 0).
-            // However, if CCS\Control\LsaInformatiion₄UACInstalled is 0, all 4 flags will be set to 0.
+            // However, if CCS\Control\LsaInformation₄UACInstalled is 0, all 4 flags will be set to 0.
             // 
             // policy: "UAC: Turn on Admin Approval Mode", aka "UAC: Run all administrators in Admin Approval Mode".
             ULONG DbgElevationEnabled       : 1;    //  1/0002 𝍌, reg value₄: "EnableLUA"
