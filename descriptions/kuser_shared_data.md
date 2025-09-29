@@ -43,8 +43,8 @@ struct _KUSER_SHARED_DATA
     // UTC System Time. Number of centums since 1601-01-01, exactly. It's a perfectly raw value; any conversions or
     // adjustments (like leap days or leap seconds) ought to be done on the higher level.
     // Coherence of this field vs 🡑InterruptTime, 🡓TickCountQuad, and certain others is ensured via 🡓TimeUpdateLock.
-    // Asilous clients with SeSystemtime privilege can set it via NtSetSystemTime to any value in range [0, 2⁶¹+2³²),
-    // which is [1601-01-01, 8907-12-05 18:49:10]. Note regular users don't have SeSystemtime privilege by default.
+    // Clients not in the server silo with SeSystemtime privilege can set it via NtSetSystemTime to any value in range
+    // [0, 2⁶¹+2³²), which is [1601-01-01, 8907-12-05 18:49:10]. Note regular users don't have SeSystemtime by default.
     volatile KSYSTEM_TIME SystemTime;               // 014 ❕👋 changes each clock interrupt + adjustable
 
     // Current 64-bit time zone bias. Silo-aware: SILO_USER_SHARED_DATA.TimeZoneBias.
