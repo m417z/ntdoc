@@ -107,7 +107,7 @@ struct _KUSER_SHARED_DATA
     // I.e. interval triples till it hits one hour (but there's about 5 extra reseeds at system start).
     // On boot you'll often see 8 here; +27s: 9; +81s more: 10; after 6/18/55/115 minutes of uptime: 11/12/13/14; etc.
     // Settable in kernel mode via RtlSetSystemGlobalData(GlobalDataIdRngSeedVersion[=1]).
-    ULONGLONG RNGSeedVersion;                       // 250 ◷ incremened periodically (every hour on average)
+    ULONGLONG RNGSeedVersion;                       // 250 ◷ incremented periodically (every hour on average)
 
     // Set of flags to control assert failures handling. Read on boot from CCS\Control\ValidationRunLevels₄Global. See
     // VRL_* flags in sdk; from oskernel view the only bit is VRL_ENABLE_KERNEL_BREAKS, it only affects debug OS builds.
