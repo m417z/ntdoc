@@ -606,7 +606,7 @@ struct _KUSER_SHARED_DATA
             volatile UCHAR QpcBypassEnabled;        // 3C6 ◷ won't change; except miiight on OS live migration
 
             // Zero. Unused on modern OS. On old OS [before win10 1709, RS3] it was used as a bitshift value for the
-            // raw perfcounter: ntdll!RltQueryPerformanceCounter() => (rdtsc() + 🡑QpcBias) >> 🡗QpcShift [before 1709].
+            // raw perfcounter: ntdll!RtlQueryPerformanceCounter() => (rdtsc() + 🡑QpcBias) >> 🡗QpcShift [before 1709].
             // But that made Qpc rate very different across systems; nowadays OS uses much more precise scaling.
             UCHAR QpcShift;                         // 3C7 𝍌♻
         };
