@@ -1,5 +1,4 @@
-**WIP**  
-This structure is partially [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/ns-ntddk-kuser_shared_data). However, as verified on 2025-09, almost all Microsoft documentation for this structure is either hopelessly outdated, utterly useless, or downright incorrect.  
+This structure is partially [documented in Windows Driver Kit](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/ns-ntddk-kuser_shared_data). However, as verified on 2025-09, almost all Microsoft documentation for this structure is either outdated, useless, or downright incorrect.  
 
 
 # Introduction
@@ -397,7 +396,7 @@ struct _KUSER_SHARED_DATA
     // OS-visible total RAM size, in pages. For comparison, 🡑NumberOfPhysicalPages holds 32-bit value of such, clamped
     // to UINT_MAX (16 TB RAM). Both values can change if RAM is added or removed; this larger field is updated first.
     // Be aware: often 1-24 MB less than the actual RAM (sum of smbios memory devices), likely due to uefi hiding some.
-    // ⚠️ WARNING ⚠️: field availabe since win11 24H2. On previous systems this location contains 0.
+    // ⚠️ WARNING ⚠️: field available since win11 24H2. On previous systems this location contains 0.
     ULONGLONG FullNumberOfPhysicalPages;            // 310 ◷ fixed at boot, but might [rarely] change at runtime
 
     // Zero. "Available for reuse".
@@ -576,7 +575,7 @@ struct _KUSER_SHARED_DATA
     UCHAR Reserved9;                                // 3C5 𝍌♻
 
     // Modern OS treats this union as bitmask/flags governing ntdll!RtlQueryPerformanceCounter() behavior.
-    // See SHARED_GLOBAL_FLAGS_QPC_BYPASS_* flags. Only 7 bits are in use, all overlayed with 🡗QpcBypassEnabled byte.
+    // See SHARED_GLOBAL_FLAGS_QPC_BYPASS_* flags. Only 7 bits are in use, all overlaid with 🡗QpcBypassEnabled byte.
     //   0/0001: _ENABLED: usermode code can bypass NtQueryPerformanceCounter syscall, retrieve Qpc perfcounter by
     //     transforming rdtsc/rdtscp value or ARM64_CNTVCT_EL0 register. When this bit is 0, all others are zeroed too.
     //     On x86 you can force bit to 0 with "bcdedit /set UsePlatformClock yes" (don't mixup with "UsePlatformTick").
@@ -626,7 +625,7 @@ struct _KUSER_SHARED_DATA
     // 🡑SystemTime reached 🡗TimeZoneBiasEffectiveEnd, so the new range has to be established).
     // 🡗TimeZoneBiasEffectiveEnd updated together with 🡗TimeZoneBiasEffectiveStart. It's set to either the next DST
     // line or to (end of year + 🡑TimeZoneBias), whichever is earlier.
-    // Adjustable – within a certain ammount – by clients with SeTimeZone privilege, together with 🡑TimeZoneBias.
+    // Adjustable – within a certain amount – by clients with SeTimeZone privilege, together with 🡑TimeZoneBias.
     LARGE_INTEGER TimeZoneBiasEffectiveStart;       // 3C8 ◷👋
     LARGE_INTEGER TimeZoneBiasEffectiveEnd;         // 3D0 ◷👋
 
@@ -641,7 +640,7 @@ struct _KUSER_SHARED_DATA
     // Starts at 1 at boot, increments each time feature config changes. However, there is so called
     // "SwapReferenceIndex" (RtlGetSwapReferenceIndex), changing which might bring in parallel global value.
     // This field is what's referred to as RTL_FEATURE_CHANGE_STAMP/ChangeStamp in structures for
-    // NtSetSystemInformation(SystemFeatureConfigurationInformation). Note these are NOT "Optional Windows Featues";
+    // NtSetSystemInformation(SystemFeatureConfigurationInformation). Note these are NOT "Optional Windows Features";
     // rather these are A/B features (and ongoing security fix "features"), adjustable via e.g. opensource ViveTool.
     // ⚠️ Size of 🡑XState increased by 0x10 in WS2022, changing this field offset from 0x710 to 0x720.
     KSYSTEM_TIME FeatureConfigurationChangeStamp;   // 720; offset is 0x710 on win10 22H2 and earlier OS
@@ -651,7 +650,7 @@ struct _KUSER_SHARED_DATA
 
     // Mirrors nt!KePointerAuthMask. Only used for ARM64, zero on x64. Initialized once at boot.
     // Contains a mask to apply to a pointer value to extract authentication "PAC" bits together with a sign
-    // bit (highest bit preceeding the PAC). If PAC is not used, or PAC size is not exactly 8 bits, value is simply
+    // bit (highest bit preceding the PAC). If PAC is not used, or PAC size is not exactly 8 bits, value is simply
     // zero (confirmed win11 24H2 and earlier). So the only values possible are 0 and 0xFF80'0000'0000'0000 [2025-08].
     UINT64 UserPointerAuthMask;                     // 730 𝍌 available since win11 22H2
 
