@@ -528,7 +528,7 @@ struct _KUSER_SHARED_DATA
 
     // Under certain conditions (e.g. after hibernation), OS makes 🡑InterruptTime to jump forward (OS "biases" it).
     // This field accumulates all such adjustments, enabling clients to get unadulterated Interrupt Time.
-    // To get such unadultered Unbiased Interrupt Time, take 🡑InterruptTime, and subtract 🡗InterruptTimeBias from it.
+    // To get such unadulterated Unbiased Interrupt Time, take 🡑InterruptTime, and subtract 🡗InterruptTimeBias from it.
     // 
     // ⚠️ Field is NOT protected via 🡑TimeUpdateLock. To ensure coherence between this field and 🡑InterruptTime,
     // read this value first, then 🡑InterruptTime, then this value again – and check it hasn't changed.
