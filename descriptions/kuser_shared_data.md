@@ -603,7 +603,7 @@ struct _KUSER_SHARED_DATA
             // Bitflags governing ntdll!RtlQueryPerformanceCounter() behavior, described above.
             // On old OS [before win10 1709, RS3] it was a bool, that role is now taken by bit0.
             // This byte settable in kernel mode via RtlSetSystemGlobalData(QpcBypassEnabled[=16]).
-            volatile UCHAR QpcBypassEnabled;        // 3C6 ◷ won't change; except miiight on OS live migration
+            volatile UCHAR QpcBypassEnabled;        // 3C6 ◷ won't really change, except possibly on OS live migration
 
             // Zero. Unused on modern OS. On old OS [before win10 1709, RS3] it was used as a bitshift value for the
             // raw perfcounter: ntdll!RtlQueryPerformanceCounter() => (rdtsc() + 🡑QpcBias) >> 🡗QpcShift [before 1709].
