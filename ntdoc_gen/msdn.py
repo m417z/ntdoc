@@ -21,7 +21,12 @@ def msdn_docs_header_to_chunk(
     header_name = json_path.relative_to(docs_path).parts[0] + '.h'
 
     if origin == ChunkOrigin.MSDN_DDI:
-        if header_name.lower() in ['dbgeng.h', 'dbgmodel.h', 'portcls.h']:
+        if header_name.lower() in [
+            'dbgeng.h',
+            'dbgmodel.h',
+            'engextcpp.h',
+            'portcls.h',
+        ]:
             # Contains mostly C++ stuff.
             return None
 
@@ -67,9 +72,15 @@ def msdn_docs_header_to_chunk(
     assert isinstance(api_type, list), json_path
     assert len(api_type) == 1, json_path
     api_type = api_type[0]
-    if api_type in ['COM', 'UserDefined']:
+    if api_type in ['COM']:
         return None
-    assert api_type in ['DllExport', 'DLLExport', 'HeaderDef', 'LibDef'], (json_path, api_type)
+    assert api_type in [
+        'DllExport',
+        'DLLExport',
+        'HeaderDef',
+        'LibDef',
+        'UserDefined',
+    ], (json_path, api_type)
 
     idents = doc_metadata.get('api_name', [])
     assert isinstance(idents, list), json_path
