@@ -2,7 +2,7 @@ This function is documented in Windows Driver Kit [here](https://learn.microsoft
 
 ---
 
-Function `NtQueryObject` retrives some informations about any or all objects opened by calling process. It can be used with any type of object.
+Function `NtQueryObject` retrieves some information about any or all objects opened by calling process. It can be used with any type of object.
 
 ### ObjectHandle
 
@@ -10,7 +10,7 @@ HANDLE to object.
 
 ### ObjectInformationClass
 
-Kind of information to retrive. See `OBJECT_INFORMATION_CLASS` for possible values list.
+Kind of information to retrieve. See `OBJECT_INFORMATION_CLASS` for possible values list.
 
 ### ObjectInformation
 

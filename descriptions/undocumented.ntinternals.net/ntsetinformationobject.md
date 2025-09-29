@@ -8,7 +8,7 @@ See `NtQueryObject` for detailed description of possible information classes.
 
 ### ObjectInformation
 
-Buffor with data to set.
+Buffer with data to set.
 
 ### Length
 
