@@ -180,11 +180,7 @@ def msdn_docs_header_to_chunk(
             ]
             idents[0], idents[1] = idents[1], idents[0]
         elif idents:
-            if fuzzy_ident not in [
-                'IOCTL_COPYCHUNK',
-                'IOCTL_LMR_DISABLE_LOCAL_BUFFERING',
-            ]:
-                assert idents == [fuzzy_ident], json_path
+            assert idents == [fuzzy_ident], json_path
         else:
             idents = [fuzzy_ident]
 
