@@ -105,12 +105,17 @@ def msdn_docs_header_to_chunk(
         return None
 
     if origin in [ChunkOrigin.MSDN_WIN32, ChunkOrigin.MSDN_WIN32_FUZZY]:
-        if is_ioctl or header_name in [
-            'winioctl.h',
-            'winternl.h',
-            'ntddkbd.h',
-            'ntdef.h',
-        ]:
+        if (
+            is_ioctl
+            or header_name
+            in [
+                'winioctl.h',
+                'winternl.h',
+                'ntddkbd.h',
+                'ntdef.h',
+            ]
+            or (set(doc_metadata.get('api_name', [])) & {'LdrDllNotification'})
+        ):
             # Always include.
             pass
         else:
@@ -167,7 +172,14 @@ def msdn_docs_header_to_chunk(
 
     if repository_type == DocsRepositoryType.FUZZY:
         fuzzy_ident = doc_metadata['_fuzzy_ident']
-        if idents:
+        if fuzzy_ident == 'LdrDllNotification':
+            # Special case.
+            assert idents == [
+                'LdrDllNotification',
+                'PLDR_DLL_NOTIFICATION_FUNCTION',
+            ]
+            idents[0], idents[1] = idents[1], idents[0]
+        elif idents:
             if fuzzy_ident not in [
                 'IOCTL_COPYCHUNK',
                 'IOCTL_LMR_DISABLE_LOCAL_BUFFERING',
