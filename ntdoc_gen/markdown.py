@@ -18,7 +18,7 @@ def markdown_to_html(text: str, header_ids=True) -> str:
     if header_ids:
         extras['header-ids'] = None
 
-    # Escape \< and \> so that markdown2 safe mode doesn't escape them.
+    # Encode some escaped symbols as markdown2 doesn't handle them correctly.
     def bracket_escape(m: re.Match) -> str:
         # Skip if inside of a code block.
         code_block_count = text.count('```', 0, m.start())
@@ -51,7 +51,7 @@ def markdown_to_html(text: str, header_ids=True) -> str:
             assert symbol == '&'
             return '&amp;'
 
-    text = re.sub(r'\\(?!<br>|<!--)([<>&])', bracket_escape, text)
+    text = re.sub(r'\\(?!<br>)([<>&])', bracket_escape, text)
 
     # A workaround for fenced code blocks not being separated from lists in safe mode.
     text = re.sub(r'^```(.*?)```', r'<!-- CODE_MARKER -->\n\g<0>', text, flags=re.MULTILINE | re.DOTALL)
