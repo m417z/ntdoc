@@ -44,8 +44,12 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// winioctl.h
 
 </span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">// <a href="ctl_code" title="void CTL_CODE(&#10;  DeviceType,&#10;  Function,&#10;  Method,&#10;  Access&#10;);">CTL_CODE</a>(0x0009, 0x082, METHOD_BUFFERED, FILE_WRITE_ACCESS)
-#define FSCTL_FILE_LEVEL_TRIM 0x00098208</span><span class="ntdoc-code-footer">
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows/win32/api/winioctl/ni-winioctl-fsctl_file_level_trim">View the official Win32 API reference</a></span></code></pre></div>
+#define FSCTL_FILE_LEVEL_TRIM 0x00098208</span><span class="ntdoc-code-footer"></span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows/win32/api/winioctl/ni-winioctl-fsctl_file_level_trim">View the official Win32 API reference</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ntifs.h
+
+</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">// <a href="ctl_code" title="void CTL_CODE(&#10;  DeviceType,&#10;  Function,&#10;  Method,&#10;  Access&#10;);">CTL_CODE</a>(0x0009, 0x082, METHOD_BUFFERED, FILE_WRITE_ACCESS)
+#define FSCTL_FILE_LEVEL_TRIM 0x00098208</span><span class="ntdoc-code-footer"></span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/fsctl-file-level-trim">View the official Windows hardware development documentation</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -171,6 +175,132 @@
 <a target="_blank" href="https://learn.microsoft.com/windows/win32/api/winioctl/ni-winioctl-fsctl_file_level_trim">View the official Win32 API reference</a>
 </p>
 <a target="_blank" href="https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/winioctl/ni-winioctl-fsctl_file_level_trim.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows hardware development documentation (fsctl-file-level-trim)</h1>
+</div>
+<div class="ntdoc-description">
+<h1>FSCTL_FILE_LEVEL_TRIM control code</h1>
+
+<p>The <strong>FSCTL_FILE_LEVEL_TRIM</strong> control code provides a method to trim data ranges with in a file. The file trim ranges are translated to the underlying storage device allowing it to optimize its resource organization to improve access performance. An <strong>FSCTL_FILE_LEVEL_TRIM</strong> request allows a virtual disk file to remain allocated at a fixed size while trimming physical storage to correspond to data ranges freed on the virtual disk.</p>
+
+<p>To perform this operation, call <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff566462(v=vs.85)"><strong>ZwFsControlFile</strong></a> with the following parameters.</p>
+
+<h2>Parameters</h2>
+
+<ul>
+<li><p><strong>Instance</strong> [in]: <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> only. Opaque instance pointer for the caller. This parameter is required and cannot be <strong>NULL</strong>.</p></li>
+<li><p><strong>FileObject</strong> [in]: <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> only. The file object pointer to the file which has the data to be trimmed. This parameter is required and cannot be <strong>NULL</strong>.</p></li>
+<li><p><strong>FileHandle</strong> [in]: <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff566462(v=vs.85)"><strong>ZwFsControlFile</strong></a> only. The file handle of the file which has the data to be trimmed. This parameter is required and cannot be <strong>NULL</strong>.</p></li>
+<li><p><strong>FsControlCode</strong> [in]: Control code for the operation. Use <strong>FSCTL_FILE_LEVEL_TRIM</strong> for this operation.</p></li>
+<li><p><strong>InputBuffer</strong> [in]: A pointer to a <strong><a href="file_level_trim" title="typedef struct _FILE_LEVEL_TRIM {&#10;  ULONG                 Key;&#10;  ULONG                 NumRanges;&#10;  FILE_LEVEL_TRIM_RANGE Ranges[1];&#10;} FILE_LEVEL_TRIM, *PFILE_LEVEL_TRIM;">FILE_LEVEL_TRIM</a></strong> structure which contains an array of trim ranges for the file.</p></li>
+<li><p><strong>InputBufferLength</strong> [in]: Size, in bytes, of the buffer pointed to by the <em>InputBuffer</em> parameter. This value must be at least sizeof(<strong><a href="file_level_trim" title="typedef struct _FILE_LEVEL_TRIM {&#10;  ULONG                 Key;&#10;  ULONG                 NumRanges;&#10;  FILE_LEVEL_TRIM_RANGE Ranges[1];&#10;} FILE_LEVEL_TRIM, *PFILE_LEVEL_TRIM;">FILE_LEVEL_TRIM</a></strong>).</p></li>
+<li><p><strong>OutputBuffer</strong> [out]: A pointer to an optional <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_level_trim"><strong>FILE_LEVEL_TRIM_OUTPUT</strong></a> structure which receives the result of the trim operation.</p></li>
+<li><p><strong>OutputBufferLength</strong> [out]: Size, in bytes, of the buffer pointed to by the <em>OutputBuffer</em> parameter. This value must be at least <strong>sizeof</strong>(<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-_file_level_trim"><strong>FILE_LEVEL_TRIM_OUTPUT</strong></a>) if <strong><a href="file_level_trim_output" title="typedef struct _FILE_LEVEL_TRIM_OUTPUT {&#10;  ULONG NumRangesProcessed;&#10;} FILE_LEVEL_TRIM_OUTPUT, *PFILE_LEVEL_TRIM_OUTPUT;">FILE_LEVEL_TRIM_OUTPUT</a></strong> is included in <em>OutputBuffer</em>. Otherwise, this is set to 0.</p></li>
+</ul>
+
+<h2>Status block</h2>
+
+<p><strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff566462(v=vs.85)"><strong>ZwFsControlFile</strong></a> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or possibly one of the following values.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Code</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>STATUS_INVALID_PARAMETER</td>
+  <td>The file to trim is either compressed or encrypted, the input or output buffer length is invalid, or, no trim ranges are specified.</td>
+</tr>
+<tr>
+  <td>STATUS_INSUFFICIENT_RESOURCES</td>
+  <td>An internal resource allocation failed.</td>
+</tr>
+<tr>
+  <td>STATUS_FILE_LOCK_CONFLICT</td>
+  <td>A trim range is part of a previously locked byte range.</td>
+</tr>
+<tr>
+  <td>STATUS_VOLUME_DISMOUNTED</td>
+  <td>The volume where the file resides is not mounted.</td>
+</tr>
+<tr>
+  <td>STATUS_PURGE_FAILED</td>
+  <td>A cache purge failed for a trim range.</td>
+</tr>
+<tr>
+  <td>STATUS_NO_RANGES_PROCESSED</td>
+  <td>No ranges in the trim range array were processed.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Remarks</h2>
+
+<p>Performing trim on certain storage devices can significantly improve their future write performance. Trim also returns resources to the allocation pool in storage systems that are thinly provisioned. When files are deleted on a virtual disk, the size of the virtual disk file itself is not changed. The data ranges freed on the virtual disk are not trimmed on the physical storage where the virtual disk file resides. A virtual disk device can notify the file system that certain data ranges in a virtual disk file can be trimmed on the physical storage device with an <strong>FSCTL_FILE_LEVEL_TRIM</strong> request. The file system will then issue a trim request to the physical storage. An <strong>FSCTL_FILE_LEVEL_TRIM</strong> request could also be issued by service applications managing database or memory swap files.</p>
+
+<p>The <strong>FSCTL_FILE_LEVEL_TRIM</strong> control code will attempt to trim the selected byte ranges of a file from a storage device. The byte ranges are contained in the <strong>Ranges</strong> array in the <strong><a href="file_level_trim" title="typedef struct _FILE_LEVEL_TRIM {&#10;  ULONG                 Key;&#10;  ULONG                 NumRanges;&#10;  FILE_LEVEL_TRIM_RANGE Ranges[1];&#10;} FILE_LEVEL_TRIM, *PFILE_LEVEL_TRIM;">FILE_LEVEL_TRIM</a></strong> structure. Included in the <strong>Ranges</strong> array are one or more <strong><a href="file_level_trim_range" title="typedef struct _FILE_LEVEL_TRIM_RANGE {&#10;  ULONGLONG Offset;&#10;  ULONGLONG Length;&#10;} FILE_LEVEL_TRIM_RANGE, *PFILE_LEVEL_TRIM_RANGE;">FILE_LEVEL_TRIM_RANGE</a></strong> structures.</p>
+
+<p>Including overlapping ranges in the range array is not necessarily an error condition. This is dependent on how extent processing is handled by the underlying storage.</p>
+
+<p>Trimmed ranges are purged as pages from the file system cache. In order to match the cache page size, a trim range's length is adjusted down to a multiple of <strong><a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a></strong>. Also, if a trim range offset does not begin at a page boundary, it is aligned to the next page boundary. With these constraints, trim range lengths will reduce when their offsets are not page aligned or lengths are not a page size multiple. A trim range length may reduce to 0 if the original length is less than two pages and the offset is not page aligned.</p>
+
+<p>If a trim range is specified or page adjusted beyond the end-of-file (EOF), the range is ignored. However, a range offset aligned before EOF but having a length extending past EOF will be adjusted to a page size multiple &lt;= EOF.</p>
+
+<p>File level trim is not supported for compressed or encrypted files (files with <strong>ATTRIBUTE_FLAG_COMPRESSION_MASK</strong> or <strong>ATTRIBUTE_FLAG_ENCRYPTED</strong> attributes set).</p>
+
+<p>A file trim is performed outside of any transaction. The trim operation cannot be rolled back.</p>
+
+<p>With sparse files (files with the <strong>ATTRIBUTE_FLAG_SPARSE</strong> attribute set), a trim range in an unallocated portion of the file is ignored.</p>
+
+<p>When included in <em>OutputBuffer</em>, the <strong>NumRangesProcessed</strong> member of the <strong><a href="file_level_trim_output" title="typedef struct _FILE_LEVEL_TRIM_OUTPUT {&#10;  ULONG NumRangesProcessed;&#10;} FILE_LEVEL_TRIM_OUTPUT, *PFILE_LEVEL_TRIM_OUTPUT;">FILE_LEVEL_TRIM_OUTPUT</a></strong> will indicate the number of trim ranges successfully processed. If an error occurs during the processing of the trim ranges, <strong>NumRangesProcessed</strong> will specify the starting index of the remaining unprocessed ranges, ending at the <strong>NumRanges</strong> member of <strong><a href="file_level_trim" title="typedef struct _FILE_LEVEL_TRIM {&#10;  ULONG                 Key;&#10;  ULONG                 NumRanges;&#10;  FILE_LEVEL_TRIM_RANGE Ranges[1];&#10;} FILE_LEVEL_TRIM, *PFILE_LEVEL_TRIM;">FILE_LEVEL_TRIM</a></strong> - 1.</p>
+
+<h2>Requirements</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Requirement type</th>
+  <th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Minimum supported client</td>
+  <td>Windows 8</td>
+</tr>
+<tr>
+  <td>Header</td>
+  <td><em>Ntifs.h</em> (include <em>Ntifs.h</em> or <em>Fltkernel.h</em>)</td>
+</tr>
+</tbody>
+</table>
+
+<h2>See also</h2>
+
+<p><strong><a href="file_level_trim" title="typedef struct _FILE_LEVEL_TRIM {&#10;  ULONG                 Key;&#10;  ULONG                 NumRanges;&#10;  FILE_LEVEL_TRIM_RANGE Ranges[1];&#10;} FILE_LEVEL_TRIM, *PFILE_LEVEL_TRIM;">FILE_LEVEL_TRIM</a></strong></p>
+
+<p><strong><a href="file_level_trim_output" title="typedef struct _FILE_LEVEL_TRIM_OUTPUT {&#10;  ULONG NumRangesProcessed;&#10;} FILE_LEVEL_TRIM_OUTPUT, *PFILE_LEVEL_TRIM_OUTPUT;">FILE_LEVEL_TRIM_OUTPUT</a></strong></p>
+
+<p><strong><a href="file_level_trim_range" title="typedef struct _FILE_LEVEL_TRIM_RANGE {&#10;  ULONGLONG Offset;&#10;  ULONGLONG Length;&#10;} FILE_LEVEL_TRIM_RANGE, *PFILE_LEVEL_TRIM_RANGE;">FILE_LEVEL_TRIM_RANGE</a></strong></p>
+
+<p><strong><a href="fltcreatefile" title="NTSTATUS FLTAPI FltCreateFile(&#10;  [in]           PFLT_FILTER        Filter,&#10;  [in, optional] PFLT_INSTANCE      Instance,&#10;  [out]          PHANDLE            FileHandle,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              CreateDisposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           ULONG              Flags&#10;);">FltCreateFile</a></strong></p>
+
+<p><strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong></p>
+
+<p><strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff566462(v=vs.85)"><strong>ZwFsControlFile</strong></a></p>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/fsctl-file-level-trim">View the official Windows hardware development documentation</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs/blob/staging/windows-driver-docs-pr/ifs/fsctl-file-level-trim.md">Edit description on GitHub</a>
 </div>
 </div>
 </div>
