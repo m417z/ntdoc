@@ -113,47 +113,107 @@
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="scsi_request_block" title="typedef struct _SCSI_REQUEST_BLOCK {&#10;  USHORT                     Length;&#10;  UCHAR                      Function;&#10;  UCHAR                      SrbStatus;&#10;  UCHAR                      ScsiStatus;&#10;  UCHAR                      PathId;&#10;  UCHAR                      TargetId;&#10;  UCHAR                      Lun;&#10;  UCHAR                      QueueTag;&#10;  UCHAR                      QueueAction;&#10;  UCHAR                      CdbLength;&#10;  UCHAR                      SenseInfoBufferLength;&#10;  ULONG                      SrbFlags;&#10;  ULONG                      DataTransferLength;&#10;  ULONG                      TimeOutValue;&#10;  PVOID                      DataBuffer;&#10;  PVOID                      SenseInfoBuffer;&#10;  struct _SCSI_REQUEST_BLOCK *NextSrb;&#10;  PVOID                      OriginalRequest;&#10;  PVOID                      SrbExtension;&#10;...">PSCSI_REQUEST_BLOCK</a></span><span class="w">    </span><span class="n">Srb</span>
 <span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="o"><!--</span><span class="w"> </span><span class="o">--></span>
-<span class="err"> </span><span class="w"> </span><span class="n">C</span>
-<span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="n">ScsiPortNotification</span><span class="p">(</span>
+<span class="err">\</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;<!--</span><span class="w"> </span><span class="o">--></span>
+<span class="w"> </span>
+</code></pre>
+</div></li>
+<li><p><strong>NotificationType = NextRequest</strong></p>
+
+<p>Indicates the miniport driver is ready for another request to a target that is not currently busy. This notification should be sent by the miniport driver as soon as the driver is ready for another request. Usually, this notification is sent from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff557323(v=vs.85)"><strong>HwScsiStartIo</strong></a> routine but, sometimes, from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff557312(v=vs.85)"><strong>HwScsiInterrupt</strong></a> (or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff557295(v=vs.85)"><strong>HwScsiEnableInterruptsCallback</strong></a>) routine.</p></li>
+<li><p><strong>NotificationType = NextLuRequest</strong></p>
+
+<p>Indicates that the HBA is ready for another request for the specified logical unit. If this value is set, <strong>ScsiPortNotification</strong> requires three additional parameters: (1) the path ID, (2) the target ID, and (3) the logical unit number. This value should be used only if the HBA can queue multiple requests and support auto-request sense or tagged queuing.</p>
+
+<p>Syntax:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="nf">ScsiPortNotification</span><span class="p">(</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">SCSI_NOTIFICATION_TYPE</span><span class="w"> </span><span class="n">NotificationType</span><span class="p">,</span><span class="w">   </span><span class="c1">// NextLuRequest</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w">                        </span><span class="n">PathId</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w">                        </span><span class="n">TargetId</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w">                        </span><span class="n">Lun</span>
 <span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="o"><!--</span><span class="w"> </span><span class="o">--></span>
-<span class="err"> </span><span class="w"> </span><span class="n">C</span>
-<span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="n">ScsiPortNotification</span><span class="p">(</span>
+<span class="err">\</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;<!--</span><span class="w"> </span><span class="o">--></span>
+<span class="w"> </span>
+</code></pre>
+</div></li>
+<li><p><strong>NotificationType = ResetDetected</strong></p>
+
+<p>Indicates that the HBA has detected a reset on the SCSI bus. After this notification, the miniport driver is still responsible for completing any active requests. The SCSI port driver will manage all required bus-reset delays.</p></li>
+<li><p><strong>NotificationType = CallEnableInterrupts</strong></p>
+
+<p>Indicates that the miniport driver requires the operating system-specific port driver to call the miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff557295(v=vs.85)"><strong>HwScsiEnableInterruptsCallback</strong></a> routine. If this value is set, <strong>ScsiPortNotification</strong> requires an additional parameter: the entry point for the <strong>HwScsiEnableInterruptsCallback</strong>. The miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff557312(v=vs.85)"><strong>HwScsiInterrupt</strong></a> routine makes this call <em>after</em> disabling interrupts on the HBA, to defer some interrupt-driven I/O processing if the HBA requires polling or stalling in the ISR. While the callback runs, system interrupts remain enabled but the miniport driver's <strong>HwScsiInterrupt</strong> routine will not be called. The <strong>HwScsiEnableInterruptsCallback</strong> is responsible for completing the deferred I/O processing and for calling <strong>ScsiPortNotification</strong> again with <strong>CallDisableInterrupts</strong> and the miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff557288(v=vs.85)"><strong>HwScsiDisableInterruptsCallback</strong></a> entry point.</p>
+
+<p>Syntax:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="nf">ScsiPortNotification</span><span class="p">(</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">SCSI_NOTIFICATION_TYPE</span><span class="w"> </span><span class="n">NotificationType</span><span class="p">,</span><span class="w">           </span><span class="c1">// CallEnableInterrupts</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="phw_interrupt" title="PHW_INTERRUPT PhwInterrupt;&#10;&#10;BOOLEAN PhwInterrupt(&#10;  [in] PVOID DeviceExtension&#10;)&#10;{...}">PHW_INTERRUPT</a></span><span class="w">          </span><span class="n">HwScsiXxxInterruptsCallback</span>
 <span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="o"><!--</span><span class="w"> </span><span class="o">--></span>
-<span class="err"> </span><span class="w"> </span><span class="n">C</span>
-<span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="n">ScsiPortNotification</span><span class="p">(</span>
+<span class="err">\</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;<!--</span><span class="w"> </span><span class="o">--></span>
+<span class="w"> </span>
+</code></pre>
+</div></li>
+<li><p><strong>NotificationType = CallDisableInterrupts</strong></p>
+
+<p>Indicates that the miniport driver requires the operating system-specific port driver to call the miniport driver's <strong>HwScsiDisableInterruptsCallback</strong> routine. If this value is set, <strong>ScsiPortNotification</strong> requires an additional parameter: the entry point for the <strong>HwScsiDisableInterruptsCallback</strong>. While this callback runs, it cannot be preempted by an interrupt except from a device with a higher priority interrupt than the HBA. In this callback, the miniport driver reenables interrupts on the HBA.</p>
+
+<p>Syntax:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="nf">ScsiPortNotification</span><span class="p">(</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">SCSI_NOTIFICATION_TYPE</span><span class="w"> </span><span class="n">NotificationType</span><span class="p">,</span><span class="w">          </span><span class="c1">// CallDisableInterrupts</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="phw_interrupt" title="PHW_INTERRUPT PhwInterrupt;&#10;&#10;BOOLEAN PhwInterrupt(&#10;  [in] PVOID DeviceExtension&#10;)&#10;{...}">PHW_INTERRUPT</a></span><span class="w">          </span><span class="n">HwScsiXxxInterruptsCallback</span>
 <span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="o"><!--</span><span class="w"> </span><span class="o">--></span>
-<span class="err"> </span><span class="w"> </span><span class="n">C</span>
-<span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="n">ScsiPortNotification</span><span class="p">(</span>
+<span class="err">\</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;<!--</span><span class="w"> </span><span class="o">--></span>
+<span class="w"> </span>
+</code></pre>
+</div></li>
+<li><p><strong>NotificationType = RequestTimerCall</strong></p>
+
+<p>Indicates that the miniport driver requires the operating system-specific port driver to call the miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff557327(v=vs.85)"><strong>HwScsiTimer</strong></a> routine in the requested number of microseconds. If this value is set, <strong>ScsiPortNotification</strong> requires two additional parameters: (1) the entry point for the miniport driver's <strong>HwScsiTimer</strong> routine, and (2) a <strong>MiniportTimerValue</strong> interval, in microseconds. Note that the resolution of the system timer is approximately 10 milliseconds.</p>
+
+<p>Syntax:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="nf">ScsiPortNotification</span><span class="p">(</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">SCSI_NOTIFICATION_TYPE</span><span class="w"> </span><span class="n">NotificationType</span><span class="p">,</span><span class="w">    </span><span class="c1">// RequestTimerCall</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="phw_timer" title="PHW_TIMER PhwTimer;&#10;&#10;VOID PhwTimer(&#10;  [in] PVOID DeviceExtension&#10;)&#10;{...}">PHW_TIMER</a></span><span class="w">              </span><span class="n">HwScsiTimer</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">                  </span><span class="n">MiniportTimerValue</span>
 <span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="o"><!--</span><span class="w"> </span><span class="o">--></span>
-<span class="err"> </span><span class="w"> </span><span class="n">C</span>
-<span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="n">ScsiPortNotification</span><span class="p">(</span>
+<span class="err">\</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;<!--</span><span class="w"> </span><span class="o">--></span>
+<span class="w"> </span>
+</code></pre>
+</div></li>
+<li><p><strong>NotificationType = BusChangeDetected</strong></p>
+
+<p>Indicates that a target device might have been added or removed from a dynamic bus. If this value is set, <strong>ScsiPortNotification</strong> requires an additional parameter: the path ID of the bus on which the change was detected. After this notification, the port driver reenumerates the bus by issuing INQUIRY commands. Bus enumeration is time-consuming and ties up the bus, so a miniport driver should not send this notification unnecessarily.</p>
+
+<p>Syntax:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="nf">ScsiPortNotification</span><span class="p">(</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">SCSI_NOTIFICATION_TYPE</span><span class="w"> </span><span class="n">NotificationType</span><span class="p">,</span><span class="w">    </span><span class="c1">// BusChangeDetected</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w">                  </span><span class="n">PathId</span>
 <span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="o"><!--</span><span class="w"> </span><span class="o">--></span>
-<span class="err"> </span><span class="w"> </span><span class="n">C</span>
-<span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="n">ScsiPortNotification</span><span class="p">(</span>
+<span class="err">\</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;<!--</span><span class="w"> </span><span class="o">--></span>
+<span class="w"> </span>
+</code></pre>
+</div></li>
+<li><p><strong>NotificationType = WMIEvent</strong></p>
+
+<p>Indicates that the miniport driver has detected an event for which one or more WMI data consumers is registered. If this value is set, <strong>ScsiPortNotification</strong> requires at least three additional arguments: (1) a pointer to a WMI event structure, (2) the size of the event structure, and (3) the path ID of the target device if the event originated from a device, or 0xFF if the event originated from the adapter. If (3) is a path ID, <strong>ScsiPortNotification</strong> requires two additional arguments: (4) the target ID, and (5) the logical unit number (LUN) of the target device.</p>
+
+<p>Syntax for PathId != 0xFF</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="nf">ScsiPortNotification</span><span class="p">(</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">SCSI_NOTIFICATION_TYPE</span><span class="w"> </span><span class="n">NotificationType</span><span class="p">,</span><span class="w">    </span><span class="c1">// WMIEvent</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">WMIEvent</span><span class="p">,</span>
@@ -161,34 +221,58 @@
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w">                  </span><span class="n">TargetId</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w">                  </span><span class="n">Lun</span>
 <span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="o"><!--</span><span class="w"> </span><span class="o">--></span>
-<span class="err"> </span><span class="w"> </span><span class="n">C</span>
-<span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="n">ScsiPortNotification</span><span class="p">(</span>
+<span class="err">\</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;<!--</span><span class="w"> </span><span class="o">--></span>
+<span class="w"> </span>
+</code></pre>
+</div></li>
+</ul>
+
+<p>Syntax for PathId = 0xFF</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="nf">ScsiPortNotification</span><span class="p">(</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">SCSI_NOTIFICATION_TYPE</span><span class="w"> </span><span class="n">NotificationType</span><span class="p">,</span><span class="w">    </span><span class="c1">// WMIEvent</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">WMIEvent</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w">                  </span><span class="n">PathId</span><span class="w">               </span><span class="c1">// 0xFF</span>
 <span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="o"><!--</span><span class="w"> </span><span class="o">--></span>
-<span class="err"> </span><span class="w"> </span><span class="n">C</span>
-<span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="n">ScsiPortNotification</span><span class="p">(</span>
+<span class="err">\</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;<!--</span><span class="w"> </span><span class="o">--></span>
+<span class="w"> </span>
+</code></pre>
+</div>
+
+<ul>
+<li><p><strong>NotificationType = WMIReregister</strong></p>
+
+<p>Indicates that the miniport driver has changed the data items or the number of instances of a given data block previously registered by calling <strong><a href="iowmiregistrationcontrol" title="NTSTATUS IoWMIRegistrationControl(&#10;  [in] PDEVICE_OBJECT DeviceObject,&#10;  [in] ULONG          Action&#10;);">IoWMIRegistrationControl</a></strong>. If <strong>WMIReregister</strong> is set, <strong>ScsiPortNotification</strong> requires at least two additional arguments: (1) the path ID of the target device to reregister that device, or 0xFF to reregister the adapter. If (1) is a path ID, <strong>ScsiPortNotification</strong> requires two additional arguments: (2) the target ID, and (3) the logical unit number (LUN) of the target device.</p>
+
+<p>Syntax for PathId != 0xFF</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="nf">ScsiPortNotification</span><span class="p">(</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">SCSI_NOTIFICATION_TYPE</span><span class="w"> </span><span class="n">NotificationType</span><span class="p">,</span><span class="w">    </span><span class="c1">// WMIReregister</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w">                  </span><span class="n">PathId</span><span class="p">,</span><span class="w">             </span><span class="c1">// != 0xFF</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w">                  </span><span class="n">TargetId</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w">                  </span><span class="n">Lun</span>
 <span class="w">  </span><span class="p">);</span>
-<span class="w">  </span><span class="o"><!--</span><span class="w"> </span><span class="o">--></span>
-<span class="err"> </span><span class="w"> </span><span class="n">C</span>
-<span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="n">ScsiPortNotification</span><span class="p">(</span>
+<span class="err">\</span><span class="o">&lt;</span><span class="mi">1</span><span class="o">&gt;<!--</span><span class="w"> </span><span class="o">--></span>
+<span class="w"> </span>
+</code></pre>
+</div></li>
+</ul>
+
+<p>Syntax for PathId = 0xFF</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="w">  </span><span class="n">VOID</span><span class="w"> </span><span class="nf">ScsiPortNotification</span><span class="p">(</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">SCSI_NOTIFICATION_TYPE</span><span class="w"> </span><span class="n">NotificationType</span><span class="p">,</span><span class="w">   </span><span class="c1">// WMIReregister</span>
 <span class="w">    </span><span class="n">_In_</span><span class="w">     </span><span class="n">PVOID</span><span class="w">                  </span><span class="n">HwDeviceExtension</span><span class="p">,</span>
 <span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w">                  </span><span class="n">PathId</span><span class="w">              </span><span class="c1">// 0xFF</span>
 <span class="w">  </span><span class="p">);</span>
 <span class="w"> </span>
 </code></pre>
-</div></li>
-</ul>
+</div>
 
 <p>Every miniport driver must call <strong>ScsiPortNotification</strong> twice for each call to the miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff557323(v=vs.85)"><strong>HwScsiStartIo</strong></a> routine with an SRB that the miniport driver completes successfully. First, the miniport driver calls <strong>ScsiPortNotification</strong> with the <strong>NotificationType</strong> of <strong>NextRequest</strong> or with <strong>NextLuRequest</strong> if the miniport driver supports tagged queuing or multiple requests per LU. Then, the miniport driver calls <strong>ScsiPortNotification</strong> with the <strong>NotificationType</strong> of <strong>RequestComplete</strong> and the request that it has just satisfied.</p>
 
