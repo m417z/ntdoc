@@ -10,6 +10,8 @@ class ChunkOrigin(IntEnum):
     PHNT = auto()
     MSDN_DDI = auto()
     MSDN_WIN32 = auto()
+    MSDN_DRIVER_FUZZY = auto()
+    MSDN_WIN32_FUZZY = auto()
 
 
 @dataclass

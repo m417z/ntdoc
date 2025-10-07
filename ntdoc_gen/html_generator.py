@@ -14,7 +14,8 @@ from . import config
 from .chunk import Chunk, ChunkOrigin
 from .markdown import markdown_to_html
 from .msdn import (get_msdn_doc_path, get_msdn_doc_repository_url,
-                   get_msdn_doc_url, get_msdn_origin_title)
+                   get_msdn_doc_url, get_msdn_origin_title,
+                   is_msdn_chunk_origin)
 
 
 def chunk_to_html(chunk: Chunk) -> str:
@@ -32,7 +33,8 @@ def chunk_to_html(chunk: Chunk) -> str:
     # Remove empty lines.
     html_before = re.sub(r'\n\n+', '\n', html_before)
 
-    html_before += '\n'
+    if html_before:
+        html_before += '\n'
 
     html_after = ''
     for x in after:
@@ -41,14 +43,15 @@ def chunk_to_html(chunk: Chunk) -> str:
     # Remove empty lines.
     html_after = re.sub(r'\n\n+', '\n', html_after)
 
-    html_after = '\n' + html_after
+    if html_after:
+        html_after = '\n' + html_after
 
     code_full_url = code_url
     code_link_title = 'View code'
     if origin == ChunkOrigin.PHNT:
         code_full_url = config.URL_PHNT_REPOSITORY + f'/blob/{config.PHNT_REPOSITORY_COMMIT}/phnt/include/' + code_url
         code_link_title = 'View code on GitHub'
-    elif origin in [ChunkOrigin.MSDN_DDI, ChunkOrigin.MSDN_WIN32]:
+    elif is_msdn_chunk_origin(origin):
         code_full_url = get_msdn_doc_url(chunk)
         code_link_title = f'View the official {get_msdn_origin_title(chunk.origin)}'
 
@@ -329,7 +332,7 @@ def get_descriptions_html(
     descriptions: List[Tuple[str, str]] = []
 
     for chunk in chunks:
-        if chunk.origin in [ChunkOrigin.MSDN_DDI, ChunkOrigin.MSDN_WIN32]:
+        if is_msdn_chunk_origin(chunk.origin):
             assert msdn_docs_path
             is_selected = not prefer_ntdoc_over_fallback and len(descriptions) == 0
             description_msdn = get_msdn_description_html(
@@ -446,7 +449,7 @@ def organize_chunks_to_dir(
         if id not in id_to_tooltip_text:
             id_to_tooltip_text[id] = chunk.body
 
-        if chunk.origin in [ChunkOrigin.MSDN_DDI, ChunkOrigin.MSDN_WIN32]:
+        if is_msdn_chunk_origin(chunk.origin):
             msdn_url_to_chunk_id[get_msdn_doc_url(chunk)] = id
 
     html_links_adder = HtmlLinksAdder(ident_to_id, id_to_tooltip_text, msdn_url_to_chunk_id)

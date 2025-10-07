@@ -2,23 +2,74 @@
 
 import json
 import re
+from dataclasses import dataclass
+from enum import IntEnum, auto
 from pathlib import Path
 from typing import List, Optional
 
 from .chunk import Chunk, ChunkOrigin
 from .ioctl import ctl_code_from_ioctl, get_ioctl_definition
 
-URL_MSDN_DDI_DOCS = 'https://learn.microsoft.com/windows-hardware/drivers/ddi'
-URL_MSDN_DDI_DOCS_REPOSITORY = 'https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content'
 
-URL_MSDN_WIN32_DOCS = 'https://learn.microsoft.com/windows/win32/api'
-URL_MSDN_WIN32_DOCS_REPOSITORY = 'https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content'
+class DocsRepositoryType(IntEnum):
+    # With file name prefixes and more-or-less organized structure and metadata.
+    ORGANIZED = auto()
+
+    # Without file name prefixes and less organized structure and metadata.
+    FUZZY = auto()
+
+
+@dataclass
+class DocsRepositoryInfo:
+    title: str
+    repository: str
+    base_url: str
+    base_repository_url: str
+    type: DocsRepositoryType
+
+
+DOCS_REPOSITORY_INFO = {
+    ChunkOrigin.MSDN_DDI: DocsRepositoryInfo(
+        title='Windows Driver Kit DDI reference',
+        repository='windows-driver-docs-ddi',
+        base_url='https://learn.microsoft.com/windows-hardware/drivers/ddi/',
+        base_repository_url='https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/',
+        type=DocsRepositoryType.ORGANIZED,
+    ),
+    ChunkOrigin.MSDN_WIN32: DocsRepositoryInfo(
+        title='Win32 API reference',
+        repository='sdk-api',
+        base_url='https://learn.microsoft.com/windows/win32/api/',
+        base_repository_url='https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/',
+        type=DocsRepositoryType.ORGANIZED,
+    ),
+    ChunkOrigin.MSDN_DRIVER_FUZZY: DocsRepositoryInfo(
+        title='Windows hardware development documentation',
+        repository='windows-driver-docs',
+        base_url='https://learn.microsoft.com/windows-hardware/drivers/',
+        base_repository_url='https://github.com/MicrosoftDocs/windows-driver-docs/blob/staging/windows-driver-docs-pr/',
+        type=DocsRepositoryType.FUZZY,
+    ),
+    ChunkOrigin.MSDN_WIN32_FUZZY: DocsRepositoryInfo(
+        title='Win32 development documentation',
+        repository='win32',
+        base_url='https://learn.microsoft.com/windows/win32/',
+        base_repository_url='https://github.com/MicrosoftDocs/win32/blob/docs/desktop-src/',
+        type=DocsRepositoryType.FUZZY,
+    ),
+}
 
 
 def msdn_docs_header_to_chunk(
-    json_path: Path, docs_path: Path, origin: ChunkOrigin
+    json_path: Path,
+    docs_path: Path,
+    origin: ChunkOrigin,
+    repository_type: DocsRepositoryType,
 ) -> Optional[Chunk]:
-    header_name = json_path.relative_to(docs_path).parts[0] + '.h'
+    header_name = ''
+    if repository_type == DocsRepositoryType.ORGANIZED:
+        header_name = json_path.relative_to(docs_path).parts[0] + '.h'
+        header_name = header_name.lower()  # Just to be sure.
 
     if origin == ChunkOrigin.MSDN_DDI:
         if header_name.lower() in [
@@ -30,16 +81,31 @@ def msdn_docs_header_to_chunk(
             # Contains mostly C++ stuff.
             return None
 
-    is_ioctl = json_path.name.startswith('ni-')
+    with json_path.open('r', encoding='utf-8') as f:
+        doc_metadata = json.load(f)
+
+    if repository_type == DocsRepositoryType.FUZZY and '_fuzzy_header' in doc_metadata:
+        if header_name:
+            assert doc_metadata['_fuzzy_header'] == header_name, json_path
+        else:
+            header_name = doc_metadata['_fuzzy_header']
+            assert isinstance(header_name, str)
+            header_name = header_name.lower()  # Just to be sure.
+
+    is_ioctl = False
+    if repository_type == DocsRepositoryType.ORGANIZED:
+        if json_path.name.startswith('ni-'):
+            is_ioctl = True
+    elif repository_type == DocsRepositoryType.FUZZY:
+        if doc_metadata['_fuzzy_type'] == 'control code':
+            is_ioctl = True
+
     c_path = json_path.with_suffix('.c')
     if not is_ioctl and not c_path.exists():
         return None
 
-    with json_path.open('r', encoding='utf-8') as f:
-        doc_metadata = json.load(f)
-
-    if origin == ChunkOrigin.MSDN_WIN32:
-        if is_ioctl or header_name.lower() in [
+    if origin in [ChunkOrigin.MSDN_WIN32, ChunkOrigin.MSDN_WIN32_FUZZY]:
+        if is_ioctl or header_name in [
             'winioctl.h',
             'winternl.h',
             'ntddkbd.h',
@@ -68,13 +134,24 @@ def msdn_docs_header_to_chunk(
             if not is_ntdll_api:
                 return None
 
+    # Check api_type.
     api_type = doc_metadata.get('api_type')
-    assert isinstance(api_type, list), json_path
-    assert len(api_type) == 1, json_path
-    api_type = api_type[0]
+
+    if repository_type == DocsRepositoryType.FUZZY:
+        if api_type == ['NA']:
+            api_type = None
+    else:
+        assert api_type is not None, json_path
+
+    if api_type is not None:
+        assert isinstance(api_type, list), json_path
+        assert len(api_type) == 1, json_path
+        api_type = api_type[0]
+
     if api_type in ['COM']:
         return None
-    assert api_type in [
+
+    assert api_type is None or api_type in [
         'DllExport',
         'DLLExport',
         'HeaderDef',
@@ -84,10 +161,22 @@ def msdn_docs_header_to_chunk(
 
     idents = doc_metadata.get('api_name', [])
     assert isinstance(idents, list), json_path
-    assert idents, json_path
 
     # Remove duplicates while preserving order.
     idents = list(dict.fromkeys(idents))
+
+    if repository_type == DocsRepositoryType.FUZZY:
+        fuzzy_ident = doc_metadata['_fuzzy_ident']
+        if idents:
+            if fuzzy_ident not in [
+                'IOCTL_COPYCHUNK',
+                'IOCTL_LMR_DISABLE_LOCAL_BUFFERING',
+            ]:
+                assert idents == [fuzzy_ident], json_path
+        else:
+            idents = [fuzzy_ident]
+
+    assert idents, json_path
 
     if not is_ioctl:
         body = c_path.read_text(encoding='utf-8')
@@ -138,7 +227,7 @@ def msdn_docs_header_to_chunk(
             body = f'// {ctl_code_from_ioctl(ioctl_code)}\n'
             body += f'#define {idents[0]} 0x{ioctl_code:08X}'
 
-    header_name_comment = '// ' + header_name + '\n'
+    header_name_comment = '// ' + header_name + '\n' if header_name else ''
 
     code_url = json_path.relative_to(docs_path).with_suffix('').as_posix()
 
@@ -156,53 +245,36 @@ def msdn_docs_header_to_chunk(
 def msdn_docs_to_chunks(msdn_docs_path: Path, ids_pattern: Optional[str]) -> List[Chunk]:
     result: List[Chunk] = []
 
-    doc_sources = [
-        ('windows-driver-docs-ddi', ChunkOrigin.MSDN_DDI),
-        ('sdk-api', ChunkOrigin.MSDN_WIN32),
-    ]
-
-    for docs_subpath, chunk_origin in doc_sources:
-        docs_path = msdn_docs_path / docs_subpath
+    for chunk_origin, docs_info in DOCS_REPOSITORY_INFO.items():
+        docs_path = msdn_docs_path / docs_info.repository
         for json_path in sorted(docs_path.rglob('*.json')):
             if ids_pattern and not re.search(ids_pattern, json_path.stem, flags=re.IGNORECASE):
                 continue
 
-            chunk = msdn_docs_header_to_chunk(json_path, docs_path, chunk_origin)
+            chunk = msdn_docs_header_to_chunk(json_path, docs_path, chunk_origin, docs_info.type)
             if chunk:
                 result.append(chunk)
 
     return result
 
 
+def is_msdn_chunk_origin(chunk_origin: ChunkOrigin) -> bool:
+    return chunk_origin in DOCS_REPOSITORY_INFO.keys()
+
+
 def get_msdn_doc_url(chunk: Chunk) -> str:
-    code_url = chunk.code_url
+    code_url = chunk.code_url.lower()
     code_url = code_url.replace(',', '_').replace('&', '_').replace('~', '-').replace(' ', '')
-    if chunk.origin == ChunkOrigin.MSDN_DDI:
-        return f'{URL_MSDN_DDI_DOCS}/{code_url}'
-    if chunk.origin == ChunkOrigin.MSDN_WIN32:
-        return f'{URL_MSDN_WIN32_DOCS}/{code_url}'
-    raise RuntimeError(f'Unexpected chunk origin: {chunk.origin}')
+    return f'{DOCS_REPOSITORY_INFO[chunk.origin].base_url}{code_url}'
 
 
 def get_msdn_doc_repository_url(chunk: Chunk) -> str:
-    if chunk.origin == ChunkOrigin.MSDN_DDI:
-        return f'{URL_MSDN_DDI_DOCS_REPOSITORY}/{chunk.code_url}.md'
-    if chunk.origin == ChunkOrigin.MSDN_WIN32:
-        return f'{URL_MSDN_WIN32_DOCS_REPOSITORY}/{chunk.code_url}.md'
-    raise RuntimeError(f'Unexpected chunk origin: {chunk.origin}')
+    return f'{DOCS_REPOSITORY_INFO[chunk.origin].base_repository_url}{chunk.code_url}.md'
 
 
 def get_msdn_doc_path(msdn_docs_path: Path, chunk: Chunk) -> Path:
-    if chunk.origin == ChunkOrigin.MSDN_DDI:
-        return msdn_docs_path / 'windows-driver-docs-ddi' / (chunk.code_url + '.md')
-    if chunk.origin == ChunkOrigin.MSDN_WIN32:
-        return msdn_docs_path / 'sdk-api' / (chunk.code_url + '.md')
-    raise RuntimeError(f'Unexpected chunk origin: {chunk.origin}')
+    return msdn_docs_path / DOCS_REPOSITORY_INFO[chunk.origin].repository / (chunk.code_url + '.md')
 
 
 def get_msdn_origin_title(chunk_origin: ChunkOrigin) -> str:
-    if chunk_origin == ChunkOrigin.MSDN_DDI:
-        return 'Windows Driver Kit DDI reference'
-    if chunk_origin == ChunkOrigin.MSDN_WIN32:
-        return 'Win32 API reference'
-    raise RuntimeError(f'Unexpected chunk origin: {chunk_origin}')
+    return DOCS_REPOSITORY_INFO[chunk_origin].title
