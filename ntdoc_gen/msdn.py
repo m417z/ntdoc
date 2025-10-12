@@ -179,6 +179,12 @@ def msdn_docs_header_to_chunk(
                 'PLDR_DLL_NOTIFICATION_FUNCTION',
             ]
             idents[0], idents[1] = idents[1], idents[0]
+        elif fuzzy_ident == 'PFREE_FUNCTION':
+            # Special case.
+            assert idents == [
+                'FreeCallback',
+            ]
+            idents = [fuzzy_ident]
         elif idents:
             assert idents == [fuzzy_ident], json_path
         else:
