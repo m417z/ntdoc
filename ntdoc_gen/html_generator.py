@@ -301,7 +301,7 @@ def get_msdn_description_html(
     if description == '':
         raise RuntimeError(f'MSDN description not found: {description_path}')
 
-    html_description = markdown_to_html(description, header_ids=is_selected)
+    html_description = markdown_to_html(description, header_ids=is_selected, code_friendly=True)
     html = html_links_adder.remove_unnecessary_msdn_links(html_description)
     html = html_links_adder.add_links(html, id)
 

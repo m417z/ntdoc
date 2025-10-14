@@ -5,15 +5,19 @@ import re
 import markdown2
 
 
-def markdown_to_html(text: str, header_ids=True) -> str:
+def markdown_to_html(text: str, header_ids=True, code_friendly=False) -> str:
     extras = {
         'breaks': {'on_backslash': True},
-        'code-friendly': None,  # TODO: replace with: 'middle-word-em': {'allowed': False},
         'cuddled-lists': None,
         'fenced-code-blocks': None,
         'tables': None,
         'target-blank-links': None,
     }
+
+    if code_friendly:
+        extras['code-friendly'] = None
+    else:
+        extras['middle-word-em'] = {'allowed': False}
 
     if header_ids:
         extras['header-ids'] = None
