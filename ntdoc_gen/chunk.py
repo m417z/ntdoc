@@ -65,6 +65,23 @@ def organize_idents_to_ids(chunks: List[Chunk]) -> Dict[str, str]:
         'WMI_DISKIO_FLUSH_BUFFERS': 'ETW_DISKIO_FLUSH_BUFFERS_V3',
         'MOFRESOURCEINFOA': 'MOFRESOURCEINFO',
         'MOFRESOURCEINFOW': 'MOFRESOURCEINFO',
+        # MSDN docs has these unified, unify NtDoc entries too.
+        'RtlIpv4AddressToStringA': 'RtlIpv4AddressToString',
+        'RtlIpv4AddressToStringW': 'RtlIpv4AddressToString',
+        'RtlIpv4AddressToStringExA': 'RtlIpv4AddressToStringEx',
+        'RtlIpv4AddressToStringExW': 'RtlIpv4AddressToStringEx',
+        'RtlIpv4StringToAddressA': 'RtlIpv4StringToAddress',
+        'RtlIpv4StringToAddressW': 'RtlIpv4StringToAddress',
+        'RtlIpv4StringToAddressExA': 'RtlIpv4StringToAddressEx',
+        'RtlIpv4StringToAddressExW': 'RtlIpv4StringToAddressEx',
+        'RtlIpv6AddressToStringA': 'RtlIpv6AddressToString',
+        'RtlIpv6AddressToStringW': 'RtlIpv6AddressToString',
+        'RtlIpv6AddressToStringExA': 'RtlIpv6AddressToStringEx',
+        'RtlIpv6AddressToStringExW': 'RtlIpv6AddressToStringEx',
+        'RtlIpv6StringToAddressA': 'RtlIpv6StringToAddress',
+        'RtlIpv6StringToAddressW': 'RtlIpv6StringToAddress',
+        'RtlIpv6StringToAddressExA': 'RtlIpv6StringToAddressEx',
+        'RtlIpv6StringToAddressExW': 'RtlIpv6StringToAddressEx',
     }
     id_update_from_to_collisions: Dict[str, str] = {
         # Collides with function WinStationShadow.
@@ -141,6 +158,8 @@ def organize_idents_to_ids(chunks: List[Chunk]) -> Dict[str, str]:
         for ident in chunk.idents:
             if ident not in ident_to_id:
                 ident_to_id[ident] = id
+                if id in id_special_cases:
+                    id_update_from_to[id] = id_special_cases[id]
                 continue
 
             id1 = ident_to_id[ident]
