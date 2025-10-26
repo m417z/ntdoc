@@ -2,10 +2,10 @@
 
 ## Description
 
-The <b>RtlDosPathNameToNtPathName_U</b> routine converts DosPathName to NtPathName by prepending these prefixes depending on what type of path
+The **RtlDosPathNameToNtPathName_U** routine converts DosPathName to NtPathName by prepending these prefixes depending on what type of path
 
-* <b>NtPrefix</b>: `\??\` <b>(C:\\Users\\Sample -> \\??\\C:\\Users\\Sample)</b>
-* <b>UncPrefix:</b> `\??\UNC\` <b>(\\\\server\\share\\path -> \\??\\UNC\\server\\share\\path)</b>
+* **NtPrefix**: `\??\` **(C:\\Users\\Sample -> \\??\\C:\\Users\\Sample)**
+* **UncPrefix:** `\??\UNC\` **(\\\\server\\share\\path -> \\??\\UNC\\server\\share\\path)**
 
 ## Parameters
 
@@ -13,34 +13,35 @@ The <b>RtlDosPathNameToNtPathName_U</b> routine converts DosPathName to NtPathNa
 
 A DOS-style file path/UNC Path that will be converted into Nt-Style Path.
 
-If <b>DosFileName</b> only contains file component, it resolves it by using the process's current directory `(NtCurrentPeb()->ProcessParameters->CurrentDirectory)`
+If **DosFileName** only contains file component, it resolves it by using the process's current directory `(NtCurrentPeb()->ProcessParameters->CurrentDirectory)`
 
-If <b>DosFileName</b> contains drive relative path <b>(e.g. C:Sample.txt)</b>, it retrieves the drive's current directory, combining it with the file component then prepend the <b>NtPrefix</b>. 
+If **DosFileName** contains drive relative path **(e.g. C:Sample.txt)**, it retrieves the drive's current directory, combining it with the file component then prepend the **NtPrefix**. 
 
-<b>(Note: If there's no file component, it simply prepends the NtPrefix to the current directory of the drive and then copies it into the `NtFileName->Buffer`)</b>
+**(Note: If there's no file component, it simply prepends the NtPrefix to the current directory of the drive and then copies it into the `NtFileName->Buffer`)**
 
 ### -NtFileName [OUT]
 
-A pointer of `UNICODE_STRING` where it receives the converted <b>DosFileName</b>
+A pointer of `UNICODE_STRING` where it receives the converted **DosFileName**
 
 ### -FilePart [OUTOPT]
 
-A string where if there's a file component on the Absolute Path of the <b>DosFileName</b>, this parameter receives the string of the file component <b>(e.g. Sample.txt)</b>.
+A string where if there's a file component on the Absolute Path of the **DosFileName**, this parameter receives the string of the file component **(e.g. Sample.txt)**.
 
-If there's no file component, it uses the last folder as its file component <b>(e.g. C:\Sample -> "Sample")</b>
+If there's no file component, it uses the last folder as its file component **(e.g. C:\Sample -> "Sample")**
 
 ### -RelativeName [OUTOPT]
 
-<b>(Only for Relative Path)</b> A pointer of `RTL_RELATIVE_NAME_U` where additional info for Relative Path are stored
+**(Only for Relative Path)** A pointer of `RTL_RELATIVE_NAME_U` where additional info for Relative Path are stored
 
 ## Return
-Returns <b>TRUE</b>  if successfully converted into Nt-Style Path. <b>FALSE</b> otherwise
+Returns **TRUE**  if successfully converted into Nt-Style Path. **FALSE** otherwise
 
 # See Also
 <a href="https://ntdoc.m417z.com/rtldospathnametontpathname_u_withstatus">RtlDosPathNameToNtPathName_U_WithStatus</a>
 
 
 <a href="https://ntdoc.m417z.com/rtldospathnametorelativentpathname_u">RtlDosPathNameToRelativeNtPathName_U</a>
+
 
 
 <a href="https://ntdoc.m417z.com/rtldospathnametorelativentpathname_u_withstatus">RtlDosPathNameToRelativeNtPathName_U_WithStatus</a>
