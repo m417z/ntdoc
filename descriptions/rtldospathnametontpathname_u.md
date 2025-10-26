@@ -2,7 +2,7 @@
 
 ## Description
 
-The **RtlDosPathNameToNtPathName_U** routine converts DosPathName to NtPathName by prepending these prefixes depending on what type of path
+The **RtlDosPathNameToNtPathName_U** routine converts DosPathName to NtPathName by prepending these prefixes depending on the type of the path
 
 * **NtPrefix**: `\??\` **(C:\\Users\\Sample -> \\??\\C:\\Users\\Sample)**
 * **UncPrefix:** `\??\UNC\` **(\\\\server\\share\\path -> \\??\\UNC\\server\\share\\path)**
@@ -45,4 +45,5 @@ Returns **TRUE**  if successfully converted into Nt-Style Path. **FALSE** otherw
 
 
 <a href="https://ntdoc.m417z.com/rtldospathnametorelativentpathname_u_withstatus">RtlDosPathNameToRelativeNtPathName_U_WithStatus</a>
+
 
