@@ -9,7 +9,7 @@ The **RtlDosPathNameToNtPathName_U** routine converts DosPathName to NtPathName 
 
 ## Parameters
 
-### -DosFileName [IN]
+### `DosFileName` [IN]
 
 A DOS-style file path/UNC Path that will be converted into Nt-Style Path.
 
@@ -19,17 +19,17 @@ If **DosFileName** contains drive relative path **(e.g. C:Sample.txt)**, it retr
 
 **(Note: If there's no file component, it simply prepends the NtPrefix to the current directory of the drive and then copies it into the `NtFileName->Buffer`)**
 
-### -NtFileName [OUT]
+### `NtFileName` [OUT]
 
 A pointer of `UNICODE_STRING` where it receives the converted **DosFileName**
 
-### -FilePart [OUTOPT]
+### `FilePart` [OUTOPT]
 
 A string where if there's a file component on the Absolute Path of the **DosFileName**, this parameter receives the string of the file component **(e.g. Sample.txt)**.
 
 If there's no file component, it uses the last folder as its file component **(e.g. C:\Sample -> "Sample")**
 
-### -RelativeName [OUTOPT]
+### `RelativeName` [OUTOPT]
 
 **(Only for Relative Path)** A pointer of `RTL_RELATIVE_NAME_U` where additional info for Relative Path are stored
 
@@ -45,3 +45,4 @@ Returns **TRUE**  if successfully converted into Nt-Style Path. **FALSE** otherw
 
 
 <a href="https://ntdoc.m417z.com/rtldospathnametorelativentpathname_u_withstatus">RtlDosPathNameToRelativeNtPathName_U_WithStatus</a>
+
