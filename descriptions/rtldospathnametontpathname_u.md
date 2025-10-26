@@ -11,7 +11,7 @@ The **RtlDosPathNameToNtPathName_U** routine converts DosPathName to NtPathName 
 
 ### `DosFileName` [IN]
 
-A DOS-style file path/UNC Path that will be converted into Nt-Style Path.
+A DOS-style file path/UNC Path that will be converted into NT Path.
 
 If **DosFileName** only contains file component, it resolves it by using the process's current directory `(NtCurrentPeb()->ProcessParameters->CurrentDirectory)`
 
@@ -34,7 +34,7 @@ If there's no file component, it uses the last folder as its file component **(e
 **(Only for Relative Path)** A pointer of `RTL_RELATIVE_NAME_U` where additional info for Relative Path are stored
 
 ## Return
-Returns **TRUE**  if successfully converted into Nt-Style Path. **FALSE** otherwise
+Returns **TRUE**  if successfully converted into NT Path. **FALSE** otherwise
 
 # See Also
 <a href="https://ntdoc.m417z.com/rtldospathnametontpathname_u_withstatus">RtlDosPathNameToNtPathName_U_WithStatus</a>
@@ -45,5 +45,6 @@ Returns **TRUE**  if successfully converted into Nt-Style Path. **FALSE** otherw
 
 
 <a href="https://ntdoc.m417z.com/rtldospathnametorelativentpathname_u_withstatus">RtlDosPathNameToRelativeNtPathName_U_WithStatus</a>
+
 
 
