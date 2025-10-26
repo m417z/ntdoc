@@ -21,30 +21,26 @@ If **DosFileName** contains drive relative path **(e.g. C:Sample.txt)**, it retr
 
 ### `NtFileName` [OUT]
 
-A pointer of `UNICODE_STRING` where it receives the converted **DosFileName**
+A pointer to a `UNICODE_STRING` where it receives the converted **DosFileName**
 
 ### `FilePart` [OUTOPT]
 
 A string where if there's a file component on the Absolute Path of the **DosFileName**, this parameter receives the string of the file component **(e.g. Sample.txt)**.
 
-If there's no file component, it uses the last folder as its file component **(e.g. C:\Sample -> "Sample")**
+If there's no file component, it uses the last folder as its file component **(e.g. C:\Sample -> "Sample")**.
 
 ### `RelativeName` [OUTOPT]
 
-**(Only for Relative Path)** A pointer of `RTL_RELATIVE_NAME_U` where additional info for Relative Path are stored
+**(Only for Relative Path)** A pointer to an `RTL_RELATIVE_NAME_U` where additional info for Relative Path is stored.
 
 ## Return
-Returns **TRUE**  if successfully converted into NT Path. **FALSE** otherwise
+Returns **TRUE** if successfully converted to an NT Path. **FALSE** otherwise
 
 # See Also
-<a href="https://ntdoc.m417z.com/rtldospathnametontpathname_u_withstatus">RtlDosPathNameToNtPathName_U_WithStatus</a>
+- `RtlDosPathNameToNtPathName_U_WithStatus`
+- `RtlDosPathNameToRelativeNtPathName_U`
+- `RtlDosPathNameToRelativeNtPathName_U_WithStatus`
 
-
-<a href="https://ntdoc.m417z.com/rtldospathnametorelativentpathname_u">RtlDosPathNameToRelativeNtPathName_U</a>
-
-
-
-<a href="https://ntdoc.m417z.com/rtldospathnametorelativentpathname_u_withstatus">RtlDosPathNameToRelativeNtPathName_U_WithStatus</a>
 
 
 
