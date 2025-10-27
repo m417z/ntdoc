@@ -14,7 +14,7 @@ Output of the new created atom table.
 
 **Note:** The atom table pointer must be set to `NULL` before calling  `RtlCreateAtomTable`, as it automatically allocates the atom table handle using `RtlAllocateHeap`. 
 
-If the pointer is not NULL, the routine returns an invalid atom table pointer to the `AtomTableHandle`.
+If the pointer is not `NULL`, the routine returns an invalid atom table pointer to the `AtomTableHandle`.
 
 The `AtomTableHandle` must contain a header located at the memory address of the atom table which should be `"Atom"`. 
 
@@ -43,3 +43,4 @@ The routine can return the following status code:
 - `RtlPinAtomInAtomTable`
 
 - `RtlLookupAtomInAtomTable`
+
