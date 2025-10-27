@@ -1,39 +1,33 @@
-The `RtlCreateAtomTable` routine creates an atom table.
+The `RtlCreateAtomTable` function creates an atom table.
 
 # Parameters
 
 ## `NumberOfBuckets` [in]
 
-Specifies a number of groups used to organize atom entries. Each bucket can contain multiple atoms, each having different hash value which helps minimize hash collisions.
+Specifies the number of groups used to organize atom entries. Each bucket can contain multiple atoms, each having a different hash value, which helps minimize hash collisions.
 
-If `NumberOfBuckets` is set to 0, the routine falls back to the default bucket count of 37.
+If `NumberOfBuckets` is set to 0, the function uses a default bucket count of 37.
 
 ## `AtomTableHandle` [in, out]
 
-Output of the new created atom table.
+A pointer to a variable that receives the newly created atom table.
 
-**Note:** The atom table pointer must be set to `NULL` before calling  `RtlCreateAtomTable`, as it automatically allocates the atom table handle using `RtlAllocateHeap`. 
+**Note:** The pointer referenced by `AtomTableHandle` must be set to `NULL` before calling `RtlCreateAtomTable`. If the pointer is not `NULL`, the function returns `ERROR_SUCCESS` without modifying the pointer or creating a new atom table.
 
-If the pointer is not `NULL`, the routine returns an invalid atom table pointer to the `AtomTableHandle`.
+# Return value
 
-The `AtomTableHandle` must contain a header located at the memory address of the atom table post-routine which should be `"Atom"`.
+Returns `STATUS_SUCCESS` on success.
 
-If the `AtomTableHandle` doesn't contain this header, it indicates that the atom table was not created properly or that the routine fails to create the atom table. 
-
-This can occur if memory for the atom table was already allocated before calling `RtlCreateAtomTable`.
-
-This header serves as an integrity check to verify that the atom table is created properly.
-
-# Return
-
-Returns `STATUS_SUCCESS`. 
-
-The routine can return the following status code:
+The function may return the following status code:
 * `STATUS_NO_MEMORY`
-   * If the routine fails to initialize the atom table handle, the routine  frees the allocated atom table before returning `STATUS_NO_MEMORY`.
-   * If the routine fails to allocate the atom table handle from the heap.
+  * The function failed to allocate the atom table handle from the heap.
+  * The function failed to initialize the atom table handle; in this case, the allocated atom table is freed before returning.
 
-# See Also
+# Remarks
+
+After the atom table is created, the memory referenced by `AtomTableHandle` begins with the 4-byte header `"Atom"`.
+
+# See also
 
 - `RtlEmptyAtomTable` 
 - `RtlAddAtomToAtomTable`
@@ -42,4 +36,3 @@ The routine can return the following status code:
 - `RtlGetIntegerAtom`
 - `RtlPinAtomInAtomTable`
 - `RtlLookupAtomInAtomTable`
-
