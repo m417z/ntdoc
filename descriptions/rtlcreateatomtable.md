@@ -16,7 +16,7 @@ Output of the new created atom table.
 
 If the pointer is not `NULL`, the routine returns an invalid atom table pointer to the `AtomTableHandle`.
 
-The `AtomTableHandle` must contain a header located at the memory address of the atom table post-routine which should be `"Atom"`. 
+The `AtomTableHandle` must contain a header located at the memory address of the atom table post-routine which should be `"Atom"`.
 
 If the `AtomTableHandle` doesn't contain this header, it indicates that the atom table was not created properly or that the routine fails to create the atom table. 
 
@@ -41,7 +41,4 @@ The routine can return the following status code:
 - `RtlQueryAtomInAtomTable`
 - `RtlGetIntegerAtom`
 - `RtlPinAtomInAtomTable`
-
 - `RtlLookupAtomInAtomTable`
-
-
