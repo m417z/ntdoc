@@ -1,4 +1,4 @@
-The `RtlDosPathNameToNtPathName_U` routine converts a DOS path name to an NT path name by prepending the appropriate prefix based on the path type.
+The `RtlDosPathNameToNtPathName_U` function converts a DOS path name to an NT path name by prepending the appropriate prefix based on the path type.
 
 * NT prefix: `\??\` (for example, `C:\Users\Sample` to `\??\C:\Users\Sample`)
 * UNC prefix: `\??\UNC\` (for example, `\\server\share\path` to `\??\UNC\server\share\path`)
@@ -9,11 +9,11 @@ The `RtlDosPathNameToNtPathName_U` routine converts a DOS path name to an NT pat
 
 A DOS-style file path or UNC path to convert to an NT path.
 
-If `DosFileName` contains only a file component, the routine resolves it by using the process's current directory (`NtCurrentPeb()->ProcessParameters->CurrentDirectory`).
+If `DosFileName` contains only a file component, the function resolves it by using the process's current directory (`NtCurrentPeb()->ProcessParameters->CurrentDirectory`).
 
-If `DosFileName` contains a drive-relative path (for example, `C:Sample.txt`), the routine retrieves the drive's current directory, combines it with the file component, and then prepends the NT prefix. 
+If `DosFileName` contains a drive-relative path (for example, `C:Sample.txt`), the function retrieves the drive's current directory, combines it with the file component, and then prepends the NT prefix. 
 
-Note: If there is no file component, the routine prepends the NT prefix to the drive's current directory and copies it into `NtFileName->Buffer`.
+Note: If there is no file component, the function prepends the NT prefix to the drive's current directory and copies it into `NtFileName->Buffer`.
 
 ## `NtFileName` [out]
 
@@ -29,7 +29,7 @@ If there is no file component, the last folder is used as the file component (fo
 
 (Only for relative paths.) A pointer to an `RTL_RELATIVE_NAME_U` that stores additional information for a relative path.
 
-# Return
+# Return value
 Returns `TRUE` if the conversion to an NT path succeeds; otherwise, `FALSE`.
 
 # See also
