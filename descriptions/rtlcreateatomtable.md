@@ -8,7 +8,7 @@ Specifies a number of groups used to organize atom entries. Each bucket can cont
 
 If `NumberOfBuckets` is set to 0, the routine falls back to the default bucket count of 37.
 
-## `AtomTableHandle` [out]
+## `AtomTableHandle` [in, out]
 
 Output of the new created atom table.
 
@@ -42,3 +42,4 @@ The routine can return the following status code:
 - `RtlGetIntegerAtom`
 - `RtlPinAtomInAtomTable`
 - `RtlLookupAtomInAtomTable`
+
