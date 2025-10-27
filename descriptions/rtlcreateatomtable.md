@@ -1,6 +1,6 @@
 The `RtlCreateAtomTable` routine creates an atom table.
 
-# Paramaters
+# Parameters
 
 ## `NumberOfBuckets` [in]
 
@@ -41,4 +41,5 @@ The routine can return the following status code:
 - `RtlQueryAtomInAtomTable`
 - `RtlGetIntegerAtom`
 - `RtlPinAtomInAtomTable`
+
 - `RtlLookupAtomInAtomTable`
