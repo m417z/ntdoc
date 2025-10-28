@@ -1,0 +1,1 @@
+Documented as [SubmitThreadpoolWork](https://learn.microsoft.com/en-us/windows/win32/api/threadpoolapiset/nf-threadpoolapiset-submitthreadpoolwork) (`Kernel32.SubmitThreadpoolWork` is a forward to `NTDLL.TpPostWork`).

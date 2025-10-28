@@ -1,0 +1,1 @@
+Documented as [CloseThreadpoolWork](https://learn.microsoft.com/en-us/windows/win32/api/threadpoolapiset/nf-threadpoolapiset-closethreadpoolwork) (`Kernel32.CloseThreadpoolWork` is a forward to `NTDLL.TpReleaseWork`).

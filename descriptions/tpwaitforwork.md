@@ -1,0 +1,1 @@
+Documented as [WaitForThreadpoolWorkCallbacks](https://learn.microsoft.com/en-us/windows/win32/api/threadpoolapiset/nf-threadpoolapiset-waitforthreadpoolworkcallbacks) (`Kernel32.WaitForThreadpoolWorkCallbacks` is a forward to `NTDLL.TpWaitForWork`).

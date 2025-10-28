@@ -1,0 +1,1 @@
+Documented as [CreateThreadpoolWork](https://learn.microsoft.com/en-us/windows/win32/api/threadpoolapiset/nf-threadpoolapiset-createthreadpoolwork) (`Kernel32.CreateThreadpoolWork` returns the `PTP_WORK` while `NTDLL.TpAllocWork` takes a pointer as return parameter).
