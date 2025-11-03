@@ -170,7 +170,7 @@
 
 <h3 id="padding-and-buffer-size">Padding and Buffer Size</h3>
 
-<p>Problems can occur when the caller doesn't consider system-specific structure padding that might occur.</p>
+<p>Problems can occur when the caller doesn't properly account for system-specific structure padding that might occur.</p>
 
 <p>For example, say a minifilter declares the following structure in which to receive a reply, and passes a pointer to it in <strong>ReplyBuffer</strong>:</p>
 
@@ -185,9 +185,11 @@
 </code></pre>
 </div>
 
-<p>Setting <strong>ReplyLength</strong> to <code>sizeof(REPLY_STRUCT)</code> would capture any padding that might be added to the end of any member of the structure, but isn't an accurate representation of the actual size of the structure and each of its members.</p>
+<p><strong>ReplyBuffer</strong> must be allocated with sufficient space to hold the entire structure including any padding. Therefore, ReplyLength should be set to <code>sizeof(REPLY_STRUCT)</code>, not <code>sizeof(<a href="filter_reply_header" title="typedef struct _FILTER_REPLY_HEADER {&#10;  NTSTATUS  Status;&#10;  ULONGLONG MessageId;&#10;} FILTER_REPLY_HEADER, *PFILTER_REPLY_HEADER;">FILTER_REPLY_HEADER</a>) + sizeof(REPLY_DATA)</code>.</p>
 
-<p>Setting <strong>ReplyLength</strong> to <code>sizeof(<a href="filter_reply_header" title="typedef struct _FILTER_REPLY_HEADER {&#10;  NTSTATUS  Status;&#10;  ULONGLONG MessageId;&#10;} FILTER_REPLY_HEADER, *PFILTER_REPLY_HEADER;">FILTER_REPLY_HEADER</a>) + sizeof(REPLY_DATA)</code> ensures that any padding at the end of either structures is ignored. In the event that padding might be added after the <strong>Header</strong> structure, <code>offsetof(REPLY_STRUCT, Data)</code> can be used to accurately access the beginning of the <strong>Data</strong> structure, and <code>sizeof(REPLY_DATA)</code> can be used to determine the true number of bytes in the <strong>Data</strong> structure.</p>
+<p>Setting <strong>ReplyLength</strong> to <code>sizeof(<a href="filter_reply_header" title="typedef struct _FILTER_REPLY_HEADER {&#10;  NTSTATUS  Status;&#10;  ULONGLONG MessageId;&#10;} FILTER_REPLY_HEADER, *PFILTER_REPLY_HEADER;">FILTER_REPLY_HEADER</a>) + sizeof(REPLY_DATA)</code> doesn't account for padding that might be inserted between the <strong>Header</strong> and <strong>Data</strong> members. This can lead to <strong>FltSendMessage</strong> returning STATUS_BUFFER_OVERFLOW even when the buffer is large enough to hold both structures.</p>
+
+<p>After <strong>FltSendMessage</strong> returns successfully, use <code>offsetof(REPLY_STRUCT, Data)</code> to locate the beginning of the <strong>Data</strong> structure within <strong>ReplyBuffer</strong>, and examine the <strong>ReplyLength</strong> output value to determine the actual number of bytes written by the user-mode application.</p>
 
 <h2 id="see-also">See also</h2>
 
