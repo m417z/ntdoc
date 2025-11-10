@@ -31,8 +31,4 @@ def markdown_to_html(text: str, header_ids=True, code_friendly=False) -> str:
     html = html.replace('&lt;br&gt;', '<br>')
     html = re.sub(r'&lt;!--(.*?)--&gt;', r'<!--\1-->', html, flags=re.DOTALL)
 
-    # Other replacements which aren't handled by markdown2 safe mode.
-    html = html.replace('&lt;code>', '<code>')
-    html = html.replace('&lt;/code>', '</code>')
-
     return html
