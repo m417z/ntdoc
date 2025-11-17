@@ -22,9 +22,6 @@ def markdown_to_html(text: str, header_ids=True, code_friendly=False) -> str:
     if header_ids:
         extras['header-ids'] = None
 
-    # A workaround for fenced code blocks not being separated from lists in safe mode.
-    text = re.sub(r'^```(.*?)```', r'<!-- CODE_MARKER -->\n\g<0>', text, flags=re.MULTILINE | re.DOTALL)
-
     html = markdown2.markdown(text, extras=extras, safe_mode='escape')
 
     # Undo safe mode for <br> and comments.
