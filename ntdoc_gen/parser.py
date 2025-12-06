@@ -26,7 +26,7 @@ def pop_next_chunk_macro(code: list[str]) -> str:
 
 def starts_with_struct_union(code: list[str]) -> bool:
     line = code[0]
-    if line.rstrip('\n') == '_Struct_size_bytes_(sizeof(SYSTEM_POWER_STATE_DISABLE_REASON) + PowerReasonLength)':
+    if match := re.fullmatch(r'_Struct_size_bytes_\(.+?\)\s*', line):
         line = code[1]
 
     return re.match(r'typedef\s+(DECLSPEC_ALIGN\(\d+\)\s+)?(struct|union|enum)\b', line) is not None
@@ -214,7 +214,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     assert not chunk.startswith('#define '), chunk
 
-    if re.match(r'(?:_Struct_size_bytes_\(.*?\)\s+)?typedef\s+(?:DECLSPEC_ALIGN\(\d+\)\s+)?(struct|union|enum)\b', chunk):
+    if re.match(r'(?:_Struct_size_bytes_\(.+?\)\s+)?typedef\s+(?:DECLSPEC_ALIGN\(\d+\)\s+)?(struct|union|enum)\b', chunk):
         last_index = chunk.rfind('}')
         if last_index != -1:
             assert '{' in chunk, chunk
