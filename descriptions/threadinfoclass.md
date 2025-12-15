@@ -225,7 +225,7 @@ Determines the number of cycles spent by the thread.
 
 |                 | Query                              | Set
 | --------------- | ---------------------------------- | ---
-| Type            | `THREAD_QUERY_LIMITED_INFORMATION` | N/A
+| Type            | `THREAD_CYCLE_TIME_INFORMATION`    | N/A
 | Required access | `THREAD_QUERY_LIMITED_INFORMATION` | N/A
 
 ## ThreadPagePriority (24)
@@ -260,10 +260,10 @@ Allows reading a portion of the thread's TEB.
 ## ThreadWow64Context (29)
 Gets and sets the WoW64 context (set of registers) for 32-bit threads running on 64-bit systems.
 
-|                 | Query                | Set
-| --------------- | -------------------- | ---
-| Type            | `WOW64_CONTEXT`      | `WOW64_CONTEXT`
-| Required access | `THREAD_GET_CONTEXT` | `THREAD_SET_CONTEXT`
+|                 | Query                                        | Set
+| --------------- | -------------------------------------------- | ---
+| Type            | `WOW64_CONTEXT` or `ARM_NT_CONTEXT` (20H1+)  | `WOW64_CONTEXT` or `ARM_NT_CONTEXT` (20H1+)
+| Required access | `THREAD_GET_CONTEXT`                         | `THREAD_SET_CONTEXT`
 
 ### Related Win32 API
  - [`Wow64GetThreadContext`](https://learn.microsoft.com/en-us/windows/win32/api/wow64apiset/nf-wow64apiset-wow64getthreadcontext)
@@ -286,7 +286,7 @@ Queries or adjusts the processor group for the thread.
 ## ThreadCounterProfiling (32)
 
 ## ThreadIdealProcessorEx (33)
-Queries or the number of the ideal (preferred) processor for the thread.
+Queries or sets the number of the ideal (preferred) processor for the thread.
 
 |                 | Query                              | Set
 | --------------- | ---------------------------------- | ---
