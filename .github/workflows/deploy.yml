@@ -51,9 +51,14 @@ jobs:
             --commit $commit \
             --windows-docs-path ../windows-docs
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./main/docs
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
+        run: |
+          git clone --depth 1 --single-branch --branch gh-pages https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git gh-pages
+          cd gh-pages
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git rm -rf .
+          cp -r ../main/docs/. .
+          touch .nojekyll
+          git add -A
+          git diff --cached --quiet || git commit -m "deploy: $(git -C ../main rev-parse HEAD)"
+          git push origin gh-pages
