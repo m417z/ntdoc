@@ -19,8 +19,8 @@ def markdown_to_html(text: str, header_ids=True, code_friendly=False) -> str:
     else:
         extras['middle-word-em'] = {'allowed': False}
 
-    # if header_ids:
-    #     extras['header-ids'] = None
+    if header_ids:
+        extras['header-ids'] = None
 
     html = markdown2.markdown(text, extras=extras, safe_mode='escape')
 
