@@ -70,8 +70,8 @@
 <h1>FSCTL_REQUEST_OPLOCK IOCTL</h1>
 <h2>Description</h2>
 <p>Requests an opportunistic lock (oplock) on a file and acknowledges that an oplock break has occurred.</p>
-<p>To perform this operation, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> function using the following parameters.</p>
-<pre lang="cpp"><code>BOOL DeviceIoControl(
+<p>To perform this operation, call the <a href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> function using the following parameters.</p>
+<pre><code>BOOL DeviceIoControl(
   (HANDLE) hDevice,                 // handle to file
   FSCTL_REQUEST_OPLOCK,             // dwIoControlCode
   (LPVOID) lpInBuffer,              // pointer to <a href="request_oplock_input_buffer" title="typedef struct _REQUEST_OPLOCK_INPUT_BUFFER {&#10;  WORD  StructureVersion;&#10;  WORD  StructureLength;&#10;  DWORD RequestedOplockLevel;&#10;  DWORD Flags;&#10;} REQUEST_OPLOCK_INPUT_BUFFER, *PREQUEST_OPLOCK_INPUT_BUFFER;">REQUEST_OPLOCK_INPUT_BUFFER</a>
@@ -93,7 +93,7 @@
 <h2>Remarks</h2>
 <p>This operation is used by client applications to request an opportunistic lock (oplock) from a local server. Client applications must not request opportunistic locks from remote servers directly—the network redirector transparently requests opportunistic locks for the application. Using this operation to request opportunistic locks from remote servers will result in the request being denied.</p>
 <p>If the <strong>DeviceIoControl</strong> operation returns the error code <strong>ERROR_IO_PENDING</strong>, the oplock request has been granted. If it returns any other error code, the oplock has not been granted. If the error code is a warning value such as ERROR_CANNOT_GRANT_REQUESTED_OPLOCK, extended information may be available in the <a href="request_oplock_output_buffer" title="typedef struct _REQUEST_OPLOCK_OUTPUT_BUFFER {&#10;  WORD        StructureVersion;&#10;  WORD        StructureLength;&#10;  DWORD       OriginalOplockLevel;&#10;  DWORD       NewOplockLevel;&#10;  DWORD       Flags;&#10;  ACCESS_MASK AccessMode;&#10;  WORD        ShareMode;&#10;} REQUEST_OPLOCK_OUTPUT_BUFFER, *PREQUEST_OPLOCK_OUTPUT_BUFFER;">REQUEST_OPLOCK_OUTPUT_BUFFER</a> structure.</p>
-<p>When a granted oplock breaks, the event object in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/minwinbase/ns-minwinbase-overlapped"><strong>OVERLAPPED</strong></a> structure will be signaled, and information will be returned in the <a href="request_oplock_output_buffer" title="typedef struct _REQUEST_OPLOCK_OUTPUT_BUFFER {&#10;  WORD        StructureVersion;&#10;  WORD        StructureLength;&#10;  DWORD       OriginalOplockLevel;&#10;  DWORD       NewOplockLevel;&#10;  DWORD       Flags;&#10;  ACCESS_MASK AccessMode;&#10;  WORD        ShareMode;&#10;} REQUEST_OPLOCK_OUTPUT_BUFFER, *PREQUEST_OPLOCK_OUTPUT_BUFFER;">REQUEST_OPLOCK_OUTPUT_BUFFER</a> structure. The <strong>Internal</strong> member of the <strong>OVERLAPPED</strong> structure will be set to an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value that provides extended information about how the oplock broke.</p>
+<p>When a granted oplock breaks, the event object in the <a href="https://learn.microsoft.com/windows/win32/api/minwinbase/ns-minwinbase-overlapped"><strong>OVERLAPPED</strong></a> structure will be signaled, and information will be returned in the <a href="request_oplock_output_buffer" title="typedef struct _REQUEST_OPLOCK_OUTPUT_BUFFER {&#10;  WORD        StructureVersion;&#10;  WORD        StructureLength;&#10;  DWORD       OriginalOplockLevel;&#10;  DWORD       NewOplockLevel;&#10;  DWORD       Flags;&#10;  ACCESS_MASK AccessMode;&#10;  WORD        ShareMode;&#10;} REQUEST_OPLOCK_OUTPUT_BUFFER, *PREQUEST_OPLOCK_OUTPUT_BUFFER;">REQUEST_OPLOCK_OUTPUT_BUFFER</a> structure. The <strong>Internal</strong> member of the <strong>OVERLAPPED</strong> structure will be set to an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value that provides extended information about how the oplock broke.</p>
 <table>
 <thead>
 <tr>
@@ -128,7 +128,7 @@
 </tr>
 </tbody>
 </table>
-<p>The <strong>FSCTL_REQUEST_OPLOCK</strong> control code provides more efficient functionality than the following related control codes: <a href="fsctl_request_oplock_level_1" title="// CTL_CODE(0x0009, 0x000, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_1 0x00090000">FSCTL_REQUEST_OPLOCK_LEVEL_1</a>, <a href="fsctl_request_oplock_level_2" title="// CTL_CODE(0x0009, 0x001, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_2 0x00090004">FSCTL_REQUEST_OPLOCK_LEVEL_2</a>, <a href="fsctl_request_filter_oplock" title="// CTL_CODE(0x0009, 0x017, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_FILTER_OPLOCK 0x0009005C">FSCTL_REQUEST_FILTER_OPLOCK</a>, and <a href="fsctl_request_batch_oplock" title="// CTL_CODE(0x0009, 0x002, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_BATCH_OPLOCK 0x00090008">FSCTL_REQUEST_BATCH_OPLOCK</a>. Requesting different oplock levels can be performed repeatedly on the same handle without closing and reopening the handle when using <strong>FSCTL_REQUEST_OPLOCK</strong>; the other control codes require that the handle be closed and then reopened with <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFile</a> to make such a change. This is accomplished by manipulating the <strong>RequestedOplockLevel</strong> member of the <a href="request_oplock_input_buffer" title="typedef struct _REQUEST_OPLOCK_INPUT_BUFFER {&#10;  WORD  StructureVersion;&#10;  WORD  StructureLength;&#10;  DWORD RequestedOplockLevel;&#10;  DWORD Flags;&#10;} REQUEST_OPLOCK_INPUT_BUFFER, *PREQUEST_OPLOCK_INPUT_BUFFER;">REQUEST_OPLOCK_INPUT_BUFFER</a> structure when re-issuing the <strong>FSCTL_REQUEST_OPLOCK</strong> control code.</p>
+<p>The <strong>FSCTL_REQUEST_OPLOCK</strong> control code provides more efficient functionality than the following related control codes: <a href="fsctl_request_oplock_level_1" title="// CTL_CODE(0x0009, 0x000, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_1 0x00090000">FSCTL_REQUEST_OPLOCK_LEVEL_1</a>, <a href="fsctl_request_oplock_level_2" title="// CTL_CODE(0x0009, 0x001, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_2 0x00090004">FSCTL_REQUEST_OPLOCK_LEVEL_2</a>, <a href="fsctl_request_filter_oplock" title="// CTL_CODE(0x0009, 0x017, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_FILTER_OPLOCK 0x0009005C">FSCTL_REQUEST_FILTER_OPLOCK</a>, and <a href="fsctl_request_batch_oplock" title="// CTL_CODE(0x0009, 0x002, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_BATCH_OPLOCK 0x00090008">FSCTL_REQUEST_BATCH_OPLOCK</a>. Requesting different oplock levels can be performed repeatedly on the same handle without closing and reopening the handle when using <strong>FSCTL_REQUEST_OPLOCK</strong>; the other control codes require that the handle be closed and then reopened with <a href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFile</a> to make such a change. This is accomplished by manipulating the <strong>RequestedOplockLevel</strong> member of the <a href="request_oplock_input_buffer" title="typedef struct _REQUEST_OPLOCK_INPUT_BUFFER {&#10;  WORD  StructureVersion;&#10;  WORD  StructureLength;&#10;  DWORD RequestedOplockLevel;&#10;  DWORD Flags;&#10;} REQUEST_OPLOCK_INPUT_BUFFER, *PREQUEST_OPLOCK_INPUT_BUFFER;">REQUEST_OPLOCK_INPUT_BUFFER</a> structure when re-issuing the <strong>FSCTL_REQUEST_OPLOCK</strong> control code.</p>
 <p>The following table summarizes how the caching ability of oplock types available from <strong>FSCTL_REQUEST_OPLOCK</strong> correspond to the level 2, level 1, and batch oplocks.</p>
 <table>
 <thead>
@@ -156,9 +156,9 @@
 </tr>
 </tbody>
 </table>
-<p>Using the <strong>FSCTL_REQUEST_OPLOCK</strong> control code with the <strong>RequestedOplockLevel</strong> member set to <code>OPLOCK_LEVEL_CACHE_READ | OPLOCK_LEVEL_CACHE_HANDLE</code> grants an oplock of type <em>RH</em>. An RH oplock is similar to the filter oplock granted by the <a href="fsctl_request_filter_oplock" title="// CTL_CODE(0x0009, 0x017, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_FILTER_OPLOCK 0x0009005C">FSCTL_REQUEST_FILTER_OPLOCK</a> control code. However, note that the filter oplock allows only one client to hold an oplock on a file at a time; <strong>FSCTL_REQUEST_OPLOCK</strong> allows multiple clients at a time to have the <em>RH</em> lock on a file. Another difference is that <strong><a href="fsctl_request_filter_oplock" title="// CTL_CODE(0x0009, 0x017, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_FILTER_OPLOCK 0x0009005C">FSCTL_REQUEST_FILTER_OPLOCK</a></strong> requires an oplock break acknowledgment before writes can occur, where <strong>FSCTL_REQUEST_OPLOCK</strong> does not because the oplock break notification is advisory-only and writes are allowed to go ahead without acknowledgment. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/breaking-oplocks">Breaking Oplocks</a>.</p>
+<p>Using the <strong>FSCTL_REQUEST_OPLOCK</strong> control code with the <strong>RequestedOplockLevel</strong> member set to <code>OPLOCK_LEVEL_CACHE_READ | OPLOCK_LEVEL_CACHE_HANDLE</code> grants an oplock of type <em>RH</em>. An RH oplock is similar to the filter oplock granted by the <a href="fsctl_request_filter_oplock" title="// CTL_CODE(0x0009, 0x017, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_FILTER_OPLOCK 0x0009005C">FSCTL_REQUEST_FILTER_OPLOCK</a> control code. However, note that the filter oplock allows only one client to hold an oplock on a file at a time; <strong>FSCTL_REQUEST_OPLOCK</strong> allows multiple clients at a time to have the <em>RH</em> lock on a file. Another difference is that <strong><a href="fsctl_request_filter_oplock" title="// CTL_CODE(0x0009, 0x017, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_FILTER_OPLOCK 0x0009005C">FSCTL_REQUEST_FILTER_OPLOCK</a></strong> requires an oplock break acknowledgment before writes can occur, where <strong>FSCTL_REQUEST_OPLOCK</strong> does not because the oplock break notification is advisory-only and writes are allowed to go ahead without acknowledgment. For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/breaking-oplocks">Breaking Oplocks</a>.</p>
 <p>An <strong>FSCTL_REQUEST_OPLOCK</strong> control code fails if the file is opened in non-overlapped (synchronous) mode.</p>
-<p>For the implications of overlapped I/O on this operation, see the Remarks section of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a> topic.</p>
+<p>For the implications of overlapped I/O on this operation, see the Remarks section of the <a href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a> topic.</p>
 <p>In Windows 8 and Windows Server 2012, this code is supported by the following technologies.</p>
 <table>
 <thead>
@@ -195,11 +195,11 @@
 <p>An RH oplock on a directory breaks to R when the directory itself is renamed or deleted. This oplock break does require an acknowledgment before the change to the directory can occur.</p>
 <h2>See also</h2>
 <ul>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFile</a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/minwinbase/ns-minwinbase-overlapped">OVERLAPPED</a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/oplock-semantics">Oplock Semantics</a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/FileIO/opportunistic-locks">Opportunistic Locks</a></li>
+<li><a href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFile</a></li>
+<li><a href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a></li>
+<li><a href="https://learn.microsoft.com/windows/win32/api/minwinbase/ns-minwinbase-overlapped">OVERLAPPED</a></li>
+<li><a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/oplock-semantics">Oplock Semantics</a></li>
+<li><a href="https://learn.microsoft.com/windows/desktop/FileIO/opportunistic-locks">Opportunistic Locks</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">
@@ -215,7 +215,7 @@
 <div class="ntdoc-description">
 <h1>FSCTL_REQUEST_OPLOCK control code</h1>
 <p>The <strong>FSCTL_REQUEST_OPLOCK</strong> control code requests an opportunistic lock (oplock) on a file, or acknowledges that an oplock break has occurred.</p>
-<p>For more information about opportunistic locks, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/FileIO/opportunistic-locks">Opportunistic Locks</a> in the Windows Desktop documentation. For more information about user mode OPLOCK controls, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/FileIO/file-management-control-codes">File Management Control Codes</a> in the Windows Desktop documentation.</p>
+<p>For more information about opportunistic locks, see <a href="https://learn.microsoft.com/windows/desktop/FileIO/opportunistic-locks">Opportunistic Locks</a> in the Windows Desktop documentation. For more information about user mode OPLOCK controls, see <a href="https://learn.microsoft.com/windows/desktop/FileIO/file-management-control-codes">File Management Control Codes</a> in the Windows Desktop documentation.</p>
 <p>To process this control code, a file system or filter driver calls <strong><a href="fsrtloplockfsctrlex" title="NTSTATUS FsRtlOplockFsctrlEx(&#10;  [in] POPLOCK Oplock,&#10;  [in] PIRP    Irp,&#10;  [in] ULONG   OpenCount,&#10;  [in] ULONG   Flags&#10;);">FsRtlOplockFsctrlEx</a></strong> with the following parameters.</p>
 <h2>Parameters</h2>
 <ul>
@@ -242,7 +242,7 @@
 <tbody>
 <tr>
 <td>OPLOCK_FSCTRL_FLAG_ALL_KEYS_MATCH (0x00000001)</td>
-<td>Specifies that the file system has verified that all opportunistic lock keys match on any handle that is currently open. By specifying this flag, the oplock package can grant an oplock of level RW or RWH when more than one open handle to the file exists. For more information about oplock types, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/oplock-overview">Overview</a>.</td>
+<td>Specifies that the file system has verified that all opportunistic lock keys match on any handle that is currently open. By specifying this flag, the oplock package can grant an oplock of level RW or RWH when more than one open handle to the file exists. For more information about oplock types, see <a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/oplock-overview">Overview</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -288,7 +288,7 @@
 <h2>See also</h2>
 <p><strong><a href="fsrtloplockfsctrlex" title="NTSTATUS FsRtlOplockFsctrlEx(&#10;  [in] POPLOCK Oplock,&#10;  [in] PIRP    Irp,&#10;  [in] ULONG   OpenCount,&#10;  [in] ULONG   Flags&#10;);">FsRtlOplockFsctrlEx</a></strong></p>
 <p><strong><a href="fsrtloplockissharedrequest" title="BOOLEAN FsRtlOplockIsSharedRequest(&#10;  [in] PIRP Irp&#10;);">FsRtlOplockIsSharedRequest</a></strong></p>
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-file-system-control"><strong>IRP_MJ_FILE_SYSTEM_CONTROL</strong></a></p>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-file-system-control"><strong>IRP_MJ_FILE_SYSTEM_CONTROL</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>
