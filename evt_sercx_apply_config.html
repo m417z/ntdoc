@@ -81,28 +81,28 @@
 <p>SerCx calls this function during initialization of the serial controller to ensure that the hardware is in a valid initial state. Additionally, this function is called whenever a client sends an <a href="ioctl_serial_apply_default_configuration" title="// CTL_CODE(0x001b, 0x028, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_APPLY_DEFAULT_CONFIGURATION 0x001B00A0">IOCTL_SERIAL_APPLY_DEFAULT_CONFIGURATION</a> I/O control request to the controller.</p>
 <p>SerCx obtains these configuration parameters from the ACPI resource descriptor for the serial controller device. The data format that the ACPI firmware uses to store these configuration settings should be the same data format that is expected by the serial controller driver.</p>
 <p>When a client sends an <strong><a href="ioctl_serial_apply_default_configuration" title="// CTL_CODE(0x001b, 0x028, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_APPLY_DEFAULT_CONFIGURATION 0x001B00A0">IOCTL_SERIAL_APPLY_DEFAULT_CONFIGURATION</a></strong> request to a serial port that is managed by SerCx, SerCx determines whether the serial controller driver for the serial port supports the <em>EvtSerCxApplyConfig</em> callback, and whether the ACPI resource descriptor for the serial port provides default connection settings. If not, SerCx completes the request with error status code STATUS_NOT_SUPPORTED. Otherwise, SerCx passes the connection parameters to the driver's <em>EvtSerCxApplyConfig</em> callback function. After this callback returns, SerCx completes the request and uses the return value from the callback as the status code for the request.</p>
-<p>If a serial controller driver needs to obtain the default connection parameters at a time other than during an <em>EvtSerCxApplyConfig</em> callback, the driver can call the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxgetconnectionparameters">SerCxGetConnectionParameters</a> method.</p>
-<p>To register an <em>EvtSerCxApplyConfig</em> callback function, the driver must call the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a> method.</p>
+<p>If a serial controller driver needs to obtain the default connection parameters at a time other than during an <em>EvtSerCxApplyConfig</em> callback, the driver can call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxgetconnectionparameters">SerCxGetConnectionParameters</a> method.</p>
+<p>To register an <em>EvtSerCxApplyConfig</em> callback function, the driver must call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a> method.</p>
 <h4>Examples</h4>
 <p>The function type for this callback is declared in Sercx.h, as follows.</p>
-<pre><code>typedef <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+<pre lang="cpp"><code>typedef <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
   EVT_SERCX_APPLY_CONFIG(
     __in WDFDEVICE Device
     );
 </code></pre>
-<p>To define an <em>EvtSerCxApplyConfig</em> callback function that is named <code>MyEvtSerCxApplyConfig</code>, you must first provide a function declaration that <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV) and other verification tools require, as follows.</p>
-<pre><code>EVT_SERCX_APPLY_CONFIG MyEvtSerCxApplyConfig;
+<p>To define an <em>EvtSerCxApplyConfig</em> callback function that is named <code>MyEvtSerCxApplyConfig</code>, you must first provide a function declaration that <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV) and other verification tools require, as follows.</p>
+<pre lang="cpp"><code>EVT_SERCX_APPLY_CONFIG MyEvtSerCxApplyConfig;
 </code></pre>
 <p>Then, implement your callback function as follows.</p>
-<pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
   MyEvtSerCxApplyConfig(
     __in WDFDEVICE Device
     )
 { ... }
 </code></pre>
-<p>For more information about SDV requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions Using Function Role Types for KMDF Drivers</a>.</p>
+<p>For more information about SDV requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions Using Function Role Types for KMDF Drivers</a>.</p>
 <p>The following code example shows a partial implementation of an <em>EvtSerCxApplyConfig</em> function for a UART.</p>
-<pre><code>//
+<pre lang="cpp"><code>//
 // Define the UART ACPI descriptor, plus any vendor-specific
 // data that is needed by the serial controller (UART) driver.
 //
@@ -188,8 +188,8 @@ EVT_SERCX_APPLY_CONFIG UartEvtApplyConfig;
 <p>The <a href="rh_query_connection_properties_output_buffer" title="typedef struct _RH_QUERY_CONNECTION_PROPERTIES_OUTPUT_BUFFER {&#10;  ULONG Version;&#10;  ULONG PropertiesLength;&#10;  UCHAR ConnectionProperties[ANYSIZE_ARRAY];&#10;} RH_QUERY_CONNECTION_PROPERTIES_OUTPUT_BUFFER, *PRH_QUERY_CONNECTION_PROPERTIES_OUTPUT_BUFFER;">PRH_QUERY_CONNECTION_PROPERTIES_OUTPUT_BUFFER</a> and <a href="pnp_serial_bus_descriptor" title="typedef struct _PNP_SERIAL_BUS_DESCRIPTOR {&#10;  UCHAR  Tag;&#10;  USHORT Length;&#10;  UCHAR  RevisionId;&#10;  UCHAR  ResourceSourceIndex;&#10;  UCHAR  SerialBusType;&#10;  UCHAR  GeneralFlags;&#10;  USHORT TypeSpecificFlags;&#10;  UCHAR  TypeSpecificRevisionId;&#10;  USHORT TypeDataLength;&#10;} PNP_SERIAL_BUS_DESCRIPTOR, *PPNP_SERIAL_BUS_DESCRIPTOR;">PPNP_SERIAL_BUS_DESCRIPTOR</a> pointer types in the preceding code example are defined in the Reshub.h header file.</p>
 <h2>See also</h2>
 <p><a href="ioctl_serial_apply_default_configuration" title="// CTL_CODE(0x001b, 0x028, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_APPLY_DEFAULT_CONFIGURATION 0x001B00A0">IOCTL_SERIAL_APPLY_DEFAULT_CONFIGURATION</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxgetconnectionparameters">SerCxGetConnectionParameters</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a></p>
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxgetconnectionparameters">SerCxGetConnectionParameters</a></p>
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>
