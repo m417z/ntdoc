@@ -64,109 +64,87 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>RDF_CARD_TRACKING callback function</h1>
-
 <p>The RDF_CARD_TRACKING callback function installs an event handler to track every time a card is inserted in or removed from a card reader.</p>
-
 <h2>Parameters</h2>
-
 <ul>
 <li><em>SmartcardExtension</em>
 A pointer to the smart card extension, <strong><a href="smartcard_extension" title="typedef struct _SMARTCARD_EXTENSION {&#10;  ULONG                     Version;&#10;  VENDOR_ATTR               VendorAttr;&#10;  NTSTATUS(                 *ReaderFunction[16];&#10;  SCARD_CARD_CAPABILITIES   CardCapabilities;&#10;  ULONG                     LastError;&#10;  struct {&#10;    PULONG Information;&#10;    PUCHAR RequestBuffer;&#10;    ULONG  RequestBufferLength;&#10;    PUCHAR ReplyBuffer;&#10;    ULONG  ReplyBufferLength;&#10;  } IoRequest;&#10;  ULONG                     MajorIoControlCode;&#10;  ULONG                     MinorIoControlCode;&#10;  POS_DEP_DATA              OsData;&#10;  SCARD_READER_CAPABILITIES ReaderCapabilities;&#10;  PREADER_EXTENSION         ReaderExtension;&#10;  SMARTCARD_REPLY           SmartcardReply;&#10;  SMARTCARD_REQUEST         SmartcardRequest;&#10;...">SMARTCARD_EXTENSION</a></strong>, of the device.
 <strong>SmartcardExtension-&gt;OsData-&gt;NotificationIrp</strong> contains the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> that receives notification of the insertion or removal event.</li>
 </ul>
-
 <h2>Return value</h2>
-
 <p>This function returns one of the following <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_PENDING</strong></td>
-  <td>Smart card tracking has started.</td>
+<td><strong>STATUS_PENDING</strong></td>
+<td>Smart card tracking has started.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INVALID_DEVICE_STATE</strong></td>
-  <td>The device cannot accept the request.</td>
+<td><strong>STATUS_INVALID_DEVICE_STATE</strong></td>
+<td>The device cannot accept the request.</td>
 </tr>
 <tr>
-  <td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
-  <td>Smart card status matches the requested tracking call.</td>
+<td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
+<td>Smart card status matches the requested tracking call.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_DEVICE_BUSY</strong></td>
-  <td>A smart card tracking event is pending.</td>
+<td><strong>STATUS_DEVICE_BUSY</strong></td>
+<td>A smart card tracking event is pending.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>It is mandatory for smart card reader drivers to implement this callback function.</p>
-
 <p>Upon receiving an <strong><a href="ioctl_smartcard_is_present" title="// CTL_CODE(0x0031, 0x00a, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SMARTCARD_IS_PRESENT 0x00310028">IOCTL_SMARTCARD_IS_PRESENT</a></strong> request, the driver library determines if the smart card is already present. If the smart card is present, the driver library completes the request with a status of <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. If there is no smart card present, the driver library calls the reader driver's smart card tracking callback function, and the reader driver starts looking for the smart card. After initiating smart card tracking, the driver library marks the request as having a status of STATUS_PENDING.</p>
-
 <p>The driver library completes the request.</p>
-
 <p><strong>WDM Device Drivers</strong></p>
-
 <p>The corresponding WDM driver library adds a pointer to the request in <strong>SmartcardExtension-&gt;OsData-&gt;NotificationIrp</strong>. The reader driver must complete the request as soon as it detects that a smart card has been inserted or removed. The reader driver completes the request by calling <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff548343/(v=vs.85/)"><strong>IoCompleteRequest</strong></a>, after which, the reader driver must set the <strong>NotificationIrp</strong> member of <strong>SmartcardExtension -&gt; OsData</strong> back to <strong>NULL</strong> to inform the driver library that the reader driver can accept further smart card tracking requests.</p>
-
 <p>Because this call can have an indefinite duration and the caller can terminate the request before it is complete, it is important to mark this <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> as cancelable.</p>
+<pre lang="cpp"><code>    MyDriverCardSupervision(
+    SmartcardExtension,
+    OtherParameters)
+    //
+    //    This function is called whenever the card status changes
+    //    For example, the card has been inserted or the card has been removed
+    //
+    {
+        if (SmartcardExtension-&gt;OsData-&gt;NotificationOverlappedData != NULL){
 
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="n">MyDriverCardSupervision</span><span class="p">(</span>
-<span class="w">    </span><span class="n">SmartcardExtension</span><span class="p">,</span>
-<span class="w">    </span><span class="n">OtherParameters</span><span class="p">)</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">//    This function is called whenever the card status changes</span>
-<span class="w">    </span><span class="c1">//    For example, the card has been inserted or the card has been removed</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">SmartcardExtension</span><span class="o">-&gt;</span><span class="n">OsData</span><span class="o">-&gt;</span><span class="n">NotificationOverlappedData</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">){</span>
-
-<span class="w">            </span><span class="n">SmartcardCompleteCardTracking</span><span class="p">(</span><span class="n">SmartcardExtension</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="c1">// Do additional tasks</span>
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">    </span><span class="p">}</span>
+            SmartcardCompleteCardTracking(SmartcardExtension);
+        }
+        //
+        // Do additional tasks
+        //
+    }
 </code></pre>
-</div>
-
 <h2>Requirements</h2>
-
 <table>
 <thead>
 <tr>
-  <th></th>
-  <th></th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Target platform</td>
-  <td>Desktop</td>
+<td>Target platform</td>
+<td>Desktop</td>
 </tr>
 <tr>
-  <td>Header</td>
-  <td>Smclib.h (include Smclib.h)</td>
+<td>Header</td>
+<td>Smclib.h (include Smclib.h)</td>
 </tr>
 </tbody>
 </table>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff548343/(v=vs.85/)"><strong>IoCompleteRequest</strong></a></p>
-
 <p><strong><a href="ioctl_smartcard_is_present" title="// CTL_CODE(0x0031, 0x00a, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SMARTCARD_IS_PRESENT 0x00310028">IOCTL_SMARTCARD_IS_PRESENT</a></strong></p>
-
 <p><strong><a href="smartcard_extension" title="typedef struct _SMARTCARD_EXTENSION {&#10;  ULONG                     Version;&#10;  VENDOR_ATTR               VendorAttr;&#10;  NTSTATUS(                 *ReaderFunction[16];&#10;  SCARD_CARD_CAPABILITIES   CardCapabilities;&#10;  ULONG                     LastError;&#10;  struct {&#10;    PULONG Information;&#10;    PUCHAR RequestBuffer;&#10;    ULONG  RequestBufferLength;&#10;    PUCHAR ReplyBuffer;&#10;    ULONG  ReplyBufferLength;&#10;  } IoRequest;&#10;  ULONG                     MajorIoControlCode;&#10;  ULONG                     MinorIoControlCode;&#10;  POS_DEP_DATA              OsData;&#10;  SCARD_READER_CAPABILITIES ReaderCapabilities;&#10;  PREADER_EXTENSION         ReaderExtension;&#10;  SMARTCARD_REPLY           SmartcardReply;&#10;  SMARTCARD_REQUEST         SmartcardRequest;&#10;...">SMARTCARD_EXTENSION</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

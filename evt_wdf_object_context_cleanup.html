@@ -67,97 +67,65 @@ VOID EvtWdfObjectContextCleanup(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_WDF_OBJECT_CONTEXT_CLEANUP callback function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>A driver's <em>EvtCleanupCallback</em> event callback function removes the driver's references on an object so that the object can be deleted.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Object</code> [in]</h3>
-
 <p>A handle to a framework object.</p>
-
 <h2>Remarks</h2>
-
 <p>The driver can specify an <em>EvtCleanupCallback</em> callback function in a <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> structure. This structure is used as input to all of the framework methods that create framework objects, such as <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a>.</p>
-
 <p>The framework calls the callback function when either the framework or a driver attempts to delete the object.</p>
-
 <p>If the driver has called <a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a> to increase the reference count of an object, the driver must provide an <em>EvtCleanupCallback</em> callback function that calls <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>. This call ensures that the object's reference count is decremented to zero and, as a result, the framework can call the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a> callback function and then delete the object.</p>
-
 <p>If a driver supplies both an <em>EvtCleanupCallback</em> callback function and an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a> callback function for an object, the framework calls the <em>EvtCleanupCallback</em> callback function first.</p>
-
 <p>After the framework calls an object's <em>EvtCleanupCallback</em> callback function, the driver can access the object only from its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a> callback function. However, a driver should not attempt to call methods on an object from its EvtDestroyCallback.</p>
-
 <p>When a driver creates an object, it sometimes allocates object-specific memory buffers and stores the buffer pointers in the object's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-object-context-space">context space</a>. The driver's <em>EvtCleanupCallback</em> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a> callback function can deallocate these memory buffers.</p>
-
 <p>Typically, if your driver does not call <a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a> for an object, the object's <em>EvtCleanupCallback</em> callback function can deallocate object context allocations. In this case, the driver does not need an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a> callback function for the object.</p>
-
 <p>When an object is deleted, the framework also deletes the object's children. With one exception, the framework calls the <em>EvtCleanupCallback</em> routines of child objects before calling those of their parent objects, so drivers are guaranteed that the parent object still exists when a child's <em>EvtCleanupCallback</em> routine runs.</p>
-
 <p>The exception to this guaranteed ordering applies to I/O requests that the driver completes at DISPATCH_LEVEL. If such an I/O request object has one or more children whose <em>EvtCleanupCallback</em> routines must be called at PASSIVE_LEVEL, the parent request might be deleted before one or more of its children. An object requires cleanup at PASSIVE_LEVEL if it must wait for something to complete or if it accesses paged memory.</p>
-
 <p>If the driver attempts to delete such an object (or the parent of such an object) while it is running at DISPATCH_LEVEL, the framework queues the <em>EvtCleanupCallback</em> to a work item for later processing at PASSIVE_LEVEL and then calls the cleanup callback for the parent object without determining whether the callbacks for the children have run.</p>
-
 <p>To avoid any problems that might result from this behavior, drivers should not set the request object as the parent for any object that requires cleanup at PASSIVE_LEVEL. By default, the parent for most objects is WDFDEVICE, so drivers should just accept the default. Generally, if the WDFDEVICE object is passed as a parameter (either directly or as part of a structure) to the method that creates the object, the WDFDEVICE is the default parent. For a complete list of default parents, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/summary-of-framework-objects">Summary of Framework Objects</a>.</p>
-
 <p>If the above exception does not apply, the framework calls the child object's <em>EvtCleanupCallback</em> callback functions before calling the parent object's <em>EvtCleanupCallback</em> callback function. Next, if the child's reference count is zero, the framework calls the child object's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a> callback function. Finally, if the parent's reference count is zero, the framework calls the parent object's <em>EvtDestroyCallback</em> callback function.</p>
-
 <p>For more information about deleting framework objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-object-life-cycle">Framework Object Life Cycle</a>.</p>
-
 <p>Typically, the framework calls the <em>EvtCleanupCallback</em> callback function at IRQL &lt;= DISPATCH_LEVEL. However, the framework calls the callback function at IRQL = PASSIVE_LEVEL in the following situations:</p>
-
 <ul>
 <li>The object's handle type is WDFDEVICE, WDFDRIVER, WDFDPC, WDFINTERRUPT, WDFIOTARGET, WDFQUEUE, WDFSTRING, WDFTIMER, or WDFWORKITEM.</li>
 <li>The object's handle type is WDFMEMORY or WDFLOOKASIDE, and the driver has specified <strong>PagedPool</strong> for the <em>PoolType</em> parameter to <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a> or <a href="wdflookasidelistcreate" title="NTSTATUS WdfLookasideListCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES LookasideAttributes,&#10;  [in]           size_t                 BufferSize,&#10;  [in]           POOL_TYPE              PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES MemoryAttributes,&#10;  [in, optional] ULONG                  PoolTag,&#10;  [out]          WDFLOOKASIDE           *Lookaside&#10;);">WdfLookasideListCreate</a>.</li>
 </ul>
-
 <p>When a work-item object is deleted, either explicitly or because the work item's parent object is being deleted, then before calling the work item's <em>EvtCleanupCallback</em> callback function, the framework waits until all instances of the work item's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function have returned. For more information, see <a href="wdfworkitemenqueue" title="VOID WdfWorkItemEnqueue(&#10;  [in] WDFWORKITEM WorkItem&#10;);">WdfWorkItemEnqueue</a>.</p>
-
 <p>Similarly, when a timer object is deleted, either explicitly or because the timer's parent object is being deleted, then before calling the timer's <em>EvtCleanupCallback</em> callback function, the framework waits until all instances of the timer's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> event callback function have returned.</p>
-
 <p>Beginning with version 1.9 of the framework, the <em>wdfroletypes.h</em> header file contains some alternative, object type-specific, function types for the <em>EvtCleanupCallback</em> callback function. These alternative types help verification tools to determine whether the driver is properly using the callback function. Use the following table to determine which function type to use.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Object Type</th>
-  <th>Function Type</th>
+<th>Object Type</th>
+<th>Function Type</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Device object</td>
-  <td>EVT_WDF_DEVICE_CONTEXT_CLEANUP</td>
+<td>Device object</td>
+<td>EVT_WDF_DEVICE_CONTEXT_CLEANUP</td>
 </tr>
 <tr>
-  <td>I/O queue object</td>
-  <td>EVT_WDF_IO_QUEUE_CONTEXT_CLEANUP_CALLBACK</td>
+<td>I/O queue object</td>
+<td>EVT_WDF_IO_QUEUE_CONTEXT_CLEANUP_CALLBACK</td>
 </tr>
 <tr>
-  <td>File object</td>
-  <td>EVT_WDF_FILE_CONTEXT_CLEANUP_CALLBACK</td>
+<td>File object</td>
+<td>EVT_WDF_FILE_CONTEXT_CLEANUP_CALLBACK</td>
 </tr>
 <tr>
-  <td>All other objects</td>
-  <td>EVT_WDF_OBJECT_CONTEXT_CLEANUP</td>
+<td>All other objects</td>
+<td>EVT_WDF_OBJECT_CONTEXT_CLEANUP</td>
 </tr>
 </tbody>
 </table>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a></p>
-
 <p><a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a></p>
-
 <p><a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a></p>
-
 <p><a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a></p>
-
 <p><a href="wdfworkitemflush" title="VOID WdfWorkItemFlush(&#10;  [in] WDFWORKITEM WorkItem&#10;);">WdfWorkItemFlush</a></p>
 <hr>
 <div class="ntdoc-description-links">

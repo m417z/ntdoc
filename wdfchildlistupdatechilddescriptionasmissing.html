@@ -65,89 +65,63 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfChildListUpdateChildDescriptionAsMissing function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF only]</p>
-
 <p>The <strong>WdfChildListUpdateChildDescriptionAsMissing</strong> method informs the framework that a specified child device is currently unplugged or otherwise unavailable.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>ChildList</code> [in]</h3>
-
 <p>A handle to a child list object.</p>
-
 <h3><code>IdentificationDescription</code> [in]</h3>
-
 <p>A pointer to a caller-allocated <a href="wdf_child_identification_description_header" title="typedef struct _WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER {&#10;  ULONG IdentificationDescriptionSize;&#10;} WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER, *PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER;">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER</a> structure that identifies a driver-supplied child <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dynamic-enumeration">identification description</a>.</p>
-
 <h2>Return value</h2>
-
 <p><strong>WdfChildListUpdateChildDescriptionAsMissing</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, or another status value for which <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">NT_SUCCESS(status)</a> equals <strong>TRUE</strong>, if the operation succeeds. Otherwise, this method might return one of the following values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
-  <td>An input parameter was invalid.</td>
+<td><strong>STATUS_INVALID_PARAMETER</strong></td>
+<td>An input parameter was invalid.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
-  <td>The size of the structure that <em>IdentificationDescription</em> points to was incorrect.</td>
+<td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
+<td>The size of the structure that <em>IdentificationDescription</em> points to was incorrect.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_NO_SUCH_DEVICE</strong></td>
-  <td>The specified device was not found in the child list.</td>
+<td><strong>STATUS_NO_SUCH_DEVICE</strong></td>
+<td>The specified device was not found in the child list.</td>
 </tr>
 </tbody>
 </table>
-
 <p>This method might also return other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
-
 <p>A system bug check occurs if the driver supplies an invalid object handle.</p>
-
 <h2>Remarks</h2>
-
 <p>Your driver can report that a device is unavailable even if the driver never called <a href="wdfchildlistaddorupdatechilddescriptionaspresent" title="NTSTATUS WdfChildListAddOrUpdateChildDescriptionAsPresent(&#10;  [in]           WDFCHILDLIST                                 ChildList,&#10;  [in]           PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription,&#10;  [in, optional] PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER        AddressDescription&#10;);">WdfChildListAddOrUpdateChildDescriptionAsPresent</a> to report that the device was present. In this case, the <strong>WdfChildListUpdateChildDescriptionAsMissing</strong> method just returns STATUS_NO_SUCH_DEVICE.</p>
-
 <p>If you want to report that all devices in a child list are unavailable, your driver can simply call <a href="wdfchildlistbeginscan" title="VOID WdfChildListBeginScan(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListBeginScan</a>, followed immediately by <a href="wdfchildlistendscan" title="VOID WdfChildListEndScan(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListEndScan</a>, instead of calling <strong>WdfChildListUpdateChildDescriptionAsMissing</strong> for each device.</p>
-
 <p>For more information about child devices and child lists, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dynamic-enumeration">Dynamic Enumeration</a>.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example informs the framework that a child device with a specified serial number is unavailable.</p>
+<pre lang="cpp"><code>PDO_IDENTIFICATION_DESCRIPTION  description;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">PDO_IDENTIFICATION_DESCRIPTION</span><span class="w">  </span><span class="n">description</span><span class="p">;</span>
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="p">;</span>
+<a href="wdf_child_identification_description_header_init" title="VOID WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT(&#10;  [out] PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER Header,&#10;  [in]  ULONG                                        IdentificationDescriptionSize&#10;);">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT</a>(
+                                                 &amp;description.Header,
+                                                 sizeof(description)
+                                                 );
 
-<span class="n"><a href="wdf_child_identification_description_header_init" title="VOID WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT(&#10;  [out] PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER Header,&#10;  [in]  ULONG                                        IdentificationDescriptionSize&#10;);">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT</a></span><span class="p">(</span>
-<span class="w">                                                 </span><span class="o">&amp;</span><span class="n">description</span><span class="p">.</span><span class="n">Header</span><span class="p">,</span>
-<span class="w">                                                 </span><span class="k">sizeof</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
-<span class="w">                                                 </span><span class="p">);</span>
-
-<span class="n">description</span><span class="p">.</span><span class="n">SerialNo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SerialNo</span><span class="p">;</span>
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfChildListUpdateChildDescriptionAsMissing</span><span class="p">(</span>
-<span class="w">                                                     </span><span class="n">list</span><span class="p">,</span>
-<span class="w">                                                     </span><span class="o">&amp;</span><span class="n">description</span><span class="p">.</span><span class="n">Header</span>
-<span class="w">                                                     </span><span class="p">);</span>
+description.SerialNo = SerialNo;
+status = WdfChildListUpdateChildDescriptionAsMissing(
+                                                     list,
+                                                     &amp;description.Header
+                                                     );
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="wdf_child_identification_description_header" title="typedef struct _WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER {&#10;  ULONG IdentificationDescriptionSize;&#10;} WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER, *PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER;">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER</a></p>
-
 <p><a href="wdf_child_identification_description_header_init" title="VOID WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT(&#10;  [out] PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER Header,&#10;  [in]  ULONG                                        IdentificationDescriptionSize&#10;);">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT</a></p>
-
 <p><a href="wdfchildlistaddorupdatechilddescriptionaspresent" title="NTSTATUS WdfChildListAddOrUpdateChildDescriptionAsPresent(&#10;  [in]           WDFCHILDLIST                                 ChildList,&#10;  [in]           PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription,&#10;  [in, optional] PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER        AddressDescription&#10;);">WdfChildListAddOrUpdateChildDescriptionAsPresent</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -66,121 +66,83 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfRequestCompleteWithInformation function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfRequestCompleteWithInformation</strong> method stores completion information and then completes a specified I/O request with a supplied completion status.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Request</code> [in]</h3>
-
 <p>A handle to the request object.</p>
-
 <h3><code>Status</code> [in]</h3>
-
 <p>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS value</a> that represents the completion status of the request. Valid status values include, but are not limited to, the following:</p>
-
 <h4><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></h4>
-
 <p>The driver successfully completed the request.</p>
-
 <h4>STATUS_CANCELLED</h4>
-
 <p>The driver canceled the request.</p>
-
 <h4>STATUS_UNSUCCESSFUL</h4>
-
 <p>The driver encountered an error while processing the request.</p>
-
 <h3><code>Information</code> [in]</h3>
-
 <p>A <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> that is set to a request-dependent value. For example, on successful completion of a transfer request, this is set to the number of bytes transferred. This field is not extensible by the driver.</p>
-
 <h2>Remarks</h2>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
 <p>For read, write and IOCTL requests, it is necessary for the driver to call <strong>WdfRequestCompleteWithInformation</strong></p>
-
 <p>For a non-data transfer request, calling <strong><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></strong> instead is an option.</p>
-
 <p>Calling <strong>WdfRequestCompleteWithInformation</strong> is equivalent to calling <a href="wdfrequestsetinformation" title="VOID WdfRequestSetInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestSetInformation</a> and then calling <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>.</p>
-
 <p>After a call to <strong>WdfRequestCompleteWithInformation</strong> returns, the request handle is no longer valid unless the driver has called <a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a> to add one or more additional reference counts to the request object. Note that after <strong>WdfRequestCompleteWithInformation</strong> returns, the driver must not attempt to access the associated WDM <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> structure, even if it has called <strong><a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a></strong>.</p>
-
 <p>When your driver calls <strong>WdfRequestCompleteWithInformation</strong>, the framework supplies a default value that the system uses to boost the run-time priority of the thread that requested the I/O operation. For information about default priority boost values, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/specifying-priority-boosts-when-completing-i-o-requests">Specifying Priority Boosts When Completing I/O Requests</a>. Your driver can call <a href="wdfrequestcompletewithpriorityboost" title="VOID WdfRequestCompleteWithPriorityBoost(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] CCHAR      PriorityBoost&#10;);">WdfRequestCompleteWithPriorityBoost</a> to override the default priority boost value.</p>
-
 <p>For more information about calling <strong>WdfRequestCompleteWithInformation</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">Completing I/O Requests</a>.</p>
-
 <p>For a code example that shows how to use <strong>WdfRequestCompleteWithInformation</strong> to retrieve the number of bytes copied, see the <a rel="noopener" target="_blank" href="https://github.com/Microsoft/Windows-driver-samples/blob/df271b80bdbb556707d9b4af1b06151ded561884/serial/VirtualSerial2/queue.c#L542">VirtualSerial2 driver sample</a>.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example shows how a driver for a USB device might call <strong>WdfRequestCompleteWithInformation</strong> in a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function .</p>
+<pre lang="cpp"><code>VOID
+EvtRequestReadCompletionRoutine(
+    IN WDFREQUEST  Request,
+    IN WDFIOTARGET  Target,
+    <a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">PWDF_REQUEST_COMPLETION_PARAMS</a>  CompletionParams,
+    IN WDFCONTEXT  Context
+    )
+{
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
+    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  bytesRead = 0;
+    <a href="wdf_usb_request_completion_params" title="typedef struct _WDF_USB_REQUEST_COMPLETION_PARAMS {&#10;  USBD_STATUS          UsbdStatus;&#10;  WDF_USB_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      USHORT    LangID;&#10;      UCHAR     StringIndex;&#10;      UCHAR     RequiredSize;&#10;    } DeviceString;&#10;    struct {&#10;      WDFMEMORY                    Buffer;&#10;      WDF_USB_CONTROL_SETUP_PACKET SetupPacket;&#10;      ULONG                        Length;&#10;    } DeviceControlTransfer;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;    } DeviceUrb;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;...">PWDF_USB_REQUEST_COMPLETION_PARAMS</a>  usbCompletionParams;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="nf">EvtRequestReadCompletionRoutine</span><span class="p">(</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFIOTARGET</span><span class="w">  </span><span class="n">Target</span><span class="p">,</span>
-<span class="w">    </span><span class="n"><a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">PWDF_REQUEST_COMPLETION_PARAMS</a></span><span class="w">  </span><span class="n">CompletionParams</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFCONTEXT</span><span class="w">  </span><span class="n">Context</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="p">;</span>
-<span class="w">    </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w">  </span><span class="n">bytesRead</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="wdf_usb_request_completion_params" title="typedef struct _WDF_USB_REQUEST_COMPLETION_PARAMS {&#10;  USBD_STATUS          UsbdStatus;&#10;  WDF_USB_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      USHORT    LangID;&#10;      UCHAR     StringIndex;&#10;      UCHAR     RequiredSize;&#10;    } DeviceString;&#10;    struct {&#10;      WDFMEMORY                    Buffer;&#10;      WDF_USB_CONTROL_SETUP_PACKET SetupPacket;&#10;      ULONG                        Length;&#10;    } DeviceControlTransfer;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;    } DeviceUrb;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;...">PWDF_USB_REQUEST_COMPLETION_PARAMS</a></span><span class="w">  </span><span class="n">usbCompletionParams</span><span class="p">;</span>
+    UNREFERENCED_PARAMETER(Target);
+    UNREFERENCED_PARAMETER(Context);
 
-<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">Target</span><span class="p">);</span>
-<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">Context</span><span class="p">);</span>
+    status = CompletionParams-&gt;IoStatus.Status;
+    usbCompletionParams = CompletionParams-&gt;Parameters.Usb.Completion;
+    bytesRead =  usbCompletionParams-&gt;Parameters.PipeRead.Length;
 
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CompletionParams</span><span class="o">-&gt;</span><span class="n">IoStatus</span><span class="p">.</span><span class="n">Status</span><span class="p">;</span>
-<span class="w">    </span><span class="n">usbCompletionParams</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CompletionParams</span><span class="o">-&gt;</span><span class="n">Parameters</span><span class="p">.</span><span class="n">Usb</span><span class="p">.</span><span class="n">Completion</span><span class="p">;</span>
-<span class="w">    </span><span class="n">bytesRead</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="n">usbCompletionParams</span><span class="o">-&gt;</span><span class="n">Parameters</span><span class="p">.</span><span class="n">PipeRead</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">)){</span>
-<span class="w">        </span><span class="n">TraceEvents</span><span class="p">(</span>
-<span class="w">                    </span><span class="n">TRACE_LEVEL_INFORMATION</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">DBG_READ</span><span class="p">,</span>
-<span class="w">                    </span><span class="s">&quot;Number of bytes read: %I64d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
-<span class="w">                    </span><span class="p">(</span><span class="n">INT64</span><span class="p">)</span><span class="n">bytesRead</span>
-<span class="w">                    </span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">TraceEvents</span><span class="p">(</span>
-<span class="w">                    </span><span class="n">TRACE_LEVEL_ERROR</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">DBG_READ</span><span class="p">,</span>
-<span class="w">                    </span><span class="s">&quot;Read failed - request status 0x%x UsbdStatus 0x%x</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">status</span><span class="p">,</span>
-<span class="w">                    </span><span class="n">usbCompletionParams</span><span class="o">-&gt;</span><span class="n">UsbdStatus</span>
-<span class="w">                    </span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">WdfRequestCompleteWithInformation</span><span class="p">(</span>
-<span class="w">                                      </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">                                      </span><span class="n">status</span><span class="p">,</span>
-<span class="w">                                      </span><span class="n">bytesRead</span>
-<span class="w">                                      </span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="p">;</span>
-<span class="p">}</span>
+    if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
+        TraceEvents(
+                    TRACE_LEVEL_INFORMATION,
+                    DBG_READ,
+                    &quot;Number of bytes read: %I64d\n&quot;,
+                    (INT64)bytesRead
+                    );
+    } else {
+        TraceEvents(
+                    TRACE_LEVEL_ERROR,
+                    DBG_READ,
+                    &quot;Read failed - request status 0x%x UsbdStatus 0x%x\n&quot;,
+                    status,
+                    usbCompletionParams-&gt;UsbdStatus
+                    );
+    }
+    WdfRequestCompleteWithInformation(
+                                      Request,
+                                      status,
+                                      bytesRead
+                                      );
+    return;
+}
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a></p>
-
 <p><a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">WDF_REQUEST_COMPLETION_PARAMS</a></p>
-
 <p><a href="wdf_usb_request_completion_params" title="typedef struct _WDF_USB_REQUEST_COMPLETION_PARAMS {&#10;  USBD_STATUS          UsbdStatus;&#10;  WDF_USB_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      USHORT    LangID;&#10;      UCHAR     StringIndex;&#10;      UCHAR     RequiredSize;&#10;    } DeviceString;&#10;    struct {&#10;      WDFMEMORY                    Buffer;&#10;      WDF_USB_CONTROL_SETUP_PACKET SetupPacket;&#10;      ULONG                        Length;&#10;    } DeviceControlTransfer;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;    } DeviceUrb;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;...">WDF_USB_REQUEST_COMPLETION_PARAMS</a></p>
-
 <p><a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a></p>
-
 <p><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></p>
-
 <p><a href="wdfrequestcompletewithpriorityboost" title="VOID WdfRequestCompleteWithPriorityBoost(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] CCHAR      PriorityBoost&#10;);">WdfRequestCompleteWithPriorityBoost</a></p>
-
 <p><a href="wdfrequestsetinformation" title="VOID WdfRequestSetInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestSetInformation</a></p>
 <hr>
 <div class="ntdoc-description-links">

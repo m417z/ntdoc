@@ -68,76 +68,55 @@ HRESULT Pfnd3dddiQueryresourceresidency(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PFND3DDDI_QUERYRESOURCERESIDENCY callback function</h1>
-
 <h2>Description</h2>
-
 <p>The <em>QueryResourceResidency</em> function determines the residency of the given list of resources.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>hDevice</code></h3>
-
 <p>A handle to the display device (graphics context).</p>
-
 <h3><code>unnamedParam2</code></h3>
-
 <p><em>pData</em> [in]</p>
-
 <p>A pointer to a <a href="d3dddiarg_queryresourceresidency" title="typedef struct _D3DDDIARG_QUERYRESOURCERESIDENCY {&#10;  [in] const HANDLE *pHandleList;&#10;  [in] UINT         NumResources;&#10;} D3DDDIARG_QUERYRESOURCERESIDENCY;">D3DDDIARG_QUERYRESOURCERESIDENCY</a> structure that describes a list of resources on which residency is verified.</p>
-
 <h2>Return value</h2>
-
 <p><em>QueryResourceResidency</em> returns one of the following values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>S_OK</td>
-  <td>All of the resources are in GPU-accessible memory.</td>
+<td>S_OK</td>
+<td>All of the resources are in GPU-accessible memory.</td>
 </tr>
 <tr>
-  <td>S_RESIDENT_IN_SHARED_MEMORY</td>
-  <td>No allocations that comprise the resources are on disk. However, at least one allocation is not in GPU-accessible memory.</td>
+<td>S_RESIDENT_IN_SHARED_MEMORY</td>
+<td>No allocations that comprise the resources are on disk. However, at least one allocation is not in GPU-accessible memory.</td>
 </tr>
 <tr>
-  <td>S_NOT_RESIDENT</td>
-  <td>At least one allocation that comprises the resources is on disk.</td>
+<td>S_NOT_RESIDENT</td>
+<td>At least one allocation that comprises the resources is on disk.</td>
 </tr>
 <tr>
-  <td>E_INVALIDARG</td>
-  <td>Parameters were validated and determined to be incorrect.</td>
+<td>E_INVALIDARG</td>
+<td>Parameters were validated and determined to be incorrect.</td>
 </tr>
 <tr>
-  <td>E_OUTOFMEMORY</td>
-  <td>QueryResourceResidency could not allocate memory that is required for it to complete.</td>
+<td>E_OUTOFMEMORY</td>
+<td>QueryResourceResidency could not allocate memory that is required for it to complete.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>The Microsoft Direct3D runtime calls the user-mode display driver's <em>QueryResourceResidency</em> function for applications to determine if the operating system will incur a significant stall at draw time if the system must make resources GPU-accessible. The information that is returned from <em>QueryResourceResidency</em> is an approximation of the residency of resources because the resources might become demoted before applications use the resources.</p>
-
 <p>The user-mode display driver's <em>QueryResourceResidency</em> function must make calls to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_queryresidencycb">pfnQueryResidencyCb</a> function. The <strong>pfnQueryResidencyCb</strong> function returns the residency status of a resource in the elements of the array that is specified by the <strong>pResidencyStatus</strong> member of the <a href="d3dddicb_queryresidency" title="typedef struct _D3DDDICB_QUERYRESIDENCY {&#10;  [in]  HANDLE                 hResource;&#10;  [in]  UINT                   NumAllocations;&#10;  [in]  const D3DKMT_HANDLE    *HandleList;&#10;  [out] D3DDDI_RESIDENCYSTATUS *pResidencyStatus;&#10;} D3DDDICB_QUERYRESIDENCY;">D3DDDICB_QUERYRESIDENCY</a> structure. If <strong>pfnQueryResidencyCb</strong> returns D3DDDI_RESIDENCYSTATUS_NOTRESIDENT for any query, <em>QueryResourceResidency</em> must return S_NOT_RESIDENT. If <strong>pfnQueryResidencyCb</strong> returns D3DDDI_RESIDENCYSTATUS_RESIDENTINSHAREDMEMORY for any query and does not return D3DDDI_RESIDENCYSTATUS_NOTRESIDENT for any query, <em>QueryResourceResidency</em> must return S_RESIDENT_IN_SHARED_MEMORY. <em>QueryResourceResidency</em> must return S_OK only if all calls to <strong>pfnQueryResidencyCb</strong> for all queries return D3DDDI_RESIDENCYSTATUS_RESIDENTINGPUMEMORY.</p>
-
 <p>For each resource that the runtime queries through a call to <em>QueryResourceResidency</em>, the user-mode display driver must determine which allocations that belong to the resource to query through a call to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_queryresidencycb">pfnQueryResidencyCb</a>. For a resource that owns a single allocation, the determination is simple--the driver will query that allocation. However, if a resource owns multiple allocations, the determination is more difficult. The driver must determine which allocations that an application will likely use for rendering, and the driver must query only those allocations. For example, if a resource owns an allocation that is used for rendering and a scratch allocation that handles a lock operation, the driver should query only for the residency of the first allocation, because an application will most likely not use the second allocation for rendering.</p>
-
 <p><strong>Note</strong> Because the runtime does not support residency-querying of system memory resources, the runtime will always fail requests from applications for the residency status of system memory resources and will never call the user-mode display driver's <em>QueryResourceResidency</em> function for these system memory resources.</p>
-
 <h2>See also</h2>
-
 <p><a href="d3dddiarg_queryresourceresidency" title="typedef struct _D3DDDIARG_QUERYRESOURCERESIDENCY {&#10;  [in] const HANDLE *pHandleList;&#10;  [in] UINT         NumResources;&#10;} D3DDDIARG_QUERYRESOURCERESIDENCY;">D3DDDIARG_QUERYRESOURCERESIDENCY</a></p>
-
 <p><a href="d3dddicb_queryresidency" title="typedef struct _D3DDDICB_QUERYRESIDENCY {&#10;  [in]  HANDLE                 hResource;&#10;  [in]  UINT                   NumAllocations;&#10;  [in]  const D3DKMT_HANDLE    *HandleList;&#10;  [out] D3DDDI_RESIDENCYSTATUS *pResidencyStatus;&#10;} D3DDDICB_QUERYRESIDENCY;">D3DDDICB_QUERYRESIDENCY</a></p>
-
 <p><a href="d3dddi_devicefuncs" title="typedef struct _D3DDDI_DEVICEFUNCS {&#10;  PFND3DDDI_SETRENDERSTATE                           pfnSetRenderState;&#10;  PFND3DDDI_UPDATEWINFO                              pfnUpdateWInfo;&#10;  PFND3DDDI_VALIDATEDEVICE                           pfnValidateDevice;&#10;  PFND3DDDI_SETTEXTURESTAGESTATE                     pfnSetTextureStageState;&#10;  PFND3DDDI_SETTEXTURE                               pfnSetTexture;&#10;  PFND3DDDI_SETPIXELSHADER                           pfnSetPixelShader;&#10;  PFND3DDDI_SETPIXELSHADERCONST                      pfnSetPixelShaderConst;&#10;  PFND3DDDI_SETSTREAMSOURCEUM                        pfnSetStreamSourceUm;&#10;  PFND3DDDI_SETINDICES                               pfnSetIndices;&#10;  PFND3DDDI_SETINDICESUM                             pfnSetIndicesUm;&#10;  PFND3DDDI_DRAWPRIMITIVE                            pfnDrawPrimitive;&#10;  PFND3DDDI_DRAWINDEXEDPRIMITIVE                     pfnDrawIndexedPrimitive;&#10;  PFND3DDDI_DRAWRECTPATCH                            pfnDrawRectPatch;&#10;  PFND3DDDI_DRAWTRIPATCH                             pfnDrawTriPatch;&#10;  PFND3DDDI_DRAWPRIMITIVE2                           pfnDrawPrimitive2;&#10;  PFND3DDDI_DRAWINDEXEDPRIMITIVE2                    pfnDrawIndexedPrimitive2;&#10;  PFND3DDDI_VOLBLT                                   pfnVolBlt;&#10;  PFND3DDDI_BUFBLT                                   pfnBufBlt;&#10;  PFND3DDDI_TEXBLT                                   pfnTexBlt;&#10;...">D3DDDI_DEVICEFUNCS</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_queryresidencycb">pfnQueryResidencyCb</a></p>
 <hr>
 <div class="ntdoc-description-links">

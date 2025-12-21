@@ -65,87 +65,65 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfDmaTransactionSetDeviceAddressOffset function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF only]</p>
-
 <p>The
 <strong>WdfDmaTransactionSetDeviceAddressOffset</strong> method specifies the offset of the register that the system DMA controller will access when performing the DMA operation.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>DmaTransaction</code> [in]</h3>
-
 <p>A handle to a DMA transaction object that specifies the transaction to modify.</p>
-
 <h3><code>Offset</code> [in]</h3>
-
 <p>The offset of the register, from the <strong>DeviceAddress</strong> specified in <a href="wdf_dma_system_profile_config" title="typedef struct _WDF_DMA_SYSTEM_PROFILE_CONFIG {&#10;  ULONG                           Size;&#10;  BOOLEAN                         DemandMode;&#10;  BOOLEAN                         LoopedTransfer;&#10;  DMA_WIDTH                       DmaWidth;&#10;  PHYSICAL_ADDRESS                DeviceAddress;&#10;  PCM_PARTIAL_RESOURCE_DESCRIPTOR DmaDescriptor;&#10;} WDF_DMA_SYSTEM_PROFILE_CONFIG, *PWDF_DMA_SYSTEM_PROFILE_CONFIG;">WDF_DMA_SYSTEM_PROFILE_CONFIG</a>, to or from which DMA should be performed.</p>
-
 <h2>Remarks</h2>
-
 <p><strong>WdfDmaTransactionSetDeviceAddressOffset</strong> must be used with a DMA enabler that specifies a system-mode DMA profile.</p>
-
 <p>Framework-based drivers call <strong>WdfDmaTransactionSetDeviceAddressOffset</strong> after initializing a DMA transaction and before executing it.</p>
-
 <p>A driver can use this method to access multiple registers within a device's register file.</p>
-
 <p>For example, a driver might use DMA to access separate read and write registers in a device's register file.</p>
-
 <p>To do so, the driver specifies the base address of the device's register file when configuring the enabler, and then sets the offset of the read or write register as necessary before executing the transaction.</p>
-
 <p>If your driver calls this method on an operating system earlier than Windows 8, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-kmdf-verifier">the framework's verifier</a> reports an error.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example initializes a DMA transaction. It then sets the offset of the register that the system DMA controller will access, provides a transfer completion callback routine, and executes the DMA transaction.</p>
+<pre lang="cpp"><code>status = <a href="wdfdmatransactioninitialize" title="NTSTATUS WdfDmaTransactionInitialize(&#10;  [in] WDFDMATRANSACTION   DmaTransaction,&#10;  [in] PFN_WDF_PROGRAM_DMA EvtProgramDmaFunction,&#10;  [in] WDF_DMA_DIRECTION   DmaDirection,&#10;  [in] PMDL                Mdl,&#10;  [in] PVOID               VirtualAddress,&#10;  [in] size_t              Length&#10;);">WdfDmaTransactionInitialize</a>(
+                                     RequestContext-&gt;DmaTransaction,
+                                     EvtProgramDma,
+                                     direction,
+                                     mdl,
+                                     startingVa,
+                                     length
+                                     );
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfdmatransactioninitialize" title="NTSTATUS WdfDmaTransactionInitialize(&#10;  [in] WDFDMATRANSACTION   DmaTransaction,&#10;  [in] PFN_WDF_PROGRAM_DMA EvtProgramDmaFunction,&#10;  [in] WDF_DMA_DIRECTION   DmaDirection,&#10;  [in] PMDL                Mdl,&#10;  [in] PVOID               VirtualAddress,&#10;  [in] size_t              Length&#10;);">WdfDmaTransactionInitialize</a></span><span class="p">(</span>
-<span class="w">                                     </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">,</span>
-<span class="w">                                     </span><span class="n">EvtProgramDma</span><span class="p">,</span>
-<span class="w">                                     </span><span class="n">direction</span><span class="p">,</span>
-<span class="w">                                     </span><span class="n">mdl</span><span class="p">,</span>
-<span class="w">                                     </span><span class="n">startingVa</span><span class="p">,</span>
-<span class="w">                                     </span><span class="n">length</span>
-<span class="w">                                     </span><span class="p">);</span>
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+    goto Complete;
+}
 
-<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">Complete</span><span class="p">;</span>
-<span class="p">}</span>
+WdfDmaTransactionSetDeviceAddressOffset(
+                                        RequestContext-&gt;DmaTransaction,
+                                        READ_DATA_REGISTER_OFFSET
+                                        );
 
-<span class="n">WdfDmaTransactionSetDeviceAddressOffset</span><span class="p">(</span>
-<span class="w">                                        </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">,</span>
-<span class="w">                                        </span><span class="n">READ_DATA_REGISTER_OFFSET</span>
-<span class="w">                                        </span><span class="p">);</span>
+<a href="wdfdmatransactionsettransfercompletecallback" title="VOID WdfDmaTransactionSetTransferCompleteCallback(&#10;  [in]           WDFDMATRANSACTION                             DmaTransaction,&#10;  [in, optional] PFN_WDF_DMA_TRANSACTION_DMA_TRANSFER_COMPLETE DmaCompletionRoutine,&#10;  [in, optional] PVOID                                         DmaCompletionContext&#10;);">WdfDmaTransactionSetTransferCompleteCallback</a>(
+                                             RequestContext-&gt;DmaTransaction,
+                                             EvtDmaTransactionDmaTransferComplete,
+                                             RequestContext
+                                             );
 
-<span class="n"><a href="wdfdmatransactionsettransfercompletecallback" title="VOID WdfDmaTransactionSetTransferCompleteCallback(&#10;  [in]           WDFDMATRANSACTION                             DmaTransaction,&#10;  [in, optional] PFN_WDF_DMA_TRANSACTION_DMA_TRANSFER_COMPLETE DmaCompletionRoutine,&#10;  [in, optional] PVOID                                         DmaCompletionContext&#10;);">WdfDmaTransactionSetTransferCompleteCallback</a></span><span class="p">(</span>
-<span class="w">                                             </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">,</span>
-<span class="w">                                             </span><span class="n">EvtDmaTransactionDmaTransferComplete</span><span class="p">,</span>
-<span class="w">                                             </span><span class="n">RequestContext</span>
-<span class="w">                                             </span><span class="p">);</span>
+status = <a href="wdfdmatransactionexecute" title="NTSTATUS WdfDmaTransactionExecute(&#10;  [in]           WDFDMATRANSACTION DmaTransaction,&#10;  [in, optional] WDFCONTEXT        Context&#10;);">WdfDmaTransactionExecute</a>(
+                                  RequestContext-&gt;DmaTransaction,
+                                  RequestContext );
 
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfdmatransactionexecute" title="NTSTATUS WdfDmaTransactionExecute(&#10;  [in]           WDFDMATRANSACTION DmaTransaction,&#10;  [in, optional] WDFCONTEXT        Context&#10;);">WdfDmaTransactionExecute</a></span><span class="p">(</span>
-<span class="w">                                  </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">,</span>
-<span class="w">                                  </span><span class="n">RequestContext</span><span class="w"> </span><span class="p">);</span>
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+    goto Complete;
+}
 
-<span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">Complete</span><span class="p">;</span>
-<span class="p">}</span>
+return status;
 
-<span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
+Complete:
 
-<span class="nl">Complete</span><span class="p">:</span>
-
-<span class="n"><a href="wdfdmatransactionrelease" title="NTSTATUS WdfDmaTransactionRelease(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionRelease</a></span><span class="p">(</span>
-<span class="w">                         </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span>
-<span class="w">                         </span><span class="p">);</span>
+<a href="wdfdmatransactionrelease" title="NTSTATUS WdfDmaTransactionRelease(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionRelease</a>(
+                         RequestContext-&gt;DmaTransaction
+                         );
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="wdf_dma_system_profile_config" title="typedef struct _WDF_DMA_SYSTEM_PROFILE_CONFIG {&#10;  ULONG                           Size;&#10;  BOOLEAN                         DemandMode;&#10;  BOOLEAN                         LoopedTransfer;&#10;  DMA_WIDTH                       DmaWidth;&#10;  PHYSICAL_ADDRESS                DeviceAddress;&#10;  PCM_PARTIAL_RESOURCE_DESCRIPTOR DmaDescriptor;&#10;} WDF_DMA_SYSTEM_PROFILE_CONFIG, *PWDF_DMA_SYSTEM_PROFILE_CONFIG;">WDF_DMA_SYSTEM_PROFILE_CONFIG</a></p>
 <hr>
 <div class="ntdoc-description-links">

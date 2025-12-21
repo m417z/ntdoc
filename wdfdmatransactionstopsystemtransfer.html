@@ -64,210 +64,186 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfDmaTransactionStopSystemTransfer function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF only]</p>
-
 <p>The
 <strong>WdfDmaTransactionStopSystemTransfer</strong> method attempts to stop a system-mode DMA transfer after the framework has called <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdmatransaction/nc-wdfdmatransaction-evt_wdf_program_dma">EvtProgramDma</a>.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>DmaTransaction</code> [in]</h3>
-
 <p>A handle to an initialized DMA transaction object.</p>
-
 <h2>Remarks</h2>
-
 <p>Only a driver that uses system-mode DMA should call <strong>WdfDmaTransactionStopSystemTransfer</strong>.</p>
-
 <p>A driver using bus-mastering DMA is responsible for programming its own dedicated DMA controller. In the event of a request cancellation, timeout, or device error, the driver can program the DMA controller to stop transferring data.</p>
-
 <p>In contrast, a driver using system-mode DMA must rely on the hardware abstraction layer (HAL) to program the shared DMA controller. When a driver calls <strong>WdfDmaTransactionStopSystemTransfer</strong>, the framework notifies the HAL that the transfer must be stopped and returns immediately.</p>
-
 <p>The framework next calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdmatransaction/nc-wdfdmatransaction-evt_wdf_dma_transaction_dma_transfer_complete">EvtDmaTransactionDmaTransferComplete</a> callback function, if the driver has provided one. If not, the framework returns FALSE when the driver next calls <a href="wdfdmatransactiondmacompleted" title="BOOLEAN WdfDmaTransactionDmaCompleted(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompleted</a>.</p>
-
 <p>If your driver calls this method on an operating system earlier than Windows 8, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-kmdf-verifier">the framework's verifier</a> reports an error.</p>
-
 <p>For more information about system-mode DMA, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/supporting-system-mode-dma">Supporting System-Mode DMA</a>.</p>
-
 <p>For more information about canceling DMA transactions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/canceling-dma-transactions">Canceling DMA Transactions</a>.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example shows how a driver might call <strong>WdfDmaTransactionStopSystemTransfer</strong> from an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> event callback function that it registers to be called if an I/O request times out.</p>
+<pre lang="cpp"><code>VOID
+MyTimerFunc(
+    __in WDFTIMER Timer
+    )
+{
+    WDFREQUEST request = (WDFREQUEST) <a href="wdftimergetparentobject" title="WDFOBJECT WdfTimerGetParentObject(&#10;  [in] WDFTIMER Timer&#10;);">WdfTimerGetParentObject</a>(Timer);
+    PREQUEST_CONTEXT requestContext = GetRequestContext(request);
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="nf">MyTimerFunc</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">WDFTIMER</span><span class="w"> </span><span class="n">Timer</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">WDFREQUEST</span><span class="w"> </span><span class="n">request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">WDFREQUEST</span><span class="p">)</span><span class="w"> </span><span class="n"><a href="wdftimergetparentobject" title="WDFOBJECT WdfTimerGetParentObject(&#10;  [in] WDFTIMER Timer&#10;);">WdfTimerGetParentObject</a></span><span class="p">(</span><span class="n">Timer</span><span class="p">);</span>
-<span class="w">    </span><span class="n">PREQUEST_CONTEXT</span><span class="w"> </span><span class="n">requestContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetRequestContext</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
+    //
+    // Begin the completion process.  If we're the first to get here
+    // then stop the DMA transfer.  The dma completion routine will
+    // take care of running down cancellation.
+    //
+    if (BeginCompletion(requestContext, STATUS_IO_TIMEOUT, false)) {
+        WdfDmaTransactionStopSystemTransfer(requestContext-&gt;DmaTransaction);
+    }
 
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Begin the completion process.  If we&#39;re the first to get here</span>
-<span class="w">    </span><span class="c1">// then stop the DMA transfer.  The dma completion routine will</span>
-<span class="w">    </span><span class="c1">// take care of running down cancellation.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BeginCompletion</span><span class="p">(</span><span class="n">requestContext</span><span class="p">,</span><span class="w"> </span><span class="n">STATUS_IO_TIMEOUT</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">WdfDmaTransactionStopSystemTransfer</span><span class="p">(</span><span class="n">requestContext</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
+    AttemptRequestCompletion(requestContext, false);
+}
 
-<span class="w">    </span><span class="n">AttemptRequestCompletion</span><span class="p">(</span><span class="n">requestContext</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
-<span class="p">}</span>
+bool
+BeginCompletion(
+    __in PREQUEST_CONTEXT  RequestContext,
+    __in <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>          CompletionStatus,
+    __in bool              ForceStatusUpdate
+    )
+{
+    bool completionStarted;
 
-<span class="kt">bool</span>
-<span class="nf">BeginCompletion</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">PREQUEST_CONTEXT</span><span class="w">  </span><span class="n">RequestContext</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">          </span><span class="n">CompletionStatus</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="kt">bool</span><span class="w">              </span><span class="n">ForceStatusUpdate</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">completionStarted</span><span class="p">;</span>
+    //
+    // Grab the object lock and mark the beginning of
+    // completion.
+    //
+    <a href="wdfspinlockacquire" title="VOID WdfSpinLockAcquire(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockAcquire</a>(RequestContext-&gt;Lock);
 
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Grab the object lock and mark the beginning of</span>
-<span class="w">    </span><span class="c1">// completion.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="n"><a href="wdfspinlockacquire" title="VOID WdfSpinLockAcquire(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockAcquire</a></span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">Lock</span><span class="p">);</span>
+    completionStarted = RequestContext-&gt;CompletionStarted;
+    RequestContext-&gt;CompletionStarted = true;
 
-<span class="w">    </span><span class="n">completionStarted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">CompletionStarted</span><span class="p">;</span>
-<span class="w">    </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">CompletionStarted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">;</span>
+    if ((completionStarted == false) ||
+        (ForceStatusUpdate == true)) {
+        RequestContext-&gt;CompletionStatus = CompletionStatus;
+    }
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">((</span><span class="n">completionStarted</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"> </span><span class="o">||</span>
-<span class="w">        </span><span class="p">(</span><span class="n">ForceStatusUpdate</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">true</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">CompletionStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CompletionStatus</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
+    <a href="wdfspinlockrelease" title="VOID WdfSpinLockRelease(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockRelease</a>(RequestContext-&gt;Lock);
 
-<span class="w">    </span><span class="n"><a href="wdfspinlockrelease" title="VOID WdfSpinLockRelease(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockRelease</a></span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">Lock</span><span class="p">);</span>
+    return !completionStarted;
+}
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="o">!</span><span class="n">completionStarted</span><span class="p">;</span>
-<span class="p">}</span>
+VOID
+AttemptRequestCompletion(
+    __in PREQUEST_CONTEXT RequestContext,
+    __in bool TransferComplete
+    )
+{
+    <a href="long" title="typedef long LONG;">LONG</a> refCount;
 
-<span class="n">VOID</span>
-<span class="nf">AttemptRequestCompletion</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">PREQUEST_CONTEXT</span><span class="w"> </span><span class="n">RequestContext</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">TransferComplete</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="long" title="typedef long LONG;">LONG</a></span><span class="w"> </span><span class="n">refCount</span><span class="p">;</span>
+    <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;No thread has begun completion&quot;,
+                 RequestContext-&gt;CompletionStarted == true);
 
-<span class="w">    </span><span class="n"><a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a></span><span class="p">(</span><span class="s">&quot;No thread has begun completion&quot;</span><span class="p">,</span>
-<span class="w">                 </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">CompletionStarted</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+    if (TransferComplete) {
+        //
+        // Unmark the request cancelable.  If that succeeds then drop the cancel reference
+        //
+        if (<a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a>(RequestContext-&gt;Request) == <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>) {
+            refCount = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;(RequestContext-&gt;CompletionRefCount));
+            <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L&quot;Reference count should not have gone to zero yet&quot;,
+                          refCount != 0);
+        }
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">TransferComplete</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="c1">// Unmark the request cancelable.  If that succeeds then drop the cancel reference</span>
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a></span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">Request</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">refCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a></span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">CompletionRefCount</span><span class="p">));</span>
-<span class="w">            </span><span class="n"><a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a></span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Reference count should not have gone to zero yet&quot;</span><span class="p">,</span>
-<span class="w">                          </span><span class="n">refCount</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
+        //
+        // Stop the timer if it's been started.
+        //
+        if (RequestContext-&gt;TimerStarted == true) {
+            if (<a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a>(RequestContext-&gt;Timer, FALSE) == TRUE) {
+                //
+                // The timer was queued but won't ever run.  Drop its
+                // reference count.
+                //
+                refCount = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;RequestContext-&gt;CompletionRefCount);
+                <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;Completion reference count should not reach zero until &quot;
+                             L&quot;this routine calls AttemptRequestCompletion&quot;,
+                             refCount &gt; 0);
+            }
+        }
+    }
 
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="c1">// Stop the timer if it&#39;s been started.</span>
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">TimerStarted</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a></span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">Timer</span><span class="p">,</span><span class="w"> </span><span class="n">FALSE</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">TRUE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">                </span><span class="c1">//</span>
-<span class="w">                </span><span class="c1">// The timer was queued but won&#39;t ever run.  Drop its</span>
-<span class="w">                </span><span class="c1">// reference count.</span>
-<span class="w">                </span><span class="c1">//</span>
-<span class="w">                </span><span class="n">refCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">CompletionRefCount</span><span class="p">);</span>
-<span class="w">                </span><span class="n"><a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a></span><span class="p">(</span><span class="s">&quot;Completion reference count should not reach zero until &quot;</span>
-<span class="w">                             </span><span class="sa">L</span><span class="s">&quot;this routine calls AttemptRequestCompletion&quot;</span><span class="p">,</span>
-<span class="w">                             </span><span class="n">refCount</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
+    //
+    // Drop this caller's reference.  If that was the last one then
+    // complete the request.
+    //
+    refCount = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;(RequestContext-&gt;CompletionRefCount));
 
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Drop this caller&#39;s reference.  If that was the last one then</span>
-<span class="w">    </span><span class="c1">// complete the request.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="n">refCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a></span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">CompletionRefCount</span><span class="p">));</span>
+    if (refCount == 0) {
+        <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L&quot;Execution reference was released, but execution &quot;
+                      L&quot;path did not set a completion status for the &quot;
+                      L&quot;request&quot;,
+                      RequestContext-&gt;CompletionStatus != STATUS_PENDING);
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">refCount</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n"><a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a></span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Execution reference was released, but execution &quot;</span>
-<span class="w">                      </span><span class="sa">L</span><span class="s">&quot;path did not set a completion status for the &quot;</span>
-<span class="w">                      </span><span class="sa">L</span><span class="s">&quot;request&quot;</span><span class="p">,</span>
-<span class="w">                      </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">CompletionStatus</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">STATUS_PENDING</span><span class="p">);</span>
+        //
+        // Timers are disposed of at passive level.  If we leave it attached to
+        // the request then we can hit a verifier issue, since the request
+        // needs to be immediately disposable at dispatch-level.
+        //
+        // Delete the timer now so that we can complete the request safely.
+        // At this point the timer has either expired or been successfully
+        // cancelled so there's no race with the timer routine.
+        //
+        if (RequestContext-&gt;Timer != NULL) {
+            <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(RequestContext-&gt;Timer);
+            RequestContext-&gt;Timer = NULL;
+        }
 
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="c1">// Timers are disposed of at passive level.  If we leave it attached to</span>
-<span class="w">        </span><span class="c1">// the request then we can hit a verifier issue, since the request</span>
-<span class="w">        </span><span class="c1">// needs to be immediately disposable at dispatch-level.</span>
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="c1">// Delete the timer now so that we can complete the request safely.</span>
-<span class="w">        </span><span class="c1">// At this point the timer has either expired or been successfully</span>
-<span class="w">        </span><span class="c1">// cancelled so there&#39;s no race with the timer routine.</span>
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">Timer</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n"><a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a></span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">Timer</span><span class="p">);</span>
-<span class="w">            </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">Timer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+        <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(RequestContext-&gt;Request,
+                           RequestContext-&gt;CompletionStatus);
+    }
+}
 
-<span class="w">        </span><span class="n"><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></span><span class="p">(</span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">Request</span><span class="p">,</span>
-<span class="w">                           </span><span class="n">RequestContext</span><span class="o">-&gt;</span><span class="n">CompletionStatus</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
 </code></pre>
-</div>
-
 <p>The following code example shows how a driver might call <strong>WdfDmaTransactionStopSystemTransfer</strong> from an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function. The driver previously called <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a> from its I/O request handler to register the callback.</p>
+<pre lang="cpp"><code>VOID
+MyRequestCancel(
+    __in WDFREQUEST Request
+    )
+{
+    PREQUEST_CONTEXT requestContext = GetRequestContext(Request);
+    <a href="long" title="typedef long LONG;">LONG</a> oldValue;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="nf">MyRequestCancel</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">WDFREQUEST</span><span class="w"> </span><span class="n">Request</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">PREQUEST_CONTEXT</span><span class="w"> </span><span class="n">requestContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetRequestContext</span><span class="p">(</span><span class="n">Request</span><span class="p">);</span>
-<span class="w">    </span><span class="n"><a href="long" title="typedef long LONG;">LONG</a></span><span class="w"> </span><span class="n">oldValue</span><span class="p">;</span>
+    //
+    // Start completion
+    //
 
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Start completion</span>
-<span class="w">    </span><span class="c1">//</span>
+    if (BeginCompletion(requestContext, STATUS_CANCELLED, false)) {
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">BeginCompletion</span><span class="p">(</span><span class="n">requestContext</span><span class="p">,</span><span class="w"> </span><span class="n">STATUS_CANCELLED</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+        //
+        // Cancel the DMA transaction.
+        //
+        if (<a href="wdfdmatransactioncancel" title="BOOLEAN WdfDmaTransactionCancel(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionCancel</a>(requestContext-&gt;DmaTransaction) == TRUE) {
+            //
+            // The transaction was stopped before EvtProgramDma could be
+            // called.  Drop the I/O reference.
+            //
+            oldValue = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;requestContext-&gt;CompletionRefCount);
+            <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;Completion reference count should not reach zero until &quot;
+                         L&quot;this routine calls AttemptRequestCompletion&quot;,
+                         oldValue &gt; 0);
+            <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;Completion status should be cancelled&quot;,
+                         requestContext-&gt;CompletionStatus == STATUS_CANCELLED);
+        }
+        else {
+            //
+            // The transaction couldn't be stopped before EvtProgramDma.
+            // Stop any running system DMA transfer.
+            //
+            WdfDmaTransactionStopSystemTransfer(requestContext-&gt;DmaTransaction);
+        }
+    }
 
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="c1">// Cancel the DMA transaction.</span>
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="wdfdmatransactioncancel" title="BOOLEAN WdfDmaTransactionCancel(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionCancel</a></span><span class="p">(</span><span class="n">requestContext</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">TRUE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="c1">//</span>
-<span class="w">            </span><span class="c1">// The transaction was stopped before EvtProgramDma could be</span>
-<span class="w">            </span><span class="c1">// called.  Drop the I/O reference.</span>
-<span class="w">            </span><span class="c1">//</span>
-<span class="w">            </span><span class="n">oldValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">requestContext</span><span class="o">-&gt;</span><span class="n">CompletionRefCount</span><span class="p">);</span>
-<span class="w">            </span><span class="n"><a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a></span><span class="p">(</span><span class="s">&quot;Completion reference count should not reach zero until &quot;</span>
-<span class="w">                         </span><span class="sa">L</span><span class="s">&quot;this routine calls AttemptRequestCompletion&quot;</span><span class="p">,</span>
-<span class="w">                         </span><span class="n">oldValue</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
-<span class="w">            </span><span class="n"><a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a></span><span class="p">(</span><span class="s">&quot;Completion status should be cancelled&quot;</span><span class="p">,</span>
-<span class="w">                         </span><span class="n">requestContext</span><span class="o">-&gt;</span><span class="n">CompletionStatus</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">STATUS_CANCELLED</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="c1">//</span>
-<span class="w">            </span><span class="c1">// The transaction couldn&#39;t be stopped before EvtProgramDma.</span>
-<span class="w">            </span><span class="c1">// Stop any running system DMA transfer.</span>
-<span class="w">            </span><span class="c1">//</span>
-<span class="w">            </span><span class="n">WdfDmaTransactionStopSystemTransfer</span><span class="p">(</span><span class="n">requestContext</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
+    AttemptRequestCompletion(requestContext, false);
+}
 
-<span class="w">    </span><span class="n">AttemptRequestCompletion</span><span class="p">(</span><span class="n">requestContext</span><span class="p">,</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
-<span class="p">}</span>
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="wdfdmatransactioncancel" title="BOOLEAN WdfDmaTransactionCancel(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionCancel</a></p>
-
 <p><a href="wdfdmatransactioncreate" title="NTSTATUS WdfDmaTransactionCreate(&#10;  [in]           WDFDMAENABLER          DmaEnabler,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]          WDFDMATRANSACTION      *DmaTransaction&#10;);">WdfDmaTransactionCreate</a></p>
 <hr>
 <div class="ntdoc-description-links">

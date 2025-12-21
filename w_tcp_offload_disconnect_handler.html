@@ -70,91 +70,64 @@ NDIS_STATUS WTcpOffloadDisconnectHandler(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>W_TCP_OFFLOAD_DISCONNECT_HANDLER callback function</h1>
-
 <h2>Description</h2>
-
 <p>[The TCP chimney offload feature is deprecated and should not be used.]</p>
-
 <p>The
 <em>MiniportTcpOffloadDisconnect</em> function closes the send half of an offloaded TCP connection. In
 addition, if the disconnect to be performed is a graceful disconnect, NDIS can supply application data to
 <em>MiniportTcpOffloadDisconnect</em> function that the function must transmit before sending a FIN
 segment.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>MiniportAdapterContext</code> [in]</h3>
-
 <p>The handle to an offload-target allocated context area in which the offload target maintains state
 information about this instance of the adapter. The offload target provided this handle to NDIS when it
 called
 <a href="ndismsetminiportattributes" title="NDIS_STATUS NdisMSetMiniportAttributes(&#10;       NDIS_HANDLE                       NdisMiniportHandle,&#10;  [in] PNDIS_MINIPORT_ADAPTER_ATTRIBUTES MiniportAttributes&#10;);">NdisMSetMiniportAttributes</a> from its
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> function.</p>
-
 <h3><code>MiniportOffloadContext</code> [in]</h3>
-
 <p>A pointer to a memory location that contains a PVOID value. This PVOID value references the
 miniport offload context that contains the state object for the TCP connection to be disconnected. The
 offload target supplied this PVOID value when it offloaded the TCP connection state object.</p>
-
 <h3><code>NetBufferList</code> [in]</h3>
-
 <p>A pointer to a single
 <a href="net_buffer_list" title="typedef struct _NET_BUFFER_LIST {&#10;  union {&#10;    struct {&#10;      NET_BUFFER_LIST *Next;&#10;      NET_BUFFER      *FirstNetBuffer;&#10;    };&#10;    SLIST_HEADER           Link;&#10;    NET_BUFFER_LIST_HEADER NetBufferListHeader;&#10;  };&#10;  NET_BUFFER_LIST_CONTEXT *Context;&#10;  NET_BUFFER_LIST         *ParentNetBufferList;&#10;  NDIS_HANDLE             NdisPoolHandle;&#10;  PVOID                   NdisReserved[2];&#10;  PVOID                   ProtocolReserved[4];&#10;  PVOID                   MiniportReserved[2];&#10;  PVOID                   Scratch;&#10;  NDIS_HANDLE             SourceHandle;&#10;  ULONG                   NblFlags;&#10;  LONG                    ChildRefCount;&#10;  ULONG                   Flags;&#10;...">NET_BUFFER_LIST</a> structure. Only one
 <a href="net_buffer" title="typedef struct _NET_BUFFER {&#10;  union {&#10;    struct {&#10;      NET_BUFFER *Next;&#10;      MDL        *CurrentMdl;&#10;      ULONG      CurrentMdlOffset;&#10;      union {&#10;        ULONG  DataLength;&#10;        SIZE_T stDataLength;&#10;      };&#10;      MDL        *MdlChain;&#10;      ULONG      DataOffset;&#10;    };&#10;    SLIST_HEADER      Link;&#10;    NET_BUFFER_HEADER NetBufferHeader;&#10;  };&#10;  USHORT           ChecksumBias;&#10;  USHORT           Reserved;&#10;  NDIS_HANDLE      NdisPoolHandle;&#10;  PVOID            NdisReserved[2];&#10;...">NET_BUFFER</a> structure is associated with this
 <a href="net_buffer_list" title="typedef struct _NET_BUFFER_LIST {&#10;  union {&#10;    struct {&#10;      NET_BUFFER_LIST *Next;&#10;      NET_BUFFER      *FirstNetBuffer;&#10;    };&#10;    SLIST_HEADER           Link;&#10;    NET_BUFFER_LIST_HEADER NetBufferListHeader;&#10;  };&#10;  NET_BUFFER_LIST_CONTEXT *Context;&#10;  NET_BUFFER_LIST         *ParentNetBufferList;&#10;  NDIS_HANDLE             NdisPoolHandle;&#10;  PVOID                   NdisReserved[2];&#10;  PVOID                   ProtocolReserved[4];&#10;  PVOID                   MiniportReserved[2];&#10;  PVOID                   Scratch;&#10;  NDIS_HANDLE             SourceHandle;&#10;  ULONG                   NblFlags;&#10;  LONG                    ChildRefCount;&#10;  ULONG                   Flags;&#10;...">NET_BUFFER_LIST</a> structure.</p>
-
 <h3><code>Flags</code> [in]</h3>
-
 <p>As one of the following values, the type of disconnect that the offload target must perform:</p>
-
 <h4>TCP_DISCONNECT_ABORTIVE_CLOSE</h4>
-
 <p>The offload target must perform an abortive disconnect by sending an RST segment.</p>
-
 <h4>TCP_DISCONNECT_GRACEFUL_CLOSE</h4>
-
 <p>The offload target must perform a graceful disconnect by sending a FIN segment.</p>
-
 <h2>Return value</h2>
-
 <p>The
 <em>MiniportTcpOffloadDisconnect</em> function always returns NDIS_STATUS_PENDING. The offload target
 completes the disconnect request asynchronously by calling
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_disconnect_complete">NdisTcpOffloadDisconnectComplete</a>.</p>
-
 <h2>Remarks</h2>
-
 <p>Depending on the
 <em>Flags</em> setting, the
 <em>MiniportTcpOffloadDisconnect</em> function performs an abortive disconnect or a graceful disconnect on
 the specified TCP connection.</p>
-
 <p><strong>Abortive Disconnect</strong></p>
-
 <p>If
 <em>Flags</em> is set to
 <strong>TCP_DISCONNECT_ABORTIVE_CLOSE</strong>, the offload target performs an abortive disconnect by sending an
 RST segment on the specified TCP connection.</p>
-
 <p><strong>Note</strong> This is the only instance in which an offload target can send an RST
 segment.</p>
-
 <p>Before calling the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_disconnect_complete">NdisTcpOffloadDisconnectComplete</a> function to complete the abortive disconnect, the offload target
 must complete all outstanding send requests on the connection with a status value of
 NDIS_STATUS_REQUEST_ABORTED. The offload target writes this status value to the
 <strong>Status</strong> member of each <a href="net_buffer_list" title="typedef struct _NET_BUFFER_LIST {&#10;  union {&#10;    struct {&#10;      NET_BUFFER_LIST *Next;&#10;      NET_BUFFER      *FirstNetBuffer;&#10;    };&#10;    SLIST_HEADER           Link;&#10;    NET_BUFFER_LIST_HEADER NetBufferListHeader;&#10;  };&#10;  NET_BUFFER_LIST_CONTEXT *Context;&#10;  NET_BUFFER_LIST         *ParentNetBufferList;&#10;  NDIS_HANDLE             NdisPoolHandle;&#10;  PVOID                   NdisReserved[2];&#10;  PVOID                   ProtocolReserved[4];&#10;  PVOID                   MiniportReserved[2];&#10;  PVOID                   Scratch;&#10;  NDIS_HANDLE             SourceHandle;&#10;  ULONG                   NblFlags;&#10;  LONG                    ChildRefCount;&#10;  ULONG                   Flags;&#10;...">NET_BUFFER_LIST</a> structure in the linked list that it passes to the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_send_complete">NdisTcpOffloadSendComplete</a> function.</p>
-
 <p>It does not matter whether the offload target terminates the outstanding send requests before or after
 it sends the RST segment.</p>
-
 <p>If there are outstanding receive indications or event indications on the connection, the offload
 target must not wait for these indications to complete before sending an RST segment. The offload target
 must immediately stop processing receive segments on the connection and not acknowledge any receive
 segments, including indicated receive data that have not been consumed by the client application.</p>
-
 <p>When
 <em>Flags</em> =
 <strong>TCP_DISCONNECT_ABORTIVE_CLOSE</strong>, the <a href="net_buffer" title="typedef struct _NET_BUFFER {&#10;  union {&#10;    struct {&#10;      NET_BUFFER *Next;&#10;      MDL        *CurrentMdl;&#10;      ULONG      CurrentMdlOffset;&#10;      union {&#10;        ULONG  DataLength;&#10;        SIZE_T stDataLength;&#10;      };&#10;      MDL        *MdlChain;&#10;      ULONG      DataOffset;&#10;    };&#10;    SLIST_HEADER      Link;&#10;    NET_BUFFER_HEADER NetBufferHeader;&#10;  };&#10;  USHORT           ChecksumBias;&#10;  USHORT           Reserved;&#10;  NDIS_HANDLE      NdisPoolHandle;&#10;  PVOID            NdisReserved[2];&#10;...">NET_BUFFER</a> structure associated with the <a href="net_buffer_list" title="typedef struct _NET_BUFFER_LIST {&#10;  union {&#10;    struct {&#10;      NET_BUFFER_LIST *Next;&#10;      NET_BUFFER      *FirstNetBuffer;&#10;    };&#10;    SLIST_HEADER           Link;&#10;    NET_BUFFER_LIST_HEADER NetBufferListHeader;&#10;  };&#10;  NET_BUFFER_LIST_CONTEXT *Context;&#10;  NET_BUFFER_LIST         *ParentNetBufferList;&#10;  NDIS_HANDLE             NdisPoolHandle;&#10;  PVOID                   NdisReserved[2];&#10;  PVOID                   ProtocolReserved[4];&#10;  PVOID                   MiniportReserved[2];&#10;  PVOID                   Scratch;&#10;  NDIS_HANDLE             SourceHandle;&#10;  ULONG                   NblFlags;&#10;  LONG                    ChildRefCount;&#10;  ULONG                   Flags;&#10;...">NET_BUFFER_LIST</a> structure referenced by the
@@ -162,73 +135,50 @@ segments, including indicated receive data that have not been consumed by the cl
 <strong>DataLength</strong> member of the
 <a href="net_buffer_data" title="typedef struct _NET_BUFFER_DATA {&#10;  NET_BUFFER             *Next;&#10;  MDL                    *CurrentMdl;&#10;  ULONG                  CurrentMdlOffset;&#10;  NET_BUFFER_DATA_LENGTH NbDataLength;&#10;  MDL                    *MdlChain;&#10;  ULONG                  DataOffset;&#10;} NET_BUFFER_DATA, *PNET_BUFFER_DATA;">NET_BUFFER_DATA</a> structure in the
 <strong>NetBufferHeader</strong> of the <a href="net_buffer" title="typedef struct _NET_BUFFER {&#10;  union {&#10;    struct {&#10;      NET_BUFFER *Next;&#10;      MDL        *CurrentMdl;&#10;      ULONG      CurrentMdlOffset;&#10;      union {&#10;        ULONG  DataLength;&#10;        SIZE_T stDataLength;&#10;      };&#10;      MDL        *MdlChain;&#10;      ULONG      DataOffset;&#10;    };&#10;    SLIST_HEADER      Link;&#10;    NET_BUFFER_HEADER NetBufferHeader;&#10;  };&#10;  USHORT           ChecksumBias;&#10;  USHORT           Reserved;&#10;  NDIS_HANDLE      NdisPoolHandle;&#10;  PVOID            NdisReserved[2];&#10;...">NET_BUFFER</a> structure is zero.</p>
-
 <p><strong>Graceful Disconnect</strong></p>
-
 <p>If
 <em>Flags</em> is set to
 <strong>TCP_DISCONNECT_GRACEFUL_CLOSE</strong>, the offload target performs a graceful disconnect by sending a FIN
 segment on the specified TCP connection.</p>
-
 <p>If there is no user data to be sent before the FIN segment, the <a href="net_buffer" title="typedef struct _NET_BUFFER {&#10;  union {&#10;    struct {&#10;      NET_BUFFER *Next;&#10;      MDL        *CurrentMdl;&#10;      ULONG      CurrentMdlOffset;&#10;      union {&#10;        ULONG  DataLength;&#10;        SIZE_T stDataLength;&#10;      };&#10;      MDL        *MdlChain;&#10;      ULONG      DataOffset;&#10;    };&#10;    SLIST_HEADER      Link;&#10;    NET_BUFFER_HEADER NetBufferHeader;&#10;  };&#10;  USHORT           ChecksumBias;&#10;  USHORT           Reserved;&#10;  NDIS_HANDLE      NdisPoolHandle;&#10;  PVOID            NdisReserved[2];&#10;...">NET_BUFFER</a> structure associated with
 the <a href="net_buffer_list" title="typedef struct _NET_BUFFER_LIST {&#10;  union {&#10;    struct {&#10;      NET_BUFFER_LIST *Next;&#10;      NET_BUFFER      *FirstNetBuffer;&#10;    };&#10;    SLIST_HEADER           Link;&#10;    NET_BUFFER_LIST_HEADER NetBufferListHeader;&#10;  };&#10;  NET_BUFFER_LIST_CONTEXT *Context;&#10;  NET_BUFFER_LIST         *ParentNetBufferList;&#10;  NDIS_HANDLE             NdisPoolHandle;&#10;  PVOID                   NdisReserved[2];&#10;  PVOID                   ProtocolReserved[4];&#10;  PVOID                   MiniportReserved[2];&#10;  PVOID                   Scratch;&#10;  NDIS_HANDLE             SourceHandle;&#10;  ULONG                   NblFlags;&#10;  LONG                    ChildRefCount;&#10;  ULONG                   Flags;&#10;...">NET_BUFFER_LIST</a> structure referenced by the
 <em>NetBufferList</em> pointer contains no data. If there is user data to be sent, the memory descriptor
 lists (MDLs) associated with the <a href="net_buffer" title="typedef struct _NET_BUFFER {&#10;  union {&#10;    struct {&#10;      NET_BUFFER *Next;&#10;      MDL        *CurrentMdl;&#10;      ULONG      CurrentMdlOffset;&#10;      union {&#10;        ULONG  DataLength;&#10;        SIZE_T stDataLength;&#10;      };&#10;      MDL        *MdlChain;&#10;      ULONG      DataOffset;&#10;    };&#10;    SLIST_HEADER      Link;&#10;    NET_BUFFER_HEADER NetBufferHeader;&#10;  };&#10;  USHORT           ChecksumBias;&#10;  USHORT           Reserved;&#10;  NDIS_HANDLE      NdisPoolHandle;&#10;  PVOID            NdisReserved[2];&#10;...">NET_BUFFER</a> structure contain the user data to be sent.</p>
-
 <p>The offload target should not wait for an acknowledgment of transmitted user data before sending a FIN
 segment. The offload target can send a separate FIN segment after transmitting the user data, or the
 offload target can set the FIN bit in the TCP header of the last segment of user data that it sends.</p>
-
 <p>From the perspective of the offload target, sending a FIN segment closes the send half of the
 connection. Sending a FIN segment, however, does not close the receive half of the connection. The remote
 host terminates the receive half of the connection by sending either of the following to the offload
 target:</p>
-
 <ul>
 <li>A FIN segment, which requests a graceful disconnect.</li>
 <li>An RST segment, which requests an abortive disconnect.</li>
 </ul>
-
 <p>After sending a FIN segment, the offload target can receive segments on the connection until the
 remote host initiates a graceful or abortive disconnect or until the local host terminates the offload of
 the connection or initiates an abortive disconnect.</p>
-
 <p>Before the offload target calls
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_disconnect_complete">NdisTcpOffloadDisconnectComplete</a>, it must complete all outstanding send requests on the connection
 in the same order in which they were delivered to the offload target.</p>
-
 <p><strong>Mandatory Response to a Disconnect Request</strong></p>
-
 <p>An offload target must not fail a disconnect request unless the specified TCP connection is being
 uploaded or is being aborted (for example, because the remote host sent an RST segment on the
 connection). If an offload target fails a disconnect request, the host stack will not reissue the
 disconnect request later.</p>
-
 <p><strong>Freeing Connection Resources</strong></p>
-
 <p>The offload target must not free resources for the connection on which it has issued either an
 abortive or graceful disconnect until the host stack terminates the offload of the connection.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-w_terminate_offload_handler">MiniportTerminateOffload</a></p>
-
 <p><a href="net_buffer" title="typedef struct _NET_BUFFER {&#10;  union {&#10;    struct {&#10;      NET_BUFFER *Next;&#10;      MDL        *CurrentMdl;&#10;      ULONG      CurrentMdlOffset;&#10;      union {&#10;        ULONG  DataLength;&#10;        SIZE_T stDataLength;&#10;      };&#10;      MDL        *MdlChain;&#10;      ULONG      DataOffset;&#10;    };&#10;    SLIST_HEADER      Link;&#10;    NET_BUFFER_HEADER NetBufferHeader;&#10;  };&#10;  USHORT           ChecksumBias;&#10;  USHORT           Reserved;&#10;  NDIS_HANDLE      NdisPoolHandle;&#10;  PVOID            NdisReserved[2];&#10;...">NET_BUFFER</a></p>
-
 <p><a href="net_buffer_data" title="typedef struct _NET_BUFFER_DATA {&#10;  NET_BUFFER             *Next;&#10;  MDL                    *CurrentMdl;&#10;  ULONG                  CurrentMdlOffset;&#10;  NET_BUFFER_DATA_LENGTH NbDataLength;&#10;  MDL                    *MdlChain;&#10;  ULONG                  DataOffset;&#10;} NET_BUFFER_DATA, *PNET_BUFFER_DATA;">NET_BUFFER_DATA</a></p>
-
 <p><a href="net_buffer_list" title="typedef struct _NET_BUFFER_LIST {&#10;  union {&#10;    struct {&#10;      NET_BUFFER_LIST *Next;&#10;      NET_BUFFER      *FirstNetBuffer;&#10;    };&#10;    SLIST_HEADER           Link;&#10;    NET_BUFFER_LIST_HEADER NetBufferListHeader;&#10;  };&#10;  NET_BUFFER_LIST_CONTEXT *Context;&#10;  NET_BUFFER_LIST         *ParentNetBufferList;&#10;  NDIS_HANDLE             NdisPoolHandle;&#10;  PVOID                   NdisReserved[2];&#10;  PVOID                   ProtocolReserved[4];&#10;  PVOID                   MiniportReserved[2];&#10;  PVOID                   Scratch;&#10;  NDIS_HANDLE             SourceHandle;&#10;  ULONG                   NblFlags;&#10;  LONG                    ChildRefCount;&#10;  ULONG                   Flags;&#10;...">NET_BUFFER_LIST</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/net-buffer-list-info">NET_BUFFER_LIST_INFO</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisadvancenetbufferdatastart">NdisAdvanceNetBufferDataStart</a></p>
-
 <p><a href="ndismsetminiportattributes" title="NDIS_STATUS NdisMSetMiniportAttributes(&#10;       NDIS_HANDLE                       NdisMiniportHandle,&#10;  [in] PNDIS_MINIPORT_ADAPTER_ATTRIBUTES MiniportAttributes&#10;);">NdisMSetMiniportAttributes</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_disconnect_complete">NdisTcpOffloadDisconnectComplete</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_send_complete">NdisTcpOffloadSendComplete</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -68,98 +68,70 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FSCTL_OPLOCK_BREAK_ACKNOWLEDGE IOCTL</h1>
-
 <h2>Description</h2>
-
 <p>Responds to notification that an exclusive opportunistic lock on a file is about to be broken. Use this operation to indicate that the file should receive a level 2 opportunistic lock.</p>
-
 <p>To perform this operation, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> function using the following parameters.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">BOOL</span><span class="w"> </span><span class="n">DeviceIoControl</span><span class="p">(</span>
-<span class="w">  </span><span class="p">(</span><span class="n">HANDLE</span><span class="p">)</span><span class="w"> </span><span class="n">hDevice</span><span class="p">,</span><span class="w">                 </span><span class="c1">// handle to file</span>
-<span class="w">  </span><span class="n">FSCTL_OPLOCK_BREAK_ACKNOWLEDGE</span><span class="p">,</span><span class="w">   </span><span class="c1">// dwIoControlCode</span>
-<span class="w">  </span><span class="nb">NULL</span><span class="p">,</span><span class="w">                             </span><span class="c1">// lpInBuffer</span>
-<span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w">                                </span><span class="c1">// nInBufferSize</span>
-<span class="w">  </span><span class="nb">NULL</span><span class="p">,</span><span class="w">                             </span><span class="c1">// lpOutBuffer</span>
-<span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w">                                </span><span class="c1">// nOutBufferSize</span>
-<span class="w">  </span><span class="p">(</span><span class="n">LPDWORD</span><span class="p">)</span><span class="w"> </span><span class="n">lpBytesReturned</span><span class="p">,</span><span class="w">        </span><span class="c1">// number of bytes returned</span>
-<span class="w">  </span><span class="p">(</span><span class="n">LPOVERLAPPED</span><span class="p">)</span><span class="w"> </span><span class="n">lpOverlapped</span><span class="w">       </span><span class="c1">// OVERLAPPED structure</span>
-<span class="p">);</span>
+<pre lang="cpp"><code>BOOL DeviceIoControl(
+  (HANDLE) hDevice,                 // handle to file
+  FSCTL_OPLOCK_BREAK_ACKNOWLEDGE,   // dwIoControlCode
+  NULL,                             // lpInBuffer
+  0,                                // nInBufferSize
+  NULL,                             // lpOutBuffer
+  0,                                // nOutBufferSize
+  (LPDWORD) lpBytesReturned,        // number of bytes returned
+  (LPOVERLAPPED) lpOverlapped       // OVERLAPPED structure
+);
 </code></pre>
-</div>
-
 <h2>Parameters</h2>
-
 <h3>Input buffer</h3>
-
 <h3>Input buffer length</h3>
-
 <h3>Output buffer</h3>
-
 <h3>Output buffer length</h3>
-
 <h3>Input/output buffer</h3>
-
 <h3>Input/output buffer length</h3>
-
 <h3>Status block</h3>
-
-<p>Irp->IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
-
+<p>Irp-&gt;IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
 <p>Otherwise, Status to the appropriate error condition as a <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code.</p>
-
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS Values</a>.</p>
-
 <h2>Remarks</h2>
-
 <p>This operation is used only by client applications that have requested an opportunistic lock from a local server. Client applications requesting opportunistic locks from remote servers must not request them directly—the network redirector transparently requests opportunistic locks for the application.</p>
-
 <p>For the implications of overlapped I/O on this operation, see the Remarks section of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a> topic.</p>
-
 <p><strong>FSCTL_OPLOCK_BREAK_ACKNOWLEDGE</strong> is a response to notification that a level 1, batch, or filter opportunistic lock on an application's file has been broken. It indicates to the server that the application should receive a level 2 opportunistic lock. If the operation returns the error code <strong>ERROR_IO_PENDING</strong>, the server has granted the application a level 2 lock on the file.</p>
-
 <p>One alternative to using <strong>FSCTL_OPLOCK_BREAK_ACKNOWLEDGE</strong> is to indicate that the application is about to close the file anyway. Use the <a href="fsctl_opbatch_ack_close_pending" title="// CTL_CODE(0x0009, 0x004, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_OPBATCH_ACK_CLOSE_PENDING 0x00090010">FSCTL_OPBATCH_ACK_CLOSE_PENDING</a> control code for this response.</p>
-
 <p>Another alternative is to request to keep the file open but lose all locking, by means of the <a href="fsctl_oplock_break_ack_no_2" title="// CTL_CODE(0x0009, 0x014, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_OPLOCK_BREAK_ACK_NO_2 0x00090050">FSCTL_OPLOCK_BREAK_ACK_NO_2</a> control code.</p>
-
 <p>Applications are notified that an opportunistic lock is broken by using the <strong>hEvent</strong> member of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/minwinbase/ns-minwinbase-overlapped">OVERLAPPED</a> structure associated with the file on which the opportunistic lock is broken. Applications may also use functions such as <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-getoverlappedresult">GetOverlappedResult</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-hasoverlappediocompleted">HasOverlappedIoCompleted</a>.</p>
-
 <p>In Windows 8 and Windows Server 2012, this code is supported by the following technologies.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Technology</th>
-  <th>Supported</th>
+<th>Technology</th>
+<th>Supported</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Server Message Block (SMB) 3.0 protocol</td>
-  <td>No</td>
+<td>Server Message Block (SMB) 3.0 protocol</td>
+<td>No</td>
 </tr>
 <tr>
-  <td>SMB 3.0 Transparent Failover (TFO)</td>
-  <td>No</td>
+<td>SMB 3.0 Transparent Failover (TFO)</td>
+<td>No</td>
 </tr>
 <tr>
-  <td>SMB 3.0 with Scale-out File Shares (SO)</td>
-  <td>No</td>
+<td>SMB 3.0 with Scale-out File Shares (SO)</td>
+<td>No</td>
 </tr>
 <tr>
-  <td>Cluster Shared Volume File System (CsvFS)</td>
-  <td>Yes</td>
+<td>Cluster Shared Volume File System (CsvFS)</td>
+<td>Yes</td>
 </tr>
 <tr>
-  <td>Resilient File System (ReFS)</td>
-  <td>Yes</td>
+<td>Resilient File System (ReFS)</td>
+<td>Yes</td>
 </tr>
 </tbody>
 </table>
-
 <h2>See also</h2>
-
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFile</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a></li>
@@ -184,96 +156,78 @@
 </div>
 <div class="ntdoc-description">
 <h1>FSCTL_OPLOCK_BREAK_ACKNOWLEDGE control code</h1>
-
 <p>The <strong>FSCTL_OPLOCK_BREAK_ACKNOWLEDGE</strong> control code responds to notification that an exclusive (level 1, batch, or filter) opportunistic lock (oplock) on a file has been broken.</p>
-
 <p>A client application sends this control code to indicate that it acknowledges the oplock break and that, if the oplock is a level 1 oplock that was broken to level 2, it does want the level 2 oplock.</p>
-
 <p>To process this control code, a minifilter calls <strong><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></strong> with the following parameters. A file system or legacy filter driver calls <strong><a href="fsrtloplockfsctrl" title="NTSTATUS FsRtlOplockFsctrl(&#10;  [in] POPLOCK Oplock,&#10;  [in] PIRP    Irp,&#10;  [in] ULONG   OpenCount&#10;);">FsRtlOplockFsctrl</a></strong>.</p>
-
 <p>For more information about opportunistic locking and about the <strong>FSCTL_OPLOCK_BREAK_ACKNOWLEDGE</strong> control code, see the Microsoft Windows SDK documentation.</p>
-
 <h2>Parameters</h2>
-
 <ul>
-<li><p><strong>Oplock</strong>: Opaque oplock object pointer for the file.</p></li>
-<li><p><strong>CallbackData</strong>: <strong><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></strong> only. Callback data (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>) structure for an <a href="irp_mj_file_system_control" title="#define IRP_MJ_FILE_SYSTEM_CONTROL 0x0d">IRP_MJ_FILE_SYSTEM_CONTROL</a> FSCTL request. The <strong>FsControlCode</strong> parameter for the operation must be FSCTL_OPLOCK_BREAK_ACKNOWLEDGE.</p></li>
-<li><p><strong>Irp</strong>: <strong><a href="fsrtloplockfsctrl" title="NTSTATUS FsRtlOplockFsctrl(&#10;  [in] POPLOCK Oplock,&#10;  [in] PIRP    Irp,&#10;  [in] ULONG   OpenCount&#10;);">FsRtlOplockFsctrl</a></strong> only. <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> for an <a href="irp_mj_file_system_control" title="#define IRP_MJ_FILE_SYSTEM_CONTROL 0x0d">IRP_MJ_FILE_SYSTEM_CONTROL</a> FSCTL request. The <strong>FsControlCode</strong> parameter for the operation must be FSCTL_OPLOCK_BREAK_ACKNOWLEDGE.</p></li>
-<li><p><strong>OpenCount</strong>: Not used with this operation; set to zero.</p></li>
+<li>
+<p><strong>Oplock</strong>: Opaque oplock object pointer for the file.</p>
+</li>
+<li>
+<p><strong>CallbackData</strong>: <strong><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></strong> only. Callback data (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>) structure for an <a href="irp_mj_file_system_control" title="#define IRP_MJ_FILE_SYSTEM_CONTROL 0x0d">IRP_MJ_FILE_SYSTEM_CONTROL</a> FSCTL request. The <strong>FsControlCode</strong> parameter for the operation must be FSCTL_OPLOCK_BREAK_ACKNOWLEDGE.</p>
+</li>
+<li>
+<p><strong>Irp</strong>: <strong><a href="fsrtloplockfsctrl" title="NTSTATUS FsRtlOplockFsctrl(&#10;  [in] POPLOCK Oplock,&#10;  [in] PIRP    Irp,&#10;  [in] ULONG   OpenCount&#10;);">FsRtlOplockFsctrl</a></strong> only. <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> for an <a href="irp_mj_file_system_control" title="#define IRP_MJ_FILE_SYSTEM_CONTROL 0x0d">IRP_MJ_FILE_SYSTEM_CONTROL</a> FSCTL request. The <strong>FsControlCode</strong> parameter for the operation must be FSCTL_OPLOCK_BREAK_ACKNOWLEDGE.</p>
+</li>
+<li>
+<p><strong>OpenCount</strong>: Not used with this operation; set to zero.</p>
+</li>
 </ul>
-
 <h2>Status block</h2>
-
 <p><strong><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></strong> returns FLT_PREOP_PENDING for this operation when a level 1 oplock is broken to level 2, and the level 2 oplock has been granted. Otherwise, it returns FLT_PREOP_COMPLETE.</p>
-
 <p><strong><a href="fsrtloplockfsctrl" title="NTSTATUS FsRtlOplockFsctrl(&#10;  [in] POPLOCK Oplock,&#10;  [in] PIRP    Irp,&#10;  [in] ULONG   OpenCount&#10;);">FsRtlOplockFsctrl</a></strong> returns one of the following <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> values for this operation:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Code</th>
-  <th>Meaning</th>
+<th>Code</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
-  <td>The oplock break is acknowledged. No remaining oplocks are held.</td>
+<td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
+<td>The oplock break is acknowledged. No remaining oplocks are held.</td>
 </tr>
 <tr>
-  <td>STATUS_INVALID_OPLOCK_PROTOCOL</td>
-  <td>No oplock was held by this handle, or the oplock break is not currently in progress. This is an error code.</td>
+<td>STATUS_INVALID_OPLOCK_PROTOCOL</td>
+<td>No oplock was held by this handle, or the oplock break is not currently in progress. This is an error code.</td>
 </tr>
 <tr>
-  <td>STATUS_PENDING</td>
-  <td>The oplock break is acknowledged. On return, the sender of the <strong>FSCTL_OPLOCK_BREAK_ACKNOWLEDGE</strong> control code holds a level 2 oplock. This is a success code.</td>
+<td>STATUS_PENDING</td>
+<td>The oplock break is acknowledged. On return, the sender of the <strong>FSCTL_OPLOCK_BREAK_ACKNOWLEDGE</strong> control code holds a level 2 oplock. This is a success code.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Requirements</h2>
-
 <table>
 <thead>
 <tr>
-  <th>Requirement type</th>
-  <th>Requirement</th>
+<th>Requirement type</th>
+<th>Requirement</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Header</td>
-  <td><em>Ntifs.h</em> (include <em>Ntifs.h</em> or <em>Fltkernel.h</em>)</td>
+<td>Header</td>
+<td><em>Ntifs.h</em> (include <em>Ntifs.h</em> or <em>Fltkernel.h</em>)</td>
 </tr>
 </tbody>
 </table>
-
 <h2>See also</h2>
-
 <p><strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong></p>
-
 <p><strong><a href="flt_parameters" title="typedef union _FLT_PARAMETERS {&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;    USHORT POINTER_ALIGNMENT FileAttributes;&#10;    USHORT                   ShareAccess;&#10;    ULONG POINTER_ALIGNMENT  EaLength;&#10;    PVOID                    EaBuffer;&#10;    LARGE_INTEGER            AllocationSize;&#10;  } Create;&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;    USHORT POINTER_ALIGNMENT Reserved;&#10;    USHORT                   ShareAccess;&#10;    PVOID                    Parameters;&#10;  } CreatePipe;&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;...">FLT_PARAMETERS</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-file-system-control"><strong>FLT_PARAMETERS for IRP_MJ_FILE_SYSTEM_CONTROL</strong></a></p>
-
 <p><strong><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></strong></p>
-
 <p><strong><a href="fsctl_opbatch_ack_close_pending" title="// CTL_CODE(0x0009, 0x004, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_OPBATCH_ACK_CLOSE_PENDING 0x00090010">FSCTL_OPBATCH_ACK_CLOSE_PENDING</a></strong></p>
-
 <p><strong><a href="fsctl_oplock_break_ack_no_2" title="// CTL_CODE(0x0009, 0x014, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_OPLOCK_BREAK_ACK_NO_2 0x00090050">FSCTL_OPLOCK_BREAK_ACK_NO_2</a></strong></p>
-
 <p><strong><a href="fsctl_oplock_break_notify" title="// CTL_CODE(0x0009, 0x005, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_OPLOCK_BREAK_NOTIFY 0x00090014">FSCTL_OPLOCK_BREAK_NOTIFY</a></strong></p>
-
 <p><strong><a href="fsctl_request_batch_oplock" title="// CTL_CODE(0x0009, 0x002, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_BATCH_OPLOCK 0x00090008">FSCTL_REQUEST_BATCH_OPLOCK</a></strong></p>
-
 <p><strong><a href="fsctl_request_filter_oplock" title="// CTL_CODE(0x0009, 0x017, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_FILTER_OPLOCK 0x0009005C">FSCTL_REQUEST_FILTER_OPLOCK</a></strong></p>
-
 <p><strong><a href="fsctl_request_oplock_level_1" title="// CTL_CODE(0x0009, 0x000, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_1 0x00090000">FSCTL_REQUEST_OPLOCK_LEVEL_1</a></strong></p>
-
 <p><strong><a href="fsctl_request_oplock_level_2" title="// CTL_CODE(0x0009, 0x001, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_2 0x00090004">FSCTL_REQUEST_OPLOCK_LEVEL_2</a></strong></p>
-
 <p><strong><a href="fsrtloplockfsctrl" title="NTSTATUS FsRtlOplockFsctrl(&#10;  [in] POPLOCK Oplock,&#10;  [in] PIRP    Irp,&#10;  [in] ULONG   OpenCount&#10;);">FsRtlOplockFsctrl</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-file-system-control"><strong>IRP_MJ_FILE_SYSTEM_CONTROL</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">

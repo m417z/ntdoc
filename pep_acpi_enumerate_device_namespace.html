@@ -80,52 +80,28 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>_PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE structure (pep_x.h)</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE</strong> structure contains an enumeration of the objects in the namespace of the device.</p>
-
 <h2>Members</h2>
-
 <h3><code>DeviceHandle</code></h3>
-
 <p>A PEPHANDLE value that identifies the device's registration for ACPI services. The platform extension plug-in (PEP) supplied this handle in response to a previous <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pepfx/ns-pepfx-_pep_acpi_register_device">PEP_NOTIFY_ACPI_REGISTER_DEVICE</a> notification.</p>
-
 <h3><code>RequestFlags</code></h3>
-
 <p>A set of input flags. No flags are currently defined for this member, which is always set to PEP_ACPI_EDN_FLAG_NONE (0x0).</p>
-
 <h3><code>Status</code></h3>
-
 <p>An <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value that indicates the status of the requested device-namespace enumeration. Set this member to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the PEP succeeds in enumerating the objects in the device namespace. Set to STATUS_BUFFER_TOO_SMALL if the input value in the <strong>ObjectBufferSize</strong> member indicates that the allocated buffer is not large enough to contain the <strong>Objects</strong> array.</p>
-
 <h3><code>ObjectCount</code></h3>
-
 <p>The number of elements in the <strong>Objects</strong> array.</p>
-
 <h3><code>ObjectBufferSize</code></h3>
-
 <p>The size, in bytes, of the buffer that the Windows <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#device-power-management">power management framework</a> (PoFx) allocated for the <strong>Objects</strong> array elements that follow the structure. If the input value of <strong>ObjectBufferSize</strong> is not large enough to contain all the <strong>Objects</strong> array elements, the PEP overwrites the input value with the required size and sets the <strong>Status</strong> member to STATUS_BUFFER_TOO_SMALL. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pep_x/ns-pep_x-_pep_acpi_enumerate_device_namespace#remarks">Remarks</a>.</p>
-
 <h3><code>Objects</code></h3>
-
 <p>The first element in an array of <a href="pep_acpi_object_name_with_type" title="typedef struct _PEP_ACPI_OBJECT_NAME_WITH_TYPE {&#10;  PEP_ACPI_OBJECT_NAME Name;&#10;  PEP_ACPI_OBJECT_TYPE Type;&#10;} PEP_ACPI_OBJECT_NAME_WITH_TYPE, *PPEP_ACPI_OBJECT_NAME_WITH_TYPE;">PEP_ACPI_OBJECT_NAME_WITH_TYPE</a> structures that describe the objects in the ACPI namespace of the device. If this array contains more than one element, the additional array elements follow the end of the <strong>PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE</strong> structure.</p>
-
 <h2>Remarks</h2>
-
 <p>This structure is used by the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pepfx/ns-pepfx-_pep_acpi_enumerate_device_namespace">PEP_NOTIFY_ACPI_ENUMERATE_DEVICE_NAMESPACE</a> notification. The <strong>RequestFlags</strong> and <strong>ObjectBufferSize</strong> members contain input values supplied by PoFx when the notification is sent. The PEP may overwrite the <strong>ObjectBufferSize</strong> input value with an output value if the input value is less than the required output buffer size. The <strong>Status</strong>, <strong>ObjectCount</strong>, and <strong>Objects</strong> members contain output values that the PEP writes to the structure.</p>
-
 <p><strong>ObjectCount</strong> is the number of objects listed in the ACPI namespace under this device. The PEP should verify that the storage allocated by PoFx for the <strong>Objects</strong> array is large enough to contain <strong>ObjectCount</strong> array elements. If <code>ObjectCount &gt; 1</code>, the additional ObjectCount–1 array elements follow the end of the <strong>PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE</strong> structure. The buffer size required to contain the structure and additional array elements is calculated as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">sizeof</span><span class="p">(</span><span class="n">PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">((</span><span class="n">ObjectCount</span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n"><a href="pep_acpi_object_name_with_type" title="typedef struct _PEP_ACPI_OBJECT_NAME_WITH_TYPE {&#10;  PEP_ACPI_OBJECT_NAME Name;&#10;  PEP_ACPI_OBJECT_TYPE Type;&#10;} PEP_ACPI_OBJECT_NAME_WITH_TYPE, *PPEP_ACPI_OBJECT_NAME_WITH_TYPE;">PEP_ACPI_OBJECT_NAME_WITH_TYPE</a></span><span class="p">));</span>
+<pre lang="cpp"><code>sizeof(PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE) + ((ObjectCount-1) * sizeof(<a href="pep_acpi_object_name_with_type" title="typedef struct _PEP_ACPI_OBJECT_NAME_WITH_TYPE {&#10;  PEP_ACPI_OBJECT_NAME Name;&#10;  PEP_ACPI_OBJECT_TYPE Type;&#10;} PEP_ACPI_OBJECT_NAME_WITH_TYPE, *PPEP_ACPI_OBJECT_NAME_WITH_TYPE;">PEP_ACPI_OBJECT_NAME_WITH_TYPE</a>));
 </code></pre>
-</div>
-
 <p>If the input value specified in the <strong>ObjectBufferSize</strong> member is less than the required size, the PEP overwrites the <strong>ObjectBufferSize</strong> input value with the required size, and sets the <strong>Status</strong> member to STATUS_BUFFER_TOO_SMALL. In response, PoFx will allocate a buffer of the required size and send a second <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pepfx/ns-pepfx-_pep_acpi_enumerate_device_namespace">PEP_NOTIFY_ACPI_ENUMERATE_DEVICE_NAMESPACE</a> notification to the PEP for this device.</p>
-
 <h2>See also</h2>
-
 <ul>
 <li><a href="pep_acpi_object_name_with_type" title="typedef struct _PEP_ACPI_OBJECT_NAME_WITH_TYPE {&#10;  PEP_ACPI_OBJECT_NAME Name;&#10;  PEP_ACPI_OBJECT_TYPE Type;&#10;} PEP_ACPI_OBJECT_NAME_WITH_TYPE, *PPEP_ACPI_OBJECT_NAME_WITH_TYPE;">PEP_ACPI_OBJECT_NAME_WITH_TYPE</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pepfx/ns-pepfx-_pep_acpi_enumerate_device_namespace">PEP_NOTIFY_ACPI_ENUMERATE_DEVICE_NAMESPACE</a></li>
@@ -144,52 +120,28 @@
 </div>
 <div class="ntdoc-description">
 <h1>_PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE structure (pepfx.h)</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE</strong> structure contains an enumeration of the objects in the namespace of the device.</p>
-
 <h2>Members</h2>
-
 <h3><code>DeviceHandle</code></h3>
-
 <p>A PEPHANDLE value that identifies the device's registration for ACPI services. The platform extension plug-in (PEP) supplied this handle in response to a previous <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pepfx/ns-pepfx-_pep_acpi_register_device">PEP_NOTIFY_ACPI_REGISTER_DEVICE</a> notification.</p>
-
 <h3><code>RequestFlags</code></h3>
-
 <p>A set of input flags. No flags are currently defined for this member, which is always set to PEP_ACPI_EDN_FLAG_NONE (0x0).</p>
-
 <h3><code>Status</code></h3>
-
 <p>An <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value that indicates the status of the requested device-namespace enumeration. Set this member to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the PEP succeeds in enumerating the objects in the device namespace. Set to STATUS_BUFFER_TOO_SMALL if the input value in the <strong>ObjectBufferSize</strong> member indicates that the allocated buffer is not large enough to contain the <strong>Objects</strong> array.</p>
-
 <h3><code>ObjectCount</code></h3>
-
 <p>The number of elements in the <strong>Objects</strong> array.</p>
-
 <h3><code>ObjectBufferSize</code></h3>
-
 <p>The size, in bytes, of the buffer that the Windows <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#device-power-management">power management framework</a> (PoFx) allocated for the <strong>Objects</strong> array elements that follow the structure. If the input value of <strong>ObjectBufferSize</strong> is not large enough to contain all the <strong>Objects</strong> array elements, the PEP overwrites the input value with the required size and sets the <strong>Status</strong> member to STATUS_BUFFER_TOO_SMALL. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pepfx/ns-pepfx-_pep_acpi_enumerate_device_namespace#remarks">Remarks</a>.</p>
-
 <h3><code>Objects</code></h3>
-
 <p>The first element in an array of <a href="pep_acpi_object_name_with_type" title="typedef struct _PEP_ACPI_OBJECT_NAME_WITH_TYPE {&#10;  PEP_ACPI_OBJECT_NAME Name;&#10;  PEP_ACPI_OBJECT_TYPE Type;&#10;} PEP_ACPI_OBJECT_NAME_WITH_TYPE, *PPEP_ACPI_OBJECT_NAME_WITH_TYPE;">PEP_ACPI_OBJECT_NAME_WITH_TYPE</a> structures that describe the objects in the ACPI namespace of the device. If this array contains more than one element, the additional array elements follow the end of the <strong>PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE</strong> structure.</p>
-
 <h2>Remarks</h2>
-
 <p>This structure is used by the <strong>PEP_NOTIFY_ACPI_ENUMERATE_DEVICE_NAMESPACE</strong> notification. The <strong>RequestFlags</strong> and <strong>ObjectBufferSize</strong> members contain input values supplied by PoFx when the notification is sent. The PEP may overwrite the <strong>ObjectBufferSize</strong> input value with an output value if the input value is less than the required output buffer size. The <strong>Status</strong>, <strong>ObjectCount</strong>, and <strong>Objects</strong> members contain output values that the PEP writes to the structure.</p>
-
 <p><strong>ObjectCount</strong> is the number of objects listed in the ACPI namespace under this device. The PEP should verify that the storage allocated by PoFx for the <strong>Objects</strong> array is large enough to contain <strong>ObjectCount</strong> array elements. If <code>ObjectCount &gt; 1</code>, the additional ObjectCount–1 array elements follow the end of the <strong>PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE</strong> structure. The buffer size required to contain the structure and additional array elements is calculated as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">sizeof</span><span class="p">(</span><span class="n">PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">((</span><span class="n">ObjectCount</span><span class="mi">-1</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n"><a href="pep_acpi_object_name_with_type" title="typedef struct _PEP_ACPI_OBJECT_NAME_WITH_TYPE {&#10;  PEP_ACPI_OBJECT_NAME Name;&#10;  PEP_ACPI_OBJECT_TYPE Type;&#10;} PEP_ACPI_OBJECT_NAME_WITH_TYPE, *PPEP_ACPI_OBJECT_NAME_WITH_TYPE;">PEP_ACPI_OBJECT_NAME_WITH_TYPE</a></span><span class="p">));</span>
+<pre lang="cpp"><code>sizeof(PEP_ACPI_ENUMERATE_DEVICE_NAMESPACE) + ((ObjectCount-1) * sizeof(<a href="pep_acpi_object_name_with_type" title="typedef struct _PEP_ACPI_OBJECT_NAME_WITH_TYPE {&#10;  PEP_ACPI_OBJECT_NAME Name;&#10;  PEP_ACPI_OBJECT_TYPE Type;&#10;} PEP_ACPI_OBJECT_NAME_WITH_TYPE, *PPEP_ACPI_OBJECT_NAME_WITH_TYPE;">PEP_ACPI_OBJECT_NAME_WITH_TYPE</a>));
 </code></pre>
-</div>
-
 <p>If the input value specified in the <strong>ObjectBufferSize</strong> member is less than the required size, the PEP overwrites the <strong>ObjectBufferSize</strong> input value with the required size, and sets the <strong>Status</strong> member to STATUS_BUFFER_TOO_SMALL. In response, PoFx will allocate a buffer of the required size and send a second <strong>PEP_NOTIFY_ACPI_ENUMERATE_DEVICE_NAMESPACE</strong> notification to the PEP for this device.</p>
-
 <h2>See also</h2>
-
 <ul>
 <li><a href="pep_acpi_object_name_with_type" title="typedef struct _PEP_ACPI_OBJECT_NAME_WITH_TYPE {&#10;  PEP_ACPI_OBJECT_NAME Name;&#10;  PEP_ACPI_OBJECT_TYPE Type;&#10;} PEP_ACPI_OBJECT_NAME_WITH_TYPE, *PPEP_ACPI_OBJECT_NAME_WITH_TYPE;">PEP_ACPI_OBJECT_NAME_WITH_TYPE</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pepfx/ns-pepfx-_pep_acpi_register_device">PEP_NOTIFY_ACPI_REGISTER_DEVICE</a></li>

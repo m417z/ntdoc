@@ -68,96 +68,61 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>RxCeSend function</h1>
-
 <h2>Description</h2>
-
 <p><strong>RxCeSend</strong> sends a transport service data unit (TSDU) along the specified connection on a virtual circuit.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>pVc</code> [in]</h3>
-
 <p>A pointer to the virtual circuit along which the TSDU is to be sent.</p>
-
 <h3><code>SendOptions</code> [in]</h3>
-
 <p>The desired options for transmitting the data on this send operation by the transport. Note that this is only a request sent to the transport. The transport may only support a limited number of the options specified and ignore options not supported. The <em>SendOptions</em> parameter consists of a set of bits defined in <em>rxce.h</em>. The <em>SendOptions</em> parameter can be a combination of the following bits:</p>
-
 <h4>RXCE_SEND_EXPEDITED</h4>
-
 <p>The given data should be sent ahead of any normal send requests the transport is currently holding queued for transmission on this endpoint-to-endpoint connection. If the transport does not support expedited transfers, it can ignore this flag. Note that RXCE_SEND_EXPEDITED is equivalent to the TDI TDI_SEND_EXPEDITED flag.</p>
-
 <h4>RXCE_SEND_NO_RESPONSE_EXPECTED</h4>
-
 <p>The caller is giving a hint to the underlying transport that it does not expect a response to this send from its remote-node peer. This flag should disable piggybacking of the TSDU acknowledgment by the remote-node transport. Note that RXCE_SEND_NO_RESPONSE_EXPECTED is equivalent to the TDI_SEND_NO_RESPONSE_EXPECTED flag.</p>
-
 <h4>RXCE_SEND_NON_BLOCKING</h4>
-
 <p>If the underlying transport currently has no internal buffer space available for the given data, it should just complete the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with STATUS_DEVICE_NOT_READY. If the transport has some buffer space available, it should copy as much data as it can from the client-supplied buffer, set the <strong>IoStatus.Information</strong> member to the number of bytes it copied, and complete the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
-
 <p>This flag is irrelevant to transports that do not buffer sends internally. Note that RXCE_SEND_NON_BLOCKING is equivalent to the TDI_SEND_NON_BLOCKING flag.</p>
-
 <h4>RXCE_SEND_PARTIAL</h4>
-
 <p>Signifies if an RX_MEM_DESC(<a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>) is to be sent in its entirety, or if only portions of it need to be sent. This option requests that the transport allow the send operation to transmit part of the data if the transport and <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> allow this behavior.</p>
-
 <h4>RXCE_SEND_SYNCHRONOUS</h4>
-
 <p>Signifies if the send operation is to transmit the data synchronously. When this option is set, the request is submitted to the underlying transport and control does not return to the caller until the request completes. Note that the <em>pCompletionContext</em> parameter is ignored when this bit is set.</p>
-
 <h3><code>pMdl</code> [in]</h3>
-
 <p>A pointer to the buffer to be sent.</p>
-
 <h3><code>SendLength</code> [in]</h3>
-
 <p>The length of data to be sent.</p>
-
 <h3><code>pCompletionContext</code> [in]</h3>
-
 <p>The context passed back to the caller during <strong>SendCompletion</strong> for asynchronous operations. Not that this parameter is ignored if the <em>SendOptions</em> parameter requests a synchronous send operation.</p>
-
 <h2>Return value</h2>
-
 <p><strong>RxCeSend</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success or one of the following error codes on failure:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_CONNECTION_DISCONNECTED</strong></td>
-  <td>An invalid or disconnected virtual circuit or connection was specified</td>
+<td><strong>STATUS_CONNECTION_DISCONNECTED</strong></td>
+<td>An invalid or disconnected virtual circuit or connection was specified</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-  <td>The allocation of nonpaged pool memory needed by this routine failed.</td>
+<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+<td>The allocation of nonpaged pool memory needed by this routine failed.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
-  <td>An invalid length was passed in the <em>SendLength</em> parameter based on the <em>SendOptions</em> specified.</td>
+<td><strong>STATUS_INVALID_PARAMETER</strong></td>
+<td>An invalid length was passed in the <em>SendLength</em> parameter based on the <em>SendOptions</em> specified.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>The <strong>RxCeSend</strong> routine will allocate the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>, build the send request for the underlying transport driver, and submit the request to TDI. In the case of synchronous send operations, this routine will also the free <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> and resources allocated when the routine completes.</p>
-
 <p>The asynchronous and synchronous options indicated in the <em>SendOptions</em> parameter used in <strong>RxCeSend</strong> distinguish between two situations. In the asynchronous case, control returns to the caller once the request has been successfully submitted to the underlying transport. The results for any given request are communicated back using the <strong>SendCompletion</strong> callback routine. The <em>pCompletionContext</em> parameter in <strong>RxCeSend</strong> is passed back in the callback routine to assist the caller in disambiguating the requests.</p>
-
 <p>In the synchronous case, the request is submitted to the underlying transport and the control does not return to the caller till the request completes. Note that in the synchronous case, the <em>pCompletionContext</em> parameter is ignored and the status that is returned corresponds to the completion status of the operations.</p>
-
 <p>The benefit of asynchronous and synchronous options depends on the underlying transport. In a virtual circuit environment (TCP, for example), a synchronous option implies that the control does not return until the data reaches the server. On the other hand for datagram oriented transports (UDP, for example), there is very little difference between the two options.</p>
-
 <h2>See also</h2>
-
 <p><a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a></p>
-
 <p><a href="rxcesenddatagram" title="NTSTATUS RxCeSendDatagram(&#10;       IN PRXCE_ADDRESS                hAddress,&#10;  [in] IN PRXCE_CONNECTION_INFORMATION pConnectionInformation,&#10;       IN ULONG                        SendOptions,&#10;  [in] IN PMDL                         pMdl,&#10;  [in] IN ULONG                        SendLength,&#10;  [in] IN PVOID                        pCompletionContext&#10;);">RxCeSendDatagram</a></p>
 <hr>
 <div class="ntdoc-description-links">

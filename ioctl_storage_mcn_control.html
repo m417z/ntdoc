@@ -68,51 +68,30 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>IOCTL_STORAGE_MCN_CONTROL IOCTL</h1>
-
 <h2>Description</h2>
-
 <p>Temporarily enables or disables delivery of the custom PnP events GUID_IO_MEDIA_ARRIVAL and GUID_IO_MEDIA_REMOVAL on a removable-media device. This, in turn, enables or disables media change detection (AutoPlay) for the device if the caller has opened the device with FILE_READ_ATTRIBUTES access and if the device has AutoPlay enabled in the registry. The caller must not open the device for read or write access or the IOCTL operation will fail. This IOCTL has no effect on the AutoPlay setting in the registry.</p>
-
 <p>A driver for such a removable-media device must do the following:</p>
-
 <ol>
 <li>Keep a count of disable requests, per physical device, in the device object extension.</li>
 <li>When called with this IOCTL, if the flag to disable media change detection is set, increment the count; if the flag is clear, decrement the count.</li>
 <li>Set the media change event for the device when the media state is changed only if the disable request count is zero.</li>
 </ol>
-
 <p>When the <a href="irp_mj_device_control" title="#define IRP_MJ_DEVICE_CONTROL 0x0e">IRP_MJ_DEVICE_CONTROL</a> <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> that contains this IOCTL is passed to the SCSI class driver, the <strong>FileObject</strong> member of the current <a href="io_stack_location" title="typedef struct _IO_STACK_LOCATION {&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  UCHAR                  Flags;&#10;  UCHAR                  Control;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      PIO_SECURITY_CONTEXT          SecurityContext;&#10;      ULONG                         Options;&#10;      USHORT POINTER_ALIGNMENT      Reserved;&#10;      USHORT                        ShareAccess;&#10;      PNAMED_PIPE_CREATE_PARAMETERS Parameters;&#10;    } CreatePipe;&#10;...">IO_STACK_LOCATION</a> must point to a valid file object. The SCSI class driver requires a file object for cases where a user-mode application that is disabling or enabling AutoPlay terminates unexpectedly. In such cases, the SCSI class driver uses the file object to reenable media change detection. Because the file object is necessary for proper clean-up, the SCSI class driver will cause the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> to fail with an error message of STATUS_INVALID_PARAMETER if the <strong>FileObject</strong> member of <a href="io_stack_location" title="typedef struct _IO_STACK_LOCATION {&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  UCHAR                  Flags;&#10;  UCHAR                  Control;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      PIO_SECURITY_CONTEXT          SecurityContext;&#10;      ULONG                         Options;&#10;      USHORT POINTER_ALIGNMENT      Reserved;&#10;      USHORT                        ShareAccess;&#10;      PNAMED_PIPE_CREATE_PARAMETERS Parameters;&#10;    } CreatePipe;&#10;...">IO_STACK_LOCATION</a> does not point to a valid file object. If a user-mode application opens the device, then the I/O manager initializes this member, but kernel-mode driver writers should not assume that <strong>FileObject</strong> will be properly initialized when the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is generated by a user-mode application. If, for instance, a user-mode application mistakenly opens the device for either read or write access before sending the IOCTL, then the device control <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> will be routed through the file system, preventing the SCSI class driver and the device driver from directly accessing the device's file object.</p>
-
 <h2>Parameters</h2>
-
 <h3>Major code</h3>
-
 <h3>Input buffer</h3>
-
-<p>The buffer at <strong>Irp->AssociatedIrp.SystemBuffer</strong> contains a Boolean value, with <strong>TRUE</strong> indicating that the driver should disable media change detection.</p>
-
+<p>The buffer at <strong>Irp-&gt;AssociatedIrp.SystemBuffer</strong> contains a Boolean value, with <strong>TRUE</strong> indicating that the driver should disable media change detection.</p>
 <h3>Input buffer length</h3>
-
 <p>The length of a Boolean.</p>
-
 <h3>Output buffer</h3>
-
 <p>None.</p>
-
 <h3>Output buffer length</h3>
-
 <p>None.</p>
-
 <h3>Input/output buffer</h3>
-
 <h3>Input/output buffer length</h3>
-
 <h3>Status block</h3>
-
 <p>The <strong>Information</strong> field is set to zero. The <strong>Status</strong> field is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, or possibly to STATUS_BUFFER_TOO_SMALL, STATUS_INVALID_PARAMETER, or STATUS_INVALID_DEVICE_STATE.</p>
-
 <h2>See also</h2>
-
 <p><a href="io_stack_location" title="typedef struct _IO_STACK_LOCATION {&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  UCHAR                  Flags;&#10;  UCHAR                  Control;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      PIO_SECURITY_CONTEXT          SecurityContext;&#10;      ULONG                         Options;&#10;      USHORT POINTER_ALIGNMENT      Reserved;&#10;      USHORT                        ShareAccess;&#10;      PNAMED_PIPE_CREATE_PARAMETERS Parameters;&#10;    } CreatePipe;&#10;...">IO_STACK_LOCATION</a></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -127,51 +106,32 @@
 </div>
 <div class="ntdoc-description">
 <h1>IOCTL_STORAGE_MCN_CONTROL IOCTL</h1>
-
 <h2>Description</h2>
-
 <p>Enables or disables media change notification. Disabling media change notification prevents the <strong>GUID_IO_MEDIA_ARRIVAL</strong> and <strong>GUID_IO_MEDIA_REMOVAL</strong> events.</p>
-
 <p>To perform this operation, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> function with the following parameters.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">BOOL</span><span class="w"> </span><span class="n">DeviceIoControl</span><span class="p">(</span>
-<span class="w">  </span><span class="p">(</span><span class="n">HANDLE</span><span class="p">)</span><span class="w"> </span><span class="n">hDevice</span><span class="p">,</span><span class="w">             </span><span class="c1">// handle to device</span>
-<span class="w">  </span><span class="n">IOCTL_STORAGE_MCN_CONTROL</span><span class="p">,</span><span class="w">    </span><span class="c1">// dwIoControlCode</span>
-<span class="w">  </span><span class="p">(</span><span class="n">LPVOID</span><span class="p">)</span><span class="w"> </span><span class="n">lpInBuffer</span><span class="p">,</span><span class="w">          </span><span class="c1">// input buffer</span>
-<span class="w">  </span><span class="p">(</span><span class="n"><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></span><span class="p">)</span><span class="w"> </span><span class="n">nInBufferSize</span><span class="p">,</span><span class="w">        </span><span class="c1">// size of input buffer</span>
-<span class="w">  </span><span class="nb">NULL</span><span class="p">,</span><span class="w">                         </span><span class="c1">// lpOutBuffer</span>
-<span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w">                            </span><span class="c1">// nOutBufferSize</span>
-<span class="w">  </span><span class="p">(</span><span class="n">LPDWORD</span><span class="p">)</span><span class="w"> </span><span class="n">lpBytesReturned</span><span class="p">,</span><span class="w">    </span><span class="c1">// number of bytes returned</span>
-<span class="w">  </span><span class="p">(</span><span class="n">LPOVERLAPPED</span><span class="p">)</span><span class="w"> </span><span class="n">lpOverlapped</span><span class="w">   </span><span class="c1">// OVERLAPPED structure</span>
-<span class="p">);</span>
+<pre lang="cpp"><code>BOOL DeviceIoControl(
+  (HANDLE) hDevice,             // handle to device
+  IOCTL_STORAGE_MCN_CONTROL,    // dwIoControlCode
+  (LPVOID) lpInBuffer,          // input buffer
+  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) nInBufferSize,        // size of input buffer
+  NULL,                         // lpOutBuffer
+  0,                            // nOutBufferSize
+  (LPDWORD) lpBytesReturned,    // number of bytes returned
+  (LPOVERLAPPED) lpOverlapped   // OVERLAPPED structure
+);
 </code></pre>
-</div>
-
 <h2>Parameters</h2>
-
 <h3>Input buffer</h3>
-
 <h3>Input buffer length</h3>
-
 <h3>Output buffer</h3>
-
 <h3>Output buffer length</h3>
-
 <h3>Input/output buffer</h3>
-
 <h3>Input/output buffer length</h3>
-
 <h3>Status block</h3>
-
-<p>Irp->IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
-
+<p>Irp-&gt;IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
 <p>Otherwise, Status to the appropriate error condition as a <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code.</p>
-
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS Values</a>.</p>
-
 <h2>See also</h2>
-
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/DevIO/device-management-control-codes">Device Management Control Codes</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a></li>

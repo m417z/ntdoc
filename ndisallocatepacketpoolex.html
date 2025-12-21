@@ -68,74 +68,48 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>NdisAllocatePacketPoolEx (Windows CE 5.0)</h1>
-
 <h2>Description</h2>
-
 <p><strong>Note</strong> NDIS 5. <em>x</em> has been deprecated and is superseded by NDIS 6. <em>x</em>. For new NDIS driver development, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_netvista/">Network Drivers Starting with Windows Vista</a>. For information about porting NDIS 5. <em>x</em> drivers to NDIS 6. <em>x</em>, see <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff570059">Porting NDIS 5.x Drivers to NDIS 6.0</a>.</p>
-
 <p>This function allocates and initializes a block of storage for a pool of packet descriptors.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Status</code> [out]</h3>
-
 <p>Points to a caller-supplied variable in which this function returns the status of the packet pool allocation.</p>
-
 <h3><code>PoolHandle</code> [out]</h3>
-
 <p>Points to a caller-supplied variable in which this function returns a handle to the packet pool. This handle is a required parameter to the <strong>Ndis<em>XXX</em>Packet</strong> functions that the driver calls subsequently.</p>
-
 <h3><code>NumberOfDescriptors</code> [in]</h3>
-
 <p>Specifies the number of packet descriptors that the pool should contain for anticipated normal use. The maximum <em>NumberOfDescriptors</em> that can be allocated is 0xFFFF. If an attempt is made to allocate more than this, <strong>NdisAllocatePacketPoolEx</strong> returns a <em>Status</em> of NDIS_STATUS_RESOURCES.</p>
-
 <h3><code>NumberOfOverflowDescriptors</code> [in]</h3>
-
 <p>Specifies the number of packet descriptors reserved for an overflow situation, that is, when all the descriptors specified by <em>NumberOfDescriptors</em> are in use. If the sum of this parameter and <em>NumberOfDescriptors</em> exceeds 0xFFFF, <strong>NdisAllocatePacketPoolEx</strong> reduces the value supplied as this parameter so that the total <em>NumberOfDescriptors</em> and <em>NumberOfOverflowDescriptors</em> equals 0xFFFF.</p>
-
 <h3><code>ProtocolReservedLength</code> [in]</h3>
-
 <p>Specifies the number of bytes to be allocated for the <strong>ProtocolReserved</strong> array of each packet descriptor. For packet descriptors to be used in receive indications, this parameter is 4*size of (PVOID).</p>
-
 <h2>Remarks</h2>
-
 <p>The following table shows the possible return values for this function.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Status</th>
-  <th>Description</th>
+<th>Status</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>NDIS_STATUS_SUCCESS</td>
-  <td>The driver can make calls to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff550774(v=vs.85)">NdisAllocatePacket</a> when it needs packet descriptors to make indications up to higher-level drivers or to send packets down to lower-level drivers.</td>
+<td>NDIS_STATUS_SUCCESS</td>
+<td>The driver can make calls to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff550774(v=vs.85)">NdisAllocatePacket</a> when it needs packet descriptors to make indications up to higher-level drivers or to send packets down to lower-level drivers.</td>
 </tr>
 <tr>
-  <td>NDIS_STATUS_RESOURCES</td>
-  <td>The attempt to allocate packet pool failed, possibly due to a shortage of memory. This return does not necessarily mean that a subsequent call will fail. However, the caller might attempt to decrease the <em>NumberOfDescriptors</em> and call again immediately.</td>
+<td>NDIS_STATUS_RESOURCES</td>
+<td>The attempt to allocate packet pool failed, possibly due to a shortage of memory. This return does not necessarily mean that a subsequent call will fail. However, the caller might attempt to decrease the <em>NumberOfDescriptors</em> and call again immediately.</td>
 </tr>
 </tbody>
 </table>
-
 <p>A successful call to <strong>NdisAllocatePacketPoolEx</strong> returns a handle to the packet pool, which the caller should save. Usually, the driver next calls <strong>NdisAllocatePacket</strong> one or more times with this handle to allocate a set of packet descriptors.</p>
-
 <p><strong>NdisAllocatePacketPoolEx</strong> statically allocates only enough memory to accommodate the number of packet descriptors specified by <em>NumberOfDescriptors</em>. The total number of packet descriptors that can be allocated from the pool with calls to <strong>NdisAllocatePacket</strong> is the lesser of 0xFFFF or the sum of <em>NumberOfDescriptors</em> and <em>NumberOfOverflowDescriptors</em> originally passed to <strong>NdisAllocatePacketPoolEx</strong>. Overflow descriptors are allocated dynamically only during an overflow situation — that is, when the given <em>NumberOfDescriptors</em> have already been allocated and are still in use.</p>
-
 <p>The sum of <em>NumberOfDescriptors</em> and <em>NumberOfOverflowDescriptors</em> is the effective limit on how many times the driver can call <strong>NdisAllocatePacket</strong> before it must call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff551993(v=vs.85)">NdisFreePacket</a> to return a packet descriptor to the free list for the packet pool. When no overflow descriptor has yet been allocated, <strong>NdisFreePacket</strong> returns the packet descriptor to the statically allocated pool. If one or more overflow descriptors have already been allocated, <strong>NdisFreePacket</strong> returns the packet descriptor to system memory — not to the pool.</p>
-
 <p>The caller of <strong>NdisAllocatePacketPoolEx</strong> should set <em>NumberOfDescriptors</em> to the number of packet descriptors needed for anticipated normal loads. The driver should set <em>NumberOfOverflowDescriptors</em> to the number of additional descriptors needed to accommodate anticipated peak loads. If the total possible number of packet descriptors (<em>NumberOfDescriptors</em> plus <em>NumberOfOverflowDescriptors</em>) has been allocated from the pool, a call to <strong>NdisAllocatePacket</strong> returns NDIS_STATUS_RESOURCES.</p>
-
 <p>As packets sent or indicated are returned to the allocating driver, it can reuse each packet descriptor after calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff554658(v=vs.85)">NdisReinitializePacket</a> and setting it up again with a chain of buffer descriptors, or the driver can call <strong>NdisFreePacket</strong> to return that packet to the free list. Reinitializing and reusing packets allocated from packet pool is far faster than freeing and, then, having to reallocate them again. Before a driver calls <strong>NdisReinitializePacket</strong> with a packet descriptor, it must save the pointers to buffer descriptors that are chained to the packet descriptor, because <strong>NdisReinitializePacket</strong> sets the head of the buffer chain to NULL.</p>
-
 <p>When a driver no longer needs packet descriptors, it calls [(nf-ndis-ndisfreepacketpool.md) to release the storage that it allocated with <strong>NdisAllocatePacketPoolEx</strong>.</p>
-
 <p><strong>OS Versions:</strong> Windows CE .NET 4.0 and later.</p>
-
 <h2>See also</h2>
-
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff550774(v=vs.85)">NdisAllocatePacket</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff551932(v=vs.85)">NdisDprAllocatePacket</a></li>

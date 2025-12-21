@@ -65,98 +65,70 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfControlDeviceInitAllocate function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF only]</p>
-
 <p>The <strong>WdfControlDeviceInitAllocate</strong> method allocates a <a href="wdfdevice_init" title="struct WDFDEVICE_INIT {&#10;  ;      // Reserved.&#10;};">WDFDEVICE_INIT</a> structure that a driver uses when creating a new control device object.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Driver</code> [in]</h3>
-
 <p>A handle to a framework driver object.</p>
-
 <h3><code>SDDLString</code> [in]</h3>
-
 <p>A pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that describes a Unicode string. This string is a Security Descriptor Definition Language (SDDL) representation of a security descriptor. For more information, see the following Remarks section.</p>
-
 <h2>Return value</h2>
-
 <p><strong>WdfControlDeviceInitAllocate</strong> returns a pointer to a framework-allocated <a href="wdfdevice_init" title="struct WDFDEVICE_INIT {&#10;  ;      // Reserved.&#10;};">WDFDEVICE_INIT</a> structure, if the operation succeeds. Otherwise, the method returns <strong>NULL</strong>.</p>
-
 <h2>Remarks</h2>
-
 <p>If you want your driver to create a control device object, the driver must call <strong>WdfControlDeviceInitAllocate</strong> to obtain a <a href="wdfdevice_init" title="struct WDFDEVICE_INIT {&#10;  ;      // Reserved.&#10;};">WDFDEVICE_INIT</a> structure that it can pass to <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a>.</p>
-
 <p>Your driver can specify a security setting by using a subset of SDDL. The <em>Wdmsec.h</em> file defines a set of SDDL_DEVOBJ_<em>Xxx</em>-formatted constants that you can use. For more information about security descriptors and SDDL, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/securing-device-objects">Securing Device Objects</a>.</p>
-
 <p>The <a href="wdfdeviceinitassignsddlstring" title="NTSTATUS WdfDeviceInitAssignSDDLString(&#10;  [in]           PWDFDEVICE_INIT  DeviceInit,&#10;  [in, optional] PCUNICODE_STRING SDDLString&#10;);">WdfDeviceInitAssignSDDLString</a> method overwrites the security setting, if any, that <strong>WdfControlDeviceInitAllocate</strong> specifies.</p>
-
 <p>For more information about calling <strong>WdfControlDeviceInitAllocate</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-control-device-objects">Using Control Device Objects</a>.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example allocates a DEVICE_INIT structure, assigns a device object name, registers a shutdown notification callback function, and creates a control device object. For a more complex example that uses <strong>WdfControlDeviceInitAllocate</strong>, see the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">NONPNP</a> sample driver or the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">NDISProt</a> sample driver.</p>
+<pre lang="cpp"><code>PWDFDEVICE_INIT  deviceInit = NULL;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
+<a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a>  objectAttribs;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">PWDFDEVICE_INIT</span><span class="w">  </span><span class="n">deviceInit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="p">;</span>
-<span class="n"><a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a></span><span class="w">  </span><span class="n">objectAttribs</span><span class="p">;</span>
+deviceInit = WdfControlDeviceInitAllocate(
+                                          hDriver,
+                                          &amp;SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RW_RES_R
+                                          );
+if (deviceInit == NULL) {
+    status = STATUS_INSUFFICIENT_RESOURCES;
+    goto Error;
+}
+status = <a href="wdfdeviceinitassignname" title="NTSTATUS WdfDeviceInitAssignName(&#10;  [in]           PWDFDEVICE_INIT  DeviceInit,&#10;  [in, optional] PCUNICODE_STRING DeviceName&#10;);">WdfDeviceInitAssignName</a>(
+                                 deviceInit,
+                                 &amp;ntDeviceName
+                                 );
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+    <a href="wdfdeviceinitfree" title="VOID WdfDeviceInitFree(&#10;  [in] PWDFDEVICE_INIT DeviceInit&#10;);">WdfDeviceInitFree</a>(deviceInit);
+    deviceInit = NULL;
+    goto Error;
+}
+<a href="wdfcontroldeviceinitsetshutdownnotification" title="VOID WdfControlDeviceInitSetShutdownNotification(&#10;  [in] PWDFDEVICE_INIT                      DeviceInit,&#10;  [in] PFN_WDF_DEVICE_SHUTDOWN_NOTIFICATION Notification,&#10;  [in] UCHAR                                Flags&#10;);">WdfControlDeviceInitSetShutdownNotification</a>(
+                                            deviceInit,
+                                            EvtShutdownNotification,
+                                            WdfDeviceShutdown
+                                            );
+<a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a>(&amp;objectAttribs);
 
-<span class="n">deviceInit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfControlDeviceInitAllocate</span><span class="p">(</span>
-<span class="w">                                          </span><span class="n">hDriver</span><span class="p">,</span>
-<span class="w">                                          </span><span class="o">&amp;</span><span class="n">SDDL_DEVOBJ_SYS_ALL_ADM_RWX_WORLD_RW_RES_R</span>
-<span class="w">                                          </span><span class="p">);</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">deviceInit</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STATUS_INSUFFICIENT_RESOURCES</span><span class="p">;</span>
-<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">Error</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfdeviceinitassignname" title="NTSTATUS WdfDeviceInitAssignName(&#10;  [in]           PWDFDEVICE_INIT  DeviceInit,&#10;  [in, optional] PCUNICODE_STRING DeviceName&#10;);">WdfDeviceInitAssignName</a></span><span class="p">(</span>
-<span class="w">                                 </span><span class="n">deviceInit</span><span class="p">,</span>
-<span class="w">                                 </span><span class="o">&amp;</span><span class="n">ntDeviceName</span>
-<span class="w">                                 </span><span class="p">);</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="wdfdeviceinitfree" title="VOID WdfDeviceInitFree(&#10;  [in] PWDFDEVICE_INIT DeviceInit&#10;);">WdfDeviceInitFree</a></span><span class="p">(</span><span class="n">deviceInit</span><span class="p">);</span>
-<span class="w">    </span><span class="n">deviceInit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">Error</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n"><a href="wdfcontroldeviceinitsetshutdownnotification" title="VOID WdfControlDeviceInitSetShutdownNotification(&#10;  [in] PWDFDEVICE_INIT                      DeviceInit,&#10;  [in] PFN_WDF_DEVICE_SHUTDOWN_NOTIFICATION Notification,&#10;  [in] UCHAR                                Flags&#10;);">WdfControlDeviceInitSetShutdownNotification</a></span><span class="p">(</span>
-<span class="w">                                            </span><span class="n">deviceInit</span><span class="p">,</span>
-<span class="w">                                            </span><span class="n">EvtShutdownNotification</span><span class="p">,</span>
-<span class="w">                                            </span><span class="n">WdfDeviceShutdown</span>
-<span class="w">                                            </span><span class="p">);</span>
-<span class="n"><a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">objectAttribs</span><span class="p">);</span>
-
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a></span><span class="p">(</span>
-<span class="w">                         </span><span class="o">&amp;</span><span class="n">deviceInit</span><span class="p">,</span>
-<span class="w">                         </span><span class="o">&amp;</span><span class="n">objectAttribs</span><span class="p">,</span>
-<span class="w">                         </span><span class="o">&amp;</span><span class="n">controlDevice</span>
-<span class="w">                         </span><span class="p">);</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="wdfdeviceinitfree" title="VOID WdfDeviceInitFree(&#10;  [in] PWDFDEVICE_INIT DeviceInit&#10;);">WdfDeviceInitFree</a></span><span class="p">(</span><span class="n">deviceInit</span><span class="p">);</span>
-<span class="w">    </span><span class="n">deviceInit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">Error</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n"><a href="wdfcontrolfinishinitializing" title="VOID WdfControlFinishInitializing(&#10;  [in] WDFDEVICE Device&#10;);">WdfControlFinishInitializing</a></span><span class="p">(</span><span class="n">controlDevice</span><span class="p">);</span>
+status = <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a>(
+                         &amp;deviceInit,
+                         &amp;objectAttribs,
+                         &amp;controlDevice
+                         );
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+    <a href="wdfdeviceinitfree" title="VOID WdfDeviceInitFree(&#10;  [in] PWDFDEVICE_INIT DeviceInit&#10;);">WdfDeviceInitFree</a>(deviceInit);
+    deviceInit = NULL;
+    goto Error;
+}
+<a href="wdfcontrolfinishinitializing" title="VOID WdfControlFinishInitializing(&#10;  [in] WDFDEVICE Device&#10;);">WdfControlFinishInitializing</a>(controlDevice);
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="wdfdevice_init" title="struct WDFDEVICE_INIT {&#10;  ;      // Reserved.&#10;};">WDFDEVICE_INIT</a></p>
-
 <p><a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a></p>
-
 <p><a href="wdfcontroldeviceinitsetshutdownnotification" title="VOID WdfControlDeviceInitSetShutdownNotification(&#10;  [in] PWDFDEVICE_INIT                      DeviceInit,&#10;  [in] PFN_WDF_DEVICE_SHUTDOWN_NOTIFICATION Notification,&#10;  [in] UCHAR                                Flags&#10;);">WdfControlDeviceInitSetShutdownNotification</a></p>
-
 <p><a href="wdfcontrolfinishinitializing" title="VOID WdfControlFinishInitializing(&#10;  [in] WDFDEVICE Device&#10;);">WdfControlFinishInitializing</a></p>
-
 <p><a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a></p>
-
 <p><a href="wdfdeviceinitassignname" title="NTSTATUS WdfDeviceInitAssignName(&#10;  [in]           PWDFDEVICE_INIT  DeviceInit,&#10;  [in, optional] PCUNICODE_STRING DeviceName&#10;);">WdfDeviceInitAssignName</a></p>
-
 <p><a href="wdfdeviceinitassignsddlstring" title="NTSTATUS WdfDeviceInitAssignSDDLString(&#10;  [in]           PWDFDEVICE_INIT  DeviceInit,&#10;  [in, optional] PCUNICODE_STRING SDDLString&#10;);">WdfDeviceInitAssignSDDLString</a></p>
 <hr>
 <div class="ntdoc-description-links">

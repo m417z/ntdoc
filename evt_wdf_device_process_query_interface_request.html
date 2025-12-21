@@ -70,69 +70,39 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST callback function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF only]</p>
-
 <p>A driver's <em>EvtDeviceProcessQueryInterfaceRequest</em> event callback function examines another driver's request for access to a driver-defined interface, before the framework passes the interface to the requesting driver.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Device</code> [in]</h3>
-
 <p>A handle to a framework device object.</p>
-
 <h3><code>InterfaceType</code> [in]</h3>
-
 <p>A pointer to the GUID that identifies the driver-defined interface.</p>
-
 <h3><code>ExposedInterface</code> [in, out]</h3>
-
 <p>A pointer to an <a href="interface" title="typedef struct _INTERFACE {&#10;  USHORT                 Size;&#10;  USHORT                 Version;&#10;  PVOID                  Context;&#10;  PINTERFACE_REFERENCE   InterfaceReference;&#10;  PINTERFACE_DEREFERENCE InterfaceDereference;&#10;} INTERFACE, *PINTERFACE;">INTERFACE</a> structure that describes the driver-defined interface and was provided by the driver that is requesting access to the interface.</p>
-
 <h3><code>ExposedInterfaceSpecificData</code> [in, out]</h3>
-
 <p>A pointer to additional, optional, driver-defined, interface-specific information. Framework-based drivers specify this value by providing a non-<strong>NULL</strong> <em>InterfaceSpecificData</em> parameter value when calling <a href="wdffdoqueryforinterface" title="NTSTATUS WdfFdoQueryForInterface(&#10;  [in]           WDFDEVICE  Fdo,&#10;  [in]           LPCGUID    InterfaceType,&#10;  [out]          PINTERFACE Interface,&#10;  [in]           USHORT     Size,&#10;  [in]           USHORT     Version,&#10;  [in, optional] PVOID      InterfaceSpecificData&#10;);">WdfFdoQueryForInterface</a>.</p>
-
 <h2>Return value</h2>
-
 <p>If the <em>EvtDeviceProcessQueryInterfaceRequest</em> callback function receives a GUID that it supports, and if the function encounters no errors, it must return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or another status value for which <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">NT_SUCCESS</a>(<em>status</em>) equals <strong>TRUE</strong>. The framework continues passing the request down the stack to see if additional drivers also support the interface.</p>
-
 <p>The <em>EvtDeviceProcessQueryInterfaceRequest</em> callback function must return STATUS_NOT_SUPPORTED if it determines that, for a particular case, it will not service the interface. The framework continues passing the request down the stack to see if another driver supports the interface. For more information about this situation, see the following Remarks section.</p>
-
 <p>If the callback function encounters an error, it must return a status value for which <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(<em>status</em>) equals <strong>FALSE</strong>. The framework fails the other driver's request for the interface and does not pass the request down the stack.</p>
-
 <h2>Remarks</h2>
-
 <p>Framework-based drivers register an <em>EvtDeviceProcessQueryInterfaceRequest</em> event callback function by calling <a href="wdfdeviceaddqueryinterface" title="NTSTATUS WdfDeviceAddQueryInterface(&#10;  [in] WDFDEVICE                   Device,&#10;  [in] PWDF_QUERY_INTERFACE_CONFIG InterfaceConfig&#10;);">WdfDeviceAddQueryInterface</a>.</p>
-
 <p>If the driver-defined interface supports only one-way communication and sets the <strong>ImportInterface</strong> member of the <a href="wdf_query_interface_config" title="typedef struct _WDF_QUERY_INTERFACE_CONFIG {&#10;  ULONG                                          Size;&#10;  PINTERFACE                                     Interface;&#10;  const GUID                                     *InterfaceType;&#10;  BOOLEAN                                        SendQueryToParentStack;&#10;  PFN_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST EvtDeviceProcessQueryInterfaceRequest;&#10;  BOOLEAN                                        ImportInterface;&#10;} WDF_QUERY_INTERFACE_CONFIG, *PWDF_QUERY_INTERFACE_CONFIG;">WDF_QUERY_INTERFACE_CONFIG</a> structure that describes the interface to <strong>FALSE</strong>, the <em>EvtDeviceProcessQueryInterfaceRequest</em> callback function is optional. When another driver calls <a href="wdffdoqueryforinterface" title="NTSTATUS WdfFdoQueryForInterface(&#10;  [in]           WDFDEVICE  Fdo,&#10;  [in]           LPCGUID    InterfaceType,&#10;  [out]          PINTERFACE Interface,&#10;  [in]           USHORT     Size,&#10;  [in]           USHORT     Version,&#10;  [in, optional] PVOID      InterfaceSpecificData&#10;);">WdfFdoQueryForInterface</a>, the framework copies the driver-defined interface values into the requesting driver's <a href="interface" title="typedef struct _INTERFACE {&#10;  USHORT                 Size;&#10;  USHORT                 Version;&#10;  PVOID                  Context;&#10;  PINTERFACE_REFERENCE   InterfaceReference;&#10;  PINTERFACE_DEREFERENCE InterfaceDereference;&#10;} INTERFACE, *PINTERFACE;">INTERFACE</a> structure and then calls the callback function. For one-way communication, you need to provide a callback function only if you want the driver to examine, and possibly modify, the interface values before the framework returns them to the requesting driver.</p>
-
 <p>Your driver must provide an <em>EvtDeviceProcessQueryInterfaceRequest</em> event callback function if the driver defines an interface that supports two-way communication (and sets the <strong>ImportInterface</strong> member of the <a href="wdf_query_interface_config" title="typedef struct _WDF_QUERY_INTERFACE_CONFIG {&#10;  ULONG                                          Size;&#10;  PINTERFACE                                     Interface;&#10;  const GUID                                     *InterfaceType;&#10;  BOOLEAN                                        SendQueryToParentStack;&#10;  PFN_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST EvtDeviceProcessQueryInterfaceRequest;&#10;  BOOLEAN                                        ImportInterface;&#10;} WDF_QUERY_INTERFACE_CONFIG, *PWDF_QUERY_INTERFACE_CONFIG;">WDF_QUERY_INTERFACE_CONFIG</a> structure to <strong>TRUE</strong>). The callback function is required because, if <strong>ImportInterface</strong> is <strong>TRUE</strong> and another driver calls <a href="wdffdoqueryforinterface" title="NTSTATUS WdfFdoQueryForInterface(&#10;  [in]           WDFDEVICE  Fdo,&#10;  [in]           LPCGUID    InterfaceType,&#10;  [out]          PINTERFACE Interface,&#10;  [in]           USHORT     Size,&#10;  [in]           USHORT     Version,&#10;  [in, optional] PVOID      InterfaceSpecificData&#10;);">WdfFdoQueryForInterface</a>, the framework does not copy the driver-defined interface into the requesting driver's interface structure. Instead, the callback function must update the requesting driver's interface structure.</p>
-
 <p>The callback function can modify the interface. In particular, it can:</p>
-
 <ul>
 <li>Change any value in any member of the interface.</li>
 <li>Allocate a dynamic instance-specific context by modifying the <strong>Context</strong> member of the <a href="interface" title="typedef struct _INTERFACE {&#10;  USHORT                 Size;&#10;  USHORT                 Version;&#10;  PVOID                  Context;&#10;  PINTERFACE_REFERENCE   InterfaceReference;&#10;  PINTERFACE_DEREFERENCE InterfaceDereference;&#10;} INTERFACE, *PINTERFACE;">INTERFACE</a> structure.</li>
 </ul>
-
 <p>The framework calls your driver's <em>EvtDeviceProcessQueryInterfaceRequest</em> callback functions only for GUIDs that the driver has registered by calling <a href="wdfdeviceaddqueryinterface" title="NTSTATUS WdfDeviceAddQueryInterface(&#10;  [in] WDFDEVICE                   Device,&#10;  [in] PWDF_QUERY_INTERFACE_CONFIG InterfaceConfig&#10;);">WdfDeviceAddQueryInterface</a>. Therefore, these callback functions do not use the STATUS_NOT_SUPPORTED return value to report unexpected GUIDs. Instead, a <em>EvtDeviceProcessQueryInterfaceRequest</em> callback function should return STATUS_NOT_SUPPORTED when it determines that, for a particular case, it will not handle the interface. For example, based on data that the requesting driver provides, your driver might determine that a lower-level driver should service the interface request. The STATUS_NOT_SUPPORTED return value informs the framework that your driver is not servicing the interface request, but a lower-level driver might service it.</p>
-
 <p>For more information about driver-defined interfaces, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-driver-defined-interfaces">Using Driver-Defined Interfaces</a>.</p>
-
 <h4>Examples</h4>
-
 <p>To define an <em>EvtDeviceProcessQueryInterfaceRequest</em> callback function, you must first provide a function declaration that identifies the type of callback function you’re defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it’s a requirement for writing drivers for the Windows operating system.</p>
-
 <p>For example, to define an <em>EvtDeviceProcessQueryInterfaceRequest</em> callback function that is named <em>MyDeviceProcessQueryInterfaceRequest</em>, use the <strong>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST</strong> type as shown in this code example:</p>
-
 <pre><code>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST  MyDeviceProcessQueryInterfaceRequest;
 </code></pre>
-
 <p>Then, implement your callback function as follows:</p>
-
 <pre><code>_Use_decl_annotations_
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
  MyDeviceProcessQueryInterfaceRequest (
@@ -143,19 +113,13 @@
     )
   {...}
 </code></pre>
-
-<p>The <strong>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST</strong> function type is defined in the WdfQueryInterface.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST</strong> function type in the header file are used.
+<p>The <strong>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST</strong> function type is defined in the WdfQueryInterface.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST</strong> function type in the header file are used.
 For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>.
-For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-
+For information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
 <h2>See also</h2>
-
 <p><a href="interface" title="typedef struct _INTERFACE {&#10;  USHORT                 Size;&#10;  USHORT                 Version;&#10;  PVOID                  Context;&#10;  PINTERFACE_REFERENCE   InterfaceReference;&#10;  PINTERFACE_DEREFERENCE InterfaceDereference;&#10;} INTERFACE, *PINTERFACE;">INTERFACE</a></p>
-
 <p><a href="wdf_query_interface_config" title="typedef struct _WDF_QUERY_INTERFACE_CONFIG {&#10;  ULONG                                          Size;&#10;  PINTERFACE                                     Interface;&#10;  const GUID                                     *InterfaceType;&#10;  BOOLEAN                                        SendQueryToParentStack;&#10;  PFN_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST EvtDeviceProcessQueryInterfaceRequest;&#10;  BOOLEAN                                        ImportInterface;&#10;} WDF_QUERY_INTERFACE_CONFIG, *PWDF_QUERY_INTERFACE_CONFIG;">WDF_QUERY_INTERFACE_CONFIG</a></p>
-
 <p><a href="wdfdeviceaddqueryinterface" title="NTSTATUS WdfDeviceAddQueryInterface(&#10;  [in] WDFDEVICE                   Device,&#10;  [in] PWDF_QUERY_INTERFACE_CONFIG InterfaceConfig&#10;);">WdfDeviceAddQueryInterface</a></p>
-
 <p><a href="wdffdoqueryforinterface" title="NTSTATUS WdfFdoQueryForInterface(&#10;  [in]           WDFDEVICE  Fdo,&#10;  [in]           LPCGUID    InterfaceType,&#10;  [out]          PINTERFACE Interface,&#10;  [in]           USHORT     Size,&#10;  [in]           USHORT     Version,&#10;  [in, optional] PVOID      InterfaceSpecificData&#10;);">WdfFdoQueryForInterface</a></p>
 <hr>
 <div class="ntdoc-description-links">

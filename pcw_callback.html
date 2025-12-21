@@ -69,305 +69,273 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>Providers can optionally implement a <code>PCW_CALLBACK</code> function to receive notifications when consumers make requests such as enumerating instances or collecting counterset data. The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/bb756968(v=msdn.10)">Performance Counter Library (PERFLIB version 2.0)</a> calls the <code>PCW_CALLBACK</code> function before completing the consumer's request.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Type</code> [in]</h3>
-
 <p>A <a href="pcw_callback_type" title="typedef enum _PCW_CALLBACK_TYPE {&#10;  PcwCallbackAddCounter,&#10;  PcwCallbackRemoveCounter,&#10;  PcwCallbackEnumerateInstances,&#10;  PcwCallbackCollectData&#10;} PCW_CALLBACK_TYPE, *PPCW_CALLBACK_TYPE;">PCW_CALLBACK_TYPE</a> enumeration value indicating why the callback was invoked. Possible values are <code>PcwCallbackAddCounter</code>, <code>PcwCallbackRemoveCounter</code>, <code>PcwCallbackEnumerateInstances</code>, and <code>PcwCallbackCollectData</code>.</p>
-
 <h3><code>Info</code> [in]</h3>
-
 <p>A pointer to a <a href="pcw_callback_information" title="typedef union _PCW_CALLBACK_INFORMATION {&#10;  PCW_COUNTER_INFORMATION AddCounter;&#10;  PCW_COUNTER_INFORMATION RemoveCounter;&#10;  PCW_MASK_INFORMATION    EnumerateInstances;&#10;  PCW_MASK_INFORMATION    CollectData;&#10;} PCW_CALLBACK_INFORMATION, *PPCW_CALLBACK_INFORMATION;">PCW_CALLBACK_INFORMATION</a> union that supplies details about why the provider callback was invoked. The details will be in the field corresponding to the <code>Type</code> parameter. For example, if <code>Type == PcwCallbackEnumerateInstances</code> then the details will be in <code>Info-&gt;EnumerateInstances</code>.</p>
-
 <h3><code>Context</code> [in, optional]</h3>
-
 <p>The callback context that was supplied by the provider when calling <a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a> or when calling the CTRPP-generated Register function (which invokes <code><a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a></code>).</p>
-
 <h2>Return value</h2>
-
 <p>The <code>PCW_CALLBACK</code> callback function should return <code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> if the callback completed without errors, or an <code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></code> error code otherwise. Note that this return code is for informational purposes only and that processing of the consumer's request will continue even if the callback returns an error.</p>
-
 <h2>Remarks</h2>
-
 <p>Counterset providers can supply information to the consumer through two different systems:</p>
-
 <ul>
-<li><p>The provider can use <code><a href="pcwcreateinstance" title="NTSTATUS PcwCreateInstance(&#10;  [out] PPCW_INSTANCE     *Instance,&#10;  [in]  PPCW_REGISTRATION Registration,&#10;  [in]  PCUNICODE_STRING  Name,&#10;  [in]  ULONG             Count,&#10;  [in]  PPCW_DATA         Data&#10;);">PcwCreateInstance</a></code> and <code><a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a></code> to maintain a list of available instances and the corresponding counter data. This system is simple to implement but limited in flexibility. When using this system, the provider does not need to supply a callback function. For more information on this system, refer to the documentation for <a href="pcwcreateinstance" title="NTSTATUS PcwCreateInstance(&#10;  [out] PPCW_INSTANCE     *Instance,&#10;  [in]  PPCW_REGISTRATION Registration,&#10;  [in]  PCUNICODE_STRING  Name,&#10;  [in]  ULONG             Count,&#10;  [in]  PPCW_DATA         Data&#10;);">PcwCreateInstance</a>.</p></li>
-<li><p>The provider can supply a <code>PCW_CALLBACK</code> function that will be invoked by the Performance Counter Library as needed to collect data.</p></li>
+<li>
+<p>The provider can use <code><a href="pcwcreateinstance" title="NTSTATUS PcwCreateInstance(&#10;  [out] PPCW_INSTANCE     *Instance,&#10;  [in]  PPCW_REGISTRATION Registration,&#10;  [in]  PCUNICODE_STRING  Name,&#10;  [in]  ULONG             Count,&#10;  [in]  PPCW_DATA         Data&#10;);">PcwCreateInstance</a></code> and <code><a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a></code> to maintain a list of available instances and the corresponding counter data. This system is simple to implement but limited in flexibility. When using this system, the provider does not need to supply a callback function. For more information on this system, refer to the documentation for <a href="pcwcreateinstance" title="NTSTATUS PcwCreateInstance(&#10;  [out] PPCW_INSTANCE     *Instance,&#10;  [in]  PPCW_REGISTRATION Registration,&#10;  [in]  PCUNICODE_STRING  Name,&#10;  [in]  ULONG             Count,&#10;  [in]  PPCW_DATA         Data&#10;);">PcwCreateInstance</a>.</p>
+</li>
+<li>
+<p>The provider can supply a <code>PCW_CALLBACK</code> function that will be invoked by the Performance Counter Library as needed to collect data.</p>
+</li>
 </ul>
-
 <p>The callback implementation must be thread-safe. Multiple different consumers might simultaneously request data from the provider on different threads.</p>
-
 <p>The callback must handle the <code>PcwCallbackEnumerateInstances</code> and <code>PcwCallbackCollectData</code> request types. The callback usually does not need to handle other request types, but in complex scenarios the callback might also handle <code>PcwCallbackAddCounter</code> and <code>PcwCallbackRemoveCounter</code> to optimize data collection (i.e. to disable statistics tracking when no queries are active).</p>
-
 <p>The callback is responsible for generating <code>Name</code> and <code>Id</code> values for the counterset instances.</p>
-
 <ul>
-<li><p>Instance <code>Id</code> values MUST be stable over time (the same logical instance should use the same <code>Id</code> value for all invocations of the callback), should be unique (e.g. do not simply use 0 for all instances), and should be less than 0xFFFFFFFE (do not use <code>PCW_ANY_INSTANCE_ID</code>). When possible, the instance <code>Id</code> should be meaningful (e.g. a Process counterset might use a PID as the <code>Id</code>) instead of arbitrary (e.g. a sequence number).</p></li>
-<li><p>Instance <code>Name</code> values MUST be stable over time (the same logical instance should use the same <code>Name</code> value for all invocations of the callback) and MUST be unique. If the counterset supports multiple instances, the instance <code>Name</code> should not be blank. String matching is done using a case-insensitive comparison, so <code>Name</code> values should not differ only by case.</p></li>
+<li>
+<p>Instance <code>Id</code> values MUST be stable over time (the same logical instance should use the same <code>Id</code> value for all invocations of the callback), should be unique (e.g. do not simply use 0 for all instances), and should be less than 0xFFFFFFFE (do not use <code>PCW_ANY_INSTANCE_ID</code>). When possible, the instance <code>Id</code> should be meaningful (e.g. a Process counterset might use a PID as the <code>Id</code>) instead of arbitrary (e.g. a sequence number).</p>
+</li>
+<li>
+<p>Instance <code>Name</code> values MUST be stable over time (the same logical instance should use the same <code>Name</code> value for all invocations of the callback) and MUST be unique. If the counterset supports multiple instances, the instance <code>Name</code> should not be blank. String matching is done using a case-insensitive comparison, so <code>Name</code> values should not differ only by case.</p>
+</li>
 </ul>
-
 <p>When handling <code>PcwCallbackCollectData</code> requests, a basic callback implementation will simply invoke <a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a> (or the CTRPP-generated AddXxx function) once for each counterset instance. For more info, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-pcwaddinstance#remarks">CTRPP-generated AddXxx function</a>.</p>
-
 <p>The following optimizations may be used in more advanced implementations when necessary:</p>
-
 <ul>
-<li><p>If <code>Info-&gt;CollectData.CounterMask != (<a href="uint64" title="typedef unsigned __int64 UINT64;">UINT64</a>)-1</code> then the consumer does not need all of the counters in the counterset. In this case, the callback may optimize data collection by leaving the corresponding values as 0 in the counter data block.</p></li>
-<li><p>If <code>Info-&gt;CollectData.InstanceId != PCW_ANY_INSTANCE_ID</code> then the consumer only wants data about instances with an <code>InstanceId</code> equal to <code>CollectData.InstanceId</code>. The callback may optimize data collection by skipping the call to <code><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></code> for instances with non-matching <code>InstanceId</code>.</p></li>
-<li><p>If <code>Info-&gt;CollectData.InstanceMask != "*"</code> then the consumer only wants data about instances with an <code>InstanceName</code> that matches the wildcard pattern of <code>CollectData.InstanceMask</code>. The callback may optimize data collection by skipping the call to <code><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></code> for instances with non-matching <code>InstanceName</code>. Wildcard matching is hard to implement correctly, so this optimization is recommended only when instance data collection is very expensive.</p></li>
+<li>
+<p>If <code>Info-&gt;CollectData.CounterMask != (<a href="uint64" title="typedef unsigned __int64 UINT64;">UINT64</a>)-1</code> then the consumer does not need all of the counters in the counterset. In this case, the callback may optimize data collection by leaving the corresponding values as 0 in the counter data block.</p>
+</li>
+<li>
+<p>If <code>Info-&gt;CollectData.InstanceId != PCW_ANY_INSTANCE_ID</code> then the consumer only wants data about instances with an <code>InstanceId</code> equal to <code>CollectData.InstanceId</code>. The callback may optimize data collection by skipping the call to <code><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></code> for instances with non-matching <code>InstanceId</code>.</p>
+</li>
+<li>
+<p>If <code>Info-&gt;CollectData.InstanceMask != &quot;*&quot;</code> then the consumer only wants data about instances with an <code>InstanceName</code> that matches the wildcard pattern of <code>CollectData.InstanceMask</code>. The callback may optimize data collection by skipping the call to <code><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></code> for instances with non-matching <code>InstanceName</code>. Wildcard matching is hard to implement correctly, so this optimization is recommended only when instance data collection is very expensive.</p>
+</li>
 </ul>
-
 <p>In most cases, the callback implementation for a <code>PcwCallbackEnumerateInstances</code> request will be identical to the implementation for a <code>PcwCallbackCollectData</code>. The callback may optionally optimize data collection by omitting the actual counter data in the call to <code><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></code> (i.e. by passing 0 and NULL for the <code>Count</code> and <code>Data</code> parameters).</p>
-
 <p>A callback implementation could be structured as follows:</p>
+<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NTAPI
+MyProviderCallback(
+    _In_ <a href="pcw_callback_type" title="typedef enum _PCW_CALLBACK_TYPE {&#10;  PcwCallbackAddCounter,&#10;  PcwCallbackRemoveCounter,&#10;  PcwCallbackEnumerateInstances,&#10;  PcwCallbackCollectData&#10;} PCW_CALLBACK_TYPE, *PPCW_CALLBACK_TYPE;">PCW_CALLBACK_TYPE</a> Type,
+    _In_ <a href="pcw_callback_information" title="typedef union _PCW_CALLBACK_INFORMATION {&#10;  PCW_COUNTER_INFORMATION AddCounter;&#10;  PCW_COUNTER_INFORMATION RemoveCounter;&#10;  PCW_MASK_INFORMATION    EnumerateInstances;&#10;  PCW_MASK_INFORMATION    CollectData;&#10;} PCW_CALLBACK_INFORMATION, *PPCW_CALLBACK_INFORMATION;">PPCW_CALLBACK_INFORMATION</a> Info,
+    _In_opt_ PVOID Context)
+{
+    <a href="pcw_mask_information" title="typedef struct _PCW_MASK_INFORMATION {&#10;  ULONG64          CounterMask;&#10;  PCUNICODE_STRING InstanceMask;&#10;  ULONG            InstanceId;&#10;  BOOLEAN          CollectMultiple;&#10;  PPCW_BUFFER      Buffer;&#10;  PKEVENT          CancelEvent;&#10;} PCW_MASK_INFORMATION, *PPCW_MASK_INFORMATION;">PCW_MASK_INFORMATION</a>* MaskInfo;
+    PAGED_CODE();
 
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">NTAPI</span>
-<span class="n">MyProviderCallback</span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="pcw_callback_type" title="typedef enum _PCW_CALLBACK_TYPE {&#10;  PcwCallbackAddCounter,&#10;  PcwCallbackRemoveCounter,&#10;  PcwCallbackEnumerateInstances,&#10;  PcwCallbackCollectData&#10;} PCW_CALLBACK_TYPE, *PPCW_CALLBACK_TYPE;">PCW_CALLBACK_TYPE</a></span><span class="w"> </span><span class="n">Type</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="pcw_callback_information" title="typedef union _PCW_CALLBACK_INFORMATION {&#10;  PCW_COUNTER_INFORMATION AddCounter;&#10;  PCW_COUNTER_INFORMATION RemoveCounter;&#10;  PCW_MASK_INFORMATION    EnumerateInstances;&#10;  PCW_MASK_INFORMATION    CollectData;&#10;} PCW_CALLBACK_INFORMATION, *PPCW_CALLBACK_INFORMATION;">PPCW_CALLBACK_INFORMATION</a></span><span class="w"> </span><span class="n">Info</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_opt_</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="pcw_mask_information" title="typedef struct _PCW_MASK_INFORMATION {&#10;  ULONG64          CounterMask;&#10;  PCUNICODE_STRING InstanceMask;&#10;  ULONG            InstanceId;&#10;  BOOLEAN          CollectMultiple;&#10;  PPCW_BUFFER      Buffer;&#10;  PKEVENT          CancelEvent;&#10;} PCW_MASK_INFORMATION, *PPCW_MASK_INFORMATION;">PCW_MASK_INFORMATION</a></span><span class="o">*</span><span class="w"> </span><span class="n">MaskInfo</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
+    switch (Type)
+    {
+    case PcwCallbackCollectData:
+        MaskInfo = &amp;Info-&gt;CollectData;
+        break;
 
-<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">Type</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">PcwCallbackCollectData</span><span class="p">:</span>
-<span class="w">        </span><span class="n">MaskInfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Info</span><span class="o">-&gt;</span><span class="n">CollectData</span><span class="p">;</span>
-<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+    case PcwCallbackEnumerateInstances:
+        MaskInfo = &amp;Info-&gt;EnumerateInstances;
+        break;
 
-<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">PcwCallbackEnumerateInstances</span><span class="p">:</span>
-<span class="w">        </span><span class="n">MaskInfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Info</span><span class="o">-&gt;</span><span class="n">EnumerateInstances</span><span class="p">;</span>
-<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+    case PcwCallbackAddCounter:
+        // Optional (for optimizing data collection):
+        // <a href="interlockedincrement" title="LONG InterlockedIncrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedIncrement</a>(&amp;CollectionEnableCount);
+        return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>; // Normally no action needed.
 
-<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">PcwCallbackAddCounter</span><span class="p">:</span>
-<span class="w">        </span><span class="c1">// Optional (for optimizing data collection):</span>
-<span class="w">        </span><span class="c1">// <a href="interlockedincrement" title="LONG InterlockedIncrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedIncrement</a>(&amp;CollectionEnableCount);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span><span class="w"> </span><span class="c1">// Normally no action needed.</span>
+    case PcwCallbackRemoveCounter:
+        // Optional (for optimizing data collection):
+        // <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;CollectionEnableCount);
+        return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>; // Normally no action needed.
+    }
 
-<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">PcwCallbackRemoveCounter</span><span class="p">:</span>
-<span class="w">        </span><span class="c1">// Optional (for optimizing data collection):</span>
-<span class="w">        </span><span class="c1">// <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;CollectionEnableCount);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span><span class="w"> </span><span class="c1">// Normally no action needed.</span>
-<span class="w">    </span><span class="p">}</span>
+    // Common code for CollectData and EnumerateInstances.
+    // Note that this code needs to be thread-safe, as multiple
+    // threads might invoke this callback at the same time.
 
-<span class="w">    </span><span class="c1">// Common code for CollectData and EnumerateInstances.</span>
-<span class="w">    </span><span class="c1">// Note that this code needs to be thread-safe, as multiple</span>
-<span class="w">    </span><span class="c1">// threads might invoke this callback at the same time.</span>
+    for (Instance : InstanceList) { // Pseudocode, need thread-safe enumeration
+        <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status;
 
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">Instance</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">InstanceList</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// Pseudocode, need thread-safe enumeration</span>
-<span class="w">        </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
+        // Optional optimization:
+        // if (MaskInfo-&gt;InstanceId != PCW_ANY_INSTANCE_ID &amp;&amp; Instance-&gt;Id != MaskInfo-&gt;InstanceId) {
+        //     continue;
+        // }
 
-<span class="w">        </span><span class="c1">// Optional optimization:</span>
-<span class="w">        </span><span class="c1">// if (MaskInfo-&gt;InstanceId != PCW_ANY_INSTANCE_ID &amp;&amp; Instance-&gt;Id != MaskInfo-&gt;InstanceId) {</span>
-<span class="w">        </span><span class="c1">//     continue;</span>
-<span class="w">        </span><span class="c1">// }</span>
+        // Note that in most cases, you'll use a CTRPP-generated Add wrapper instead of directly
+        // calling <a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a>.
+        Status = <a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a>(MaskInfo-&gt;Buffer,
+                                &amp;Instance-&gt;Name,
+                                Instance-&gt;Id,
+                                1, // Number of items in PcwData array
+                                &amp;Instance-&gt;PcwData);
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
+            return Status;
+        }
+    }
 
-<span class="w">        </span><span class="c1">// Note that in most cases, you&#39;ll use a CTRPP-generated Add wrapper instead of directly</span>
-<span class="w">        </span><span class="c1">// calling <a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a>.</span>
-<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></span><span class="p">(</span><span class="n">MaskInfo</span><span class="o">-&gt;</span><span class="n">Buffer</span><span class="p">,</span>
-<span class="w">                                </span><span class="o">&amp;</span><span class="n">Instance</span><span class="o">-&gt;</span><span class="n">Name</span><span class="p">,</span>
-<span class="w">                                </span><span class="n">Instance</span><span class="o">-&gt;</span><span class="n">Id</span><span class="p">,</span>
-<span class="w">                                </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="c1">// Number of items in PcwData array</span>
-<span class="w">                                </span><span class="o">&amp;</span><span class="n">Instance</span><span class="o">-&gt;</span><span class="n">PcwData</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
-<span class="p">}</span>
+    return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+}
 </code></pre>
-</div>
-
 <p>Most counterset providers use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/perfctrs/ctrpp">CTRPP</a> tool to process their counterset manifest and generate helper functions, including functions wrapping <code><a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a></code> (CTRPP generates the counter descriptors) and <code><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></code> (CTRPP generates code for wrapping the provider's data structures into the format required by <code><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></code>).</p>
-
 <p>For reference in this example, the following is the CTRPP-generated Register function for the <code>KCS.man</code> manifest from the KCS sample.</p>
+<pre lang="cpp"><code><a href="extern_c" title="#define EXTERN_C extern &quot;C&quot;">EXTERN_C</a> FORCEINLINE <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+KcsRegisterGeometricWave(
+    __in_opt PPCW_CALLBACK Callback,
+    __in_opt PVOID CallbackContext
+    )
+{
+    <a href="pcw_registration_information" title="typedef struct _PCW_REGISTRATION_INFORMATION {&#10;  ULONG                   Version;&#10;  PCUNICODE_STRING        Name;&#10;  ULONG                   CounterCount;&#10;  PPCW_COUNTER_DESCRIPTOR Counters;&#10;  PPCW_CALLBACK           Callback;&#10;  PVOID                   CallbackContext;&#10;  PCW_REGISTRATION_FLAGS  Flags;&#10;} PCW_REGISTRATION_INFORMATION, *PPCW_REGISTRATION_INFORMATION;">PCW_REGISTRATION_INFORMATION</a> RegInfo;
+    <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> Name = <a href="rtl_constant_string" title="#define RTL_CONSTANT_STRING(s) \&#10;{ \&#10;    sizeof( s ) - sizeof( (s)[0] ), \&#10;    sizeof( s ) / (sizeof(_RTL_CONSTANT_STRING_type_check(s))), \&#10;    _RTL_CONSTANT_STRING_remove_const_macro(s) \&#10;}">RTL_CONSTANT_STRING</a>(L&quot;Geometric Waves&quot;);
+    <a href="pcw_counter_descriptor" title="typedef struct _PCW_COUNTER_DESCRIPTOR {&#10;  USHORT Id;&#10;  USHORT StructIndex;&#10;  USHORT Offset;&#10;  USHORT Size;&#10;} PCW_COUNTER_DESCRIPTOR, *PPCW_COUNTER_DESCRIPTOR;">PCW_COUNTER_DESCRIPTOR</a> Descriptors[] = {
+        { 1, 0, <a href="field_offset" title="void FIELD_OFFSET(&#10;  type,&#10;  field&#10;);">FIELD_OFFSET</a>(GEOMETRIC_WAVE_VALUES, Triangle), RTL_FIELD_SIZE(GEOMETRIC_WAVE_VALUES, Triangle)},
+        { 2, 0, <a href="field_offset" title="void FIELD_OFFSET(&#10;  type,&#10;  field&#10;);">FIELD_OFFSET</a>(GEOMETRIC_WAVE_VALUES, Square), RTL_FIELD_SIZE(GEOMETRIC_WAVE_VALUES, Square)},
+    };
 
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="extern_c" title="#define EXTERN_C extern &quot;C&quot;">EXTERN_C</a></span><span class="w"> </span><span class="n">FORCEINLINE</span><span class="w"> </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="n">KcsRegisterGeometricWave</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in_opt</span><span class="w"> </span><span class="n">PPCW_CALLBACK</span><span class="w"> </span><span class="n">Callback</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in_opt</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">CallbackContext</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="pcw_registration_information" title="typedef struct _PCW_REGISTRATION_INFORMATION {&#10;  ULONG                   Version;&#10;  PCUNICODE_STRING        Name;&#10;  ULONG                   CounterCount;&#10;  PPCW_COUNTER_DESCRIPTOR Counters;&#10;  PPCW_CALLBACK           Callback;&#10;  PVOID                   CallbackContext;&#10;  PCW_REGISTRATION_FLAGS  Flags;&#10;} PCW_REGISTRATION_INFORMATION, *PPCW_REGISTRATION_INFORMATION;">PCW_REGISTRATION_INFORMATION</a></span><span class="w"> </span><span class="n">RegInfo</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></span><span class="w"> </span><span class="n">Name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="rtl_constant_string" title="#define RTL_CONSTANT_STRING(s) \&#10;{ \&#10;    sizeof( s ) - sizeof( (s)[0] ), \&#10;    sizeof( s ) / (sizeof(_RTL_CONSTANT_STRING_type_check(s))), \&#10;    _RTL_CONSTANT_STRING_remove_const_macro(s) \&#10;}">RTL_CONSTANT_STRING</a></span><span class="p">(</span><span class="sa">L</span><span class="s">&quot;Geometric Waves&quot;</span><span class="p">);</span>
-<span class="w">    </span><span class="n"><a href="pcw_counter_descriptor" title="typedef struct _PCW_COUNTER_DESCRIPTOR {&#10;  USHORT Id;&#10;  USHORT StructIndex;&#10;  USHORT Offset;&#10;  USHORT Size;&#10;} PCW_COUNTER_DESCRIPTOR, *PPCW_COUNTER_DESCRIPTOR;">PCW_COUNTER_DESCRIPTOR</a></span><span class="w"> </span><span class="n">Descriptors</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="p">{</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n"><a href="field_offset" title="void FIELD_OFFSET(&#10;  type,&#10;  field&#10;);">FIELD_OFFSET</a></span><span class="p">(</span><span class="n">GEOMETRIC_WAVE_VALUES</span><span class="p">,</span><span class="w"> </span><span class="n">Triangle</span><span class="p">),</span><span class="w"> </span><span class="n">RTL_FIELD_SIZE</span><span class="p">(</span><span class="n">GEOMETRIC_WAVE_VALUES</span><span class="p">,</span><span class="w"> </span><span class="n">Triangle</span><span class="p">)},</span>
-<span class="w">        </span><span class="p">{</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n"><a href="field_offset" title="void FIELD_OFFSET(&#10;  type,&#10;  field&#10;);">FIELD_OFFSET</a></span><span class="p">(</span><span class="n">GEOMETRIC_WAVE_VALUES</span><span class="p">,</span><span class="w"> </span><span class="n">Square</span><span class="p">),</span><span class="w"> </span><span class="n">RTL_FIELD_SIZE</span><span class="p">(</span><span class="n">GEOMETRIC_WAVE_VALUES</span><span class="p">,</span><span class="w"> </span><span class="n">Square</span><span class="p">)},</span>
-<span class="w">    </span><span class="p">};</span>
+    PAGED_CODE();
 
-<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
+    <a href="rtlzeromemory" title="VOID RtlZeroMemory(&#10;  _Out_ VOID UNALIGNED *Destination,&#10;  _In_  SIZE_T         Length&#10;);">RtlZeroMemory</a>(&amp;RegInfo, sizeof RegInfo);
 
-<span class="w">    </span><span class="n"><a href="rtlzeromemory" title="VOID RtlZeroMemory(&#10;  _Out_ VOID UNALIGNED *Destination,&#10;  _In_  SIZE_T         Length&#10;);">RtlZeroMemory</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">RegInfo</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="n">RegInfo</span><span class="p">);</span>
+    RegInfo.Version = PCW_CURRENT_VERSION;
+    RegInfo.Counters = Descriptors;
+    RegInfo.CounterCount = RTL_NUMBER_OF(Descriptors);
+    RegInfo.Callback = Callback;
+    RegInfo.CallbackContext = CallbackContext;
+    RegInfo.Name = &amp;Name;
 
-<span class="w">    </span><span class="n">RegInfo</span><span class="p">.</span><span class="n">Version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PCW_CURRENT_VERSION</span><span class="p">;</span>
-<span class="w">    </span><span class="n">RegInfo</span><span class="p">.</span><span class="n">Counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Descriptors</span><span class="p">;</span>
-<span class="w">    </span><span class="n">RegInfo</span><span class="p">.</span><span class="n">CounterCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RTL_NUMBER_OF</span><span class="p">(</span><span class="n">Descriptors</span><span class="p">);</span>
-<span class="w">    </span><span class="n">RegInfo</span><span class="p">.</span><span class="n">Callback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Callback</span><span class="p">;</span>
-<span class="w">    </span><span class="n">RegInfo</span><span class="p">.</span><span class="n">CallbackContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallbackContext</span><span class="p">;</span>
-<span class="w">    </span><span class="n">RegInfo</span><span class="p">.</span><span class="n">Name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Name</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n"><a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">KcsGeometricWave</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">RegInfo</span><span class="p">);</span>
-<span class="p">}</span>
+    return <a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a>(&amp;KcsGeometricWave, &amp;RegInfo);
+}
 </code></pre>
-</div>
-
 <p>The counterset provider implements the <code>PCW_CALLBACK</code> function to handle consumer requests. The following code example shows a <code>PCW_CALLBACK</code> function named <code>KcsGeometricWaveCallback</code> that enumerates and collects simulated data. (Note that <code>KcsAddGeometricWave</code> is a CTRPP-generated helper function that calls <code><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></code>.)</p>
+<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+KcsAddGeometricInstance (
+    _In_ PPCW_BUFFER Buffer,
+    _In_ PCWSTR Name,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Id,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MinimalValue,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Amplitude
+    )
+{
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Index;
+    LARGE_INTEGER Timestamp;
+    <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> UnicodeName;
+    GEOMETRIC_WAVE_VALUES Values;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="nf">KcsAddGeometricInstance</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">PPCW_BUFFER</span><span class="w"> </span><span class="n">Buffer</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">PCWSTR</span><span class="w"> </span><span class="n">Name</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">Id</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">MinimalValue</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">Amplitude</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">Index</span><span class="p">;</span>
-<span class="w">    </span><span class="n">LARGE_INTEGER</span><span class="w"> </span><span class="n">Timestamp</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></span><span class="w"> </span><span class="n">UnicodeName</span><span class="p">;</span>
-<span class="w">    </span><span class="n">GEOMETRIC_WAVE_VALUES</span><span class="w"> </span><span class="n">Values</span><span class="p">;</span>
+    PAGED_CODE();
 
-<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
+    <a href="kequerysystemtime" title="VOID KeQuerySystemTime(&#10;  [out] PLARGE_INTEGER CurrentTime&#10;);">KeQuerySystemTime</a>(&amp;Timestamp);
 
-<span class="w">    </span><span class="n"><a href="kequerysystemtime" title="VOID KeQuerySystemTime(&#10;  [out] PLARGE_INTEGER CurrentTime&#10;);">KeQuerySystemTime</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">Timestamp</span><span class="p">);</span>
+    Index = (Timestamp.QuadPart / 10000000) % 10;
 
-<span class="w">    </span><span class="n">Index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Timestamp</span><span class="p">.</span><span class="n">QuadPart</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">10000000</span><span class="p">)</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span>
+    Values.Triangle = MinimalValue + Amplitude * abs(5 - Index) / 5;
+    Values.Square = MinimalValue + Amplitude * (Index &lt; 5);
 
-<span class="w">    </span><span class="n">Values</span><span class="p">.</span><span class="n">Triangle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MinimalValue</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Amplitude</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">abs</span><span class="p">(</span><span class="mi">5</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">Index</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span>
-<span class="w">    </span><span class="n">Values</span><span class="p">.</span><span class="n">Square</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MinimalValue</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Amplitude</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">Index</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">5</span><span class="p">);</span>
+    <a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;UnicodeName, Name);
 
-<span class="w">    </span><span class="n"><a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">UnicodeName</span><span class="p">,</span><span class="w"> </span><span class="n">Name</span><span class="p">);</span>
+    return KcsAddGeometricWave(Buffer, &amp;UnicodeName, Id, &amp;Values);
+}
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">KcsAddGeometricWave</span><span class="p">(</span><span class="n">Buffer</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">UnicodeName</span><span class="p">,</span><span class="w"> </span><span class="n">Id</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Values</span><span class="p">);</span>
-<span class="p">}</span>
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NTAPI
+KcsGeometricWaveCallback (
+    __in <a href="pcw_callback_type" title="typedef enum _PCW_CALLBACK_TYPE {&#10;  PcwCallbackAddCounter,&#10;  PcwCallbackRemoveCounter,&#10;  PcwCallbackEnumerateInstances,&#10;  PcwCallbackCollectData&#10;} PCW_CALLBACK_TYPE, *PPCW_CALLBACK_TYPE;">PCW_CALLBACK_TYPE</a> Type,
+    __in <a href="pcw_callback_information" title="typedef union _PCW_CALLBACK_INFORMATION {&#10;  PCW_COUNTER_INFORMATION AddCounter;&#10;  PCW_COUNTER_INFORMATION RemoveCounter;&#10;  PCW_MASK_INFORMATION    EnumerateInstances;&#10;  PCW_MASK_INFORMATION    CollectData;&#10;} PCW_CALLBACK_INFORMATION, *PPCW_CALLBACK_INFORMATION;">PPCW_CALLBACK_INFORMATION</a> Info,
+    __in_opt PVOID Context
+    )
+{
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status;
+    <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> UnicodeName;
 
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">NTAPI</span>
-<span class="n">KcsGeometricWaveCallback</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="pcw_callback_type" title="typedef enum _PCW_CALLBACK_TYPE {&#10;  PcwCallbackAddCounter,&#10;  PcwCallbackRemoveCounter,&#10;  PcwCallbackEnumerateInstances,&#10;  PcwCallbackCollectData&#10;} PCW_CALLBACK_TYPE, *PPCW_CALLBACK_TYPE;">PCW_CALLBACK_TYPE</a></span><span class="w"> </span><span class="n">Type</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="pcw_callback_information" title="typedef union _PCW_CALLBACK_INFORMATION {&#10;  PCW_COUNTER_INFORMATION AddCounter;&#10;  PCW_COUNTER_INFORMATION RemoveCounter;&#10;  PCW_MASK_INFORMATION    EnumerateInstances;&#10;  PCW_MASK_INFORMATION    CollectData;&#10;} PCW_CALLBACK_INFORMATION, *PPCW_CALLBACK_INFORMATION;">PPCW_CALLBACK_INFORMATION</a></span><span class="w"> </span><span class="n">Info</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in_opt</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></span><span class="w"> </span><span class="n">UnicodeName</span><span class="p">;</span>
+    UNREFERENCED_PARAMETER(Context);
 
-<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">Context</span><span class="p">);</span>
+    PAGED_CODE();
 
-<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
+    switch (Type) {
+    case PcwCallbackEnumerateInstances:
 
-<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">Type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">PcwCallbackEnumerateInstances</span><span class="p">:</span>
+        //
+        // Instances are being enumerated, so we add them without values.
+        //
 
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="c1">// Instances are being enumerated, so we add them without values.</span>
-<span class="w">        </span><span class="c1">//</span>
+        <a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;UnicodeName, L&quot;Small Wave&quot;);
+        Status = KcsAddGeometricWave(Info-&gt;EnumerateInstances.Buffer,
+                                     &amp;UnicodeName,
+                                     0,
+                                     NULL);
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
+            return Status;
+        }
 
-<span class="w">        </span><span class="n"><a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">UnicodeName</span><span class="p">,</span><span class="w"> </span><span class="sa">L</span><span class="s">&quot;Small Wave&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KcsAddGeometricWave</span><span class="p">(</span><span class="n">Info</span><span class="o">-&gt;</span><span class="n">EnumerateInstances</span><span class="p">.</span><span class="n">Buffer</span><span class="p">,</span>
-<span class="w">                                     </span><span class="o">&amp;</span><span class="n">UnicodeName</span><span class="p">,</span>
-<span class="w">                                     </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">                                     </span><span class="nb">NULL</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+        <a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;UnicodeName, L&quot;Medium Wave&quot;);
+        Status = KcsAddGeometricWave(Info-&gt;EnumerateInstances.Buffer,
+                                     &amp;UnicodeName,
+                                     1,
+                                     NULL);
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
+            return Status;
+        }
 
-<span class="w">        </span><span class="n"><a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">UnicodeName</span><span class="p">,</span><span class="w"> </span><span class="sa">L</span><span class="s">&quot;Medium Wave&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KcsAddGeometricWave</span><span class="p">(</span><span class="n">Info</span><span class="o">-&gt;</span><span class="n">EnumerateInstances</span><span class="p">.</span><span class="n">Buffer</span><span class="p">,</span>
-<span class="w">                                     </span><span class="o">&amp;</span><span class="n">UnicodeName</span><span class="p">,</span>
-<span class="w">                                     </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                                     </span><span class="nb">NULL</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+        <a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;UnicodeName, L&quot;Large Wave&quot;);
+        Status = KcsAddGeometricWave(Info-&gt;EnumerateInstances.Buffer,
+                                     &amp;UnicodeName,
+                                     2,
+                                     NULL);
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
+            return Status;
+        }
 
-<span class="w">        </span><span class="n"><a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">UnicodeName</span><span class="p">,</span><span class="w"> </span><span class="sa">L</span><span class="s">&quot;Large Wave&quot;</span><span class="p">);</span>
-<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KcsAddGeometricWave</span><span class="p">(</span><span class="n">Info</span><span class="o">-&gt;</span><span class="n">EnumerateInstances</span><span class="p">.</span><span class="n">Buffer</span><span class="p">,</span>
-<span class="w">                                     </span><span class="o">&amp;</span><span class="n">UnicodeName</span><span class="p">,</span>
-<span class="w">                                     </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">                                     </span><span class="nb">NULL</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+        break;
 
-<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+ case PcwCallbackCollectData:
 
-<span class="w"> </span><span class="k">case</span><span class="w"> </span><span class="no">PcwCallbackCollectData</span><span class="p">:</span>
+        //
+        // Add values for 3 instances of Geometric Wave Counterset.
+        //
 
-<span class="w">        </span><span class="c1">//</span>
-<span class="w">        </span><span class="c1">// Add values for 3 instances of Geometric Wave Counterset.</span>
-<span class="w">        </span><span class="c1">//</span>
+        Status = KcsAddGeometricInstance(Info-&gt;CollectData.Buffer,
+                                         L&quot;Small Wave&quot;,
+                                         0,
+                                         40,
+                                         20);
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
+            return Status;
+        }
 
-<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KcsAddGeometricInstance</span><span class="p">(</span><span class="n">Info</span><span class="o">-&gt;</span><span class="n">CollectData</span><span class="p">.</span><span class="n">Buffer</span><span class="p">,</span>
-<span class="w">                                         </span><span class="sa">L</span><span class="s">&quot;Small Wave&quot;</span><span class="p">,</span>
-<span class="w">                                         </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">                                         </span><span class="mi">40</span><span class="p">,</span>
-<span class="w">                                         </span><span class="mi">20</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+        Status = KcsAddGeometricInstance(Info-&gt;CollectData.Buffer,
+                                         L&quot;Medium Wave&quot;,
+                                         1,
+                                         30,
+                                         40);
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
+            return Status;
+        }
 
-<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KcsAddGeometricInstance</span><span class="p">(</span><span class="n">Info</span><span class="o">-&gt;</span><span class="n">CollectData</span><span class="p">.</span><span class="n">Buffer</span><span class="p">,</span>
-<span class="w">                                         </span><span class="sa">L</span><span class="s">&quot;Medium Wave&quot;</span><span class="p">,</span>
-<span class="w">                                         </span><span class="mi">1</span><span class="p">,</span>
-<span class="w">                                         </span><span class="mi">30</span><span class="p">,</span>
-<span class="w">                                         </span><span class="mi">40</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+        Status = KcsAddGeometricInstance(Info-&gt;CollectData.Buffer,
+                                         L&quot;Large Wave&quot;,
+                                         2,
+                                         20,
+                                         60);
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
+            return Status;
+        }
 
-<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KcsAddGeometricInstance</span><span class="p">(</span><span class="n">Info</span><span class="o">-&gt;</span><span class="n">CollectData</span><span class="p">.</span><span class="n">Buffer</span><span class="p">,</span>
-<span class="w">                                         </span><span class="sa">L</span><span class="s">&quot;Large Wave&quot;</span><span class="p">,</span>
-<span class="w">                                         </span><span class="mi">2</span><span class="p">,</span>
-<span class="w">                                         </span><span class="mi">20</span><span class="p">,</span>
-<span class="w">                                         </span><span class="mi">60</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
+        break;
+    }
 
-<span class="w">        </span><span class="k">break</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
-<span class="p">}</span>
+    return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+}
 </code></pre>
-</div>
-
 <p>In the <code><a href="driverentry" title="NTSTATUS DriverEntry(&#10;  [in] PDRIVER_OBJECT  DriverObject,&#10;  [in] PUNICODE_STRING RegistryPath&#10;);">DriverEntry</a></code> routine of the KCS sample, the <code>KcsGeometricWaveCallback</code> function is specified as the <code>Callback</code> when <code>KcsRegisterGeometricWave</code> registers the counterset.</p>
+<pre lang="cpp"><code>    //
+    // Register Countersets during <a href="driverentry" title="NTSTATUS DriverEntry(&#10;  [in] PDRIVER_OBJECT  DriverObject,&#10;  [in] PUNICODE_STRING RegistryPath&#10;);">DriverEntry</a>. (TODO: Unregister at driver unload.)
+    //
 
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Register Countersets during <a href="driverentry" title="NTSTATUS DriverEntry(&#10;  [in] PDRIVER_OBJECT  DriverObject,&#10;  [in] PUNICODE_STRING RegistryPath&#10;);">DriverEntry</a>. (TODO: Unregister at driver unload.)</span>
-<span class="w">    </span><span class="c1">//</span>
-
-<span class="w">    </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KcsRegisterGeometricWave</span><span class="p">(</span><span class="n">KcsGeometricWaveCallback</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
+    Status = KcsRegisterGeometricWave(KcsGeometricWaveCallback, NULL);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
+        return Status;
+    }
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a></p>
-
 <p><a href="pcwaddinstance" title="NTSTATUS PcwAddInstance(&#10;  [in] PPCW_BUFFER      Buffer,&#10;  [in] PCUNICODE_STRING Name,&#10;  [in] ULONG            Id,&#10;  [in] ULONG            Count,&#10;  [in] PPCW_DATA        Data&#10;);">PcwAddInstance</a></p>
-
 <p><a href="pcwcreateinstance" title="NTSTATUS PcwCreateInstance(&#10;  [out] PPCW_INSTANCE     *Instance,&#10;  [in]  PPCW_REGISTRATION Registration,&#10;  [in]  PCUNICODE_STRING  Name,&#10;  [in]  ULONG             Count,&#10;  [in]  PPCW_DATA         Data&#10;);">PcwCreateInstance</a></p>
-
 <p><a href="pcw_callback_type" title="typedef enum _PCW_CALLBACK_TYPE {&#10;  PcwCallbackAddCounter,&#10;  PcwCallbackRemoveCounter,&#10;  PcwCallbackEnumerateInstances,&#10;  PcwCallbackCollectData&#10;} PCW_CALLBACK_TYPE, *PPCW_CALLBACK_TYPE;">PCW_CALLBACK_TYPE</a></p>
-
 <p><strong><a href="pcw_callback_information" title="typedef union _PCW_CALLBACK_INFORMATION {&#10;  PCW_COUNTER_INFORMATION AddCounter;&#10;  PCW_COUNTER_INFORMATION RemoveCounter;&#10;  PCW_MASK_INFORMATION    EnumerateInstances;&#10;  PCW_MASK_INFORMATION    CollectData;&#10;} PCW_CALLBACK_INFORMATION, *PPCW_CALLBACK_INFORMATION;">PCW_CALLBACK_INFORMATION</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/perfctrs/ctrpp">CTRPP</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/bb756968(v=msdn.10)">Performance Counter Library (PERFLIB version 2.0)</a></p>
 <hr>
 <div class="ntdoc-description-links">

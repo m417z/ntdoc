@@ -68,131 +68,94 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfRegistryAssignMemory function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfRegistryAssignMemory</strong> method assigns data that is contained in a specified memory buffer to a specified value name in the registry.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Key</code> [in]</h3>
-
 <p>A handle to a registry-key object that represents an opened registry key.</p>
-
 <h3><code>ValueName</code> [in]</h3>
-
 <p>A pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that contains a value name.</p>
-
 <h3><code>ValueType</code> [in]</h3>
-
 <p>A value that identifies the data type. For a list of data type values, see the <strong>Type</strong> member of <a href="key_value_basic_information" title="typedef struct _KEY_VALUE_BASIC_INFORMATION&#10;{&#10;    ULONG TitleIndex;&#10;    ULONG Type;&#10;    ULONG NameLength;&#10;    _Field_size_bytes_(NameLength) WCHAR Name[1];&#10;} KEY_VALUE_BASIC_INFORMATION, *PKEY_VALUE_BASIC_INFORMATION;">KEY_VALUE_BASIC_INFORMATION</a>.</p>
-
 <h3><code>Memory</code> [in]</h3>
-
 <p>A handle to a framework memory object. This object represents a buffer that contains data that will be assigned to the value name that <em>ValueName</em> points to.</p>
-
 <h3><code>MemoryOffsets</code> [in, optional]</h3>
-
 <p>A pointer to a driver-supplied <a href="wdfmemory_offset" title="typedef struct _WDFMEMORY_OFFSET {&#10;  size_t BufferOffset;&#10;  size_t BufferLength;&#10;} WDFMEMORY_OFFSET, *PWDFMEMORY_OFFSET;">WDFMEMORY_OFFSET</a> structure that identifies a subsection of the buffer that <em>Memory</em> specifies. This parameter is optional and can be <strong>NULL</strong>.</p>
-
 <h2>Return value</h2>
-
 <p><strong>WdfRegistryAssignMemory</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, the method might return one of the following values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
-  <td>WdfRegistryAssignMemory was not called at IRQL = PASSIVE_LEVEL.</td>
+<td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
+<td>WdfRegistryAssignMemory was not called at IRQL = PASSIVE_LEVEL.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
-  <td>An invalid parameter was specified.</td>
+<td><strong>STATUS_INVALID_PARAMETER</strong></td>
+<td>An invalid parameter was specified.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_ACCESS_DENIED</strong></td>
-  <td>The driver did not open the registry key with KEY_SET_VALUE access.</td>
+<td><strong>STATUS_ACCESS_DENIED</strong></td>
+<td>The driver did not open the registry key with KEY_SET_VALUE access.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INTEGER_OVERFLOW</strong></td>
-  <td>The contents of the <a href="wdfmemory_offset" title="typedef struct _WDFMEMORY_OFFSET {&#10;  size_t BufferOffset;&#10;  size_t BufferLength;&#10;} WDFMEMORY_OFFSET, *PWDFMEMORY_OFFSET;">WDFMEMORY_OFFSET</a> structure that the <em>MemoryOffsets</em> parameter specified were invalid.</td>
+<td><strong>STATUS_INTEGER_OVERFLOW</strong></td>
+<td>The contents of the <a href="wdfmemory_offset" title="typedef struct _WDFMEMORY_OFFSET {&#10;  size_t BufferOffset;&#10;  size_t BufferLength;&#10;} WDFMEMORY_OFFSET, *PWDFMEMORY_OFFSET;">WDFMEMORY_OFFSET</a> structure that the <em>MemoryOffsets</em> parameter specified were invalid.</td>
 </tr>
 </tbody>
 </table>
-
 <p>This method also might return other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
 <h2>Remarks</h2>
-
 <p>If the value name that the <em>ValueName</em> parameter specifies already exists, <strong>WdfRegistryAssignMemory</strong> updates the value's data.</p>
-
 <p>For more information about registry-key objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-the-registry-in-wdf-drivers">Using the Registry in Framework-Based Drivers</a>.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example creates a framework memory object, loads the object's buffer with fake data, and assigns the buffer's contents to a registry value.</p>
+<pre lang="cpp"><code>PUCHAR pBuffer;
+WDFMEMORY memory;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
+<a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> i;
+<a href="declare_unicode_string_size" title="#define DECLARE_UNICODE_STRING_SIZE(_var, _size) \&#10;WCHAR _var ## _buffer[_size]; \&#10;UNICODE_STRING _var = { 0, (_size) * sizeof(WCHAR) , _var ## _buffer }">DECLARE_UNICODE_STRING_SIZE</a>(valueName, L&quot;MyValueName&quot;);
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">PUCHAR</span><span class="w"> </span><span class="n">pBuffer</span><span class="p">;</span>
-<span class="n">WDFMEMORY</span><span class="w"> </span><span class="n">memory</span><span class="p">;</span>
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
-<span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
-<span class="n"><a href="declare_unicode_string_size" title="#define DECLARE_UNICODE_STRING_SIZE(_var, _size) \&#10;WCHAR _var ## _buffer[_size]; \&#10;UNICODE_STRING _var = { 0, (_size) * sizeof(WCHAR) , _var ## _buffer }">DECLARE_UNICODE_STRING_SIZE</a></span><span class="p">(</span><span class="n">valueName</span><span class="p">,</span><span class="w"> </span><span class="sa">L</span><span class="s">&quot;MyValueName&quot;</span><span class="p">);</span>
+status = <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a>(
+                         WDF_NO_OBJECT_ATTRIBUTES,
+                         NonPagedPool,
+                         0,
+                         MEMORY_LENGTH,
+                         &amp;memory,
+                         (PVOID*)&amp;pBuffer
+                         );
+if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
 
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a></span><span class="p">(</span>
-<span class="w">                         </span><span class="n">WDF_NO_OBJECT_ATTRIBUTES</span><span class="p">,</span>
-<span class="w">                         </span><span class="n">NonPagedPool</span><span class="p">,</span>
-<span class="w">                         </span><span class="mi">0</span><span class="p">,</span>
-<span class="w">                         </span><span class="n">MEMORY_LENGTH</span><span class="p">,</span>
-<span class="w">                         </span><span class="o">&amp;</span><span class="n">memory</span><span class="p">,</span>
-<span class="w">                         </span><span class="p">(</span><span class="n">PVOID</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">pBuffer</span>
-<span class="w">                         </span><span class="p">);</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+    // Fill the buffer with fake data.
+    for (i = 1; i &lt;= MEMORY_LENGTH; i++) {
+        pBuffer[i-1] = i;
+    }
 
-<span class="w">    </span><span class="c1">// Fill the buffer with fake data.</span>
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">MEMORY_LENGTH</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">pBuffer</span><span class="p">[</span><span class="n">i</span><span class="mi">-1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfRegistryAssignMemory</span><span class="p">(</span>
-<span class="w">                                     </span><span class="n">Key</span><span class="p">,</span>
-<span class="w">                                     </span><span class="o">&amp;</span><span class="n">valueName</span><span class="p">,</span>
-<span class="w">                                     </span><span class="n">REG_BINARY</span><span class="p">,</span>
-<span class="w">                                     </span><span class="n">memory</span><span class="p">,</span>
-<span class="w">                                     </span><span class="nb">NULL</span>
-<span class="w">                                     </span><span class="p">);</span>
-<span class="p">}</span>
+    status = WdfRegistryAssignMemory(
+                                     Key,
+                                     &amp;valueName,
+                                     REG_BINARY,
+                                     memory,
+                                     NULL
+                                     );
+}
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="key_value_basic_information" title="typedef struct _KEY_VALUE_BASIC_INFORMATION&#10;{&#10;    ULONG TitleIndex;&#10;    ULONG Type;&#10;    ULONG NameLength;&#10;    _Field_size_bytes_(NameLength) WCHAR Name[1];&#10;} KEY_VALUE_BASIC_INFORMATION, *PKEY_VALUE_BASIC_INFORMATION;">KEY_VALUE_BASIC_INFORMATION</a></p>
-
 <p><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></p>
-
 <p><a href="wdfmemory_offset" title="typedef struct _WDFMEMORY_OFFSET {&#10;  size_t BufferOffset;&#10;  size_t BufferLength;&#10;} WDFMEMORY_OFFSET, *PWDFMEMORY_OFFSET;">WDFMEMORY_OFFSET</a></p>
-
 <p><a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a></p>
-
 <p><a href="wdfregistryassignmultistring" title="NTSTATUS WdfRegistryAssignMultiString(&#10;  [in] WDFKEY           Key,&#10;  [in] PCUNICODE_STRING ValueName,&#10;  [in] WDFCOLLECTION    StringsCollection&#10;);">WdfRegistryAssignMultiString</a></p>
-
 <p><a href="wdfregistryassignstring" title="NTSTATUS WdfRegistryAssignString(&#10;  [in] WDFKEY           Key,&#10;  [in] PCUNICODE_STRING ValueName,&#10;  [in] WDFSTRING        String&#10;);">WdfRegistryAssignString</a></p>
-
 <p><a href="wdfregistryassignulong" title="NTSTATUS WdfRegistryAssignULong(&#10;  [in] WDFKEY           Key,&#10;  [in] PCUNICODE_STRING ValueName,&#10;  [in] ULONG            Value&#10;);">WdfRegistryAssignULong</a></p>
-
 <p><a href="wdfregistryassignunicodestring" title="NTSTATUS WdfRegistryAssignUnicodeString(&#10;  [in] WDFKEY           Key,&#10;  [in] PCUNICODE_STRING ValueName,&#10;  [in] PCUNICODE_STRING Value&#10;);">WdfRegistryAssignUnicodeString</a></p>
-
 <p><a href="wdfregistryassignvalue" title="NTSTATUS WdfRegistryAssignValue(&#10;  [in] WDFKEY           Key,&#10;  [in] PCUNICODE_STRING ValueName,&#10;  [in] ULONG            ValueType,&#10;  [in] ULONG            ValueLength,&#10;  [in] PVOID            Value&#10;);">WdfRegistryAssignValue</a></p>
 <hr>
 <div class="ntdoc-description-links">

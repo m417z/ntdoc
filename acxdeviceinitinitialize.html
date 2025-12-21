@@ -65,72 +65,54 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>The client driver must call <strong>AcxDeviceInitInitialize</strong> in its <a href="evt_wdf_driver_device_add" title="EVT_WDF_DRIVER_DEVICE_ADD EvtWdfDriverDeviceAdd;&#10;&#10;NTSTATUS EvtWdfDriverDeviceAdd(&#10;  [in]      WDFDRIVER Driver,&#10;  [in, out] PWDFDEVICE_INIT DeviceInit&#10;)&#10;{...}">EVT_WDF_DRIVER_DEVICE_ADD</a> callback, before calling <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a>.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>DeviceInit</code></h3>
-
 <p>Pointer to a <a href="wdfdevice_init" title="struct WDFDEVICE_INIT {&#10;  ;      // Reserved.&#10;};">WDFDEVICE_INIT</a> structure representing the device to initialize.</p>
-
 <h3><code>Config</code></h3>
-
 <p>Pointer to an <a href="acx_deviceinit_config" title="typedef struct _ACX_DEVICEINIT_CONFIG {&#10;  ULONG                     Size;&#10;  ULONG                     Flags;&#10;  WDF_SYNCHRONIZATION_SCOPE SynchronizationScope;&#10;  WDF_EXECUTION_LEVEL       ExecutionLevel;&#10;  PVOID                     Context[ACX_DEVICEINIT_CONFIG_CONTEXT_SIZE];&#10;} ACX_DEVICEINIT_CONFIG, *PACX_DEVICEINIT_CONFIG;">ACX_DEVICEINIT_CONFIG</a> structure that has been initialized by calling the <a href="acx_deviceinit_config_init" title="VOID ACX_DEVICEINIT_CONFIG_INIT(&#10;  PACX_DEVICEINIT_CONFIG Config&#10;);">ACX_DEVICEINIT_CONFIG_INIT</a> function.</p>
-
 <h2>Return value</h2>
-
 <p><strong>AcxDeviceInitInitialize</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call was successful. Otherwise, it returns an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">NTSTATUS</a> error code.</p>
-
 <h2>Remarks</h2>
-
 <h3>Example</h3>
+<pre lang="cpp"><code>WDFDEVICE             Parent;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>              status;
+PWDFDEVICE_INIT       devInit = NULL;
+<a href="acx_deviceinit_config" title="typedef struct _ACX_DEVICEINIT_CONFIG {&#10;  ULONG                     Size;&#10;  ULONG                     Flags;&#10;  WDF_SYNCHRONIZATION_SCOPE SynchronizationScope;&#10;  WDF_EXECUTION_LEVEL       ExecutionLevel;&#10;  PVOID                     Context[ACX_DEVICEINIT_CONFIG_CONTEXT_SIZE];&#10;} ACX_DEVICEINIT_CONFIG, *PACX_DEVICEINIT_CONFIG;">ACX_DEVICEINIT_CONFIG</a> devInitCfg;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">WDFDEVICE</span><span class="w">             </span><span class="n">Parent</span><span class="p">;</span>
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">              </span><span class="n">status</span><span class="p">;</span>
-<span class="n">PWDFDEVICE_INIT</span><span class="w">       </span><span class="n">devInit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="n"><a href="acx_deviceinit_config" title="typedef struct _ACX_DEVICEINIT_CONFIG {&#10;  ULONG                     Size;&#10;  ULONG                     Flags;&#10;  WDF_SYNCHRONIZATION_SCOPE SynchronizationScope;&#10;  WDF_EXECUTION_LEVEL       ExecutionLevel;&#10;  PVOID                     Context[ACX_DEVICEINIT_CONFIG_CONTEXT_SIZE];&#10;} ACX_DEVICEINIT_CONFIG, *PACX_DEVICEINIT_CONFIG;">ACX_DEVICEINIT_CONFIG</a></span><span class="w"> </span><span class="n">devInitCfg</span><span class="p">;</span>
+// Code to initialize WDFDEVICE...
 
-<span class="c1">// Code to initialize WDFDEVICE...</span>
+//
+// Create a child audio device for this circuit.
+//
+devInit = <a href="wdfpdoinitallocate" title="PWDFDEVICE_INIT WdfPdoInitAllocate(&#10;  [in] WDFDEVICE ParentDevice&#10;);">WdfPdoInitAllocate</a>(Parent);
 
-<span class="c1">//</span>
-<span class="c1">// Create a child audio device for this circuit.</span>
-<span class="c1">//</span>
-<span class="n">devInit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfpdoinitallocate" title="PWDFDEVICE_INIT WdfPdoInitAllocate(&#10;  [in] WDFDEVICE ParentDevice&#10;);">WdfPdoInitAllocate</a></span><span class="p">(</span><span class="n">Parent</span><span class="p">);</span>
+if (NULL == devInit)
+{
+    status = STATUS_INSUFFICIENT_RESOURCES;
+    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
+    goto exit;
+}
 
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">NULL</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">devInit</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STATUS_INSUFFICIENT_RESOURCES</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">FALSE</span><span class="p">);</span>
-<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">exit</span><span class="p">;</span>
-<span class="p">}</span>
+//
+// Allow ACX to add any pre-requirement it needs on this device.
+//
+<a href="acx_deviceinit_config_init" title="VOID ACX_DEVICEINIT_CONFIG_INIT(&#10;  PACX_DEVICEINIT_CONFIG Config&#10;);">ACX_DEVICEINIT_CONFIG_INIT</a>(&amp;devInitCfg);
 
-<span class="c1">//</span>
-<span class="c1">// Allow ACX to add any pre-requirement it needs on this device.</span>
-<span class="c1">//</span>
-<span class="n"><a href="acx_deviceinit_config_init" title="VOID ACX_DEVICEINIT_CONFIG_INIT(&#10;  PACX_DEVICEINIT_CONFIG Config&#10;);">ACX_DEVICEINIT_CONFIG_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">devInitCfg</span><span class="p">);</span>
+devInitCfg.Flags |= AcxDeviceInitConfigRawDevice;
 
-<span class="n">devInitCfg</span><span class="p">.</span><span class="n">Flags</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="n">AcxDeviceInitConfigRawDevice</span><span class="p">;</span>
+status = AcxDeviceInitInitialize(devInit, &amp;devInitCfg);
 
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AcxDeviceInitInitialize</span><span class="p">(</span><span class="n">devInit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">devInitCfg</span><span class="p">);</span>
-
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">FALSE</span><span class="p">);</span>
-<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">exit</span><span class="p">;</span>
-<span class="p">}</span>
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
+{
+    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
+    goto exit;
+}
 </code></pre>
-</div>
-
 <h3>ACX requirements</h3>
-
 <p><strong>Minimum ACX version:</strong> 1.0</p>
-
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
-
 <h2>See also</h2>
-
 <ul>
 <li><a href="evt_wdf_driver_device_add" title="EVT_WDF_DRIVER_DEVICE_ADD EvtWdfDriverDeviceAdd;&#10;&#10;NTSTATUS EvtWdfDriverDeviceAdd(&#10;  [in]      WDFDRIVER Driver,&#10;  [in, out] PWDFDEVICE_INIT DeviceInit&#10;)&#10;{...}">EVT_WDF_DRIVER_DEVICE_ADD</a></li>
 <li><a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a></li>

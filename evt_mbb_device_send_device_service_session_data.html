@@ -69,92 +69,72 @@ VOID EvtMbbDeviceSendDeviceServiceSessionData(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_MBB_DEVICE_SEND_DEVICE_SERVICE_SESSION_DATA callback function</h1>
-
 <h2>Description</h2>
-
 <p>A client driver's <em>EvtMbbDeviceSendServiceSessionData</em> event callback function sends device service session data down to its modem device.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Device</code></h3>
-
 <p>A handle to a framework device object the client driver obtained from a previous call to <strong><a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a></strong>.</p>
-
 <h3><code>SessionId</code></h3>
-
 <p>The ID of the device service session obtained from a previous call to <strong><a href="mbbadaptergetsessionid" title="ULONG MbbAdapterGetSessionId(&#10;  NETADAPTER Adapter&#10;);">MbbAdapterGetSessionId</a></strong>.</p>
-
 <h3><code>Data</code></h3>
-
 <p>A WDFMEMORY object containing the data to pass to the device.</p>
-
 <h2>Prototype</h2>
+<pre lang="cpp"><code>//Declaration
 
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//Declaration</span>
+EVT_MBB_DEVICE_SEND_DEVICE_SERVICE_SESSION_DATA EvtMbbDeviceSendDeviceServiceSessionData;
 
-<span class="n">EVT_MBB_DEVICE_SEND_DEVICE_SERVICE_SESSION_DATA</span><span class="w"> </span><span class="n">EvtMbbDeviceSendDeviceServiceSessionData</span><span class="p">;</span>
+// Definition
 
-<span class="c1">// Definition</span>
+VOID EvtMbbDeviceSendDeviceServiceSessionData
+(
+	WDFDEVICE Device
+	DSS_SESSION_ID SessionId
+	WDFMEMORY Data
+)
+{...}
 
-<span class="n">VOID</span><span class="w"> </span><span class="nf">EvtMbbDeviceSendDeviceServiceSessionData</span>
-<span class="p">(</span>
-<span class="w">    </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span>
-<span class="w">    </span><span class="n">DSS_SESSION_ID</span><span class="w"> </span><span class="n">SessionId</span>
-<span class="w">    </span><span class="n">WDFMEMORY</span><span class="w"> </span><span class="n">Data</span>
-<span class="p">)</span>
-<span class="p">{...}</span>
 </code></pre>
-</div>
-
 <h2>Remarks</h2>
-
 <p>MBBCx invokes a client driver's <em>EvtMbbDeviceSendServiceSessionData</em> callback function when an application sends DSS data down to the modem device. After sending the data to the device asynchronously, the client driver must call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mbbcx/nf-mbbcx-mbbdevicesenddeviceservicesessiondatacomplete"><strong>MbbDeviceSendServiceSessionDataComplete</strong></a> so MBBCx can free the memory allocated for the data.</p>
-
 <h3>Example</h3>
-
 <p>The following example shows how a client might send DSS data down to its modem device. Error handling has been left out of this example for brevity and clarity.</p>
+<pre lang="C++"><code>VOID
+MyEvtMbbDeviceSendServiceSessionData(
+    _In_ WDFDEVICE Device,
+    _In_ DSS_SESSION_ID SessionId,
+    _In_ WDFMEMORY Data
+)
+{
+    // Get the device context and NETADAPTER context
+    PMY_DEVICE_CONTEXT deviceContext = GetMyDeviceContext(Device);
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="nf">MyEvtMbbDeviceSendServiceSessionData</span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">DSS_SESSION_ID</span><span class="w"> </span><span class="n">SessionId</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">WDFMEMORY</span><span class="w"> </span><span class="n">Data</span>
-<span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// Get the device context and NETADAPTER context</span>
-<span class="w">    </span><span class="n">PMY_DEVICE_CONTEXT</span><span class="w"> </span><span class="n">deviceContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetMyDeviceContext</span><span class="p">(</span><span class="n">Device</span><span class="p">);</span>
+    // Set up a driver-defined DSS packet structure
+    PMY_DSS_PACKET packet = NULL;
 
-<span class="w">    </span><span class="c1">// Set up a driver-defined DSS packet structure</span>
-<span class="w">    </span><span class="n">PMY_DSS_PACKET</span><span class="w"> </span><span class="n">packet</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+    // Get the data to send from the WDFMEMORY object
+    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> bufferSize = 0;
+    PVOID buffer = <a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a>(Data,
+                                      &amp;bufferSize);
 
-<span class="w">    </span><span class="c1">// Get the data to send from the WDFMEMORY object</span>
-<span class="w">    </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w"> </span><span class="n">bufferSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PVOID</span><span class="w"> </span><span class="n">buffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a></span><span class="p">(</span><span class="n">Data</span><span class="p">,</span>
-<span class="w">                                      </span><span class="o">&amp;</span><span class="n">bufferSize</span><span class="p">);</span>
+    // Populate the DSS packet
+    packet = MyAllocateDssPacket(Data,
+                                buffer,
+                                bufferSize,
+                                SessionId);
 
-<span class="w">    </span><span class="c1">// Populate the DSS packet</span>
-<span class="w">    </span><span class="n">packet</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MyAllocateDssPacket</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span>
-<span class="w">                                </span><span class="n">buffer</span><span class="p">,</span>
-<span class="w">                                </span><span class="n">bufferSize</span><span class="p">,</span>
-<span class="w">                                </span><span class="n">SessionId</span><span class="p">);</span>
+    // Send the data asynchronously, which returns STATUS_PENDING when successful
+    status = MyModemBusWriteData(deviceContext-&gt;BusHandle,
+                                 packet);
 
-<span class="w">    </span><span class="c1">// Send the data asynchronously, which returns STATUS_PENDING when successful</span>
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MyModemBusWriteData</span><span class="p">(</span><span class="n">deviceContext</span><span class="o">-&gt;</span><span class="n">BusHandle</span><span class="p">,</span>
-<span class="w">                                 </span><span class="n">packet</span><span class="p">);</span>
+    // Increment count of sent packets
+    deviceContext-&gt;DSSPacketsSentCount++;
 
-<span class="w">    </span><span class="c1">// Increment count of sent packets</span>
-<span class="w">    </span><span class="n">deviceContext</span><span class="o">-&gt;</span><span class="n">DSSPacketsSentCount</span><span class="o">++</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">// Clean up the memory</span>
-<span class="w">    </span><span class="n">MbbDeviceSendServiceSessionDataComplete</span><span class="p">(</span><span class="n">Data</span><span class="p">,</span>
-<span class="w">                                            </span><span class="n">status</span><span class="p">);</span>
-<span class="w">    </span><span class="n">MyCleanupDssPacket</span><span class="p">(</span><span class="n">packet</span><span class="p">);</span>
-<span class="p">}</span>
+    // Clean up the memory
+    MbbDeviceSendServiceSessionDataComplete(Data,
+                                            status);
+    MyCleanupDssPacket(packet);
+}
 </code></pre>
-</div>
-
 <h2>See also</h2>
 <hr>
 <div class="ntdoc-description-links">

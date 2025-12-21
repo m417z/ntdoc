@@ -65,79 +65,55 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfDmaEnablerWdmGetDmaAdapter function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF only]</p>
-
 <p>The <strong>WdfDmaEnablerWdmGetDmaAdapter</strong> method returns a pointer to a WDM <a href="padapter_object" title="typedef struct _DMA_ADAPTER {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  PDMA_OPERATIONS DmaOperations;&#10;} *PADAPTER_OBJECT, DMA_ADAPTER, *PDMA_ADAPTER;">DMA_ADAPTER</a> structure that is associated with a DMA enabler object.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>DmaEnabler</code> [in]</h3>
-
 <p>A handle to a DMA enabler object that the driver obtained from a previous call to <a href="wdfdmaenablercreate" title="NTSTATUS WdfDmaEnablerCreate(&#10;  [in]           WDFDEVICE               Device,&#10;  [in]           PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES  Attributes,&#10;  [out]          WDFDMAENABLER           *DmaEnablerHandle&#10;);">WdfDmaEnablerCreate</a>.</p>
-
 <h3><code>DmaDirection</code> [in]</h3>
-
 <p>A <a href="wdf_dma_direction" title="typedef enum _WDF_DMA_DIRECTION {&#10;  WdfDmaDirectionReadFromDevice = FALSE,&#10;  WdfDmaDirectionWriteToDevice = TRUE&#10;} WDF_DMA_DIRECTION;">WDF_DMA_DIRECTION</a>-typed value that specifies the direction of the DMA transfer operation. For more information, see the following Remarks section.</p>
-
 <h2>Return value</h2>
-
 <p><strong>WdfDmaEnablerWdmGetDmaAdapter</strong> returns a pointer to a <a href="padapter_object" title="typedef struct _DMA_ADAPTER {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  PDMA_OPERATIONS DmaOperations;&#10;} *PADAPTER_OBJECT, DMA_ADAPTER, *PDMA_ADAPTER;">DMA_ADAPTER</a> structure, or <strong>NULL</strong> if the <em>DmaDirection</em> parameter's value is invalid.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
 <h2>Remarks</h2>
-
 <p>When your driver calls <a href="wdfdmaenablercreate" title="NTSTATUS WdfDmaEnablerCreate(&#10;  [in]           WDFDEVICE               Device,&#10;  [in]           PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES  Attributes,&#10;  [out]          WDFDMAENABLER           *DmaEnablerHandle&#10;);">WdfDmaEnablerCreate</a>, the framework creates a separate <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/adapter-objects-and-dma">adapter object</a> for each direction if the driver specifies a duplex profile, and it creates a single adapter object if the driver does not specify a duplex profile.</p>
-
 <p>If your driver specified a duplex profile when it called <a href="wdfdmaenablercreate" title="NTSTATUS WdfDmaEnablerCreate(&#10;  [in]           WDFDEVICE               Device,&#10;  [in]           PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES  Attributes,&#10;  [out]          WDFDMAENABLER           *DmaEnablerHandle&#10;);">WdfDmaEnablerCreate</a>, the <strong>WdfDmaEnablerWdmGetDmaAdapter</strong> method's <em>DmaDirection</em> parameter's value must be <strong>WdfDmaDirectionReadFromDevice</strong> to obtain the <a href="padapter_object" title="typedef struct _DMA_ADAPTER {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  PDMA_OPERATIONS DmaOperations;&#10;} *PADAPTER_OBJECT, DMA_ADAPTER, *PDMA_ADAPTER;">DMA_ADAPTER</a> structure for read operations and <strong>WdfDmaDirectionWriteToDevice</strong> to obtain the <strong><a href="padapter_object" title="typedef struct _DMA_ADAPTER {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  PDMA_OPERATIONS DmaOperations;&#10;} *PADAPTER_OBJECT, DMA_ADAPTER, *PDMA_ADAPTER;">DMA_ADAPTER</a></strong> structure for write operations. If your driver did not specify a duplex profile, the driver can specify either <strong>WdfDmaDirectionReadFromDevice</strong> or <strong>WdfDmaDirectionWriteToDevice</strong>.</p>
-
 <p>The pointer that <strong>WdfDmaEnablerWdmGetDmaAdapter</strong> returns is valid until the DMA enabler object is deleted. If the driver provides an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_cleanup">EvtCleanupCallback</a> function for the DMA enabler object, the pointer is valid until the callback function returns.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example creates a DMA enabler object and then obtains pointers to the WDM <a href="padapter_object" title="typedef struct _DMA_ADAPTER {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  PDMA_OPERATIONS DmaOperations;&#10;} *PADAPTER_OBJECT, DMA_ADAPTER, *PDMA_ADAPTER;">DMA_ADAPTER</a> structures that the framework creates for read and write operations.</p>
+<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+<a href="wdf_dma_enabler_config" title="typedef struct _WDF_DMA_ENABLER_CONFIG {&#10;  ULONG                                    Size;&#10;  WDF_DMA_PROFILE                          Profile;&#10;  size_t                                   MaximumLength;&#10;  PFN_WDF_DMA_ENABLER_FILL                 EvtDmaEnablerFill;&#10;  PFN_WDF_DMA_ENABLER_FLUSH                EvtDmaEnablerFlush;&#10;  PFN_WDF_DMA_ENABLER_DISABLE              EvtDmaEnablerDisable;&#10;  PFN_WDF_DMA_ENABLER_ENABLE               EvtDmaEnablerEnable;&#10;  PFN_WDF_DMA_ENABLER_SELFMANAGED_IO_START EvtDmaEnablerSelfManagedIoStart;&#10;  PFN_WDF_DMA_ENABLER_SELFMANAGED_IO_STOP  EvtDmaEnablerSelfManagedIoStop;&#10;  ULONG                                    AddressWidthOverride;&#10;  ULONG                                    WdmDmaVersionOverride;&#10;  ULONG                                    Flags;&#10;} WDF_DMA_ENABLER_CONFIG, *PWDF_DMA_ENABLER_CONFIG;">WDF_DMA_ENABLER_CONFIG</a>  dmaConfig;
+WDFDMAENABLER  dmaEnabler;
+PDMA_ADAPTER  readAdapter, writeAdapter;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
-<span class="n"><a href="wdf_dma_enabler_config" title="typedef struct _WDF_DMA_ENABLER_CONFIG {&#10;  ULONG                                    Size;&#10;  WDF_DMA_PROFILE                          Profile;&#10;  size_t                                   MaximumLength;&#10;  PFN_WDF_DMA_ENABLER_FILL                 EvtDmaEnablerFill;&#10;  PFN_WDF_DMA_ENABLER_FLUSH                EvtDmaEnablerFlush;&#10;  PFN_WDF_DMA_ENABLER_DISABLE              EvtDmaEnablerDisable;&#10;  PFN_WDF_DMA_ENABLER_ENABLE               EvtDmaEnablerEnable;&#10;  PFN_WDF_DMA_ENABLER_SELFMANAGED_IO_START EvtDmaEnablerSelfManagedIoStart;&#10;  PFN_WDF_DMA_ENABLER_SELFMANAGED_IO_STOP  EvtDmaEnablerSelfManagedIoStop;&#10;  ULONG                                    AddressWidthOverride;&#10;  ULONG                                    WdmDmaVersionOverride;&#10;  ULONG                                    Flags;&#10;} WDF_DMA_ENABLER_CONFIG, *PWDF_DMA_ENABLER_CONFIG;">WDF_DMA_ENABLER_CONFIG</a></span><span class="w">  </span><span class="n">dmaConfig</span><span class="p">;</span>
-<span class="n">WDFDMAENABLER</span><span class="w">  </span><span class="n">dmaEnabler</span><span class="p">;</span>
-<span class="n">PDMA_ADAPTER</span><span class="w">  </span><span class="n">readAdapter</span><span class="p">,</span><span class="w"> </span><span class="n">writeAdapter</span><span class="p">;</span>
+<a href="wdf_dma_enabler_config_init" title="VOID WDF_DMA_ENABLER_CONFIG_INIT(&#10;  [out] PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in]  WDF_DMA_PROFILE         Profile,&#10;  [in]  size_t                  MaximumLength&#10;);">WDF_DMA_ENABLER_CONFIG_INIT</a>(
+                            &amp;dmaConfig,
+                            WdfDmaProfileScatterGatherDuplex,
+                            maxLength
+                            );
+status = <a href="wdfdmaenablercreate" title="NTSTATUS WdfDmaEnablerCreate(&#10;  [in]           WDFDEVICE               Device,&#10;  [in]           PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES  Attributes,&#10;  [out]          WDFDMAENABLER           *DmaEnablerHandle&#10;);">WdfDmaEnablerCreate</a>(
+                             Device,
+                             &amp;dmaConfig,
+                             WDF_NO_OBJECT_ATTRIBUTES,
+                             &amp;dmaEnabler
+                             );
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> (status)) {
+    return status;
+}
 
-<span class="n"><a href="wdf_dma_enabler_config_init" title="VOID WDF_DMA_ENABLER_CONFIG_INIT(&#10;  [out] PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in]  WDF_DMA_PROFILE         Profile,&#10;  [in]  size_t                  MaximumLength&#10;);">WDF_DMA_ENABLER_CONFIG_INIT</a></span><span class="p">(</span>
-<span class="w">                            </span><span class="o">&amp;</span><span class="n">dmaConfig</span><span class="p">,</span>
-<span class="w">                            </span><span class="n">WdfDmaProfileScatterGatherDuplex</span><span class="p">,</span>
-<span class="w">                            </span><span class="n">maxLength</span>
-<span class="w">                            </span><span class="p">);</span>
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfdmaenablercreate" title="NTSTATUS WdfDmaEnablerCreate(&#10;  [in]           WDFDEVICE               Device,&#10;  [in]           PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES  Attributes,&#10;  [out]          WDFDMAENABLER           *DmaEnablerHandle&#10;);">WdfDmaEnablerCreate</a></span><span class="p">(</span>
-<span class="w">                             </span><span class="n">Device</span><span class="p">,</span>
-<span class="w">                             </span><span class="o">&amp;</span><span class="n">dmaConfig</span><span class="p">,</span>
-<span class="w">                             </span><span class="n">WDF_NO_OBJECT_ATTRIBUTES</span><span class="p">,</span>
-<span class="w">                             </span><span class="o">&amp;</span><span class="n">dmaEnabler</span>
-<span class="w">                             </span><span class="p">);</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="w"> </span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="n">readAdapter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDmaEnablerWdmGetDmaAdapter</span><span class="p">(</span>
-<span class="w">                                            </span><span class="n">dmaEnabler</span><span class="p">,</span>
-<span class="w">                                            </span><span class="n">WdfDmaDirectionReadFromDevice</span>
-<span class="w">                                            </span><span class="p">);</span>
-<span class="n">writeAdapter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDmaEnablerWdmGetDmaAdapter</span><span class="p">(</span>
-<span class="w">                                             </span><span class="n">dmaEnabler</span><span class="p">,</span>
-<span class="w">                                             </span><span class="n">WdfDmaDirectionWriteToDevice</span>
-<span class="w">                                             </span><span class="p">);</span>
+readAdapter = WdfDmaEnablerWdmGetDmaAdapter(
+                                            dmaEnabler,
+                                            WdfDmaDirectionReadFromDevice
+                                            );
+writeAdapter = WdfDmaEnablerWdmGetDmaAdapter(
+                                             dmaEnabler,
+                                             WdfDmaDirectionWriteToDevice
+                                             );
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="padapter_object" title="typedef struct _DMA_ADAPTER {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  PDMA_OPERATIONS DmaOperations;&#10;} *PADAPTER_OBJECT, DMA_ADAPTER, *PDMA_ADAPTER;">DMA_ADAPTER</a></p>
-
 <p><a href="wdf_dma_direction" title="typedef enum _WDF_DMA_DIRECTION {&#10;  WdfDmaDirectionReadFromDevice = FALSE,&#10;  WdfDmaDirectionWriteToDevice = TRUE&#10;} WDF_DMA_DIRECTION;">WDF_DMA_DIRECTION</a></p>
-
 <p><a href="wdfdmaenablercreate" title="NTSTATUS WdfDmaEnablerCreate(&#10;  [in]           WDFDEVICE               Device,&#10;  [in]           PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES  Attributes,&#10;  [out]          WDFDMAENABLER           *DmaEnablerHandle&#10;);">WdfDmaEnablerCreate</a></p>
 <hr>
 <div class="ntdoc-description-links">

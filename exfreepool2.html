@@ -67,80 +67,55 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>The <strong>ExFreePool2</strong> routine deallocates a previously allocated block of pool memory. It extends <strong><a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a></strong> by accepting optional extended parameters to free allocations associated with a secure pool created via <strong><a href="excreatepool" title="NTSTATUS ExCreatePool(&#10;  ULONG                       Flags,&#10;  ULONG_PTR                   Tag,&#10;  POOL_CREATE_EXTENDED_PARAMS *Params,&#10;  HANDLE                      *PoolHandle&#10;);">ExCreatePool</a></strong>.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>P</code> [in]</h3>
-
 <p>Pointer to the start of the allocation to free. Must be the exact address returned by the pool allocation routine such as <strong><a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a></strong> or <strong><a href="exallocatepool3" title="DECLSPEC_RESTRICT PVOID ExAllocatePool3(&#10;  POOL_FLAGS                Flags,&#10;  SIZE_T                    NumberOfBytes,&#10;  ULONG                     Tag,&#10;  PCPOOL_EXTENDED_PARAMETER ExtendedParameters,&#10;  ULONG                     ExtendedParametersCount&#10;);">ExAllocatePool3</a></strong>. This parameter must not be NULL.</p>
-
 <h3><code>Tag</code> [in]</h3>
-
 <p>Pool tag originally supplied when the allocation was made.</p>
-
 <h3><code>ExtendedParameters</code> [in, optional]</h3>
-
 <p>Pointer to an array of extended parameter descriptors (type <strong><a href="pool_extended_parameter" title="typedef struct _POOL_EXTENDED_PARAMETER {&#10;  struct {&#10;    ULONG64 Type : POOL_EXTENDED_PARAMETER_TYPE_BITS;&#10;    ULONG64 Optional : POOL_EXTENDED_PARAMETER_REQUIRED_FIELD_BITS;&#10;    ULONG64 Reserved : POOL_EXTENDED_PARAMETER_RESERVED_BITS;&#10;  } DUMMYSTRUCTNAME;&#10;  union {&#10;    ULONG64                          Reserved2;&#10;    PVOID                            Reserved3;&#10;    EX_POOL_PRIORITY                 Priority;&#10;    POOL_EXTENDED_PARAMS_SECURE_POOL *SecurePoolParams;&#10;    POOL_NODE_REQUIREMENT            PreferredNode;&#10;  } DUMMYUNIONNAME;&#10;} POOL_EXTENDED_PARAMETER, *PPOOL_EXTENDED_PARAMETER;">POOL_EXTENDED_PARAMETER</a></strong>). See Remarks.</p>
-
 <h3><code>ExtendedParametersCount</code> [in]</h3>
-
 <p>Number of entries in the <strong>ExtendedParameters</strong> array. See Remarks.</p>
-
 <h2>Remarks</h2>
-
 <p>The following table shows the requirements for using <strong>ExFreePool2</strong> with different types of allocations:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Allocation Type</th>
-  <th>ExtendedParametersCount</th>
-  <th>ExtendedParameters</th>
+<th>Allocation Type</th>
+<th>ExtendedParametersCount</th>
+<th>ExtendedParameters</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Ordinary (non-secure)</td>
-  <td>0</td>
-  <td>NULL</td>
+<td>Ordinary (non-secure)</td>
+<td>0</td>
+<td>NULL</td>
 </tr>
 <tr>
-  <td>Secure</td>
-  <td>1</td>
-  <td>Pointer to <strong><a href="pool_extended_params_secure_pool" title="typedef struct _POOL_EXTENDED_PARAMS_SECURE_POOL {&#10;  HANDLE    SecurePoolHandle;&#10;  PVOID     Buffer;&#10;  ULONG_PTR Cookie;&#10;  ULONG     SecurePoolFlags;&#10;} POOL_EXTENDED_PARAMS_SECURE_POOL;">POOL_EXTENDED_PARAMS_SECURE_POOL</a></strong> structure</td>
+<td>Secure</td>
+<td>1</td>
+<td>Pointer to <strong><a href="pool_extended_params_secure_pool" title="typedef struct _POOL_EXTENDED_PARAMS_SECURE_POOL {&#10;  HANDLE    SecurePoolHandle;&#10;  PVOID     Buffer;&#10;  ULONG_PTR Cookie;&#10;  ULONG     SecurePoolFlags;&#10;} POOL_EXTENDED_PARAMS_SECURE_POOL;">POOL_EXTENDED_PARAMS_SECURE_POOL</a></strong> structure</td>
 </tr>
 </tbody>
 </table>
-
 <p>For secure pool frees, the associated <strong><a href="pool_extended_params_secure_pool" title="typedef struct _POOL_EXTENDED_PARAMS_SECURE_POOL {&#10;  HANDLE    SecurePoolHandle;&#10;  PVOID     Buffer;&#10;  ULONG_PTR Cookie;&#10;  ULONG     SecurePoolFlags;&#10;} POOL_EXTENDED_PARAMS_SECURE_POOL;">POOL_EXTENDED_PARAMS_SECURE_POOL</a></strong> structure must:</p>
-
 <ul>
 <li>Contain a valid secure pool handle obtained from a successful allocation associated with a secure pool.</li>
 <li>Provide the correct cookie for the allocation being freed.</li>
 <li>Have all reserved fields (e.g., Buffer, SecurePoolFlags) set to NULL/0.</li>
 <li>Be the sole entry (ExtendedParametersCount == 1).</li>
 </ul>
-
 <p>Validation failures (wrong count, unsupported parameter type, non-zero reserved fields, invalid handle, or secure kernel communication failure) cause a bug check (BAD_POOL_CALLER) rather than returning an error status.</p>
-
 <p>This routine doesn't return an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value; it always completes the free or bug checks. A double free, corrupted header, tag mismatch, or freeing with incorrect secure pool metadata can also trigger pool integrity bug checks depending on system diagnostics.</p>
-
 <p><strong>ExFreePool2</strong> must be called at IRQL &lt;= DISPATCH_LEVEL. If the allocation originated from paged pool the caller must be at IRQL &lt;= APC_LEVEL. Secure pool allocations reside in nonpaged memory and can be freed at DISPATCH_LEVEL.</p>
-
 <p>Use <strong>ExFreePool2</strong> for code that may free either standard or secure pool allocations to avoid branching on allocation origin.</p>
-
 <h2>See also</h2>
-
 <p><strong><a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a></strong></p>
-
 <p><strong><a href="exfreepoolwithtag" title="VOID ExFreePoolWithTag(&#10;  [in] PVOID P,&#10;  [in] ULONG Tag&#10;);">ExFreePoolWithTag</a></strong></p>
-
 <p><strong><a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a></strong></p>
-
 <p><strong><a href="exallocatepool3" title="DECLSPEC_RESTRICT PVOID ExAllocatePool3(&#10;  POOL_FLAGS                Flags,&#10;  SIZE_T                    NumberOfBytes,&#10;  ULONG                     Tag,&#10;  PCPOOL_EXTENDED_PARAMETER ExtendedParameters,&#10;  ULONG                     ExtendedParametersCount&#10;);">ExAllocatePool3</a></strong></p>
-
 <p><strong><a href="excreatepool" title="NTSTATUS ExCreatePool(&#10;  ULONG                       Flags,&#10;  ULONG_PTR                   Tag,&#10;  POOL_CREATE_EXTENDED_PARAMS *Params,&#10;  HANDLE                      *PoolHandle&#10;);">ExCreatePool</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

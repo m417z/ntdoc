@@ -67,130 +67,101 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>The <strong>EvtAcxStreamReleaseHardware</strong> event tells the driver to release any hardware allocated for the stream and put the stream into the Stop state.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Stream</code></h3>
-
 <p>An ACXSTREAM object represents an audio stream created by a circuit. The stream is composed of a list of elements created based on the parent circuit's elements. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">ACX - Summary of ACX Objects</a>.</p>
-
 <h2>Return value</h2>
-
 <p>Returns <code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> if the call was successful. Otherwise, it returns an appropriate error code. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">Using NTSTATUS Values</a>.</p>
-
 <h2>Remarks</h2>
-
 <p>An AcxStream supports different states. These states indicate when audio is flowing (RUN state), audio is not flowing but audio hardware is prepared (PAUSE state), or audio is not flowing and audio hardware is not prepared (STOP state).</p>
-
 <p>The EvtAcxStreamReleaseHardware event will transition the stream state from the Pause state to the Stop state. The driver should release any hardware resources that were allocated for streaming in this event, such as DMA engines. Once the stream is in the Stop state, the driver may receive the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/nc-acxstreams-evt_acx_stream_prepare_hardware">EvtAcxStreamPrepareHardware</a> event to transition to the Pause state or the ACXSTREAM object may be destroyed.</p>
-
 <p>ACX Events are analogous to KS states as described in this table.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Start State</th>
-  <th>End State</th>
-  <th>ACX Driver Event Called</th>
-  <th>Notes</th>
+<th>Start State</th>
+<th>End State</th>
+<th>ACX Driver Event Called</th>
+<th>Notes</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>STOP</td>
-  <td>ACQUIRE</td>
-  <td>PrepareHardware</td>
-  <td>Driver performs hardware allocations and preparations</td>
+<td>STOP</td>
+<td>ACQUIRE</td>
+<td>PrepareHardware</td>
+<td>Driver performs hardware allocations and preparations</td>
 </tr>
 <tr>
-  <td>ACQUIRE</td>
-  <td>PAUSE</td>
-  <td>(No Call)</td>
-  <td></td>
+<td>ACQUIRE</td>
+<td>PAUSE</td>
+<td>(No Call)</td>
+<td></td>
 </tr>
 <tr>
-  <td>PAUSE</td>
-  <td>RUN</td>
-  <td>Run</td>
-  <td></td>
+<td>PAUSE</td>
+<td>RUN</td>
+<td>Run</td>
+<td></td>
 </tr>
 <tr>
-  <td>RUN</td>
-  <td>PAUSE</td>
-  <td>Pause</td>
-  <td></td>
+<td>RUN</td>
+<td>PAUSE</td>
+<td>Pause</td>
+<td></td>
 </tr>
 <tr>
-  <td>PAUSE</td>
-  <td>ACQUIRE</td>
-  <td>(No call)</td>
-  <td></td>
+<td>PAUSE</td>
+<td>ACQUIRE</td>
+<td>(No call)</td>
+<td></td>
 </tr>
 <tr>
-  <td>ACQUIRE</td>
-  <td>STOP</td>
-  <td>ReleaseHardware</td>
-  <td>Driver releases hardware allocations</td>
+<td>ACQUIRE</td>
+<td>STOP</td>
+<td>ReleaseHardware</td>
+<td>Driver releases hardware allocations</td>
 </tr>
 </tbody>
 </table>
-
 <p>When work with the stream is complete, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/nc-acxstreams-evt_acx_stream_free_rtpackets">EvtAcxStreamFreeRtPackets</a> is called after EvtAcxStreamReleaseHardware. This allows the release hardware phase to finish deallocating bandwidth, freeing DMA resources and any other associated cleanup, to occur before the allocated RT buffers are then freed.</p>
-
 <h3>Memory Cleanup</h3>
-
 <p>The disposal of the stream's resources can be done in the driver's stream context cleanup (not destroy). Never put the disposal of anything that is shared in an object's context destroy callback. This guidance applies to all the ACX objects.</p>
-
 <p>The destroy callback is invoked after the last ref is gone, when it is unknown.</p>
-
 <p>The stream's cleanup callback is called when the handle is closed. One exception to this is when the driver created the stream in its callback. If ACX failed to add this stream to its stream-bridge just before returning from the stream-create operation, the stream is cancelled async, and the current thread returns an error to the create-stream client. The stream should not have any mem allocations allocated at this point.</p>
-
 <h3>Example</h3>
-
 <p>Example usage is shown below.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="n"><a href="acx_stream_callbacks" title="typedef struct _ACX_STREAM_CALLBACKS {&#10;  ULONG                                Size;&#10;  PFN_ACX_STREAM_PREPARE_HARDWARE      EvtAcxStreamPrepareHardware;&#10;  PFN_ACX_STREAM_RELEASE_HARDWARE      EvtAcxStreamReleaseHardware;&#10;  PFN_ACX_STREAM_RUN                   EvtAcxStreamRun;&#10;  PFN_ACX_STREAM_PAUSE                 EvtAcxStreamPause;&#10;  PFN_ACX_STREAM_ASSIGN_DRM_CONTENT_ID EvtAcxStreamAssignDrmContentId;&#10;} ACX_STREAM_CALLBACKS, *PACX_STREAM_CALLBACKS;">ACX_STREAM_CALLBACKS</a></span><span class="w"> </span><span class="n">streamCallbacks</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="acx_stream_callbacks_init" title="VOID ACX_STREAM_CALLBACKS_INIT(&#10;  PACX_STREAM_CALLBACKS Callbacks&#10;);">ACX_STREAM_CALLBACKS_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">streamCallbacks</span><span class="p">);</span>
-<span class="w">    </span><span class="n">streamCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamReleaseHardware</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamReleaseHardware</span><span class="p">;</span>
-<span class="w">    </span><span class="p">...</span>
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="acxstreaminitassignacxstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxStreamCallbacks(&#10;  PACXSTREAM_INIT       StreamInit,&#10;  PACX_STREAM_CALLBACKS StreamCallbacks&#10;);">AcxStreamInitAssignAcxStreamCallbacks</a></span><span class="p">(</span><span class="n">StreamInit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">streamCallbacks</span><span class="p">);</span>
+<pre lang="cpp"><code>    <a href="acx_stream_callbacks" title="typedef struct _ACX_STREAM_CALLBACKS {&#10;  ULONG                                Size;&#10;  PFN_ACX_STREAM_PREPARE_HARDWARE      EvtAcxStreamPrepareHardware;&#10;  PFN_ACX_STREAM_RELEASE_HARDWARE      EvtAcxStreamReleaseHardware;&#10;  PFN_ACX_STREAM_RUN                   EvtAcxStreamRun;&#10;  PFN_ACX_STREAM_PAUSE                 EvtAcxStreamPause;&#10;  PFN_ACX_STREAM_ASSIGN_DRM_CONTENT_ID EvtAcxStreamAssignDrmContentId;&#10;} ACX_STREAM_CALLBACKS, *PACX_STREAM_CALLBACKS;">ACX_STREAM_CALLBACKS</a> streamCallbacks;
+    <a href="acx_stream_callbacks_init" title="VOID ACX_STREAM_CALLBACKS_INIT(&#10;  PACX_STREAM_CALLBACKS Callbacks&#10;);">ACX_STREAM_CALLBACKS_INIT</a>(&amp;streamCallbacks);
+    streamCallbacks.EvtAcxStreamReleaseHardware = EvtStreamReleaseHardware;
+    ...
+    status = <a href="acxstreaminitassignacxstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxStreamCallbacks(&#10;  PACXSTREAM_INIT       StreamInit,&#10;  PACX_STREAM_CALLBACKS StreamCallbacks&#10;);">AcxStreamInitAssignAcxStreamCallbacks</a>(StreamInit, &amp;streamCallbacks);
 </code></pre>
-</div>
+<pre lang="cpp"><code>PAGED_CODE_SEG
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+EvtStreamReleaseHardware(
+    _In_ ACXSTREAM Stream
+    )
+{
+    PSTREAM_CONTEXT ctx;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>        status;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">PAGED_CODE_SEG</span>
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="n">EvtStreamReleaseHardware</span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">ACXSTREAM</span><span class="w"> </span><span class="n">Stream</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">PSTREAM_CONTEXT</span><span class="w"> </span><span class="n">ctx</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">        </span><span class="n">status</span><span class="p">;</span>
+    PAGED_CODE();
 
-<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
+    ctx = GetStreamContext(Stream);
 
-<span class="w">    </span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetStreamContext</span><span class="p">(</span><span class="n">Stream</span><span class="p">);</span>
+    status = ReleaseStreamHardware(Stream);
 
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ReleaseStreamHardware</span><span class="p">(</span><span class="n">Stream</span><span class="p">);</span>
+    ctx-&gt;StreamState = AcxStreamStateStop;
 
-<span class="w">    </span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">StreamState</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AcxStreamStateStop</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
-<span class="p">}</span>
+    return status;
+}
 </code></pre>
-</div>
-
 <h3>ACX requirements</h3>
-
 <p><strong>Minimum ACX version:</strong> 1.0</p>
-
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
-
 <h2>See also</h2>
-
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/">acxstreams.h header</a></li>
 <li><a href="evt_acx_stream_prepare_hardware" title="EVT_ACX_STREAM_PREPARE_HARDWARE EvtAcxStreamPrepareHardware;&#10;&#10;NTSTATUS EvtAcxStreamPrepareHardware(&#10;  ACXSTREAM Stream&#10;)&#10;{...}">EVT_ACX_STREAM_PREPARE_HARDWARE</a></li>

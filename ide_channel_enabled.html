@@ -68,69 +68,57 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>IDE_CHANNEL_ENABLED callback function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>AtaControllerChannelEnabled</strong> miniport driver routine indicates whether the specified channel is enabled.</p>
-
 <blockquote>
-  <p>[!NOTE]
-  The ATA port driver and ATA miniport driver models may be altered or unavailable in the future. Instead, we recommend using the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/storport-driver">Storport driver</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/storport-miniport-drivers">Storport miniport</a> driver models.</p>
+<p>[!NOTE]
+The ATA port driver and ATA miniport driver models may be altered or unavailable in the future. Instead, we recommend using the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/storport-driver">Storport driver</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/storport-miniport-drivers">Storport miniport</a> driver models.</p>
 </blockquote>
-
 <h2>Parameters</h2>
-
 <h3><code>ControllerExtension</code></h3>
-
 <p>[in] A pointer to the controller extension.</p>
-
 <h3><code>Channel</code></h3>
-
 <p>[in] The channel to enable.</p>
-
 <h2>Return value</h2>
-
 <p><strong>AtaControllerChannelEnabled</strong> returns an enumerator value of type <strong><a href="ata_channel_state" title="typedef enum {&#10;  ChannelStateDisabled,&#10;  ChannelStateEnabled,&#10;  ChannelStateUnKnown&#10;} ATA_CHANNEL_STATE;">ATA_CHANNEL_STATE</a></strong>, which can have any of the following values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Meaning</th>
+<th>Return code</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>ChannelStateEnabled</td>
-  <td>Indicates that the specified channel is enabled.</td>
+<td>ChannelStateEnabled</td>
+<td>Indicates that the specified channel is enabled.</td>
 </tr>
 <tr>
-  <td>ChannelStateDisabled</td>
-  <td>Indicates that the specified channel is disabled.</td>
+<td>ChannelStateDisabled</td>
+<td>Indicates that the specified channel is disabled.</td>
 </tr>
 <tr>
-  <td>ChannelStateUnKnown</td>
-  <td>Indicates that the state of the channel could not be determined.</td>
+<td>ChannelStateUnKnown</td>
+<td>Indicates that the state of the channel could not be determined.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>The following sequence describes how the miniport driver and the port driver interact to determine which controller channels are enabled:</p>
-
 <ol>
-<li><p>The port driver calls the miniport driver's <strong>AtaAdapterControl</strong> routine with control action <strong>IdeStart</strong>.</p></li>
-<li><p>While the miniport driver processes the <strong>AtaAdapterControl</strong> routine with control action <strong>IdeStart</strong>, it initializes the <strong>NumberOfChannels</strong> member of <strong><a href="ide_controller_configuration" title="typedef struct _IDE_CONTROLLER_CONFIGURATION {&#10;  USHORT                  Version;&#10;  UCHAR                   NumberOfChannels;&#10;  IDE_OPERATION_MODE      ControllerMode;&#10;  UCHAR                   NumberOfPhysicalBreaks;&#10;  ULONG                   MaximumTransferLength;&#10;  BOOLEAN                 Reserved;&#10;  BOOLEAN                 NativeModeEnabled;&#10;  BOOLEAN                 Dma64BitAddress;&#10;  BOOLEAN                 BusMaster;&#10;  IDE_BUS_TYPE            AtaBusType;&#10;  PIDE_MINIPORT_RESOURCES ControllerResources;&#10;} IDE_CONTROLLER_CONFIGURATION, *PIDE_CONTROLLER_CONFIGURATION;">IDE_CONTROLLER_CONFIGURATION</a></strong> to indicate the number of channels that are enabled.</p></li>
-<li><p>After the <strong>AtaAdapterControl</strong> routine returns, the port driver calls <strong>AtaControllerChannelEnabled</strong> one time for every NumberOfChannels specified in the ControllerConfiguration structure that are returned by <strong>AtaAdapterControl</strong>.</p></li>
+<li>
+<p>The port driver calls the miniport driver's <strong>AtaAdapterControl</strong> routine with control action <strong>IdeStart</strong>.</p>
+</li>
+<li>
+<p>While the miniport driver processes the <strong>AtaAdapterControl</strong> routine with control action <strong>IdeStart</strong>, it initializes the <strong>NumberOfChannels</strong> member of <strong><a href="ide_controller_configuration" title="typedef struct _IDE_CONTROLLER_CONFIGURATION {&#10;  USHORT                  Version;&#10;  UCHAR                   NumberOfChannels;&#10;  IDE_OPERATION_MODE      ControllerMode;&#10;  UCHAR                   NumberOfPhysicalBreaks;&#10;  ULONG                   MaximumTransferLength;&#10;  BOOLEAN                 Reserved;&#10;  BOOLEAN                 NativeModeEnabled;&#10;  BOOLEAN                 Dma64BitAddress;&#10;  BOOLEAN                 BusMaster;&#10;  IDE_BUS_TYPE            AtaBusType;&#10;  PIDE_MINIPORT_RESOURCES ControllerResources;&#10;} IDE_CONTROLLER_CONFIGURATION, *PIDE_CONTROLLER_CONFIGURATION;">IDE_CONTROLLER_CONFIGURATION</a></strong> to indicate the number of channels that are enabled.</p>
+</li>
+<li>
+<p>After the <strong>AtaAdapterControl</strong> routine returns, the port driver calls <strong>AtaControllerChannelEnabled</strong> one time for every NumberOfChannels specified in the ControllerConfiguration structure that are returned by <strong>AtaAdapterControl</strong>.</p>
+</li>
 </ol>
-
 <p>This routine should not have steps that are critical to the operation of the controller. There are situations, such as during a crashdump operation, where this function will not be called at all. Additionally, this function is not called when a channel is restarted, only when PCIIDEx responds to a QueryDeviceRelations <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>.</p>
-
 <p><strong>AtaControllerChannelEnabled</strong> is an optional routine. If the miniport driver does not implement this routine, the port driver will load a default handler. If the port driver loads a default handler, all channels that are specified by NumberOfChannels in the ControllerConfiguration structure that is returned by <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/irb/nc-irb-ide_adapter_control"><strong>AtaAdapterControl</strong></a> when handling an IdeStart action are assumed to be enabled. This routine enables PCIIDEx to load the ATA port driver for only the channels enabled. Doing this allows for sparse channel support (for example, channel 0, channel 1, channel 3, channel 4, and channel 6, but not channel 2 and channel 5).</p>
-
 <h2>See also</h2>
-
 <p><strong><a href="ide_controller_configuration" title="typedef struct _IDE_CONTROLLER_CONFIGURATION {&#10;  USHORT                  Version;&#10;  UCHAR                   NumberOfChannels;&#10;  IDE_OPERATION_MODE      ControllerMode;&#10;  UCHAR                   NumberOfPhysicalBreaks;&#10;  ULONG                   MaximumTransferLength;&#10;  BOOLEAN                 Reserved;&#10;  BOOLEAN                 NativeModeEnabled;&#10;  BOOLEAN                 Dma64BitAddress;&#10;  BOOLEAN                 BusMaster;&#10;  IDE_BUS_TYPE            AtaBusType;&#10;  PIDE_MINIPORT_RESOURCES ControllerResources;&#10;} IDE_CONTROLLER_CONFIGURATION, *PIDE_CONTROLLER_CONFIGURATION;">IDE_CONTROLLER_CONFIGURATION</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

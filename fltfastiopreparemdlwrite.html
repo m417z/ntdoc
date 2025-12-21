@@ -70,59 +70,32 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltFastIoPrepareMdlWrite function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>FltFastIoPrepareMdlWrite</strong> routine returns a linked list of memory descriptor lists (MDLs) that point to the specified range of cached file data to write data directly to the cache.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>InitiatingInstance</code></h3>
-
 <p>Opaque instance pointer for the caller. This parameter is required and cannot be <strong>NULL</strong>.</p>
-
 <h3><code>FileObject</code> [in]</h3>
-
 <p>A pointer to the file object.</p>
-
 <h3><code>FileOffset</code> [in]</h3>
-
 <p>A pointer to a value that specifies the starting byte offset within the cache that holds the data.</p>
-
 <h3><code>Length</code> [in]</h3>
-
 <p>The length in bytes of the data to read from the cache.</p>
-
 <h3><code>LockKey</code> [in]</h3>
-
 <p>A value that is associated with the byte range to lock. If the range to lock overlaps another range that is already locked with a nonexclusive lock, or if the range to read is a subrange of another range that is already locked non-exclusively, the value in this parameter must be the key for that nonexclusive lock. The lock must be held by the parent process of the calling thread. Otherwise, this parameter has no effect.</p>
-
 <h3><code>MdlChain</code> [out]</h3>
-
 <p>On output, a pointer to a linked list of memory descriptor lists (MDLs) that point to the byte range within the cached data.</p>
-
 <h3><code>IoStatus</code> [out]</h3>
-
 <p>A pointer to an <a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a> structure that, on output, contains the status of the transfer. If the operation succeeds, <em>IoStatus.Status</em> is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. Otherwise, it is set to an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code. <em>IoStatus.Information</em> is set to the actual number of bytes that the routine successfully locked.</p>
-
 <h2>Return value</h2>
-
 <p>The <strong>FltFastIoPrepareMdlWrite</strong> routine returns <strong>TRUE</strong> if the operation succeeds and <strong>FALSE</strong> if the operation fails.</p>
-
 <h2>Remarks</h2>
-
 <p><strong>FltFastIoPrepareMdlWrite</strong> is similar to <a href="fsrtlcopywrite" title="BOOLEAN FsRtlCopyWrite(&#10;  [in]  PFILE_OBJECT     FileObject,&#10;  [in]  PLARGE_INTEGER   FileOffset,&#10;  [in]  ULONG            Length,&#10;  [in]  BOOLEAN          Wait,&#10;  [in]  ULONG            LockKey,&#10;  [in]  PVOID            Buffer,&#10;  [out] PIO_STATUS_BLOCK IoStatus,&#10;  [in]  PDEVICE_OBJECT   DeviceObject&#10;);">FsRtlCopyWrite</a>, except that <strong>FltFastIoPrepareMdlWrite</strong> does not copy data to the cache. Instead, the physical pages that the caller will overwrite are locked in memory, and <strong>FltFastIoPrepareMdlWrite</strong> returns one or more memory descriptor lists (MDLs) that point to the specified byte range. The locked pages remain locked until the caller calls <a href="fltfastiomdlwritecomplete" title="BOOLEAN FLTAPI FltFastIoMdlWriteComplete(&#10;       PFLT_INSTANCE  InitiatingInstance,&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] PMDL           MdlChain&#10;);">FltFastIoMdlWriteComplete</a>.</p>
-
 <p>The pages that the MDLs point to are locked in memory, but are not mapped in system space. The caller can perform this mapping by calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mm-bad-pointer#mmgetsystemaddressformdlsafe">MmGetSystemAddressForMdlSafe</a>.</p>
-
 <p>Even if the call to <strong>FltFastIoPrepareMdlWrite</strong> fails, one or more MDLs might have been allocated. The caller can examine the value of <em>IoStatus.Information</em> to determine if this has occurred. If it has, the caller must call <a href="fltfastiomdlwritecomplete" title="BOOLEAN FLTAPI FltFastIoMdlWriteComplete(&#10;       PFLT_INSTANCE  InitiatingInstance,&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] PMDL           MdlChain&#10;);">FltFastIoMdlWriteComplete</a> to free the allocated MDLs.</p>
-
 <h2>See also</h2>
-
 <p><a href="fltfastiomdlwritecomplete" title="BOOLEAN FLTAPI FltFastIoMdlWriteComplete(&#10;       PFLT_INSTANCE  InitiatingInstance,&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] PMDL           MdlChain&#10;);">FltFastIoMdlWriteComplete</a></p>
-
 <p><a href="fsrtlcopywrite" title="BOOLEAN FsRtlCopyWrite(&#10;  [in]  PFILE_OBJECT     FileObject,&#10;  [in]  PLARGE_INTEGER   FileOffset,&#10;  [in]  ULONG            Length,&#10;  [in]  BOOLEAN          Wait,&#10;  [in]  ULONG            LockKey,&#10;  [in]  PVOID            Buffer,&#10;  [out] PIO_STATUS_BLOCK IoStatus,&#10;  [in]  PDEVICE_OBJECT   DeviceObject&#10;);">FsRtlCopyWrite</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mm-bad-pointer#mmgetsystemaddressformdlsafe">MmGetSystemAddressForMdlSafe</a></p>
 <hr>
 <div class="ntdoc-description-links">

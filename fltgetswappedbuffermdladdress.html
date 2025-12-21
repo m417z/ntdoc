@@ -64,45 +64,27 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltGetSwappedBufferMdlAddress function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>FltGetSwappedBufferMdlAddress</strong> routine returns the memory descriptor list (<a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>) address for a buffer that was swapped in by a minifilter driver.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>CallbackData</code> [in]</h3>
-
 <p>Pointer to the callback data structure for the operation.</p>
-
 <h2>Return value</h2>
-
 <p><strong>FltGetSwappedBufferMdlAddress</strong> returns the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> address for the buffer that was swapped in by the caller. <strong>FltGetSwappedBufferMdlAddress</strong> returns <strong>NULL</strong> in the following cases:</p>
-
 <ul>
 <li>The operation is a fast I/O operation. In a fast I/O operation, the buffer cannot have an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>.</li>
 <li>The buffer that was swapped in by the caller does not have an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>.</li>
 <li>The minifilter driver did not swap buffers in the preoperation callback routine.</li>
 </ul>
-
 <h2>Remarks</h2>
-
 <p>A minifilter driver that swaps in a new buffer in a preoperation callback routine can get the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> address for the buffer by calling <strong>FltGetSwappedBufferMdlAddress</strong> from the corresponding postoperation callback routine.</p>
-
 <p>The <strong>FltGetSwappedBufferMdlAddress</strong> routine is necessary because the postoperation callback routine receives a callback data structure that contains the original buffer and <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> address, not the ones that were swapped in by the caller's preoperation callback routine.</p>
-
 <p>It is possible for <strong>FltGetSwappedBufferMdlAddress</strong> to return a non-<strong>NULL</strong> <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> value even if the caller did not create an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> for the buffer that it swapped in. This happens when an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> is created for the buffer by a minifilter driver, legacy filter driver, or file system driver that is below the caller in the minifilter driver or file system driver stack.</p>
-
 <p>It is also possible for <strong>FltGetSwappedBufferMdlAddress</strong> to return a non-<strong>NULL</strong> <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> value even if the caller did not swap in a new buffer in its preoperation callback routine. This happens in operations, such as paging I/O, where the buffer is <strong>NULL</strong>, and the caller swaps in a new <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> address.</p>
-
 <p>The <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> for the buffer that was swapped in by the caller is automatically freed by the Filter Manager when the postoperation callback routine returns. To prevent this <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> from being freed, call <a href="fltretainswappedbuffermdladdress" title="VOID FltRetainSwappedBufferMdlAddress(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltRetainSwappedBufferMdlAddress</a>.</p>
-
 <p><strong>FltGetSwappedBufferMdlAddress</strong> can only be called from a postoperation callback routine.</p>
-
 <h2>See also</h2>
-
 <p><a href="fltdecodeparameters" title="NTSTATUS FLTAPI FltDecodeParameters(&#10;  [in]            PFLT_CALLBACK_DATA CallbackData,&#10;  [out]           PMDL               **MdlAddressPointer,&#10;  [out]           PVOID              **Buffer,&#10;  [out]           PULONG             *Length,&#10;  [out, optional] LOCK_OPERATION     *DesiredAccess&#10;);">FltDecodeParameters</a></p>
-
 <p><a href="fltretainswappedbuffermdladdress" title="VOID FltRetainSwappedBufferMdlAddress(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltRetainSwappedBufferMdlAddress</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -64,43 +64,32 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>NdisInitializeReadWriteLock function</h1>
-
 <h2>Description</h2>
-
 <p>The
 <strong>NdisInitializeReadWriteLock</strong> function initializes a read or write lock variable of type
 <strong><a href="ndis_rw_lock" title="typedef struct _NDIS_RW_LOCK {&#10;  union {&#10;    struct {&#10;      KSPIN_LOCK SpinLock;&#10;      PVOID      Context;&#10;    };&#10;    UCHAR Reserved[16];&#10;  };&#10;  union {&#10;    NDIS_RW_LOCK_REFCOUNT RefCount[MAXIMUM_PROCESSORS];&#10;    ULONG                 *RefCountEx[sizeof(NDIS_RW_LOCK_REFCOUNT)/ sizeof(ULONG) MAXIMUM_PROCESSORS];&#10;    struct {&#10;      KSPIN_LOCK RefCountLock;&#10;      ULONG      SharedRefCount;&#10;      BOOLEAN    WriterWaiting;&#10;    };&#10;  };&#10;} NDIS_RW_LOCK, *PNDIS_RW_LOCK;">NDIS_RW_LOCK</a></strong>.</p>
-
 <p><strong>Note</strong> The read-write lock interface is deprecated for NDIS 6.20 and later drivers, which should use <a href="ndisallocaterwlock" title="PNDIS_RW_LOCK_EX NdisAllocateRWLock(&#10;  NDIS_HANDLE NdisHandle&#10;);">NdisAllocateRWLock</a> instead of <strong>NdisInitializeReadWriteLock</strong>.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Lock</code> [out]</h3>
-
 <p>A pointer to an opaque
 <strong><a href="ndis_rw_lock" title="typedef struct _NDIS_RW_LOCK {&#10;  union {&#10;    struct {&#10;      KSPIN_LOCK SpinLock;&#10;      PVOID      Context;&#10;    };&#10;    UCHAR Reserved[16];&#10;  };&#10;  union {&#10;    NDIS_RW_LOCK_REFCOUNT RefCount[MAXIMUM_PROCESSORS];&#10;    ULONG                 *RefCountEx[sizeof(NDIS_RW_LOCK_REFCOUNT)/ sizeof(ULONG) MAXIMUM_PROCESSORS];&#10;    struct {&#10;      KSPIN_LOCK RefCountLock;&#10;      ULONG      SharedRefCount;&#10;      BOOLEAN    WriterWaiting;&#10;    };&#10;  };&#10;} NDIS_RW_LOCK, *PNDIS_RW_LOCK;">NDIS_RW_LOCK</a></strong> variable that represents a lock. The caller can use this lock to gain write or read
 access to resources that are shared among non-ISR driver threads.</p>
-
 <h2>Remarks</h2>
-
 <p>An
 <strong><a href="ndis_rw_lock" title="typedef struct _NDIS_RW_LOCK {&#10;  union {&#10;    struct {&#10;      KSPIN_LOCK SpinLock;&#10;      PVOID      Context;&#10;    };&#10;    UCHAR Reserved[16];&#10;  };&#10;  union {&#10;    NDIS_RW_LOCK_REFCOUNT RefCount[MAXIMUM_PROCESSORS];&#10;    ULONG                 *RefCountEx[sizeof(NDIS_RW_LOCK_REFCOUNT)/ sizeof(ULONG) MAXIMUM_PROCESSORS];&#10;    struct {&#10;      KSPIN_LOCK RefCountLock;&#10;      ULONG      SharedRefCount;&#10;      BOOLEAN    WriterWaiting;&#10;    };&#10;  };&#10;} NDIS_RW_LOCK, *PNDIS_RW_LOCK;">NDIS_RW_LOCK</a></strong> variable is used to limit write access to shared resources to one non-ISR driver
 thread at a time. This
 <strong><a href="ndis_rw_lock" title="typedef struct _NDIS_RW_LOCK {&#10;  union {&#10;    struct {&#10;      KSPIN_LOCK SpinLock;&#10;      PVOID      Context;&#10;    };&#10;    UCHAR Reserved[16];&#10;  };&#10;  union {&#10;    NDIS_RW_LOCK_REFCOUNT RefCount[MAXIMUM_PROCESSORS];&#10;    ULONG                 *RefCountEx[sizeof(NDIS_RW_LOCK_REFCOUNT)/ sizeof(ULONG) MAXIMUM_PROCESSORS];&#10;    struct {&#10;      KSPIN_LOCK RefCountLock;&#10;      ULONG      SharedRefCount;&#10;      BOOLEAN    WriterWaiting;&#10;    };&#10;  };&#10;} NDIS_RW_LOCK, *PNDIS_RW_LOCK;">NDIS_RW_LOCK</a></strong> can allow multiple non-ISR driver threads concurrent read access to those resources.
 Such read access is not permitted during a write access.</p>
-
 <p>The
 <em>Lock</em> pointer that is passed to
 <strong>NdisInitializeReadWriteLock</strong> is a required parameter for all other
 <strong>Ndis..ReadWriteLock</strong> functions.</p>
-
 <p>Before a driver calls the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff560696(v=vs.85)">NdisAcquireReadWriteLock</a> function
 to obtain write or read access to a resource, the driver must call
 <strong>NdisInitializeReadWriteLock</strong> to initialize the lock that is associated with that resource. The
 caller must provide nonpaged storage for the variable at
 <em>Lock</em> .</p>
-
 <p>After calling
 <strong>NdisInitializeReadWriteLock</strong>, the driver can call
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff560696(v=vs.85)">NdisAcquireReadWriteLock</a> to obtain either write or read access to the resource. Only one non-ISR
@@ -108,30 +97,22 @@ driver thread at a time can obtain write access to the resource. When one non-IS
 access, all read and write accesses by other non-ISR threads must wait until the write-access holder
 releases the lock. However, if a non-ISR thread has read access, other non-ISR threads can concurrently
 acquire read access.</p>
-
 <p>Initialize and use this type of lock for resources that are frequently accessed for reading and
 infrequently accessed for writing.</p>
-
 <p>Once resource access is complete, the driver calls the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564521(v=vs.85)">NdisReleaseReadWriteLock</a> function.</p>
-
 <p>Each lock that a driver initializes does one of the following:</p>
-
 <ul>
 <li>Protects a discrete set of shared resources from simultaneous write and read access by driver
 threads that run at IRQL &lt;= DISPATCH_LEVEL.</li>
 <li>Exposes a discrete set of shared resources to simultaneous read access by driver threads that run at
 IRQL &lt;= DISPATCH_LEVEL.</li>
 </ul>
-
 <p>Callers of
 <strong>NdisInitializeReadWriteLock</strong> can run at any IRQL. Usually a caller is running at IRQL =
 PASSIVE_LEVEL during initialization.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff560696(v=vs.85)">NdisAcquireReadWriteLock</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564521(v=vs.85)">NdisReleaseReadWriteLock</a></p>
 <hr>
 <div class="ntdoc-description-links">

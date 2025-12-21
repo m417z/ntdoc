@@ -64,71 +64,45 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfRequestCancelSentRequest function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfRequestCancelSentRequest</strong> method attempts to cancel an I/O request that the caller previously submitted to an I/O target.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Request</code> [in]</h3>
-
 <p>A handle to a framework request object.</p>
-
 <h2>Return value</h2>
-
 <p><strong>WdfRequestCancelSentRequest</strong> returns <strong>TRUE</strong> if it successfully delivers the cancel request to the driver's I/O target. This method returns <strong>FALSE</strong> if the request has already been completed or canceled, or if the I/O target driver has not called <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a> or <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a>.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
 <h2>Remarks</h2>
-
 <p>A driver can call <strong>WdfRequestCancelSentRequest</strong> to attempt to cancel an I/O request that it previously had sent to an I/O target by calling <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>.</p>
-
 <p>If the request is in the I/O target's queue, the framework cancels the request. If the framework has already delivered the request to the I/O target's driver, and if that driver has called <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a> or <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a> to enable canceling, the framework calls that driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function. If the target's driver has not called <strong><a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a></strong> or <strong><a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a></strong>, the request is not canceled unless the request becomes cancelable.</p>
-
 <p>If the driver has registered a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function for the request, the framework calls the callback function after the request has been canceled.</p>
-
 <p>Typically, if your driver calls <strong>WdfRequestCancelSentRequest</strong>, it must increment the request object's reference count. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/synchronizing-cancellation-of-sent-requests">Synchronizing Cancellation of Sent Requests</a>.</p>
-
 <p>For more information about request cancellation, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/canceling-i-o-requests">Canceling I/O Requests</a>.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example is from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/samples/browse/?redirectedfrom=MSDN-samples">kmdf_fx2</a> sample driver. This example is an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_stop">EvtIoStop</a> callback function. Because this driver sends each request to its I/O target, the <em>EvtIoStop</em> callback function calls <strong>WdfRequestCancelSentRequest</strong> if the device has been removed.</p>
+<pre lang="cpp"><code>VOID
+OsrFxEvtIoStop(
+    IN WDFQUEUE  Queue,
+    IN WDFREQUEST  Request,
+    IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  ActionFlags
+    )
+{
+    UNREFERENCED_PARAMETER(Queue);
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="nf">OsrFxEvtIoStop</span><span class="p">(</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFQUEUE</span><span class="w">  </span><span class="n">Queue</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">ActionFlags</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">Queue</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ActionFlags</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">WdfRequestStopActionSuspend</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n"><a href="wdfrequeststopacknowledge" title="VOID WdfRequestStopAcknowledge(&#10;  [in] WDFREQUEST Request,&#10;  [in] BOOLEAN    Requeue&#10;);">WdfRequestStopAcknowledge</a></span><span class="p">(</span><span class="n">Request</span><span class="p">,</span><span class="w"> </span><span class="n">FALSE</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">ActionFlags</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">WdfRequestStopActionPurge</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">WdfRequestCancelSentRequest</span><span class="p">(</span><span class="n">Request</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="p">;</span>
-<span class="p">}</span>
+    if (ActionFlags &amp; WdfRequestStopActionSuspend) {
+        <a href="wdfrequeststopacknowledge" title="VOID WdfRequestStopAcknowledge(&#10;  [in] WDFREQUEST Request,&#10;  [in] BOOLEAN    Requeue&#10;);">WdfRequestStopAcknowledge</a>(Request, FALSE);
+    } else if (ActionFlags &amp; WdfRequestStopActionPurge) {
+        WdfRequestCancelSentRequest(Request);
+    }
+    return;
+}
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a></p>
-
 <p><a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a></p>
-
 <p><a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a></p>
-
 <p><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></p>
 <hr>
 <div class="ntdoc-description-links">

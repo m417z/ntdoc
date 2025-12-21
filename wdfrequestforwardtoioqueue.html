@@ -65,156 +65,123 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfRequestForwardToIoQueue function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfRequestForwardToIoQueue</strong> method requeues an I/O request to one of the calling driver's I/O queues.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Request</code> [in]</h3>
-
 <p>A handle to a framework request object.</p>
-
 <h3><code>DestinationQueue</code> [in]</h3>
-
 <p>A handle to a framework queue object.</p>
-
 <h2>Return value</h2>
-
 <p><strong>WdfRequestForwardToIoQueue</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, this method might return one of the following values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
-  <td>This value is returned if one of the following occurs:<br><br>* The driver did not obtain the request from an I/O queue.<br>* The source and destination queues are the same.<br>* The source and destination queues do not belong to the same device.<br>* The driver does not own the request.<br>* The request is cancelable.</td>
+<td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
+<td>This value is returned if one of the following occurs:<!-- raw HTML omitted --><!-- raw HTML omitted -->* The driver did not obtain the request from an I/O queue.<!-- raw HTML omitted -->* The source and destination queues are the same.<!-- raw HTML omitted -->* The source and destination queues do not belong to the same device.<!-- raw HTML omitted -->* The driver does not own the request.<!-- raw HTML omitted -->* The request is cancelable.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_WDF_BUSY</strong></td>
-  <td>The destination queue is not accepting new requests.</td>
+<td><strong>STATUS_WDF_BUSY</strong></td>
+<td>The destination queue is not accepting new requests.</td>
 </tr>
 </tbody>
 </table>
-
 <p>This method might also return other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
 <h2>Remarks</h2>
-
 <p>The driver must <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/request-ownership">own</a> the I/O request and must have obtained the request from one of its I/O queues.</p>
-
 <p>The source and destination queues cannot be the same. In other words, the driver cannot call <strong>WdfRequestForwardToIoQueue</strong> to return a request to the queue that it came from. To requeue a request to the same queue, use <a href="wdfrequestrequeue" title="NTSTATUS WdfRequestRequeue(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestRequeue</a>.</p>
-
 <p>Both the source and destination queues must belong to the same device.</p>
-
 <p>The request must not be cancelable. If the driver has called <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a> or <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a> to make the request cancelable, it must call <a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a> before calling <strong>WdfRequestForwardToIoQueue</strong>.</p>
-
 <p>After the driver calls <strong>WdfRequestForwardToIoQueue</strong>, the driver does not own the requeued request until the framework delivers the request from the new queue to the driver. While the request is in the new queue, the framework owns the request and can cancel it without notifying the driver.</p>
-
 <p>Before <strong>WdfRequestForwardToIoQueue</strong> returns, the following events can occur:</p>
-
 <ul>
 <li>If the destination queue was empty, the framework can deliver the requeued I/O request to one of the destination queue's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/request-handlers">request handlers</a>.</li>
 <li>If the source queue's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dispatching-methods-for-i-o-requests">dispatching method</a> is sequential or parallel, the framework can deliver another request to one of the source queue's request handlers.</li>
 </ul>
-
 <p>For more information about <strong>WdfRequestForwardToIoQueue</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/requeuing-i-o-requests">Requeuing I/O Requests</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/managing-i-o-queues">Managing I/O Queues</a>.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example is an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_device_control">EvtIoDeviceControl</a> callback function from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">PCIDRV</a> sample driver. If a received request contains an I/O control code of IOCTL_NDISPROT_INDICATE_STATUS, the driver calls <strong>WdfRequestForwardToIoQueue</strong> to move the request to a different I/O queue.</p>
+<pre lang="cpp"><code>VOID
+PciDrvEvtIoDeviceControl(
+    IN WDFQUEUE  Queue,
+    IN WDFREQUEST  Request,
+    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  OutputBufferLength,
+    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  InputBufferLength,
+    IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  IoControlCode
+    )
+{
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status= <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+    PFDO_DATA  fdoData = NULL;
+    WDFDEVICE  hDevice;
+    <a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="nf">PciDrvEvtIoDeviceControl</span><span class="p">(</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFQUEUE</span><span class="w">  </span><span class="n">Queue</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w">  </span><span class="n">OutputBufferLength</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w">  </span><span class="n">InputBufferLength</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">IoControlCode</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="o">=</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
-<span class="w">    </span><span class="n">PFDO_DATA</span><span class="w">  </span><span class="n">fdoData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">    </span><span class="n">WDFDEVICE</span><span class="w">  </span><span class="n">hDevice</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a></span><span class="w">  </span><span class="n">params</span><span class="p">;</span>
+    UNREFERENCED_PARAMETER(OutputBufferLength);
+    UNREFERENCED_PARAMETER(InputBufferLength);
 
-<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">OutputBufferLength</span><span class="p">);</span>
-<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">InputBufferLength</span><span class="p">);</span>
+    hDevice = <a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue);
+    fdoData = FdoGetData(hDevice);
 
-<span class="w">    </span><span class="n">hDevice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a></span><span class="p">(</span><span class="n">Queue</span><span class="p">);</span>
-<span class="w">    </span><span class="n">fdoData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FdoGetData</span><span class="p">(</span><span class="n">hDevice</span><span class="p">);</span>
+    <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
+    <a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a>(
+                            Request,
+                            &amp;params
+                            );
 
-<span class="w">    </span><span class="n"><a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">params</span><span class="p">);</span>
-<span class="w">    </span><span class="n"><a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a></span><span class="p">(</span>
-<span class="w">                            </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">                            </span><span class="o">&amp;</span><span class="n">params</span>
-<span class="w">                            </span><span class="p">);</span>
+    switch (IoControlCode)
+    {
+        case IOCTL_NDISPROT_QUERY_OID_VALUE:
+            NICHandleQueryOidRequest(
+                                     Queue,
+                                     Request,
+                                     &amp;params
+                                     );
+            break;
 
-<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">IoControlCode</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">IOCTL_NDISPROT_QUERY_OID_VALUE</span><span class="p">:</span>
-<span class="w">            </span><span class="n">NICHandleQueryOidRequest</span><span class="p">(</span>
-<span class="w">                                     </span><span class="n">Queue</span><span class="p">,</span>
-<span class="w">                                     </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">                                     </span><span class="o">&amp;</span><span class="n">params</span>
-<span class="w">                                     </span><span class="p">);</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+        case IOCTL_NDISPROT_SET_OID_VALUE:
+            NICHandleSetOidRequest(
+                                   Queue,
+                                   Request,
+                                   &amp;params
+                                   );
+            break;
 
-<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">IOCTL_NDISPROT_SET_OID_VALUE</span><span class="p">:</span>
-<span class="w">            </span><span class="n">NICHandleSetOidRequest</span><span class="p">(</span>
-<span class="w">                                   </span><span class="n">Queue</span><span class="p">,</span>
-<span class="w">                                   </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">                                   </span><span class="o">&amp;</span><span class="n">params</span>
-<span class="w">                                   </span><span class="p">);</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+        case IOCTL_NDISPROT_INDICATE_STATUS:
+            status = WdfRequestForwardToIoQueue(
+                                                Request,
+                                                fdoData-&gt;PendingIoctlQueue
+                                                );
+            if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
+                <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
+                                   Request,
+                                   status
+                                   );
+                break;
+            }
+            break;
 
-<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">IOCTL_NDISPROT_INDICATE_STATUS</span><span class="p">:</span>
-<span class="w">            </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfRequestForwardToIoQueue</span><span class="p">(</span>
-<span class="w">                                                </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">                                                </span><span class="n">fdoData</span><span class="o">-&gt;</span><span class="n">PendingIoctlQueue</span>
-<span class="w">                                                </span><span class="p">);</span>
-<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">)){</span>
-<span class="w">                </span><span class="n"><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></span><span class="p">(</span>
-<span class="w">                                   </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">                                   </span><span class="n">status</span>
-<span class="w">                                   </span><span class="p">);</span>
-<span class="w">                </span><span class="k">break</span><span class="p">;</span>
-<span class="w">            </span><span class="p">}</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-
-<span class="w">        </span><span class="k">default</span><span class="o">:</span>
-<span class="w">            </span><span class="n"><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></span><span class="p">(</span>
-<span class="w">                               </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">                               </span><span class="n">STATUS_INVALID_DEVICE_REQUEST</span>
-<span class="w">                               </span><span class="p">);</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">return</span><span class="p">;</span>
-<span class="p">}</span>
+        default:
+            <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
+                               Request,
+                               STATUS_INVALID_DEVICE_REQUEST
+                               );
+            break;
+    }
+    return;
+}
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a></p>
-
 <p><a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a></p>
-
 <p><a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a></p>
-
 <p><a href="wdfrequestrequeue" title="NTSTATUS WdfRequestRequeue(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestRequeue</a></p>
-
 <p><a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a></p>
 <hr>
 <div class="ntdoc-description-links">

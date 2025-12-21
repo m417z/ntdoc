@@ -65,87 +65,57 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltReissueSynchronousIo function</h1>
-
 <h2>Description</h2>
-
 <p><strong>FltReissueSynchronousIo</strong> initiates a new synchronous I/O operation that uses the parameters from a previously synchronized I/O operation.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>InitiatingInstance</code> [in]</h3>
-
 <p>An opaque instance pointer to the minifilter driver instance that is reissuing the I/O operation. Must be the same instance that initiated the previous I/O operation. This parameter is required and cannot be set to NULL.</p>
-
 <h3><code>CallbackData</code> [in]</h3>
-
 <p>A pointer to the callback data (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>) structure from a previously synchronized I/O operation. This parameter is required and cannot be set to NULL.</p>
-
 <h2>Return value</h2>
-
 <p>None</p>
-
 <h2>Remarks</h2>
-
 <p>A minifilter driver calls <strong>FltReissueSynchronousIo</strong> from a postoperation callback (<strong><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></strong>) routine to reissue a synchronized I/O request. It typically calls <strong>FltReissueSynchronousIo</strong> from a postoperation callback routine to reissue a failed operation with different parameters, or to handle a reparse bounce. However, it can also call <strong>FltReissueSynchronousIo</strong> to reissue I/O that the minifilter driver generated through calls to the <strong><a href="fltallocatecallbackdata" title="NTSTATUS FLTAPI FltAllocateCallbackData(&#10;  [in]           PFLT_INSTANCE      Instance,&#10;  [in, optional] PFILE_OBJECT       FileObject,&#10;  [out]          PFLT_CALLBACK_DATA *RetNewCallbackData&#10;);">FltAllocateCallbackData</a></strong> and <strong><a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a></strong> routines. In this situation, it does not matter whether it calls <strong>FltReissueSynchronousIo</strong> in a postoperation callback routine or outside the context of an operation callback routine. For calls outside the context of a postoperation callback routine, consider using the <strong><a href="fltreusecallbackdata" title="VOID FLTAPI FltReuseCallbackData(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltReuseCallbackData</a></strong> and <strong><a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a></strong> routines instead.</p>
-
 <p>The caller can modify the contents of the callback data (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>) structure's I/O parameter block before reissuing the I/O request. If it does, it must call <strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong> before calling <strong>FltReissueSynchronousIo</strong>.</p>
-
 <p>For example, if a minifilter driver uses reparse points, and its post-create callback routine is called for a create operation that returned STATUS_REPARSE, the minifilter driver can reissue the create operation for its own reparse points. In this case, the minifilter driver will complete the following steps:</p>
-
 <ol>
-<li><p>Set the <a href="file_open_reparse_point" title="#define FILE_OPEN_REPARSE_POINT 0x00200000">FILE_OPEN_REPARSE_POINT</a> flag in the callback data structure's I/O parameter block.</p></li>
-<li><p>Call <strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong>.</p></li>
-<li><p>Call <strong>FltReissueSynchronousIo</strong> to reissue the create request.</p></li>
+<li>
+<p>Set the <a href="file_open_reparse_point" title="#define FILE_OPEN_REPARSE_POINT 0x00200000">FILE_OPEN_REPARSE_POINT</a> flag in the callback data structure's I/O parameter block.</p>
+</li>
+<li>
+<p>Call <strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong>.</p>
+</li>
+<li>
+<p>Call <strong>FltReissueSynchronousIo</strong> to reissue the create request.</p>
+</li>
 </ol>
-
 <p>The Filter Manager sends the reissued I/O request only to the minifilter driver instances that are attached below the initiating instance (specified in the <strong>InitiatingInstance</strong> parameter) and to the file system. Minifilter driver instances attached above the initiating instance do not receive the reissued I/O request.</p>
-
 <p>Only synchronized I/O operations can be reissued. To provide the driver with the ability to reissue, by calling <strong>FltReissueSynchronousIo</strong> in the postoperation callback routine, a minifilter driver must specifically return FLT_PREOP_SYNCHRONIZE in the preoperation callback routine.</p>
-
 <blockquote>
-  <p>[!NOTE]
-  The minifilter driver does not call the <strong><a href="fltisoperationsynchronous" title="BOOLEAN FLTAPI FltIsOperationSynchronous(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltIsOperationSynchronous</a></strong> routine to determine whether the preoperation callback routine for this operation returned FLT_PREOP_SYNCHRONIZE. The minifilter driver calls <strong><a href="fltisoperationsynchronous" title="BOOLEAN FLTAPI FltIsOperationSynchronous(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltIsOperationSynchronous</a></strong> to determine whether the operation itself is synchronous from the I/O manager's perspective.</p>
+<p>[!NOTE]
+The minifilter driver does not call the <strong><a href="fltisoperationsynchronous" title="BOOLEAN FLTAPI FltIsOperationSynchronous(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltIsOperationSynchronous</a></strong> routine to determine whether the preoperation callback routine for this operation returned FLT_PREOP_SYNCHRONIZE. The minifilter driver calls <strong><a href="fltisoperationsynchronous" title="BOOLEAN FLTAPI FltIsOperationSynchronous(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltIsOperationSynchronous</a></strong> to determine whether the operation itself is synchronous from the I/O manager's perspective.</p>
 </blockquote>
-
 <p>Only <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operations can be reissued. Fast I/O operations and file system filter (FSFilter) callback operations cannot be reissued. To determine whether an I/O operation is <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based, use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544654(v=vs.85)"><strong>FLT_IS_IRP_OPERATION</strong></a> macro.</p>
-
 <p>A create (<a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a>) operation that has been canceled cannot be reissued. Before calling <strong>FltReissueSynchronousIo</strong> for a create operation, callers should check the <strong>Flags</strong> member of the file object for the create operation. If the <a href="fo_file_open_cancelled" title="#define FO_FILE_OPEN_CANCELLED 0x00200000">FO_FILE_OPEN_CANCELLED</a> flag is set, this means that the create operation has been canceled, and a close (<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-close"><strong>IRP_MJ_CLOSE</strong></a>) operation will be issued for this file object. If <strong>FltReissueSynchronousIo</strong> is called for a create operation that has been canceled, the Filter Manager fails the reissued I/O request with STATUS_CANCELLED.</p>
-
 <blockquote>
-  <p>[!NOTE]
-  When minifilter drivers re-issue the create in the post-create callback, they do not have to release and set the buffer that is associated with their reparse point (<strong>TagData</strong> field in <strong>CallbackData</strong>) to NULL. Instead, the Filter Manager releases and sets the buffer to NULL for them.</p>
+<p>[!NOTE]
+When minifilter drivers re-issue the create in the post-create callback, they do not have to release and set the buffer that is associated with their reparse point (<strong>TagData</strong> field in <strong>CallbackData</strong>) to NULL. Instead, the Filter Manager releases and sets the buffer to NULL for them.</p>
 </blockquote>
-
 <h2>See also</h2>
-
 <p><strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong></p>
-
 <p><strong><a href="flt_is_fastio_operation" title="void FLT_IS_FASTIO_OPERATION(&#10;  [in] Data&#10;);">FLT_IS_FASTIO_OPERATION</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544648(v=vs.85)"><strong>FLT_IS_FS_FILTER_OPERATION</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544654(v=vs.85)"><strong>FLT_IS_IRP_OPERATION</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544660(v=vs.85)"><strong>FLT_IS_REISSUED_IO</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-create"><strong>FLT_PARAMETERS for IRP_MJ_CREATE</strong></a></p>
-
 <p><strong><a href="fltcancelfileopen" title="VOID FLTAPI FltCancelFileOpen(&#10;  [in] PFLT_INSTANCE Instance,&#10;  [in] PFILE_OBJECT  FileObject&#10;);">FltCancelFileOpen</a></strong></p>
-
 <p><strong><a href="fltisoperationsynchronous" title="BOOLEAN FLTAPI FltIsOperationSynchronous(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltIsOperationSynchronous</a></strong></p>
-
 <p><strong><a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a></strong></p>
-
 <p><strong><a href="fltreusecallbackdata" title="VOID FLTAPI FltReuseCallbackData(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltReuseCallbackData</a></strong></p>
-
 <p><strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-close"><strong>IRP_MJ_CLOSE</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create"><strong>IRP_MJ_CREATE</strong></a></p>
-
 <p><strong><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></strong></p>
-
 <p><strong><a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -69,169 +69,155 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltCheckOplockEx function</h1>
-
 <h2>Description</h2>
-
 <p>A minifilter driver calls the <strong>FltCheckOplockEx</strong> routine to synchronize the callback data structure for an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operation that has the current opportunistic lock (oplock) state of the file.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Oplock</code> [in]</h3>
-
 <p>An opaque oplock pointer for the file. This pointer must have been initialized by a previous call to <strong><a href="fltinitializeoplock" title="VOID FLTAPI FltInitializeOplock(&#10;  [out] POPLOCK Oplock&#10;);">FltInitializeOplock</a></strong>.</p>
-
 <h3><code>CallbackData</code> [in]</h3>
-
 <p>A pointer to the callback data <strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong> structure for the I/O operation.</p>
-
 <h3><code>Flags</code> [in]</h3>
-
 <p>A bitmask for the associated file I/O operation. A minifilter driver sets bits to specify the behavior of <strong>FltCheckOplockEx</strong>. <em>Flags</em> can be one or more of the following values.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Flag</th>
-  <th>Description</th>
+<th>Flag</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>OPLOCK_FLAG_COMPLETE_IF_OPLOCKED (0x00000001)</td>
-  <td>Allows an opportunistic lock break to proceed without blocking or pending the operation that caused the oplock break.</td>
+<td>OPLOCK_FLAG_COMPLETE_IF_OPLOCKED (0x00000001)</td>
+<td>Allows an opportunistic lock break to proceed without blocking or pending the operation that caused the oplock break.</td>
 </tr>
 <tr>
-  <td>OPLOCK_FLAG_OPLOCK_KEY_CHECK_ONLY (0x00000002)</td>
-  <td>Specifies that <strong>FltCheckOplockEx</strong> should only check for an opportunistic lock key on the <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a> that is associated with the I/O operation. This I/O operations is represented by the callback data that the <em>CallbackData</em> parameter points to. <strong>FltCheckOplockEx</strong> must then add the key if one is provided in the I/O operation. No other oplock processing occurs; that is, no opportunistic lock break will occur.</td>
+<td>OPLOCK_FLAG_OPLOCK_KEY_CHECK_ONLY (0x00000002)</td>
+<td>Specifies that <strong>FltCheckOplockEx</strong> should only check for an opportunistic lock key on the <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a> that is associated with the I/O operation. This I/O operations is represented by the callback data that the <em>CallbackData</em> parameter points to. <strong>FltCheckOplockEx</strong> must then add the key if one is provided in the I/O operation. No other oplock processing occurs; that is, no opportunistic lock break will occur.</td>
 </tr>
 <tr>
-  <td>OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK (0x00000004)</td>
-  <td>Specifies that <strong><a href="fsrtlcheckoplockex" title="NTSTATUS FsRtlCheckOplockEx(&#10;  [in]           POPLOCK                       Oplock,&#10;  [in]           PIRP                          Irp,&#10;  [in]           ULONG                         Flags,&#10;  [in, optional] PVOID                         Context,&#10;  [in, optional] POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine,&#10;  [in, optional] POPLOCK_FS_PREPOST_IRP        PostIrpRoutine&#10;);">FsRtlCheckOplockEx</a></strong> should revert any state that was previously set up through a call to the <strong><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></strong> routine. <strong><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></strong> is called when an <a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a> request is processed. This <a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a> request specifies the <a href="file_open_requiring_oplock" title="#define FILE_OPEN_REQUIRING_OPLOCK 0x00010000">FILE_OPEN_REQUIRING_OPLOCK</a> flag in the create options parameter. The OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK flag is typically used in final processing of such a create request when it previously failed.</td>
+<td>OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK (0x00000004)</td>
+<td>Specifies that <strong><a href="fsrtlcheckoplockex" title="NTSTATUS FsRtlCheckOplockEx(&#10;  [in]           POPLOCK                       Oplock,&#10;  [in]           PIRP                          Irp,&#10;  [in]           ULONG                         Flags,&#10;  [in, optional] PVOID                         Context,&#10;  [in, optional] POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine,&#10;  [in, optional] POPLOCK_FS_PREPOST_IRP        PostIrpRoutine&#10;);">FsRtlCheckOplockEx</a></strong> should revert any state that was previously set up through a call to the <strong><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></strong> routine. <strong><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></strong> is called when an <a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a> request is processed. This <a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a> request specifies the <a href="file_open_requiring_oplock" title="#define FILE_OPEN_REQUIRING_OPLOCK 0x00010000">FILE_OPEN_REQUIRING_OPLOCK</a> flag in the create options parameter. The OPLOCK_FLAG_BACK_OUT_ATOMIC_OPLOCK flag is typically used in final processing of such a create request when it previously failed.</td>
 </tr>
 <tr>
-  <td>OPLOCK_FLAG_IGNORE_OPLOCK_KEYS (0x00000008)</td>
-  <td>Allows all opportunistic lock breaks to proceed regardless of the opportunistic lock key.</td>
+<td>OPLOCK_FLAG_IGNORE_OPLOCK_KEYS (0x00000008)</td>
+<td>Allows all opportunistic lock breaks to proceed regardless of the opportunistic lock key.</td>
 </tr>
 </tbody>
 </table>
-
 <h3><code>Context</code> [in, optional]</h3>
-
 <p>A pointer to caller-defined context information to be passed to the callback routines that <em>WaitCompletionRoutine</em> and <em>PrePostCallbackDataRoutine</em> point to. The Filter Manager treats this information as opaque.</p>
-
 <h3><code>WaitCompletionRoutine</code> [in, optional]</h3>
-
 <p>A pointer to a caller-supplied callback routine. If an oplock break is in progress, the Filter Manager calls this routine when the oplock break is completed. This parameter is optional and can be NULL. If it is NULL, the caller is put into a wait state until the oplock break is completed.</p>
-
 <p>This routine is declared as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n">VOID</span>
-<span class="p">(</span><span class="o">*</span><span class="n">PFLTOPLOCK_WAIT_COMPLETE_ROUTINE</span><span class="p">)</span><span class="w"> </span><span class="p">(</span>
-<span class="w">      </span><span class="n">IN</span><span class="w"> </span><span class="n"><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">PFLT_CALLBACK_DATA</a></span><span class="w"> </span><span class="n">CallbackData</span><span class="p">,</span>
-<span class="w">      </span><span class="n">IN</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span>
-<span class="w">      </span><span class="p">);</span>
+<pre lang="C"><code>typedef VOID
+(*PFLTOPLOCK_WAIT_COMPLETE_ROUTINE) (
+      IN <a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">PFLT_CALLBACK_DATA</a> CallbackData,
+      IN PVOID Context
+      );
 </code></pre>
-</div>
-
 <p>This routine has the following parameters:</p>
-
 <ul>
-<li><p><strong>CallbackData</strong> is a pointer to the callback data structure for the I/O operation. When your <em>WaitCompleteRoutine</em> is called, the IoStatus sub-structure might be filled in with a failure status (for instance STATUS_CANCELLED). You should inspect this status and react appropriately.</p></li>
-<li><p><strong>Context</strong> is a context information pointer that was passed in the <strong>Context</strong> parameter to <strong>FltCheckOplockEx</strong>.</p></li>
+<li>
+<p><strong>CallbackData</strong> is a pointer to the callback data structure for the I/O operation. When your <em>WaitCompleteRoutine</em> is called, the IoStatus sub-structure might be filled in with a failure status (for instance STATUS_CANCELLED). You should inspect this status and react appropriately.</p>
+</li>
+<li>
+<p><strong>Context</strong> is a context information pointer that was passed in the <strong>Context</strong> parameter to <strong>FltCheckOplockEx</strong>.</p>
+</li>
 </ul>
-
 <h3><code>PrePostCallbackDataRoutine</code> [in, optional]</h3>
-
 <p>A pointer to a caller-supplied callback routine to be called if the I/O operation is posted to a work queue. This parameter is optional and can be NULL.</p>
-
 <p>This routine is declared as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n">VOID</span>
-<span class="p">(</span><span class="o">*</span><span class="n">PFLTOPLOCK_PREPOST_CALLBACKDATA_ROUTINE</span><span class="p">)</span><span class="w"> </span><span class="p">(</span>
-<span class="w">      </span><span class="n">IN</span><span class="w"> </span><span class="n"><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">PFLT_CALLBACK_DATA</a></span><span class="w"> </span><span class="n">CallbackData</span><span class="p">,</span>
-<span class="w">      </span><span class="n">IN</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span>
-<span class="w">      </span><span class="p">);</span>
+<pre lang="C"><code>typedef VOID
+(*PFLTOPLOCK_PREPOST_CALLBACKDATA_ROUTINE) (
+      IN <a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">PFLT_CALLBACK_DATA</a> CallbackData,
+      IN PVOID Context
+      );
 </code></pre>
-</div>
-
 <ul>
-<li><p><strong>CallbackData</strong> is a pointer to the callback data structure for the I/O operation.</p></li>
-<li><p><strong>Context</strong> is a context information pointer that was passed in the <em>Context</em> parameter to <strong>FltCheckOplockEx</strong>.</p></li>
+<li>
+<p><strong>CallbackData</strong> is a pointer to the callback data structure for the I/O operation.</p>
+</li>
+<li>
+<p><strong>Context</strong> is a context information pointer that was passed in the <em>Context</em> parameter to <strong>FltCheckOplockEx</strong>.</p>
+</li>
 </ul>
-
 <h2>Return value</h2>
-
 <p><strong>FltCheckOplockEx</strong> returns one of the following FLT_PREOP_CALLBACK_STATUS codes:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>FLT_PREOP_COMPLETE</td>
-  <td><strong>FltCheckOplockEx</strong> encountered a pool allocation failure, or a call to the <strong><a href="fsrtlcheckoplockex" title="NTSTATUS FsRtlCheckOplockEx(&#10;  [in]           POPLOCK                       Oplock,&#10;  [in]           PIRP                          Irp,&#10;  [in]           ULONG                         Flags,&#10;  [in, optional] PVOID                         Context,&#10;  [in, optional] POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine,&#10;  [in, optional] POPLOCK_FS_PREPOST_IRP        PostIrpRoutine&#10;);">FsRtlCheckOplockEx</a></strong> function returned an error. <strong>FltCheckOplockEx</strong> sets the error code in the <strong>Status</strong> member of the <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure of the <strong>IoStatus</strong> member of the <strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong> callback data structure. The <strong>CallbackData</strong> parameter points to this <a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a> structure.</td>
+<td>FLT_PREOP_COMPLETE</td>
+<td><strong>FltCheckOplockEx</strong> encountered a pool allocation failure, or a call to the <strong><a href="fsrtlcheckoplockex" title="NTSTATUS FsRtlCheckOplockEx(&#10;  [in]           POPLOCK                       Oplock,&#10;  [in]           PIRP                          Irp,&#10;  [in]           ULONG                         Flags,&#10;  [in, optional] PVOID                         Context,&#10;  [in, optional] POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine,&#10;  [in, optional] POPLOCK_FS_PREPOST_IRP        PostIrpRoutine&#10;);">FsRtlCheckOplockEx</a></strong> function returned an error. <strong>FltCheckOplockEx</strong> sets the error code in the <strong>Status</strong> member of the <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure of the <strong>IoStatus</strong> member of the <strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong> callback data structure. The <strong>CallbackData</strong> parameter points to this <a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a> structure.</td>
 </tr>
 <tr>
-  <td>FLT_PREOP_PENDING</td>
-  <td>An oplock break was initiated, which caused the Filter Manager to post the I/O operation to a work queue. The I/O operation is represented by the callback data that the <strong>CallbackData</strong> parameter points to.</td>
+<td>FLT_PREOP_PENDING</td>
+<td>An oplock break was initiated, which caused the Filter Manager to post the I/O operation to a work queue. The I/O operation is represented by the callback data that the <strong>CallbackData</strong> parameter points to.</td>
 </tr>
 <tr>
-  <td>FLT_PREOP_SUCCESS_WITH_CALLBACK</td>
-  <td>The callback data that the <strong>CallbackData</strong> parameter points to was not pended, and the I/O operation was performed immediately. Be aware that if the caller specified OPLOCK_FLAG_COMPLETE_IF_OPLOCKED in the <strong>Flags</strong> parameter, an oplock break might actually be in progress even though the I/O operation was not pended. To determine whether this is the situation, the caller should check for STATUS_OPLOCK_BREAK_IN_PROGRESS in the <strong>Status</strong> member of the <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure of the <strong>IoStatus</strong> member of the <strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong> callback data structure.</td>
+<td>FLT_PREOP_SUCCESS_WITH_CALLBACK</td>
+<td>The callback data that the <strong>CallbackData</strong> parameter points to was not pended, and the I/O operation was performed immediately. Be aware that if the caller specified OPLOCK_FLAG_COMPLETE_IF_OPLOCKED in the <strong>Flags</strong> parameter, an oplock break might actually be in progress even though the I/O operation was not pended. To determine whether this is the situation, the caller should check for STATUS_OPLOCK_BREAK_IN_PROGRESS in the <strong>Status</strong> member of the <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure of the <strong>IoStatus</strong> member of the <strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong> callback data structure.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>A minifilter driver calls <strong>FltCheckOplockEx</strong> to synchronize an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operation with the current oplock state of a file according to the following conditions:</p>
-
 <ul>
-<li><p>If the I/O operation will cause the oplock to break, the oplock break is initiated.</p></li>
-<li><p>If the I/O operation cannot continue until the oplock break is complete, <strong>FltCheckOplockEx</strong> returns FLT_PREOP_PENDING and calls the callback routine that the <em>PrePostCallbackDataRoutine</em> parameter points to.</p></li>
-<li><p>If a minifilter driver uses oplocks, it must call <strong>FltCheckOplockEx</strong> from any preoperation callback (<a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a>) routine for I/O operations that can cause oplock breaks. This rule applies to the following types of I/O operations, because these operations can cause oplock breaks:</p>
-
+<li>
+<p>If the I/O operation will cause the oplock to break, the oplock break is initiated.</p>
+</li>
+<li>
+<p>If the I/O operation cannot continue until the oplock break is complete, <strong>FltCheckOplockEx</strong> returns FLT_PREOP_PENDING and calls the callback routine that the <em>PrePostCallbackDataRoutine</em> parameter points to.</p>
+</li>
+<li>
+<p>If a minifilter driver uses oplocks, it must call <strong>FltCheckOplockEx</strong> from any preoperation callback (<a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a>) routine for I/O operations that can cause oplock breaks. This rule applies to the following types of I/O operations, because these operations can cause oplock breaks:</p>
 <ul>
-<li><p><a href="irp_mj_cleanup" title="#define IRP_MJ_CLEANUP 0x12">IRP_MJ_CLEANUP</a></p></li>
-<li><p><a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a></p></li>
-<li><p><a href="irp_mj_file_system_control" title="#define IRP_MJ_FILE_SYSTEM_CONTROL 0x0d">IRP_MJ_FILE_SYSTEM_CONTROL</a></p></li>
-<li><p><a href="irp_mj_flush_buffers" title="#define IRP_MJ_FLUSH_BUFFERS 0x09">IRP_MJ_FLUSH_BUFFERS</a></p></li>
-<li><p><a href="irp_mj_lock_control" title="#define IRP_MJ_LOCK_CONTROL 0x11">IRP_MJ_LOCK_CONTROL</a></p></li>
-<li><p><a href="irp_mj_read" title="#define IRP_MJ_READ 0x03">IRP_MJ_READ</a></p></li>
-<li><p><a href="irp_mj_set_information" title="#define IRP_MJ_SET_INFORMATION 0x06">IRP_MJ_SET_INFORMATION</a></p></li>
-<li><p><a href="irp_mj_write" title="#define IRP_MJ_WRITE 0x04">IRP_MJ_WRITE</a></p></li>
-<li><p><a href="irp_mj_acquire_for_section_synchronization" title="#define IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION ((UCHAR)-1)">IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION</a></p></li>
-</ul></li>
+<li>
+<p><a href="irp_mj_cleanup" title="#define IRP_MJ_CLEANUP 0x12">IRP_MJ_CLEANUP</a></p>
+</li>
+<li>
+<p><a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a></p>
+</li>
+<li>
+<p><a href="irp_mj_file_system_control" title="#define IRP_MJ_FILE_SYSTEM_CONTROL 0x0d">IRP_MJ_FILE_SYSTEM_CONTROL</a></p>
+</li>
+<li>
+<p><a href="irp_mj_flush_buffers" title="#define IRP_MJ_FLUSH_BUFFERS 0x09">IRP_MJ_FLUSH_BUFFERS</a></p>
+</li>
+<li>
+<p><a href="irp_mj_lock_control" title="#define IRP_MJ_LOCK_CONTROL 0x11">IRP_MJ_LOCK_CONTROL</a></p>
+</li>
+<li>
+<p><a href="irp_mj_read" title="#define IRP_MJ_READ 0x03">IRP_MJ_READ</a></p>
+</li>
+<li>
+<p><a href="irp_mj_set_information" title="#define IRP_MJ_SET_INFORMATION 0x06">IRP_MJ_SET_INFORMATION</a></p>
+</li>
+<li>
+<p><a href="irp_mj_write" title="#define IRP_MJ_WRITE 0x04">IRP_MJ_WRITE</a></p>
+</li>
+<li>
+<p><a href="irp_mj_acquire_for_section_synchronization" title="#define IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION ((UCHAR)-1)">IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION</a></p>
+</li>
 </ul>
-
+</li>
+</ul>
 <p>With the exception of <a href="irp_mj_acquire_for_section_synchronization" title="#define IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION ((UCHAR)-1)">IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION</a>, the I/O operation must be an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operation. To determine whether a given callback data structure represents an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operation, use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544654(v=vs.85)">FLT_IS_IRP_OPERATION</a> macro.</p>
-
 <p>Minifilters must not call <strong>FltCheckOplockEx</strong> again within the callback specified in <em>WaitCompletionRoutine</em>. Doing so can result in a deadlock condition if the oplock package calls the completion callback before <strong>FltCheckOplockEx</strong> returns.</p>
-
 <p><strong>FltCheckOplockEx</strong> will only every return FLT_PREOP_SUCCESS_WITH_CALLBACK when the major function is <a href="irp_mj_acquire_for_section_synchronization" title="#define IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION ((UCHAR)-1)">IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION</a>.</p>
-
 <p>For more information about opportunistic locks, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/fileio/opportunistic-locks">Opportunistic Locks</a>.</p>
-
 <h2>See also</h2>
-
 <p><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544654(v=vs.85)">FLT_IS_IRP_OPERATION</a></p>
-
 <p><a href="fltinitializeoplock" title="VOID FLTAPI FltInitializeOplock(&#10;  [out] POPLOCK Oplock&#10;);">FltInitializeOplock</a></p>
-
 <p><a href="fltoplockfsctrl" title="FLT_PREOP_CALLBACK_STATUS FLTAPI FltOplockFsctrl(&#10;  [in] POPLOCK            Oplock,&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] ULONG              OpenCount&#10;);">FltOplockFsctrl</a></p>
-
 <p><a href="fsrtlcheckoplockex" title="NTSTATUS FsRtlCheckOplockEx(&#10;  [in]           POPLOCK                       Oplock,&#10;  [in]           PIRP                          Irp,&#10;  [in]           ULONG                         Flags,&#10;  [in, optional] PVOID                         Context,&#10;  [in, optional] POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine,&#10;  [in, optional] POPLOCK_FS_PREPOST_IRP        PostIrpRoutine&#10;);">FsRtlCheckOplockEx</a></p>
-
 <p><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></p>
-
 <p><a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -69,75 +69,57 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_UCX_ENDPOINT_STATIC_STREAMS_ADD callback function</h1>
-
 <h2>Description</h2>
-
 <p>The client driver's implementation that UCX calls to create static streams.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>UcxEndpoint</code> [in]</h3>
-
 <p>A handle to a UCXENDPOINT object that represents the endpoint.</p>
-
 <h3><code>NumberOfStreams</code> [in]</h3>
-
 <p>The number of non-default streams to create.</p>
-
 <h3><code>UcxStaticStreamsInit</code> [in]</h3>
-
 <p>A pointer to an opaque structure containing initialization information. This structure is managed by UCX.</p>
-
 <h2>Return value</h2>
-
 <p>If the operation is successful, the callback function must return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, or another status value for which <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) equals TRUE. Otherwise it must return a status value for which <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) equals FALSE.</p>
-
 <h2>Remarks</h2>
-
 <p>The UCX client driver registers this callback function with the USB host controller extension (UCX) by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ucxendpoint/nf-ucxendpoint-ucxendpointcreate">UcxEndpointCreate</a> method.</p>
-
 <p>This callback function creates a UCX static streams object by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ucxsstreams/nf-ucxsstreams-ucxstaticstreamscreate">UcxStaticStreamsCreate</a> method. Only one UCX static streams object can be associated with a single endpoint. The driver then calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ucxsstreams/nf-ucxsstreams-ucxstaticstreamssetstreaminfo">UcxStaticStreamsSetStreamInfo</a> once per stream to create a queue for each stream.</p>
-
 <p>A static streams object is not enabled until UCX calls the client driver's <a href="evt_ucx_endpoint_static_streams_enable" title="EVT_UCX_ENDPOINT_STATIC_STREAMS_ENABLE EvtUcxEndpointStaticStreamsEnable;&#10;&#10;VOID EvtUcxEndpointStaticStreamsEnable(&#10;  [in] UCXENDPOINT UcxEndpoint,&#10;  [in] UCXSSTREAMS UcxStaticStreams,&#10;  [in] WDFREQUEST Request&#10;)&#10;{...}">EVT_UCX_ENDPOINT_STATIC_STREAMS_ENABLE</a> callback function.</p>
-
 <h3>Examples</h3>
+<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+Endpoint_EvtEndpointStaticStreamsAdd(
+    UCXENDPOINT         UcxEndpoint,
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>               NumberOfStreams,
+    PUCXSSTREAMS_INIT   UcxStaticStreamsInit
+    )
+{
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>                    status;
+    <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a>       wdfAttributes;
+    UCXSSTREAMS                 ucxStaticStreams;
+    <a href="stream_info" title="typedef struct _STREAM_INFO {&#10;  ULONG    Size;&#10;  WDFQUEUE WdfQueue;&#10;  ULONG    StreamId;&#10;} STREAM_INFO, *PSTREAM_INFO;">STREAM_INFO</a>                 streamInfo;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                       streamId;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="nf">Endpoint_EvtEndpointStaticStreamsAdd</span><span class="p">(</span>
-<span class="w">    </span><span class="n">UCXENDPOINT</span><span class="w">         </span><span class="n">UcxEndpoint</span><span class="p">,</span>
-<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">               </span><span class="n">NumberOfStreams</span><span class="p">,</span>
-<span class="w">    </span><span class="n">PUCXSSTREAMS_INIT</span><span class="w">   </span><span class="n">UcxStaticStreamsInit</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">                    </span><span class="n">status</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a></span><span class="w">       </span><span class="n">wdfAttributes</span><span class="p">;</span>
-<span class="w">    </span><span class="n">UCXSSTREAMS</span><span class="w">                 </span><span class="n">ucxStaticStreams</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="stream_info" title="typedef struct _STREAM_INFO {&#10;  ULONG    Size;&#10;  WDFQUEUE WdfQueue;&#10;  ULONG    StreamId;&#10;} STREAM_INFO, *PSTREAM_INFO;">STREAM_INFO</a></span><span class="w">                 </span><span class="n">streamInfo</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">                       </span><span class="n">streamId</span><span class="p">;</span>
+    TRY {
 
-<span class="w">    </span><span class="n">TRY</span><span class="w"> </span><span class="p">{</span>
+        <a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a>(&amp;wdfAttributes, STATIC_STREAMS_CONTEXT);
 
-<span class="w">        </span><span class="n"><a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">wdfAttributes</span><span class="p">,</span><span class="w"> </span><span class="n">STATIC_STREAMS_CONTEXT</span><span class="p">);</span>
+        status = UcxStaticStreamsCreate(UcxEndpoint,
+                                        &amp;UcxStaticStreamsInit,
+                                        &amp;wdfAttributes,
+                                        &amp;ucxStaticStreams);
+        // … error handling …
 
-<span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UcxStaticStreamsCreate</span><span class="p">(</span><span class="n">UcxEndpoint</span><span class="p">,</span>
-<span class="w">                                        </span><span class="o">&amp;</span><span class="n">UcxStaticStreamsInit</span><span class="p">,</span>
-<span class="w">                                        </span><span class="o">&amp;</span><span class="n">wdfAttributes</span><span class="p">,</span>
-<span class="w">                                        </span><span class="o">&amp;</span><span class="n">ucxStaticStreams</span><span class="p">);</span>
-<span class="w">        </span><span class="c1">// … error handling …</span>
+        for (i = 0, streamId = 1; i &lt; NumberOfStreams; i += 1, streamId += 1) {
 
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">streamId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">NumberOfStreams</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">streamId</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+            // … create WDF queue …
 
-<span class="w">            </span><span class="c1">// … create WDF queue …</span>
+            STREAM_INFO_INIT(&amp;streamInfo,
+                             wdfQueue,
+                             streamId);
 
-<span class="w">            </span><span class="n">STREAM_INFO_INIT</span><span class="p">(</span><span class="o">&amp;</span><span class="n">streamInfo</span><span class="p">,</span>
-<span class="w">                             </span><span class="n">wdfQueue</span><span class="p">,</span>
-<span class="w">                             </span><span class="n">streamId</span><span class="p">);</span>
+            UcxStaticStreamsSetStreamInfo(ucxStaticStreams, &amp;streamInfo);
+        }
 
-<span class="w">            </span><span class="n">UcxStaticStreamsSetStreamInfo</span><span class="p">(</span><span class="n">ucxStaticStreams</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">streamInfo</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
 </code></pre>
-</div>
 <hr>
 <div class="ntdoc-description-links">
 <p>

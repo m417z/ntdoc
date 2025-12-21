@@ -68,90 +68,56 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PMRX_CREATE_SRVCALL callback function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>MRxCreateSrvCall</strong> routine is called by <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/the-rdbss-driver-and-library">RDBSS</a> to request that the network mini-redirector create an SRV_CALL structure and establish connection with a server.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>SrvCall</code></h3>
-
 <p>[in, out] A pointer to the SRV_CALL structure to be created.</p>
-
 <h3><code>SrvCallCallBackContext</code></h3>
-
 <p>[in, out] A pointer to the callback context used by the network mini-redirector to notify RDBSS when the <strong>MRxCreateSrvCall</strong> request is finally completed. The <strong>SrvCallCallBackContext</strong> parameter points to an MRX_SRVCALLDOWN_STRUCTURE structure that contains the <a href="rx_context" title="typedef struct _RX_CONTEXT {&#10;  NODE_TYPE_CODE         NodeTypeCode;&#10;  NODE_BYTE_SIZE         NodeByteSize;&#10;  __volatile ULONG       ReferenceCount;&#10;  LIST_ENTRY             ContextListEntry;&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  BOOLEAN                PendingReturned;&#10;  BOOLEAN                PostRequest;&#10;  PDEVICE_OBJECT         RealDevice;&#10;  PIRP                   CurrentIrp;&#10;  PIO_STACK_LOCATION     CurrentIrpSp;&#10;  PMRX_FCB               pFcb;&#10;  PMRX_FOBX              pFobx;&#10;  PMRX_SRV_OPEN          pRelevantSrvOpen;&#10;  PNON_PAGED_FCB         NonPagedFcb;&#10;  PRDBSS_DEVICE_OBJECT   RxDeviceObject;&#10;  PETHREAD               OriginalThread;&#10;  PETHREAD               LastExecutionThread;&#10;  __volatile PVOID       LockManagerContext;&#10;...">RX_CONTEXT</a> structure for this request, as well as the <strong>Callback</strong> routine that the mini-redirector calls when the <strong>MRxCreateSrvCall</strong> request is finally completed.</p>
-
 <h2>Return value</h2>
-
 <p>RDBSS expects <strong>MRxCreateSrvCall</strong> to return STATUS_PENDING on success or failure. This behavior results because RDBSS expects this call to be completed asynchronously. A network mini-redirector should map <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> to STATUS_PENDING as a return value for <strong>MRxCreateSrvCall</strong>.</p>
-
-<p>The final completion status is returned in the <strong>SrvCallCallBackContext->Status</strong> member once the call completes and the routine in the <strong>Callback</strong> member in the MRX_SRVCALLDOWN_STRUCTURE structure is called by the network mini-redirector. This member initially contains STATUS_BAD_NETWORK_PATH until the network mini-redirector changes this value on completion.</p>
-
-<p>The <strong>SrvCallCallBackContext->Status</strong> member contains <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success once the call is completed or one of the following common error codes on failure (although other error codes are possible):</p>
-
+<p>The final completion status is returned in the <strong>SrvCallCallBackContext-&gt;Status</strong> member once the call completes and the routine in the <strong>Callback</strong> member in the MRX_SRVCALLDOWN_STRUCTURE structure is called by the network mini-redirector. This member initially contains STATUS_BAD_NETWORK_PATH until the network mini-redirector changes this value on completion.</p>
+<p>The <strong>SrvCallCallBackContext-&gt;Status</strong> member contains <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success once the call is completed or one of the following common error codes on failure (although other error codes are possible):</p>
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>STATUS_BAD_NETWORK_PATH</td>
-  <td>The network path that was specified is bad.</td>
+<td>STATUS_BAD_NETWORK_PATH</td>
+<td>The network path that was specified is bad.</td>
 </tr>
 <tr>
-  <td>STATUS_NETWORK_UNREACHABLE</td>
-  <td>The network was unreachable.</td>
+<td>STATUS_NETWORK_UNREACHABLE</td>
+<td>The network was unreachable.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>The two important abstractions used in the interface between RDBSS and a network mini-redirector are the SRV_CALL structure and the NET_ROOT structure. An SRV_CALL structure corresponds to the context associated with a server once a connection is established. A NET_ROOT structure corresponds to a share on a server (this could also be viewed as a portion of the namespace that has been claimed by a network mini-redirector).</p>
-
 <p>The creation of an SRV_CALL structure typically involves at least one network round trip. This operation can take considerable time to complete because a network connection with a remote resource may need to be established. To ensure that the asynchronous operations continue, the creation of an SRV_CALL structure is modeled as a two-phase activity. Each call down to a network mini-redirector for creating an SRV_CALL structure is accompanied by a call up from the network mini-redirector to RDBSS that specifies the completion status of the request. RDBSS assumes that <strong>MRxCreateSrvCall</strong> will be completed asynchronously. So RDBSS expects <strong>MRxCreateSrvCall</strong> to return STATUS_PENDING. RDBSS will be notified using the callback routine when the call finally completes.</p>
-
 <p>A network mini-redirector implementation of <strong>MRxCreateSrvCall</strong> is expected to return STATUS_PENDING to the initial call. When processing is completed, the network mini-redirector calls the callback routine that is passed in as part of the <strong>SrvCallCallBackContext</strong> parameter to notify RDBSS that the call was completed and to return the completion status. The callback routine that the network mini-redirector calls is specified as the <strong>Callback</strong> member in the MRX_SRVCALLDOWN_STRUCTURE of the <strong>SrvCallCallBackContext</strong> parameter. The final completion status of the call must be stored in the <strong>Status</strong> member of the <strong>SrvCallCallBackContext</strong> parameter.</p>
-
 <p>On success, the network mini-redirector must also store some value in the <strong>RecommunicateContext</strong> member of the <strong>SrvCallCallBackContext</strong>. The value stored in the <strong>RecommunicateContext</strong> member is the value that RDBSS will pass to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_srvcall_winner_notify"><strong>MRxSrvCallWinnerNotify</strong></a> in the <strong>RecommunicateContext</strong> parameter if <strong>MRxCreateSrvCall</strong> was successful. The network mini-redirector must also fill the appropriate data in the <strong>SrvCall</strong> parameter for the SRV_CALL structure that was created. Note that the <strong>SrvCall</strong> parameter passed to <strong>MRxCreateSrvCall</strong> is the same as the <strong>SrvCall</strong> member in the MRX_SRVCALLDOWN_STRUCTURE of the <strong>SrvCallCallBackContext</strong> parameter. This same SrvCall parameter is also passed to <strong>MRxSrvCallWinnerNotify</strong> in the <strong>SrvCall</strong> parameter.</p>
-
 <p>The implementation of <strong>MRxCreateSrvCall</strong> in a network mini-redirector is also complicated by the need for transport handles. Certain transport-related interfaces require a handle to be created and used for all communication. Creating an SRV_CALL structure may require establishing transport-related handles for network communications. Because the process of establishing a network connection can be time consuming, once a connection is established it makes sense to use the connection for communication as long as possible. Once a transport handle to a remote network resource is established, it can be reused by any number of other application requests. When a user application terminates, the handles associated with the process are deleted. For this reason, establishing transport handles in the context of a transient user-mode process that could be short-lived does not make sense. So an SRV_CALL structure normally needs to be initialized in the context of a well known process that will not disappear while these transport handles are being used for communication.</p>
-
 <p>One method used to work around the potential problems with transport handles is to have the RDBSS system process allocate the transport handles. This affects how the <strong>MRxCreateSrvCall</strong> routine is executed. If the request to <strong>MRxCreateSrvCall</strong> was issued in the context of the RDBSS system process, then this call can be executed immediately and does not need to be posted to a work queue. However, in order to avoid problems, if the request to <strong>MRxCreateSrvCall</strong> is from any other process, the request would be posted to a system work queue using <strong><a href="rxdispatchtoworkerthread" title="NTSTATUS RxDispatchToWorkerThread(&#10;  [in] IN PRDBSS_DEVICE_OBJECT     pMRxDeviceObject,&#10;  [in] IN WORK_QUEUE_TYPE          WorkQueueType,&#10;  [in] IN PRX_WORKERTHREAD_ROUTINE Routine,&#10;  [in] IN PVOID                    pContext&#10;);">RxDispatchToWorkerThread</a></strong> for later execution. RDBSS will later use one of its system threads to process the work queue request and execute <strong>MRxCreateSrvCall</strong>. This ensures that any transport handles will be owned by a system process.</p>
-
 <p>A network mini-redirector can determine if a call to <strong>MRxCreateSrvCall</strong> was received directly from RDBSS by calling <strong><a href="rxgetrdbssprocess" title="PEPROCESS RxGetRDBSSProcess();">RxGetRDBSSProcess</a></strong>. <strong><a href="rxgetrdbssprocess" title="PEPROCESS RxGetRDBSSProcess();">RxGetRDBSSProcess</a></strong> will return the RDBBS process and this value can be compared with the current process returned using <strong><a href="iogetcurrentprocess" title="PEPROCESS IoGetCurrentProcess();">IoGetCurrentProcess</a></strong>. If the call to <strong>MRxCreateSrvCall</strong> was not initiated in the context of the RDBSS system process, then <strong>MRxCreateSrvCall</strong> can return STATUS_PENDING and post the call to a work queue using <strong><a href="rxdispatchtoworkerthread" title="NTSTATUS RxDispatchToWorkerThread(&#10;  [in] IN PRDBSS_DEVICE_OBJECT     pMRxDeviceObject,&#10;  [in] IN WORK_QUEUE_TYPE          WorkQueueType,&#10;  [in] IN PRX_WORKERTHREAD_ROUTINE Routine,&#10;  [in] IN PVOID                    pContext&#10;);">RxDispatchToWorkerThread</a></strong>for later execution by RDBSS. Normally, these calls would be posted to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ne-wdm-_work_queue_type"><strong>DelayedWorkQueue</strong></a>.</p>
-
 <p>It is up to the developer of the network mini-redirector to decide how <strong>MRxCreateSrvCall</strong> is implemented. If the process to create a SRV_CALL can take a considerable amount of time, then <strong>MRxCreateSrvCall</strong> should be completed asynchronously. If transport handles are needed, then the network mini-redirector needs to find a system process that is long-lived to establish these handles.</p>
-
 <p>When this call completes, the <strong>SrvCall</strong> parameter should be modified with the SRV_CALL structure information updated from the network mini-redirector.</p>
-
 <p>A network mini-redirector that indicates support as a UNC provider will receive a prefix claim from the Multiple UNC Provider (MUP) as a call to <strong>MRxCreateSrvCall</strong>. For more information about UNC Naming and MUP, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/support-for-unc-naming-and-mup">Support for UNC Naming and MUP</a>.</p>
-
 <h2>See also</h2>
-
 <p><strong><a href="iogetcurrentprocess" title="PEPROCESS IoGetCurrentProcess();">IoGetCurrentProcess</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_create_v_net_root"><strong>MRxCreateVNetRoot</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_extract_netroot_name"><strong>MRxExtractNetRootName</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_finalize_net_root_calldown"><strong>MRxFinalizeNetRoot</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_finalize_srvcall_calldown"><strong>MRxFinalizeSrvCall</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_finalize_v_net_root_calldown"><strong>MRxFinalizeVNetRoot</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_preparse_name"><strong>MRxPreparseName</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_srvcall_winner_notify"><strong>MRxSrvCallWinnerNotify</strong></a></p>
-
 <p><strong><a href="rxdispatchtoworkerthread" title="NTSTATUS RxDispatchToWorkerThread(&#10;  [in] IN PRDBSS_DEVICE_OBJECT     pMRxDeviceObject,&#10;  [in] IN WORK_QUEUE_TYPE          WorkQueueType,&#10;  [in] IN PRX_WORKERTHREAD_ROUTINE Routine,&#10;  [in] IN PVOID                    pContext&#10;);">RxDispatchToWorkerThread</a></strong></p>
-
 <p><strong><a href="rxgetrdbssprocess" title="PEPROCESS RxGetRDBSSProcess();">RxGetRDBSSProcess</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

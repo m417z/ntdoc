@@ -68,68 +68,43 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK callback function</h1>
-
 <h2>Description</h2>
-
 <p>A minifilter driver can register a routine of type <em>PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK</em> as the minifilter driver's <em>InstanceQueryTeardownCallback</em> routine.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>FltObjects</code> [in]</h3>
-
 <p>Pointer to an <a href="flt_related_objects" title="typedef struct _FLT_RELATED_OBJECTS {&#10;  USHORT        Size;&#10;  USHORT        TransactionContext;&#10;  PFLT_FILTER   Filter;&#10;  PFLT_VOLUME   Volume;&#10;  PFLT_INSTANCE Instance;&#10;  PFILE_OBJECT  FileObject;&#10;  PKTRANSACTION Transaction;&#10;} FLT_RELATED_OBJECTS, *PFLT_RELATED_OBJECTS;">FLT_RELATED_OBJECTS</a> structure that contains opaque pointers for the objects related to the current operation.</p>
-
 <h3><code>Flags</code> [in]</h3>
-
 <p>Bitmask of flags that describe why the given instance query teardown callback routine was called. No flags are currently defined.</p>
-
 <h2>Return value</h2>
-
 <p>This callback routine returns <strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong> or an <strong><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></strong> value such as one of the following:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_FLT_DO_NOT_DETACH</strong></td>
-  <td>Returning this status value prevents the minifilter driver instance from being detached. This is an error code.</td>
+<td><strong>STATUS_FLT_DO_NOT_DETACH</strong></td>
+<td>Returning this status value prevents the minifilter driver instance from being detached. This is an error code.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>When a minifilter driver registers itself by calling <a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a> from its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a> routine, it can register a routine of type <em>PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK</em> as the minifilter driver's <em>InstanceQueryTeardownCallback</em> routine.</p>
-
 <p>To register the <em>InstanceQueryTeardownCallback</em> routine, the minifilter driver stores the address of a routine of type <em>PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK</em> in the <em>InstanceQueryTeardownCallback</em> member of the <a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a> structure that the minifilter driver passes as the <em>Registration</em> parameter of <a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a>.</p>
-
 <p>The filter manager calls this routine to allow the minifilter driver to respond to a manual detach request. Such a request is received when a user-mode application calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fltuser/nf-fltuser-filterdetach">FilterDetach</a> or a kernel-mode component calls <a href="fltdetachvolume" title="NTSTATUS FLTAPI FltDetachVolume(&#10;  [in, out]      PFLT_FILTER      Filter,&#10;  [in, out]      PFLT_VOLUME      Volume,&#10;  [in, optional] PCUNICODE_STRING InstanceName&#10;);">FltDetachVolume</a>.</p>
-
 <p>This routine is not called for automatic or mandatory detach requests, for example, when the minifilter driver is unloaded or a volume is dismounted.</p>
-
 <p>If this routine returns an error or warning <strong><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></strong> code, such as <strong>STATUS_FLT_DO_NOT_DETACH</strong>, the minifilter driver instance is not detached from the volume. Otherwise, the instance is detached.</p>
-
 <p>If a minifilter driver does not define an <em>InstanceQueryTeardownCallback</em> routine, its instances cannot be detached manually by calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fltuser/nf-fltuser-filterdetach">FilterDetach</a> or <a href="fltdetachvolume" title="NTSTATUS FLTAPI FltDetachVolume(&#10;  [in, out]      PFLT_FILTER      Filter,&#10;  [in, out]      PFLT_VOLUME      Volume,&#10;  [in, optional] PCUNICODE_STRING InstanceName&#10;);">FltDetachVolume</a>.</p>
-
 <h2>See also</h2>
-
 <p><a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a></p>
-
 <p><a href="flt_related_objects" title="typedef struct _FLT_RELATED_OBJECTS {&#10;  USHORT        Size;&#10;  USHORT        TransactionContext;&#10;  PFLT_FILTER   Filter;&#10;  PFLT_VOLUME   Volume;&#10;  PFLT_INSTANCE Instance;&#10;  PFILE_OBJECT  FileObject;&#10;  PKTRANSACTION Transaction;&#10;} FLT_RELATED_OBJECTS, *PFLT_RELATED_OBJECTS;">FLT_RELATED_OBJECTS</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fltuser/nf-fltuser-filterdetach">FilterDetach</a></p>
-
 <p><a href="fltdetachvolume" title="NTSTATUS FLTAPI FltDetachVolume(&#10;  [in, out]      PFLT_FILTER      Filter,&#10;  [in, out]      PFLT_VOLUME      Volume,&#10;  [in, optional] PCUNICODE_STRING InstanceName&#10;);">FltDetachVolume</a></p>
-
 <p><a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a></p>
-
 <p><a href="pflt_instance_setup_callback" title="PFLT_INSTANCE_SETUP_CALLBACK PfltInstanceSetupCallback;&#10;&#10;NTSTATUS PfltInstanceSetupCallback(&#10;  [in] PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in] FLT_INSTANCE_SETUP_FLAGS Flags,&#10;  [in] DEVICE_TYPE VolumeDeviceType,&#10;  [in] FLT_FILESYSTEM_TYPE VolumeFilesystemType&#10;)&#10;{...}">PFLT_INSTANCE_SETUP_CALLBACK</a></p>
-
 <p><a href="pflt_instance_teardown_callback" title="PFLT_INSTANCE_TEARDOWN_CALLBACK PfltInstanceTeardownCallback;&#10;&#10;VOID PfltInstanceTeardownCallback(&#10;  [in] PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in] FLT_INSTANCE_TEARDOWN_FLAGS Reason&#10;)&#10;{...}">PFLT_INSTANCE_TEARDOWN_CALLBACK</a></p>
 <hr>
 <div class="ntdoc-description-links">

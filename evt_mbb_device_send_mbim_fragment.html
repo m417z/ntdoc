@@ -68,105 +68,84 @@ VOID EvtMbbDeviceSendMbimFragment(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_MBB_DEVICE_SEND_MBIM_FRAGMENT callback function</h1>
-
 <h2>Description</h2>
-
 <p>A client driver's <em>EvtMbbDeviceSendMbimFragment</em> event callback function instructs its device to perform the task specified by the MBIM control message. This callback function is the equivalent of the <em>SendEncapsulatedCommand</em> request defined in the MBIM specification.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Device</code></h3>
-
 <p>A handle to a framework device object the client driver obtained from a previous call to <strong><a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a></strong>.</p>
-
 <h3><code>SendRequest</code></h3>
-
 <p>A handle to the framework object that represents the request to send a fragmented MBIM message to the device.</p>
-
 <h2>Prototype</h2>
+<pre lang="cpp"><code>//Declaration
 
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//Declaration</span>
+EVT_MBB_DEVICE_SEND_MBIM_FRAGMENT EvtMbbDeviceSendMbimFragment;
 
-<span class="n">EVT_MBB_DEVICE_SEND_MBIM_FRAGMENT</span><span class="w"> </span><span class="n">EvtMbbDeviceSendMbimFragment</span><span class="p">;</span>
+// Definition
 
-<span class="c1">// Definition</span>
+VOID EvtMbbDeviceSendMbimFragment
+(
+	WDFDEVICE Device
+	MBBREQUEST SendRequest
+)
+{...}
 
-<span class="n">VOID</span><span class="w"> </span><span class="nf">EvtMbbDeviceSendMbimFragment</span>
-<span class="p">(</span>
-<span class="w">    </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span>
-<span class="w">    </span><span class="n">MBBREQUEST</span><span class="w"> </span><span class="n">SendRequest</span>
-<span class="p">)</span>
-<span class="p">{...}</span>
 </code></pre>
-</div>
-
 <h2>Remarks</h2>
-
 <p>An MBBCx client driver must register an <em>EvtMbbDeviceSendMbimFragment</em> callback function by calling <strong><a href="mbbdeviceinitialize" title="NTSTATUS MbbDeviceInitialize(&#10;  WDFDEVICE          Device,&#10;  PMBB_DEVICE_CONFIG Config&#10;);">MbbDeviceInitialize</a></strong>.</p>
-
 <p>The MBBCx framework calls this callback function when it wants to issue a command in the format of an MBIM control message to the client driver. If the size of the MBIM control message is larger than the maximum fragment size set by the client driver in the <strong><a href="mbb_device_mbim_parameters" title="typedef struct _MBB_DEVICE_MBIM_PARAMETERS {&#10;  ULONG                     Size;&#10;  MBB_MBIM_VERSION          Version;&#10;  MBB_MBIM_EXTENDED_VERSION ExtendedVersion;&#10;  ULONG                     MaximumFragmentSize;&#10;} MBB_DEVICE_MBIM_PARAMETERS, *PMBB_DEVICE_MBIM_PARAMETERS;">MBB_DEVICE_MBIM_PARAMETERS</a></strong> structure, the MBBCx framework splits the MBIM control message into multiple fragmented messages and calls this callback function once per fragmented message.</p>
-
 <p>To get the actual MBIM message fragment being sent, the client driver should call <strong><a href="mbbrequestgetbuffer" title="PVOID MbbRequestGetBuffer(&#10;  MBBREQUEST Request,&#10;  size_t     *BufferSize&#10;);">MbbRequestGetBuffer</a></strong> to get the buffer where the MBIM message fragment is stored. Once its device has successfully accepted the control request, or any failure condition has occurred, the client driver must acknowledge this to MBBCx by calling <strong><a href="mbbrequestcomplete" title="VOID MbbRequestComplete(&#10;  MBBREQUEST Request,&#10;  NTSTATUS   NtStatus&#10;);">MbbRequestComplete</a></strong> either asynchronously or synchronously.</p>
-
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/netcx/writing-an-mbbcx-client-driver#handling-mbim-control-messages">Handling MBIM control messages</a>.</p>
-
 <h3>Example</h3>
-
 <p>Error handling code has been left out of this example for brevity and clarity.</p>
+<pre lang="C++"><code>VOID
+EvtMbbDeviceSendMbimFragment(
+    WDFDEVICE  Device,
+    MBBREQUEST SendRequest
+)
+{
+    // The client driver-specified framework object context
+    PMY_DEVICE_CONTEXT myContext = GetMyDeviceContext(Device);
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="nf">EvtMbbDeviceSendMbimFragment</span><span class="p">(</span>
-<span class="w">    </span><span class="n">WDFDEVICE</span><span class="w">  </span><span class="n">Device</span><span class="p">,</span>
-<span class="w">    </span><span class="n">MBBREQUEST</span><span class="w"> </span><span class="n">SendRequest</span>
-<span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="c1">// The client driver-specified framework object context</span>
-<span class="w">    </span><span class="n">PMY_DEVICE_CONTEXT</span><span class="w"> </span><span class="n">myContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetMyDeviceContext</span><span class="p">(</span><span class="n">Device</span><span class="p">);</span>
+    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> bufferSize = 0;
+    PVOID buffer = <a href="mbbrequestgetbuffer" title="PVOID MbbRequestGetBuffer(&#10;  MBBREQUEST Request,&#10;  size_t     *BufferSize&#10;);">MbbRequestGetBuffer</a>(SendRequest, &amp;bufferSize);
 
-<span class="w">    </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w"> </span><span class="n">bufferSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PVOID</span><span class="w"> </span><span class="n">buffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="mbbrequestgetbuffer" title="PVOID MbbRequestGetBuffer(&#10;  MBBREQUEST Request,&#10;  size_t     *BufferSize&#10;);">MbbRequestGetBuffer</a></span><span class="p">(</span><span class="n">SendRequest</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">bufferSize</span><span class="p">);</span>
+    // This client driver example uses asynchronous completion
+    auto myDeviceSendCompletionRoutine = [](MBBREQUEST SendRequest, <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NtStatus)
+    {
+        //Acknowledge back to MBBCx
+        <a href="mbbrequestcomplete" title="VOID MbbRequestComplete(&#10;  MBBREQUEST Request,&#10;  NTSTATUS   NtStatus&#10;);">MbbRequestComplete</a>(SendRequest, NtStatus);
+    };
 
-<span class="w">    </span><span class="c1">// This client driver example uses asynchronous completion</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">myDeviceSendCompletionRoutine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[](</span><span class="n">MBBREQUEST</span><span class="w"> </span><span class="n">SendRequest</span><span class="p">,</span><span class="w"> </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">NtStatus</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">//Acknowledge back to MBBCx</span>
-<span class="w">        </span><span class="n"><a href="mbbrequestcomplete" title="VOID MbbRequestComplete(&#10;  MBBREQUEST Request,&#10;  NTSTATUS   NtStatus&#10;);">MbbRequestComplete</a></span><span class="p">(</span><span class="n">SendRequest</span><span class="p">,</span><span class="w"> </span><span class="n">NtStatus</span><span class="p">);</span>
-<span class="w">    </span><span class="p">};</span>
+    // The client driver-specified function call into its device
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> sendStatus = MyDeviceAsyncSend(
 
-<span class="w">    </span><span class="c1">// The client driver-specified function call into its device</span>
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">sendStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MyDeviceAsyncSend</span><span class="p">(</span>
+        // The client driver-specific handle
+        myContext-&gt;MyDeviceHandle,
 
-<span class="w">        </span><span class="c1">// The client driver-specific handle</span>
-<span class="w">        </span><span class="n">myContext</span><span class="o">-&gt;</span><span class="n">MyDeviceHandle</span><span class="p">,</span>
+        // The context for completion
+        SendRequest,
 
-<span class="w">        </span><span class="c1">// The context for completion</span>
-<span class="w">        </span><span class="n">SendRequest</span><span class="p">,</span>
+        // MBIM message
+        buffer,
 
-<span class="w">        </span><span class="c1">// MBIM message</span>
-<span class="w">        </span><span class="n">buffer</span><span class="p">,</span>
+        // MBIM message size
+        bufferSize,
 
-<span class="w">        </span><span class="c1">// MBIM message size</span>
-<span class="w">        </span><span class="n">bufferSize</span><span class="p">,</span>
+        // Can be used for logging purpose, for example
+        MbbRequestGetActivityId(SendRequest),
 
-<span class="w">        </span><span class="c1">// Can be used for logging purpose, for example</span>
-<span class="w">        </span><span class="n">MbbRequestGetActivityId</span><span class="p">(</span><span class="n">SendRequest</span><span class="p">),</span>
+        // The client driver-specific completion routine
+        myDeviceSendCompletionRoutine);
 
-<span class="w">        </span><span class="c1">// The client driver-specific completion routine</span>
-<span class="w">        </span><span class="n">myDeviceSendCompletionRoutine</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">sendStatus</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">STATUS_PENDING</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="c1">// Acknowledge back to MBBCx</span>
-<span class="w">        </span><span class="n">myDeviceSendCompletionRoutine</span><span class="p">(</span>
-<span class="w">            </span><span class="n">SendRequest</span><span class="p">,</span>
-<span class="w">            </span><span class="n">sendStatus</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
+    if (sendStatus != STATUS_PENDING)
+    {
+        // Acknowledge back to MBBCx
+        myDeviceSendCompletionRoutine(
+            SendRequest,
+            sendStatus);
+    }
+}
 </code></pre>
-</div>
-
 <h2>See also</h2>
 <hr>
 <div class="ntdoc-description-links">

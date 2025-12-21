@@ -68,65 +68,50 @@ NDIS_STATUS FilterPause(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FILTER_PAUSE callback function</h1>
-
 <h2>Description</h2>
-
 <p>NDIS calls a filter driver's
 <em>FilterPause</em> function to initiate a pause operation for the specified filter module.</p>
-
 <p><strong>Note</strong> You must declare the function by using the <strong>FILTER_PAUSE</strong> type. For more
 information, see the following Examples section.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>FilterModuleContext</code> [in]</h3>
-
 <p>A handle to the context area for the filter module that the filter driver should pause. The filter
 driver created and initialized this context area in the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_attach">FilterAttach</a> function.</p>
-
 <h3><code>PauseParameters</code> [in]</h3>
-
 <p>A pointer to an
 <a href="ndis_filter_pause_parameters" title="typedef struct _NDIS_FILTER_PAUSE_PARAMETERS {&#10;  NDIS_OBJECT_HEADER Header;&#10;  ULONG              Flags;&#10;  ULONG              PauseReason;&#10;} NDIS_FILTER_PAUSE_PARAMETERS, *PNDIS_FILTER_PAUSE_PARAMETERS;">NDIS_FILTER_PAUSE_PARAMETERS</a> structure that defines the pause parameters for the filter
 module.</p>
-
 <h2>Return value</h2>
-
 <p>NDIS drivers cannot fail a pause request. The filter driver should call the
 <a href="ndiswriteeventlogentry" title="NDIS_STATUS NdisWriteEventLogEntry(&#10;  [in]           PVOID       LogHandle,&#10;  [in]           NDIS_STATUS EventCode,&#10;  [in]           ULONG       UniqueEventValue,&#10;  [in]           USHORT      NumStrings,&#10;  [in, optional] PVOID       StringsList,&#10;  [in]           ULONG       DataSize,&#10;  [in, optional] PVOID       Data&#10;);">NdisWriteEventLogEntry</a> function
 together with parameters that specify the reason for any errors that occur.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>NDIS_STATUS_SUCCESS</strong></td>
-  <td><em>FilterPause</em> successfully paused the specified filter module.</td>
+<td><strong>NDIS_STATUS_SUCCESS</strong></td>
+<td><em>FilterPause</em> successfully paused the specified filter module.</td>
 </tr>
 <tr>
-  <td><strong>NDIS_STATUS_PENDING</strong></td>
-  <td>The filter driver will complete the request asynchronously with a call to the <a href="ndisfpausecomplete" title="VOID NdisFPauseComplete(&#10;  [in] NDIS_HANDLE NdisFilterHandle&#10;);">NdisFPauseComplete</a> function.</td>
+<td><strong>NDIS_STATUS_PENDING</strong></td>
+<td>The filter driver will complete the request asynchronously with a call to the <a href="ndisfpausecomplete" title="VOID NdisFPauseComplete(&#10;  [in] NDIS_HANDLE NdisFilterHandle&#10;);">NdisFPauseComplete</a> function.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p><em>FilterPause</em> is a required function. NDIS can call
 <em>FilterPause</em> when the filter module is in the
 <em>Running</em> state. The filter module enters the
 <em>Pausing</em> state at the start of execution in the
 <em>FilterPause</em> function.</p>
-
 <p>A filter driver performs the following operations when NDIS calls
 <em>FilterPause</em>:</p>
-
 <ul>
 <li>Must call the
 <a href="ndisfsendnetbufferlistscomplete" title="VOID NdisFSendNetBufferListsComplete(&#10;  [in] NDIS_HANDLE      NdisFilterHandle,&#10;       PNET_BUFFER_LIST NetBufferList,&#10;  [in] ULONG            SendCompleteFlags&#10;);">NdisFSendNetBufferListsComplete</a> function for any queued send buffers that an overlying driver
@@ -139,13 +124,11 @@ created.</li>
 <li>Must wait for NDIS to return all outstanding receive indications that the driver originated to the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_return_net_buffer_lists">FilterReturnNetBufferLists</a> function.</li>
 </ul>
-
 <p>After the filter driver returns NDIS_STATUS_SUCCESS from
 <em>FilterPause</em> or calls the
 <a href="ndisfpausecomplete" title="VOID NdisFPauseComplete(&#10;  [in] NDIS_HANDLE NdisFilterHandle&#10;);">NdisFPauseComplete</a> function, the pause
 operation is complete. The filter module is in the
 <em>Paused</em> state.</p>
-
 <p>In the
 <em>Pausing</em> or
 <em>Paused</em> states, a filter driver should continue to handle OID requests or status indications. The
@@ -153,29 +136,20 @@ driver should reject calls to its
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_send_net_buffer_lists">FilterSendNetBufferLists</a> function. The driver can pass on calls to its
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_receive_net_buffer_lists">FilterReceiveNetBufferLists</a> function. However, the driver cannot pass any buffers that it created.
 The driver must not originate any receive indications or send requests.</p>
-
 <p>In the
 <em>Paused</em> state, the filter module must not generate send requests or receive indications.</p>
-
 <p>NDIS calls the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_restart">FilterRestart</a> function to initiate a
 restart request for a filter module that is in the
 <em>Paused</em> state.</p>
-
 <p>NDIS calls
 <em>FilterPause</em> at IRQL = PASSIVE_LEVEL.</p>
-
 <h3>Examples</h3>
-
 <p>To define a <em>FilterPause</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-
-<p>For example, to define a <em>FilterPause</em> function that is named "MyPause", use the <strong>FILTER_PAUSE</strong> type as shown in this code example:</p>
-
+<p>For example, to define a <em>FilterPause</em> function that is named &quot;MyPause&quot;, use the <strong>FILTER_PAUSE</strong> type as shown in this code example:</p>
 <pre><code>FILTER_PAUSE MyPause;
 </code></pre>
-
 <p>Then, implement your function as follows:</p>
-
 <pre><code>_Use_decl_annotations_
 NDIS_STATUS
  MyPause(
@@ -184,35 +158,20 @@ NDIS_STATUS
     )
   {...}
 </code></pre>
-
-<p>The <strong>FILTER_PAUSE</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>FILTER_PAUSE</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
-
-<p>For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-
+<p>The <strong>FILTER_PAUSE</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>FILTER_PAUSE</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
+<p>For information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_attach">FilterAttach</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_receive_net_buffer_lists">FilterReceiveNetBufferLists</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_restart">FilterRestart</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_return_net_buffer_lists">FilterReturnNetBufferLists</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_send_net_buffer_lists">FilterSendNetBufferLists</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_send_net_buffer_lists_complete">FilterSendNetBufferListsComplete</a></p>
-
 <p><a href="ndis_filter_pause_parameters" title="typedef struct _NDIS_FILTER_PAUSE_PARAMETERS {&#10;  NDIS_OBJECT_HEADER Header;&#10;  ULONG              Flags;&#10;  ULONG              PauseReason;&#10;} NDIS_FILTER_PAUSE_PARAMETERS, *PNDIS_FILTER_PAUSE_PARAMETERS;">NDIS_FILTER_PAUSE_PARAMETERS</a></p>
-
 <p><a href="ndis_object_header" title="typedef struct _NDIS_OBJECT_HEADER {&#10;  UCHAR  Type;&#10;  UCHAR  Revision;&#10;  USHORT Size;&#10;} NDIS_OBJECT_HEADER, *PNDIS_OBJECT_HEADER;">NDIS_OBJECT_HEADER</a></p>
-
 <p><a href="ndisfpausecomplete" title="VOID NdisFPauseComplete(&#10;  [in] NDIS_HANDLE NdisFilterHandle&#10;);">NdisFPauseComplete</a></p>
-
 <p><a href="ndisfreturnnetbufferlists" title="VOID NdisFReturnNetBufferLists(&#10;  [in] NDIS_HANDLE      NdisFilterHandle,&#10;  [in] PNET_BUFFER_LIST NetBufferLists,&#10;  [in] ULONG            ReturnFlags&#10;);">NdisFReturnNetBufferLists</a></p>
-
 <p><a href="ndisfsendnetbufferlistscomplete" title="VOID NdisFSendNetBufferListsComplete(&#10;  [in] NDIS_HANDLE      NdisFilterHandle,&#10;       PNET_BUFFER_LIST NetBufferList,&#10;  [in] ULONG            SendCompleteFlags&#10;);">NdisFSendNetBufferListsComplete</a></p>
-
 <p><a href="ndiswriteeventlogentry" title="NDIS_STATUS NdisWriteEventLogEntry(&#10;  [in]           PVOID       LogHandle,&#10;  [in]           NDIS_STATUS EventCode,&#10;  [in]           ULONG       UniqueEventValue,&#10;  [in]           USHORT      NumStrings,&#10;  [in, optional] PVOID       StringsList,&#10;  [in]           ULONG       DataSize,&#10;  [in, optional] PVOID       Data&#10;);">NdisWriteEventLogEntry</a></p>
 <hr>
 <div class="ntdoc-description-links">

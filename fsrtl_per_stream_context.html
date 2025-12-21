@@ -67,94 +67,53 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>_FSRTL_PER_STREAM_CONTEXT structure</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>FSRTL_PER_STREAM_CONTEXT</strong> structure contains context information that a file system filter driver maintains about a file stream.</p>
-
 <h2>Members</h2>
-
 <h3><code>Links</code></h3>
-
 <p>Link for this structure in the list of all per-stream context structures associated with the same file stream. <a href="fsrtlinsertperstreamcontext" title="NTSTATUS FsRtlInsertPerStreamContext(&#10;       PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,&#10;  [in] PFSRTL_PER_STREAM_CONTEXT  Ptr&#10;);">FsRtlInsertPerStreamContext</a> inserts this member into the list of all per-stream context structures for a file stream. To get a pointer to the head of the list from a file object, use the <a href="fsrtlgetperstreamcontextpointer" title="void FsRtlGetPerStreamContextPointer(&#10;  _fo&#10;);">FsRtlGetPerStreamContextPointer</a> macro, and cast the result to a <strong>PFSRTL_ADVANCED_FCB_HEADER</strong> pointer. The list pointer is the <strong>FilterContexts</strong> member in the advanced file control block (FCB) header structure for the file stream.</p>
-
 <h3><code>OwnerId</code></h3>
-
 <p>Pointer to a filter-driver-allocated variable that uniquely identifies the owner of the per-stream context structure. The format of this variable is filter-driver-specific. Filter writers should choose a value that is both meaningful and convenient, such as the address of a driver object or device object. Filter drivers must set this member to a non-<strong>NULL</strong> value.</p>
-
 <h3><code>InstanceId</code></h3>
-
 <p>Pointer to a filter-driver-allocated variable that can be used to distinguish among per-stream context structures created by the same filter driver. The format of this variable is filter-driver-specific. Filter writers should choose a value that is both meaningful and convenient, such as the address of the stream context object for the file stream. (To get this address from a file object, use the <a href="fsrtlgetperstreamcontextpointer" title="void FsRtlGetPerStreamContextPointer(&#10;  _fo&#10;);">FsRtlGetPerStreamContextPointer</a> macro.)</p>
-
 <p>This member is optional and can be <strong>NULL</strong>.</p>
-
 <h3><code>FreeCallback</code></h3>
-
 <p>Pointer to a callback routine that frees the per-stream context structure. This routine and its parameters are defined as follows:</p>
-
 <pre><code>VOID
 (*<a href="pfree_function" title="typedef VOID ( *FreeCallback)(&#10;  _In_ PVOID Buffer&#10;);">PFREE_FUNCTION</a>) (
      IN PVOID Buffer
      );
 </code></pre>
-
 <h4>Buffer</h4>
-
 <p>Pointer to the <strong>FSRTL_PER_STREAM_CONTEXT</strong> structure to free.</p>
-
 <h2>Remarks</h2>
-
 <p>File system filter drivers can use a <strong>FSRTL_PER_STREAM_CONTEXT</strong> structure to maintain context information for a file stream. This structure can be used as is or embedded in a driver-defined, per-stream context structure.</p>
-
 <p>When a file system tears down the stream context object for a file stream, it must call <a href="fsrtlteardownperstreamcontexts" title="VOID FsRtlTeardownPerStreamContexts(&#10;  [in] PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader&#10;);">FsRtlTeardownPerStreamContexts</a>, which in turn calls the <em>FreeCallback</em> routines of all per-stream context structures associated with the file stream.</p>
-
 <p><strong>Note</strong> The <em>FreeCallback</em> routine cannot recursively call down into the file system or acquire any file system resources. Also, this routine must assume that the file object for the file stream has already been freed.</p>
-
 <p>The <strong>FSRTL_PER_STREAM_CONTEXT</strong> structure can be allocated from paged or nonpaged pool.</p>
-
 <p>The <strong>FsRtlSupportsPerStreamContexts</strong> macro determines whether a file system supports per-stream contexts for a given file stream.</p>
-
 <pre><code>BOOLEAN FsRtlSupportsPerStreamContexts(
   [in] <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">PFILE_OBJECT</a> FileObject
 );
 </code></pre>
-
 <p>Parameters</p>
-
 <p><em>FileObject [in]</em></p>
-
 <p><strong><a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">PFILE_OBJECT</a></strong></p>
-
 <p>A pointer to a file object for the file stream.</p>
-
 <p>Return value</p>
-
 <p><strong>BOOLEAN</strong></p>
-
 <p>The <strong>FsRtlSupportsPerStreamContexts</strong> macro returns <strong>TRUE</strong> if the file system supports per-stream contexts for the file stream, <strong>FALSE</strong> otherwise.</p>
-
 <p>File system filter drivers call <strong>FsRtlSupportsPerStreamContexts</strong> to determine whether the underlying file system supports per-stream contexts for the file stream represented by a given file object. Note that a file system might support per-stream contexts for some types of files but not for others. For example, NTFS and FAT do not currently support per-stream contexts for paging files.</p>
-
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/tracking-per-stream-context-in-a-legacy-file-system-filter-driver">Tracking Per-Stream Context in a Legacy File System Filter Driver</a>.</p>
-
 <h2>See also</h2>
-
 <p><a href="fsrtl_advanced_fcb_header" title="typedef struct _FSRTL_ADVANCED_FCB_HEADER {&#10;  FSRTL_COMMON_FCB_HEADER          DUMMYSTRUCTNAME;&#10;  PFAST_MUTEX                      FastMutex;&#10;  LIST_ENTRY                       FilterContexts;&#10;  EX_PUSH_LOCK                     PushLock;&#10;  PVOID                            *FileContextSupportPointer;&#10;  union {&#10;    OPLOCK Oplock;&#10;    PVOID  ReservedForRemote;&#10;  };&#10;  PVOID                            AePushLock;&#10;  PVOID                            ReservedContextLegacy;&#10;  ULONG                            BypassIoOpenCount;&#10;  struct _FSRTL_PER_STREAM_CONTEXT *ReservedContext;&#10;} FSRTL_ADVANCED_FCB_HEADER;">FSRTL_ADVANCED_FCB_HEADER</a></p>
-
 <p><a href="fsrtl_common_fcb_header" title="typedef struct _FSRTL_COMMON_FCB_HEADER {&#10;  CSHORT        NodeTypeCode;&#10;  CSHORT        NodeByteSize;&#10;  UCHAR         Flags;&#10;  UCHAR         IsFastIoPossible;&#10;  UCHAR         Flags2;&#10;  UCHAR         Reserved : 4;&#10;  UCHAR         Version : 4;&#10;  PERESOURCE    Resource;&#10;  PERESOURCE    PagingIoResource;&#10;  LARGE_INTEGER AllocationSize;&#10;  LARGE_INTEGER FileSize;&#10;  LARGE_INTEGER ValidDataLength;&#10;} FSRTL_COMMON_FCB_HEADER;">FSRTL_COMMON_FCB_HEADER</a></p>
-
 <p><a href="fsrtlgetperstreamcontextpointer" title="void FsRtlGetPerStreamContextPointer(&#10;  _fo&#10;);">FsRtlGetPerStreamContextPointer</a></p>
-
 <p><a href="fsrtlinsertperstreamcontext" title="NTSTATUS FsRtlInsertPerStreamContext(&#10;       PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,&#10;  [in] PFSRTL_PER_STREAM_CONTEXT  Ptr&#10;);">FsRtlInsertPerStreamContext</a></p>
-
 <p><a href="fsrtllookupperstreamcontext" title="void FsRtlLookupPerStreamContext(&#10;  _sc,&#10;  _oid,&#10;  _iid&#10;);">FsRtlLookupPerStreamContext</a></p>
-
 <p><a href="fsrtlremoveperstreamcontext" title="PFSRTL_PER_STREAM_CONTEXT FsRtlRemovePerStreamContext(&#10;  [in]           PFSRTL_ADVANCED_FCB_HEADER StreamContext,&#10;  [in, optional] PVOID                      OwnerId,&#10;  [in, optional] PVOID                      InstanceId&#10;);">FsRtlRemovePerStreamContext</a></p>
-
 <p><a href="fsrtlteardownperstreamcontexts" title="VOID FsRtlTeardownPerStreamContexts(&#10;  [in] PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader&#10;);">FsRtlTeardownPerStreamContexts</a></p>
-
 <p><a href="pfree_function" title="typedef VOID ( *FreeCallback)(&#10;  _In_ PVOID Buffer&#10;);">PFREE_FUNCTION</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/tracking-per-stream-context-in-a-legacy-file-system-filter-driver">Tracking Per-Stream Context in a Legacy File System Filter Driver</a></p>
 <hr>
 <div class="ntdoc-description-links">

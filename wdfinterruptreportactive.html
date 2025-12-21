@@ -64,78 +64,60 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfInterruptReportActive function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF only]</p>
-
 <p>The <strong>WdfInterruptReportActive</strong> informs the system that the interrupt is active and the driver is ready to process interrupt requests on the associated lines.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Interrupt</code> [in]</h3>
-
 <p>A handle to a framework interrupt object.</p>
-
 <h2>Remarks</h2>
-
 <p>Only drivers that implement functional state power management call <strong>WdfInterruptReportActive</strong>.</p>
-
 <p>A driver does not need to call <strong>WdfInterruptReportActive</strong> immediately after creating an interrupt. The driver should only call <strong>WdfInterruptReportActive</strong> after having previously called <a href="wdfinterruptreportinactive" title="VOID WdfInterruptReportInactive(&#10;  [in] WDFINTERRUPT Interrupt&#10;);">WdfInterruptReportInactive</a>.</p>
-
 <p>Typically, a driver calls <strong>WdfInterruptReportActive</strong> from either its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_active_condition_callback">ComponentActiveConditionCallback</a> routine, or from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_idle_state_callback">ComponentIdleStateCallback</a> when <em>State</em> is 0 (indicating the fully on F0 state).</p>
-
 <p>If your driver calls this method on an operating system earlier than Windows 8, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-kmdf-verifier">the framework's verifier</a> reports an error.</p>
-
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/supporting-functional-power-states">Supporting Functional Power States</a>.</p>
-
 <h4>Examples</h4>
-
 <p>The following example shows how a driver might call <strong>WdfInterruptReportActive</strong> from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_idle_state_callback">ComponentIdleStateCallback</a> routine of a KMDF driver. The driver registers a single component by calling <a href="wdfdevicewdmassignpowerframeworksettings" title="NTSTATUS WdfDeviceWdmAssignPowerFrameworkSettings(&#10;  [in] WDFDEVICE                     Device,&#10;  [in] PWDF_POWER_FRAMEWORK_SETTINGS PowerFrameworkSettings&#10;);">WdfDeviceWdmAssignPowerFrameworkSettings</a>.</p>
+<pre lang="cpp"><code>VOID
+MyComponentIdleStateCallback(
+    _In_ PVOID Context,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Component,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> State
+    )
+{
+    PFDO_DEVICE_DATA deviceData;
+    PINTERRUPT_CONTEXT interruptContext;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="nf">MyComponentIdleStateCallback</span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">Component</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">State</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">PFDO_DEVICE_DATA</span><span class="w"> </span><span class="n">deviceData</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PINTERRUPT_CONTEXT</span><span class="w"> </span><span class="n">interruptContext</span><span class="p">;</span>
+    deviceData = FdoGetData((WDFDEVICE)Context);
+    interruptContext = InterruptGetData(deviceData-&gt;Interrupt);
 
-<span class="w">    </span><span class="n">deviceData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FdoGetData</span><span class="p">((</span><span class="n">WDFDEVICE</span><span class="p">)</span><span class="n">Context</span><span class="p">);</span>
-<span class="w">    </span><span class="n">interruptContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">InterruptGetData</span><span class="p">(</span><span class="n">deviceData</span><span class="o">-&gt;</span><span class="n">Interrupt</span><span class="p">);</span>
+    switch (State) {
+        case 0:
+            if (interruptContext-&gt;ReportedInactive) {
 
-<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">State</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="mi">0</span><span class="p">:</span>
-<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">interruptContext</span><span class="o">-&gt;</span><span class="n">ReportedInactive</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+                //
+                // the interrupt was reported inactive earlier. We need to report active now.
+                //
+                WdfInterruptReportActive(deviceData-&gt;Interrupt);
+                interruptContext-&gt;ReportedInactive = FALSE;
 
-<span class="w">                </span><span class="c1">//</span>
-<span class="w">                </span><span class="c1">// the interrupt was reported inactive earlier. We need to report active now.</span>
-<span class="w">                </span><span class="c1">//</span>
-<span class="w">                </span><span class="n">WdfInterruptReportActive</span><span class="p">(</span><span class="n">deviceData</span><span class="o">-&gt;</span><span class="n">Interrupt</span><span class="p">);</span>
-<span class="w">                </span><span class="n">interruptContext</span><span class="o">-&gt;</span><span class="n">ReportedInactive</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
+                //
+                // Enable interrupt generation at hardware.
+                //
+                WdfInterruptAcquireLock(deviceData-&gt;Interrupt);
+                EnableInterruptInHardware();
+                WdfInterruptReleaseLock(deviceData-&gt;Interrupt);
 
-<span class="w">                </span><span class="c1">//</span>
-<span class="w">                </span><span class="c1">// Enable interrupt generation at hardware.</span>
-<span class="w">                </span><span class="c1">//</span>
-<span class="w">                </span><span class="n">WdfInterruptAcquireLock</span><span class="p">(</span><span class="n">deviceData</span><span class="o">-&gt;</span><span class="n">Interrupt</span><span class="p">);</span>
-<span class="w">                </span><span class="n">EnableInterruptInHardware</span><span class="p">();</span>
-<span class="w">                </span><span class="n">WdfInterruptReleaseLock</span><span class="p">(</span><span class="n">deviceData</span><span class="o">-&gt;</span><span class="n">Interrupt</span><span class="p">);</span>
+            }
 
-<span class="w">            </span><span class="p">}</span>
+        break;
 
-<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+    …
 
-<span class="w">    </span><span class="err">…</span>
+}
 
-<span class="p">}</span>
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="wdfinterruptreportinactive" title="VOID WdfInterruptReportInactive(&#10;  [in] WDFINTERRUPT Interrupt&#10;);">WdfInterruptReportInactive</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -68,106 +68,71 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_SERCX_PURGE callback function</h1>
-
 <h2>Description</h2>
-
 <p>The <em>EvtSerCxPurge</em> event callback function is called by the serial framework extension (SerCx) to purge the serial controller's hardware buffers.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Device</code> [in]</h3>
-
 <p>A WDFDEVICE handle to the framework device object that represents the serial controller.</p>
-
 <h3><code>PurgeMask</code> [in]</h3>
-
 <p>A set of flags that describe the hardware buffers that are to be purged. Currently, no flags are defined for purge operations that are performed by the serial controller. For more information, see Remarks.</p>
-
 <h2>Return value</h2>
-
 <p>The <em>EvtSerCxPurge</em> function returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call is successful. Otherwise, it returns an appropriate error status code.</p>
-
 <h2>Remarks</h2>
-
 <p>The serial controller driver implements this callback function. SerCx calls this function when a client (application or peripheral driver) sends an <a href="ioctl_serial_purge" title="// CTL_CODE(0x001b, 0x013, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_PURGE 0x001B004C">IOCTL_SERIAL_PURGE</a> control request that requires hardware buffers managed by the serial controller to be purged.</p>
-
 <p>SerCx performs the purge operations that are designated by the flags listed in the following table.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Flag bit</th>
-  <th>Meaning</th>
+<th>Flag bit</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>SERIAL_PURGE_RXABORT</td>
-  <td>Purge all read requests.</td>
+<td>SERIAL_PURGE_RXABORT</td>
+<td>Purge all read requests.</td>
 </tr>
 <tr>
-  <td>SERIAL_PURGE_RXCLEAR</td>
-  <td>Purge the input buffer, if one exists. Any receive data in this buffer is discarded.</td>
+<td>SERIAL_PURGE_RXCLEAR</td>
+<td>Purge the input buffer, if one exists. Any receive data in this buffer is discarded.</td>
 </tr>
 <tr>
-  <td>SERIAL_PURGE_TXABORT</td>
-  <td>Purge all write requests.</td>
+<td>SERIAL_PURGE_TXABORT</td>
+<td>Purge all write requests.</td>
 </tr>
 <tr>
-  <td>SERIAL_PURGE_TXCLEAR</td>
-  <td>Purge the output buffer, if one exists. Any transmit data in this buffer is discarded.</td>
+<td>SERIAL_PURGE_TXCLEAR</td>
+<td>Purge the output buffer, if one exists. Any transmit data in this buffer is discarded.</td>
 </tr>
 </tbody>
 </table>
-
 <p>The <em>EvtSerCxPurge</em> function will never receive a purge request that contains any of the flags in this table. The SERIAL_PURGE_<em>XXX</em> flags are defined in the Ntddser.h header file.</p>
-
 <p>Currently, no SERIAL_PURGE_<em>XXX</em> flags are defined to designate purge operations that are performed by the serial controller driver, and the serial controller driver should perform no purge operations in response to a <em>EvtSerCxPurge</em> call.</p>
-
 <p>If the <strong><a href="ioctl_serial_purge" title="// CTL_CODE(0x001b, 0x013, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_PURGE 0x001B004C">IOCTL_SERIAL_PURGE</a></strong> control request requires pending read or write requests to be canceled, SerCx cancels these requests before it calls the <em>EvtSerCxPurge</em> function.</p>
-
 <p>To register an <em>EvtSerCxPurge</em> callback function, the controller driver calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a> method during the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback.</p>
-
 <h4>Examples</h4>
-
 <p>The function type for this callback is declared in Sercx.h, as follows.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="w">  </span><span class="nf">EVT_SERCX_PURGE</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">PurgeMask</span>
-<span class="w">    </span><span class="p">);</span>
+<pre lang="cpp"><code>typedef <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  EVT_SERCX_PURGE(
+    __in WDFDEVICE Device,
+    __in <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PurgeMask
+    );
 </code></pre>
-</div>
-
 <p>To define an <em>EvtSerCxPurge</em> callback function that is named <code>MyEvtSerCxPurge</code>, you must first provide a function declaration that <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV) and other verification tools require, as follows.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">EVT_SERCX_PURGE</span><span class="w"> </span><span class="n">MyEvtSerCxPurge</span><span class="p">;</span>
+<pre lang="cpp"><code>EVT_SERCX_PURGE MyEvtSerCxPurge;
 </code></pre>
-</div>
-
 <p>Then, implement your callback function as follows.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="w">  </span><span class="nf">MyEvtSerCxPurge</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">PurgeMask</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  MyEvtSerCxPurge(
+    __in WDFDEVICE Device,
+    __in <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PurgeMask
+    )
+{ ... }
 </code></pre>
-</div>
-
 <p>For more information about SDV requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions Using Function Role Types for KMDF Drivers</a>.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a></p>
-
 <p><a href="ioctl_serial_purge" title="// CTL_CODE(0x001b, 0x013, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_PURGE 0x001B004C">IOCTL_SERIAL_PURGE</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a></p>
 <hr>
 <div class="ntdoc-description-links">

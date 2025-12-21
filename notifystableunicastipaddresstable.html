@@ -68,172 +68,144 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>NotifyStableUnicastIpAddressTable function</h1>
-
 <p>The <strong>NotifyStableUnicastIpAddressTable</strong> function retrieves the stable unicast IP address table on a local computer.</p>
-
 <h2>Parameters</h2>
-
 <ul>
-<li><p><em>Family</em> [in]
-The address family to retrieve.</p>
-
-<p>Possible values for the address family are listed in the Winsock2.h header file. Note that the values for the AF_ address family and PF_ protocol family constants are identical (for example, AF_INET and PF_INET), so you can use either constant.</p>
-
-<p>On Windows Vista and later versions of the Windows operating systems, possible values for the <em>Family</em> parameter are defined in the Ws2def.h header file. Note that the Ws2def.h header file is automatically included in Netioapi.h and you should never use Ws2def.h directly.</p>
-
-<p>The following values are currently supported for the address family:</p>
-
-<ul>
-<li><p>AF_INET
-The IPv4 address family. When this value is specified, the function retrieves the stable unicast IP address table that contains only IPv4 entries.</p></li>
-<li><p>AF_INET6
-The IPv6 address family. When this value is specified, the function retrieves the stable unicast IP address table that contains only IPv6 entries.</p></li>
-<li><p>AF_UNSPEC
-The address family is unspecified. When this value is specified, the function retrieves the stable unicast IP address table that contains both IPv4 and IPv6 entries.</p></li>
-</ul></li>
-<li><p><em>Table</em> [out]
-A pointer to a <strong><a href="mib_unicastipaddress_table" title="typedef struct _MIB_UNICASTIPADDRESS_TABLE {&#10;  ULONG                    NumEntries;&#10;  MIB_UNICASTIPADDRESS_ROW Table[ANY_SIZE];&#10;} MIB_UNICASTIPADDRESS_TABLE, *PMIB_UNICASTIPADDRESS_TABLE;">MIB_UNICASTIPADDRESS_TABLE</a></strong> structure. When <strong>NotifyStableUnicastIpAddressTable</strong> is successful, this parameter returns the stable unicast IP address table on the local computer.</p>
-
-<p>When <strong>NotifyStableUnicastIpAddressTable</strong> returns ERROR_IO_PENDING, which indicates that the I/O request is pending, the stable unicast IP address table is returned to the function in the <em>CallerCallback</em> parameter.</p></li>
-<li><p><em>CallerCallback</em> [in]
-A pointer to the function to call with the stable unicast IP address table. This function is called if <strong>NotifyStableUnicastIpAddressTable</strong> returns ERROR_IO_PENDING, which indicates that the I/O request is pending.</p></li>
-<li><p><em>CallerContext</em> [in]
-A user context that is passed to the callback function that is specified in the <em>CallerCallback</em> parameter when the stable unicast IP address table is available.</p></li>
-<li><p><em>NotificationHandle</em> [in, out]
-A pointer that is used to return a handle that your driver can use to cancel the request to retrieve the stable unicast IP address table. This parameter is returned if the return value from <strong>NotifyStableUnicastIpAddressTable</strong> is ERROR_IO_PENDING, which indicates that the I/O request is pending.</p></li>
+<li><em>Family</em> [in]
+The address family to retrieve.</li>
 </ul>
-
-<h2>Return value</h2>
-
-<p><strong>NotifyStableUnicastIpAddressTable</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> and the stable unicast IP table is returned in the <em>Table</em> parameter if the function succeeds immediately.</p>
-
-<p>If the I/O request is pending, the function returns ERROR_IO_PENDING and the function that the <em>CallerCallback</em> parameter points to is called when the I/O request has completed with the stable unicast IP address table.</p>
-
-<p>If the function fails, <strong>NotifyStableUnicastIpAddressTable</strong> returns one of the following error codes:</p>
-
-<table>
-<thead>
-<tr>
-  <th>Return code</th>
-  <th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td><strong>ERROR_INVALID_HANDLE</strong></td>
-  <td>An internal error occurred where an invalid handle was encountered.</td>
-</tr>
-<tr>
-  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
-  <td>An invalid parameter was passed to the function. This error is returned if the <em>Table</em> parameter was a <strong>NULL</strong> pointer, the <em>NotificationHandle</em> parameter was a <strong>NULL</strong> pointer, or the <em>Family</em> parameter was not either AF_INET, AF_INET6, or AF_UNSPEC.</td>
-</tr>
-<tr>
-  <td><strong>STATUS_NOT_ENOUGH_MEMORY</strong></td>
-  <td>There was insufficient memory.</td>
-</tr>
-<tr>
-  <td><strong>Other</strong></td>
-  <td>Use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage</a> function to obtain the message string for the returned error.</td>
-</tr>
-</tbody>
-</table>
-
-<h2>Remarks</h2>
-
-<p>All unicast IP addresses, except dial-on-demand addresses, are considered stable only if they are in the preferred state. For a normal unicast IP address entry, this state would correspond to a <strong>DadState</strong> member of the <strong><a href="mib_unicastipaddress_row" title="typedef struct _MIB_UNICASTIPADDRESS_ROW {&#10;  SOCKADDR_INET    Address;&#10;  NET_LUID         InterfaceLuid;&#10;  NET_IFINDEX      InterfaceIndex;&#10;  NL_PREFIX_ORIGIN PrefixOrigin;&#10;  NL_SUFFIX_ORIGIN SuffixOrigin;&#10;  ULONG            ValidLifetime;&#10;  ULONG            PreferredLifetime;&#10;  UINT8            OnLinkPrefixLength;&#10;  BOOLEAN          SkipAsSource;&#10;  NL_DAD_STATE     DadState;&#10;  SCOPE_ID         ScopeId;&#10;  LARGE_INTEGER    CreationTimeStamp;&#10;} MIB_UNICASTIPADDRESS_ROW, *PMIB_UNICASTIPADDRESS_ROW;">MIB_UNICASTIPADDRESS_ROW</a></strong> for the IP address that is set to <strong>IpDadStatePreferred</strong>. Every dial-on-demand address defines its own stability metric. Currently the only dial-on-demand address that the <strong>NotifyStableUnicastIpAddressTable</strong> function considers is the unicast IP address that the Teredo client uses on the local computer.</p>
-
-<p>Your driver must set the <em>Family</em> parameter to either AF_INET, AF_INET6, or AF_UNSPEC.</p>
-
-<p>When <strong>NotifyStableUnicastIpAddressTable</strong> is successful and returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, the <em>Table</em> parameter returns the stable unicast IP address table on the local computer.</p>
-
+<p>Possible values for the address family are listed in the Winsock2.h header file. Note that the values for the AF_ address family and PF_ protocol family constants are identical (for example, AF_INET and PF_INET), so you can use either constant.</p>
+<p>On Windows Vista and later versions of the Windows operating systems, possible values for the <em>Family</em> parameter are defined in the Ws2def.h header file. Note that the Ws2def.h header file is automatically included in Netioapi.h and you should never use Ws2def.h directly.</p>
+<p>The following values are currently supported for the address family:</p>
+<pre><code>- AF\_INET
+</code></pre>
+<p>The IPv4 address family. When this value is specified, the function retrieves the stable unicast IP address table that contains only IPv4 entries.</p>
+<pre><code>- AF\_INET6
+</code></pre>
+<p>The IPv6 address family. When this value is specified, the function retrieves the stable unicast IP address table that contains only IPv6 entries.</p>
+<pre><code>- AF\_UNSPEC
+</code></pre>
+<p>The address family is unspecified. When this value is specified, the function retrieves the stable unicast IP address table that contains both IPv4 and IPv6 entries.</p>
+<ul>
+<li><em>Table</em> [out]
+A pointer to a <strong><a href="mib_unicastipaddress_table" title="typedef struct _MIB_UNICASTIPADDRESS_TABLE {&#10;  ULONG                    NumEntries;&#10;  MIB_UNICASTIPADDRESS_ROW Table[ANY_SIZE];&#10;} MIB_UNICASTIPADDRESS_TABLE, *PMIB_UNICASTIPADDRESS_TABLE;">MIB_UNICASTIPADDRESS_TABLE</a></strong> structure. When <strong>NotifyStableUnicastIpAddressTable</strong> is successful, this parameter returns the stable unicast IP address table on the local computer.</li>
+</ul>
 <p>When <strong>NotifyStableUnicastIpAddressTable</strong> returns ERROR_IO_PENDING, which indicates that the I/O request is pending, the stable unicast IP address table is returned to the function in the <em>CallerCallback</em> parameter.</p>
-
+<ul>
+<li>
+<p><em>CallerCallback</em> [in]
+A pointer to the function to call with the stable unicast IP address table. This function is called if <strong>NotifyStableUnicastIpAddressTable</strong> returns ERROR_IO_PENDING, which indicates that the I/O request is pending.</p>
+</li>
+<li>
+<p><em>CallerContext</em> [in]
+A user context that is passed to the callback function that is specified in the <em>CallerCallback</em> parameter when the stable unicast IP address table is available.</p>
+</li>
+<li>
+<p><em>NotificationHandle</em> [in, out]
+A pointer that is used to return a handle that your driver can use to cancel the request to retrieve the stable unicast IP address table. This parameter is returned if the return value from <strong>NotifyStableUnicastIpAddressTable</strong> is ERROR_IO_PENDING, which indicates that the I/O request is pending.</p>
+</li>
+</ul>
+<h2>Return value</h2>
+<p><strong>NotifyStableUnicastIpAddressTable</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> and the stable unicast IP table is returned in the <em>Table</em> parameter if the function succeeds immediately.</p>
+<p>If the I/O request is pending, the function returns ERROR_IO_PENDING and the function that the <em>CallerCallback</em> parameter points to is called when the I/O request has completed with the stable unicast IP address table.</p>
+<p>If the function fails, <strong>NotifyStableUnicastIpAddressTable</strong> returns one of the following error codes:</p>
+<table>
+<thead>
+<tr>
+<th>Return code</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ERROR_INVALID_HANDLE</strong></td>
+<td>An internal error occurred where an invalid handle was encountered.</td>
+</tr>
+<tr>
+<td><strong>STATUS_INVALID_PARAMETER</strong></td>
+<td>An invalid parameter was passed to the function. This error is returned if the <em>Table</em> parameter was a <strong>NULL</strong> pointer, the <em>NotificationHandle</em> parameter was a <strong>NULL</strong> pointer, or the <em>Family</em> parameter was not either AF_INET, AF_INET6, or AF_UNSPEC.</td>
+</tr>
+<tr>
+<td><strong>STATUS_NOT_ENOUGH_MEMORY</strong></td>
+<td>There was insufficient memory.</td>
+</tr>
+<tr>
+<td><strong>Other</strong></td>
+<td>Use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/winbase/nf-winbase-formatmessage">FormatMessage</a> function to obtain the message string for the returned error.</td>
+</tr>
+</tbody>
+</table>
+<h2>Remarks</h2>
+<p>All unicast IP addresses, except dial-on-demand addresses, are considered stable only if they are in the preferred state. For a normal unicast IP address entry, this state would correspond to a <strong>DadState</strong> member of the <strong><a href="mib_unicastipaddress_row" title="typedef struct _MIB_UNICASTIPADDRESS_ROW {&#10;  SOCKADDR_INET    Address;&#10;  NET_LUID         InterfaceLuid;&#10;  NET_IFINDEX      InterfaceIndex;&#10;  NL_PREFIX_ORIGIN PrefixOrigin;&#10;  NL_SUFFIX_ORIGIN SuffixOrigin;&#10;  ULONG            ValidLifetime;&#10;  ULONG            PreferredLifetime;&#10;  UINT8            OnLinkPrefixLength;&#10;  BOOLEAN          SkipAsSource;&#10;  NL_DAD_STATE     DadState;&#10;  SCOPE_ID         ScopeId;&#10;  LARGE_INTEGER    CreationTimeStamp;&#10;} MIB_UNICASTIPADDRESS_ROW, *PMIB_UNICASTIPADDRESS_ROW;">MIB_UNICASTIPADDRESS_ROW</a></strong> for the IP address that is set to <strong>IpDadStatePreferred</strong>. Every dial-on-demand address defines its own stability metric. Currently the only dial-on-demand address that the <strong>NotifyStableUnicastIpAddressTable</strong> function considers is the unicast IP address that the Teredo client uses on the local computer.</p>
+<p>Your driver must set the <em>Family</em> parameter to either AF_INET, AF_INET6, or AF_UNSPEC.</p>
+<p>When <strong>NotifyStableUnicastIpAddressTable</strong> is successful and returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, the <em>Table</em> parameter returns the stable unicast IP address table on the local computer.</p>
+<p>When <strong>NotifyStableUnicastIpAddressTable</strong> returns ERROR_IO_PENDING, which indicates that the I/O request is pending, the stable unicast IP address table is returned to the function in the <em>CallerCallback</em> parameter.</p>
 <p>If the unicast IP address that Teredo uses is available on the local computer but not in the stable (qualified) state, <strong>NotifyStableUnicastIpAddressTable</strong> returns ERROR_IO_PENDING and the stable unicast IP address table is eventually returned by calling the function in the <em>CallerCallback</em> parameter. If the Teredo address is not available or is in the stable state and the other unicast IP addresses are in a stable state, the function in the <em>CallerCallback</em> parameter is never called.</p>
-
 <p>The callback function that is specified in the <em>CallerCallback</em> parameter should be defined as a function of type <strong>VOID</strong>. The parameters that are passed to the callback function include the following.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Parameter</th>
-  <th>Description</th>
+<th>Parameter</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>IN PVOID <em>CallerContext</em></td>
-  <td>The <em>CallerContext</em> parameter that is passed to the <strong>NotifyStableUnicastIpAddressTable</strong> function when it is registering the driver for notifications.</td>
+<td>IN PVOID <em>CallerContext</em></td>
+<td>The <em>CallerContext</em> parameter that is passed to the <strong>NotifyStableUnicastIpAddressTable</strong> function when it is registering the driver for notifications.</td>
 </tr>
 <tr>
-  <td>IN PMIB_UNICASTIPADDRESS_TABLE <em>AddressTable</em></td>
-  <td>A pointer to a <strong><a href="mib_unicastipaddress_table" title="typedef struct _MIB_UNICASTIPADDRESS_TABLE {&#10;  ULONG                    NumEntries;&#10;  MIB_UNICASTIPADDRESS_ROW Table[ANY_SIZE];&#10;} MIB_UNICASTIPADDRESS_TABLE, *PMIB_UNICASTIPADDRESS_TABLE;">MIB_UNICASTIPADDRESS_TABLE</a></strong> structure that contains the stable unicast IP address table on the local computer.</td>
+<td>IN PMIB_UNICASTIPADDRESS_TABLE <em>AddressTable</em></td>
+<td>A pointer to a <strong><a href="mib_unicastipaddress_table" title="typedef struct _MIB_UNICASTIPADDRESS_TABLE {&#10;  ULONG                    NumEntries;&#10;  MIB_UNICASTIPADDRESS_ROW Table[ANY_SIZE];&#10;} MIB_UNICASTIPADDRESS_TABLE, *PMIB_UNICASTIPADDRESS_TABLE;">MIB_UNICASTIPADDRESS_TABLE</a></strong> structure that contains the stable unicast IP address table on the local computer.</td>
 </tr>
 </tbody>
 </table>
-
 <p>The <strong>NotifyStableUnicastIpAddressTable</strong> function is used primarily by drivers that use the Teredo client.</p>
-
 <p>To cancel the notification after the callback is complete, call the <strong><a href="cancelmibchangenotify2" title="NETIOAPI_API CancelMibChangeNotify2(&#10;  _In_ HANDLE NotificationHandle&#10;);">CancelMibChangeNotify2</a></strong> function, passing the <em>NotificationHandle</em> parameter that <strong>NotifyStableUnicastIpAddressTable</strong> returns.</p>
-
 <h2>Requirements</h2>
-
 <table>
 <thead>
 <tr>
-  <th></th>
-  <th></th>
+<th></th>
+<th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Target platform</td>
-  <td><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/develop/target-platforms">Universal</a></td>
+<td>Target platform</td>
+<td><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/develop/target-platforms">Universal</a></td>
 </tr>
 <tr>
-  <td>Version</td>
-  <td>Available in Windows Vista and later versions of the Windows operating systems.</td>
+<td>Version</td>
+<td>Available in Windows Vista and later versions of the Windows operating systems.</td>
 </tr>
 <tr>
-  <td>Header</td>
-  <td>Netioapi.h (include Netioapi.h)</td>
+<td>Header</td>
+<td>Netioapi.h (include Netioapi.h)</td>
 </tr>
 <tr>
-  <td>Library</td>
-  <td>Netio.lib</td>
+<td>Library</td>
+<td>Netio.lib</td>
 </tr>
 <tr>
-  <td>IRQL</td>
-  <td>&lt; DISPATCH_LEVEL</td>
+<td>IRQL</td>
+<td>&lt; DISPATCH_LEVEL</td>
 </tr>
 </tbody>
 </table>
-
 <h2>See also</h2>
-
 <p><strong><a href="cancelmibchangenotify2" title="NETIOAPI_API CancelMibChangeNotify2(&#10;  _In_ HANDLE NotificationHandle&#10;);">CancelMibChangeNotify2</a></strong></p>
-
 <p><strong><a href="createunicastipaddressentry" title="NETIOAPI_API CreateUnicastIpAddressEntry(&#10;  _In_ const MIB_UNICASTIPADDRESS_ROW *Row&#10;);">CreateUnicastIpAddressEntry</a></strong></p>
-
 <p><strong><a href="deleteunicastipaddressentry" title="NETIOAPI_API DeleteUnicastIpAddressEntry(&#10;  _In_ const MIB_UNICASTIPADDRESS_ROW *Row&#10;);">DeleteUnicastIpAddressEntry</a></strong></p>
-
 <p><strong><a href="getteredoport" title="NETIOAPI_API GetTeredoPort(&#10;  _Out_ USHORT *Port&#10;);">GetTeredoPort</a></strong></p>
-
 <p><strong><a href="getunicastipaddressentry" title="NETIOAPI_API GetUnicastIpAddressEntry(&#10;  _Inout_ PMIB_UNICASTIPADDRESS_ROW Row&#10;);">GetUnicastIpAddressEntry</a></strong></p>
-
 <p><strong><a href="getunicastipaddresstable" title="NETIOAPI_API GetUnicastIpAddressTable(&#10;  _In_  ADDRESS_FAMILY              Family,&#10;  _Out_ PMIB_UNICASTIPADDRESS_TABLE *Table&#10;);">GetUnicastIpAddressTable</a></strong></p>
-
 <p><strong><a href="initializeunicastipaddressentry" title="VOID NETIOAPI_API_ InitializeUnicastIpAddressEntry(&#10;  _Out_ PMIB_UNICASTIPADDRESS_ROW Row&#10;);">InitializeUnicastIpAddressEntry</a></strong></p>
-
 <p><strong><a href="mib_notification_type" title="typedef enum _MIB_NOTIFICATION_TYPE { &#10;  MibParameterNotification  = 0,&#10;  MibAddInstance            = 1,&#10;  MibDeleteInstance         = 2,&#10;  MibInitialNotification    = 3&#10;} MIB_NOTIFICATION_TYPE, *PMIB_NOTIFICATION_TYPE;">MIB_NOTIFICATION_TYPE</a></strong></p>
-
 <p><strong><a href="mib_unicastipaddress_row" title="typedef struct _MIB_UNICASTIPADDRESS_ROW {&#10;  SOCKADDR_INET    Address;&#10;  NET_LUID         InterfaceLuid;&#10;  NET_IFINDEX      InterfaceIndex;&#10;  NL_PREFIX_ORIGIN PrefixOrigin;&#10;  NL_SUFFIX_ORIGIN SuffixOrigin;&#10;  ULONG            ValidLifetime;&#10;  ULONG            PreferredLifetime;&#10;  UINT8            OnLinkPrefixLength;&#10;  BOOLEAN          SkipAsSource;&#10;  NL_DAD_STATE     DadState;&#10;  SCOPE_ID         ScopeId;&#10;  LARGE_INTEGER    CreationTimeStamp;&#10;} MIB_UNICASTIPADDRESS_ROW, *PMIB_UNICASTIPADDRESS_ROW;">MIB_UNICASTIPADDRESS_ROW</a></strong></p>
-
 <p><strong><a href="mib_unicastipaddress_table" title="typedef struct _MIB_UNICASTIPADDRESS_TABLE {&#10;  ULONG                    NumEntries;&#10;  MIB_UNICASTIPADDRESS_ROW Table[ANY_SIZE];&#10;} MIB_UNICASTIPADDRESS_TABLE, *PMIB_UNICASTIPADDRESS_TABLE;">MIB_UNICASTIPADDRESS_TABLE</a></strong></p>
-
 <p><strong><a href="notifyteredoportchange" title="NETIOAPI_API NotifyTeredoPortChange(&#10;  _In_    PTEREDO_PORT_CHANGE_CALLBACK Callback,&#10;  _In_    PVOID                        CallerContext,&#10;  _In_    BOOLEAN                      InitialNotification,&#10;  _Inout_ HANDLE *                     NotificationHandle&#10;);">NotifyTeredoPortChange</a></strong></p>
-
 <p><strong><a href="notifyunicastipaddresschange" title="NETIOAPI_API NotifyUnicastIpAddressChange(&#10;  _In_    ADDRESS_FAMILY                     Family,&#10;  _In_    PUNICAST_IPADDRESS_CHANGE_CALLBACK Callback,&#10;  _In_    PVOID                              CallerContext,&#10;  _In_    BOOLEAN                            InitialNotification,&#10;  _Inout_ HANDLE                             *NotificationHandle&#10;);">NotifyUnicastIpAddressChange</a></strong></p>
-
 <p><strong><a href="setunicastipaddressentry" title="NETIOAPI_API SetUnicastIpAddressEntry(&#10;  _In_ const MIB_UNICASTIPADDRESS_ROW *Row&#10;);">SetUnicastIpAddressEntry</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

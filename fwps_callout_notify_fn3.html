@@ -69,68 +69,47 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>Version 3 of the function invoked during classification when a callout filter matches. The difference being that this callback returns an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fwpstypes/ns-fwpstypes-fwps_filter3">FWPS_FILTER3</a> structure.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>notifyType</code></h3>
-
 <p>A value that indicates the type of notification that the filter engine is sending to the callout. Valid values for this parameter are:</p>
-
 <ul>
 <li><strong>FWPS_CALLOUT_NOTIFY_ADD_FILTER</strong>: A filter is being added to the filter engine that specifies the callout for the filter's action.</li>
 <li><strong>FWPS_CALLOUT_NOTIFY_DELETE_FILTER</strong>: A filter is being deleted from the filter engine that specifies the callout for the filter's action.</li>
 <li><strong>FWPS_CALLOUT_NOTIFY_TYPE_MAX</strong>: A maximum value for testing purposes.</li>
 </ul>
-
 <h3><code>filterKey</code></h3>
-
 <p>A pointer to the management identifier for the filter, as specified by the application or driver that is adding or deleting the filter. Must be <strong>NULL</strong> if the <em>notifyType</em> parameter is set to <strong>FWPS_CALLOUT_NOTIFY_DELETE_FILTER</strong>. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fwpsk/nc-fwpsk-fwps_callout_notify_fn3#remarks">Remarks</a>.</p>
-
 <h3><code>filter</code></h3>
-
 <p>A pointer to an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fwpstypes/ns-fwpstypes-fwps_filter3">FWPS_FILTER3</a> structure. This structure describes the filter that is being added to or deleted from the filter engine.</p>
-
 <p>A callout's <strong>notifyFn3</strong> callout function can set the context member of this structure to point to a callout driver-supplied context structure when the filter is added to the filter engine. This context structure is opaque to the filter engine, and can be used by the callout driver's <strong>classifyFn3</strong> callout function to preserve any driver-specific data or state information between calls by the filter engine to the callout driver's <strong>classifyFn3</strong> callout function.</p>
-
 <p>A callout's <strong>notifyFn3</strong> callout function can clean up any context associated with the filter when the filter is deleted from the filter engine.</p>
-
 <h2>Return value</h2>
-
 <p>A callout's <strong>notifyFn3</strong> function returns one of the following <strong><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></strong> codes.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
-  <td>The callout driver accepts the notification from the filter engine.</td>
+<td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
+<td>The callout driver accepts the notification from the filter engine.</td>
 </tr>
 <tr>
-  <td>Other status codes</td>
-  <td>An error occurred. If the <em>notifyType</em> parameter is <strong>FWPS_CALLOUT_NOTIFY_ADD_FILTER</strong>, the filter will not be added to the filter engine. If the <em>notifyType</em> parameter is <strong>FWPS_CALLOUT_NOTIFY_DELETE_FILTER</strong>, the filter will still be deleted from the filter engine.</td>
+<td>Other status codes</td>
+<td>An error occurred. If the <em>notifyType</em> parameter is <strong>FWPS_CALLOUT_NOTIFY_ADD_FILTER</strong>, the filter will not be added to the filter engine. If the <em>notifyType</em> parameter is <strong>FWPS_CALLOUT_NOTIFY_DELETE_FILTER</strong>, the filter will still be deleted from the filter engine.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>A callout driver registers a callout's callout functions with the filter engine by calling the <strong><a href="fwpscalloutregister2" title="NTSTATUS FwpsCalloutRegister2(&#10;  [in, out]       void                *deviceObject,&#10;  [in]            const FWPS_CALLOUT2 *callout,&#10;  [out, optional] UINT32              *calloutId&#10;);">FwpsCalloutRegister2</a></strong> function.</p>
-
 <p>The filter engine calls a callout's <strong>notifyFn3</strong> callout function to notify the callout driver about events that are associated with the callout. If the callout driver's <strong>notifyFn3</strong> callout function does not recognize the type of notification that is passed in the <em>notifyType</em> parameter, it ignores the notification and return <strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong>.</p>
-
 <p>If a callout driver registers a callout with the filter engine after filters that specify the callout for the filter's action have already been added to the filter engine, the filter engine does not call the callout driver's <strong>notifyFn3</strong> callout function to notify the callout about any of the existing filters. The filter engine calls the callout driver's <strong>notifyFn3</strong> callout function to notify the callout when new filters that specify the callout for the filter's action are added to the filter engine. In this situation, a callout's <strong>notifyFn3</strong> callout function might not get called for every filter in the filter engine that specifies the callout for the filter's action. If a callout driver registers a callout after the filter engine is started and the callout needs to know about every filter in the filter engine that specifies the callout for the filter's action, the callout driver must call the appropriate management functions to enumerate all the filters in the filter engine and sort through the resulting list of filters to find those that specify the callout for the filter's action. For more information about calling these functions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/calling-other-windows-filtering-platform-functions">Calling other Windows Filtering Platform functions</a>.</p>
-
 <p>When a filter that specifies a callout for the filter's action is deleted from the filter engine, the filter engine calls the callout driver's <strong>notifyFn3</strong> callout function and passes FWP_CALLOUT_NOTIFY_DELETE_FILTER in the <em>notifyType</em> parameter and <strong>NULL</strong> in the filterKey parameter. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/processing-notify-callouts">Processing notify callouts</a>.</p>
-
 <h2>See also</h2>
-
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fwpstypes/ns-fwpstypes-fwps_filter3">FWPS_FILTER3</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/calling-other-windows-filtering-platform-functions">Calling other Windows Filtering Platform functions</a></li>

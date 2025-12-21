@@ -67,92 +67,67 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WDF_WMI_BUFFER_APPEND_STRING function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF only]</p>
-
 <p>The <strong>WDF_WMI_BUFFER_APPEND_STRING</strong> function copies a specified Unicode string into a specified buffer in the format that WMI requires.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Buffer</code> [out]</h3>
-
 <p>A pointer to a destination buffer that receives the string.</p>
-
 <h3><code>BufferLength</code> [in]</h3>
-
 <p>The length, in bytes, of the destination buffer that receives the string.</p>
-
 <h3><code>String</code> [in]</h3>
-
 <p>A pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that contains the string to be copied.</p>
-
 <h3><code>RequiredSize</code> [out]</h3>
-
 <p>A pointer to a location that receives the number of bytes that are required to store the specified string in the destination buffer.</p>
-
 <h2>Return value</h2>
-
 <p><strong>WDF_WMI_BUFFER_APPEND_STRING</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. If the destination buffer is too small to hold the Unicode string that the <em>String</em> parameter specifies, the function returns STATUS_BUFFER_TOO_SMALL.</p>
-
 <h2>Remarks</h2>
-
 <p>WMI requires that strings that an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfwmi/nc-wdfwmi-evt_wdf_wmi_instance_query_instance">EvtWmiInstanceQueryInstance</a> callback function returns be preceded by a byte count. The <strong>WDF_WMI_BUFFER_APPEND_STRING</strong> function calculates the byte count, stores it in the destination buffer, and then copies the string from the <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure into the destination buffer.</p>
-
 <p>When <strong>WDF_WMI_BUFFER_APPEND_STRING</strong> returns, the location that the <em>RequiredSize</em> parameter points to contains the total number of bytes that were written to the buffer. To find the first buffer address that follows the string, your driver can pass the <em>RequiredSize</em> value to the <a href="wdf_ptr_add_offset" title="PVOID WDF_PTR_ADD_OFFSET(&#10;    _ptr,&#10;    _offset&#10;);">WDF_PTR_ADD_OFFSET</a> macro that is defined in <em>Wdfcore.h</em>.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example is from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">Serial</a> sample driver. This example is an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfwmi/nc-wdfwmi-evt_wdf_wmi_instance_query_instance">EvtWmiInstanceQueryInstance</a> callback function that obtains a device's symbolic name and copies the name into the callback function's output buffer.</p>
+<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+EvtWmiQueryPortName(
+    IN  WDFWMIINSTANCE WmiInstance,
+    IN  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OutBufferSize,
+    IN  PVOID OutBuffer,
+    OUT PULONG BufferUsed
+    )
+{
+    WDFDEVICE device;
+    PSERIAL_DEVICE_EXTENSION pDevExt;
+    WCHAR pRegName[SYMBOLIC_NAME_LENGTH];
+    <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> string;
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> nameSize = sizeof(pRegName);
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="nf">EvtWmiQueryPortName</span><span class="p">(</span>
-<span class="w">    </span><span class="n">IN</span><span class="w">  </span><span class="n">WDFWMIINSTANCE</span><span class="w"> </span><span class="n">WmiInstance</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w">  </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">OutBufferSize</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w">  </span><span class="n">PVOID</span><span class="w"> </span><span class="n">OutBuffer</span><span class="p">,</span>
-<span class="w">    </span><span class="n">OUT</span><span class="w"> </span><span class="n">PULONG</span><span class="w"> </span><span class="n">BufferUsed</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">device</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PSERIAL_DEVICE_EXTENSION</span><span class="w"> </span><span class="n">pDevExt</span><span class="p">;</span>
-<span class="w">    </span><span class="n">WCHAR</span><span class="w"> </span><span class="n">pRegName</span><span class="p">[</span><span class="n">SYMBOLIC_NAME_LENGTH</span><span class="p">];</span>
-<span class="w">    </span><span class="n"><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></span><span class="w"> </span><span class="n">string</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="ushort" title="typedef unsigned short USHORT;">USHORT</a></span><span class="w"> </span><span class="n">nameSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">pRegName</span><span class="p">);</span>
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
+    PAGED_CODE();
 
-<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
+    device = <a href="wdfwmiinstancegetdevice" title="WDFDEVICE WdfWmiInstanceGetDevice(&#10;  [in] WDFWMIINSTANCE WmiInstance&#10;);">WdfWmiInstanceGetDevice</a>(WmiInstance);
+    pDevExt = SerialGetDeviceExtension(device);
 
-<span class="w">    </span><span class="n">device</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfwmiinstancegetdevice" title="WDFDEVICE WdfWmiInstanceGetDevice(&#10;  [in] WDFWMIINSTANCE WmiInstance&#10;);">WdfWmiInstanceGetDevice</a></span><span class="p">(</span><span class="n">WmiInstance</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pDevExt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SerialGetDeviceExtension</span><span class="p">(</span><span class="n">device</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">SerialReadSymName</span><span class="p">(</span>
-<span class="w">                               </span><span class="n">device</span><span class="p">,</span>
-<span class="w">                               </span><span class="n">pRegName</span><span class="p">,</span>
-<span class="w">                               </span><span class="o">&amp;</span><span class="n">nameSize</span>
-<span class="w">                               </span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n"><a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a></span><span class="p">(</span>
-<span class="w">                         </span><span class="o">&amp;</span><span class="n">string</span><span class="p">,</span>
-<span class="w">                         </span><span class="n">pRegName</span>
-<span class="w">                         </span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">WDF_WMI_BUFFER_APPEND_STRING</span><span class="p">(</span>
-<span class="w">                                        </span><span class="n">OutBuffer</span><span class="p">,</span>
-<span class="w">                                        </span><span class="n">OutBufferSize</span><span class="p">,</span>
-<span class="w">                                        </span><span class="o">&amp;</span><span class="n">string</span><span class="p">,</span>
-<span class="w">                                        </span><span class="n">BufferUsed</span>
-<span class="w">                                        </span><span class="p">);</span>
-<span class="p">}</span>
+    status = SerialReadSymName(
+                               device,
+                               pRegName,
+                               &amp;nameSize
+                               );
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+        return status;
+    }
+    <a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(
+                         &amp;string,
+                         pRegName
+                         );
+    return WDF_WMI_BUFFER_APPEND_STRING(
+                                        OutBuffer,
+                                        OutBufferSize,
+                                        &amp;string,
+                                        BufferUsed
+                                        );
+}
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfwmi/nc-wdfwmi-evt_wdf_wmi_instance_query_instance">EvtWmiInstanceQueryInstance</a></p>
-
 <p><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></p>
 <hr>
 <div class="ntdoc-description-links">

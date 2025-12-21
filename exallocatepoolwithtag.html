@@ -66,70 +66,39 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>The <strong>ExAllocatePoolWithTag</strong> routine allocates pool memory of the specified type and returns a pointer to the allocated block.</p>
-
 <blockquote>
-  <p>[!WARNING]
-  ExAllocatePoolWithTag has been deprecated in Windows 10, version 2004 and has been replaced by <a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a>. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/updating-deprecated-exallocatepool-calls">Updating deprecated ExAllocatePool calls to ExAllocatePool2 and ExAllocatePool3</a>.</p>
+<p>[!WARNING]
+ExAllocatePoolWithTag has been deprecated in Windows 10, version 2004 and has been replaced by <a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a>. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/updating-deprecated-exallocatepool-calls">Updating deprecated ExAllocatePool calls to ExAllocatePool2 and ExAllocatePool3</a>.</p>
 </blockquote>
-
 <h2>Parameters</h2>
-
 <h3><code>PoolType</code> [in]</h3>
-
 <p>The type of pool memory to allocate. For a description of the available pool memory types, see <a href="pool_type" title="typedef enum _POOL_TYPE {&#10;    NonPagedPool,&#10;    NonPagedPoolExecute = NonPagedPool,&#10;    PagedPool,&#10;    NonPagedPoolMustSucceed = NonPagedPool + 2,&#10;    DontUseThisType,&#10;    NonPagedPoolCacheAligned = NonPagedPool + 4,&#10;    PagedPoolCacheAligned,&#10;    NonPagedPoolCacheAlignedMustS = NonPagedPool + 6,&#10;    MaxPoolType,&#10;    NonPagedPoolBase = 0,&#10;    NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,&#10;    NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,&#10;    NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,&#10;    NonPagedPoolSession = 32,&#10;    PagedPoolSession = NonPagedPoolSession + 1,&#10;    NonPagedPoolMustSucceedSession = PagedPoolSession + 1,&#10;    DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,&#10;    NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,&#10;    PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,&#10;...">POOL_TYPE</a>.</p>
-
 <p>You can modify the <em>PoolType</em> value by bitwise-ORing this value with the POOL_RAISE_IF_ALLOCATION_FAILURE flag. This flag causes an exception to be raised if the request cannot be satisfied. Use of the POOL_RAISE_IF_ALLOCATION_FAILURE flag is not recommended because it is costly.</p>
-
 <p>Similarly, you can modify the <em>PoolType</em> value by bitwise-ORing this value with the POOL_COLD_ALLOCATION flag as a hint to the kernel to allocate the memory from pages that are likely to be paged out quickly. To reduce the amount of resident pool memory as much as possible, you should not reference these allocations frequently. The POOL_COLD_ALLOCATION flag is only advisory.</p>
-
 <h3><code>NumberOfBytes</code> [in]</h3>
-
 <p>The number of bytes to allocate.</p>
-
 <h3><code>Tag</code> [in]</h3>
-
 <p>The pool tag to use for the allocated memory. Specify the pool tag as a non-zero character literal of one to four characters delimited by single quotation marks (for example, 'Tag1'). The string is usually specified in reverse order (for example, '1gaT'). Each ASCII character in the tag must be a value in the range 0x20 (space) to 0x7E (tilde). Each allocation code path should use a unique pool tag to help debuggers and verifiers identify the code path.</p>
-
 <h2>Return value</h2>
-
 <p><strong>ExAllocatePoolWithTag</strong> returns <strong>NULL</strong> if there is insufficient memory in the free pool to satisfy the request. Otherwise, the routine returns a pointer to the allocated memory.</p>
-
 <h2>Remarks</h2>
-
 <p>This routine is used for the general pool allocation of memory.</p>
-
 <p>If <em>NumberOfBytes</em> is <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> or greater, a page-aligned buffer is allocated. Memory allocations of <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> or less are allocated within a page and do not cross page boundaries. Memory allocations of less than <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> are not necessarily page-aligned but are aligned to 8-byte boundaries in 32-bit systems and to 16-byte boundaries in 64-bit systems.</p>
-
 <p>A successful allocation requesting <em>NumberOfBytes</em> &lt; <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> of nonpaged pool gives the caller exactly the number of requested bytes of memory. If an allocation request for <em>NumberOfBytes</em> &gt; <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> succeeds and <em>NumberOfBytes</em> is not an exact multiple of <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a>, the last page in the allocation contains bytes that are not part of the caller's allocation. If possible, the pool allocator uses these bytes. To avoid corrupting data that belongs to other kernel-mode components, drivers must access only storage addresses that they have explicitly allocated.</p>
-
 <p>The system associates the pool tag with the allocated memory. Programming tools, such as WinDbg, can display the pool tag associated with each allocated buffer. Gflags, a tool included in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/debugger/">Debugging Tools for Windows</a>, turns on a system feature that requests allocation from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/special-pool">special pool</a> for a particular pool tag. <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/poolmon">Poolmon</a>, which is included in the WDK, tracks memory by pool tag.</p>
-
-<p>The value of <em>Tag</em> is stored, and sometimes displayed, in reverse (little-endian) order. For example, if a caller passes 'Fred' as a <em>Tag</em>, it appears as "derF" in a pool dump and in pool usage tracking in the debugger, and as 0x64657246 in the registry and in tool displays.</p>
-
+<p>The value of <em>Tag</em> is stored, and sometimes displayed, in reverse (little-endian) order. For example, if a caller passes 'Fred' as a <em>Tag</em>, it appears as &quot;derF&quot; in a pool dump and in pool usage tracking in the debugger, and as 0x64657246 in the registry and in tool displays.</p>
 <p>The allocated buffer can be freed with either <a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a> or <a href="exfreepoolwithtag" title="VOID ExFreePoolWithTag(&#10;  [in] PVOID P,&#10;  [in] ULONG Tag&#10;);">ExFreePoolWithTag</a>.</p>
-
 <p>The system automatically sets certain standard event objects when the amount of pool (paged or nonpaged) is high or low. Drivers can wait for these events to tune their pool usage. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/standard-event-objects">Standard Event Objects</a>.</p>
-
 <p>Callers of <strong>ExAllocatePoolWithTag</strong> must be executing at IRQL &lt;= DISPATCH_LEVEL. A caller executing at DISPATCH_LEVEL must specify a <strong>NonPaged</strong><em>Xxx</em> value for <em>PoolType</em>. A caller executing at IRQL &lt;= APC_LEVEL can specify any <strong><a href="pool_type" title="typedef enum _POOL_TYPE {&#10;    NonPagedPool,&#10;    NonPagedPoolExecute = NonPagedPool,&#10;    PagedPool,&#10;    NonPagedPoolMustSucceed = NonPagedPool + 2,&#10;    DontUseThisType,&#10;    NonPagedPoolCacheAligned = NonPagedPool + 4,&#10;    PagedPoolCacheAligned,&#10;    NonPagedPoolCacheAlignedMustS = NonPagedPool + 6,&#10;    MaxPoolType,&#10;    NonPagedPoolBase = 0,&#10;    NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,&#10;    NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,&#10;    NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,&#10;    NonPagedPoolSession = 32,&#10;    PagedPoolSession = NonPagedPoolSession + 1,&#10;    NonPagedPoolMustSucceedSession = PagedPoolSession + 1,&#10;    DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,&#10;    NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,&#10;    PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,&#10;...">POOL_TYPE</a></strong> value, but the IRQL and environment must also be considered for determining the page type.</p>
-
 <p>Do not set <em>NumberOfBytes</em> = 0. Avoid zero-length allocations because they waste pool header space and, in many cases, indicate a potential validation issue in the calling code. For this reason, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/what-s-new-in-driver-development">Driver Verifier</a> flags such allocations as possible errors.</p>
-
 <p>In a non-uniform memory access (NUMA) multiprocessor architecture, <strong>ExAllocatePoolWithTag</strong> tries to allocate memory that is local to the processor that is calling <strong>ExAllocatePoolWithTag</strong>. If no local memory is available, <strong>ExAllocatePoolWithTag</strong> allocates the closest available memory.</p>
-
 <p>Memory that <strong>ExAllocatePoolWithTag</strong> allocates is uninitialized. A kernel-mode driver must first zero this memory if it is going to make it visible to user-mode software (to avoid leaking potentially privileged contents).</p>
-
 <h2>See also</h2>
-
 <p><a href="exallocatepoolwithquotatag" title="PVOID ExAllocatePoolWithQuotaTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithQuotaTag</a></p>
-
 <p><a href="exallocatepoolwithtagpriority" title="PVOID ExAllocatePoolWithTagPriority(&#10;  [in] __drv_strictTypeMatch(__drv_typeCond)POOL_TYPE        PoolType,&#10;  [in] SIZE_T                                                NumberOfBytes,&#10;  [in] ULONG                                                 Tag,&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)EX_POOL_PRIORITY Priority&#10;);">ExAllocatePoolWithTagPriority</a></p>
-
 <p><a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a></p>
-
 <p><a href="exfreepoolwithtag" title="VOID ExFreePoolWithTag(&#10;  [in] PVOID P,&#10;  [in] ULONG Tag&#10;);">ExFreePoolWithTag</a></p>
-
 <p><a href="pool_type" title="typedef enum _POOL_TYPE {&#10;    NonPagedPool,&#10;    NonPagedPoolExecute = NonPagedPool,&#10;    PagedPool,&#10;    NonPagedPoolMustSucceed = NonPagedPool + 2,&#10;    DontUseThisType,&#10;    NonPagedPoolCacheAligned = NonPagedPool + 4,&#10;    PagedPoolCacheAligned,&#10;    NonPagedPoolCacheAlignedMustS = NonPagedPool + 6,&#10;    MaxPoolType,&#10;    NonPagedPoolBase = 0,&#10;    NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,&#10;    NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,&#10;    NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,&#10;    NonPagedPoolSession = 32,&#10;    PagedPoolSession = NonPagedPoolSession + 1,&#10;    NonPagedPoolMustSucceedSession = PagedPoolSession + 1,&#10;    DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,&#10;    NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,&#10;    PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,&#10;...">POOL_TYPE</a></p>
 <hr>
 <div class="ntdoc-description-links">

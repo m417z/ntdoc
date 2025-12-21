@@ -68,59 +68,45 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>CcInitializeCacheMap function</h1>
-
 <h2>Description</h2>
-
 <p>File systems call the <strong>CcInitializeCacheMap</strong> routine to cache a file.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>FileObject</code> [in]</h3>
-
 <p>Pointer to a file object for the file.</p>
-
 <h3><code>FileSizes</code> [in]</h3>
-
 <p>Pointer to a <a href="cc_file_sizes" title="typedef struct _CC_FILE_SIZES {&#10;  LARGE_INTEGER AllocationSize;&#10;  LARGE_INTEGER FileSize;&#10;  LARGE_INTEGER ValidDataLength;&#10;} CC_FILE_SIZES, *PCC_FILE_SIZES;">CC_FILE_SIZES</a> structure containing <strong>AllocationSize</strong>, <strong>FileSize</strong>, and <strong>ValidDataLength</strong> for the file. This structure is defined as follows:</p>
-
 <pre><code>typedef <a href="cc_file_sizes" title="typedef struct _CC_FILE_SIZES {&#10;  LARGE_INTEGER AllocationSize;&#10;  LARGE_INTEGER FileSize;&#10;  LARGE_INTEGER ValidDataLength;&#10;} CC_FILE_SIZES, *PCC_FILE_SIZES;">struct _CC_FILE_SIZES</a> {
     LARGE_INTEGER AllocationSize;
     LARGE_INTEGER FileSize;
     LARGE_INTEGER ValidDataLength;
 } <a href="cc_file_sizes" title="typedef struct _CC_FILE_SIZES {&#10;  LARGE_INTEGER AllocationSize;&#10;  LARGE_INTEGER FileSize;&#10;  LARGE_INTEGER ValidDataLength;&#10;} CC_FILE_SIZES, *PCC_FILE_SIZES;">CC_FILE_SIZES</a>, *<a href="cc_file_sizes" title="typedef struct _CC_FILE_SIZES {&#10;  LARGE_INTEGER AllocationSize;&#10;  LARGE_INTEGER FileSize;&#10;  LARGE_INTEGER ValidDataLength;&#10;} CC_FILE_SIZES, *PCC_FILE_SIZES;">PCC_FILE_SIZES</a>;
 </code></pre>
-
 <table>
 <thead>
 <tr>
-  <th>Member</th>
-  <th>Meaning</th>
+<th>Member</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>AllocationSize</strong></td>
-  <td>New section object size for the file. Ignored if less than or equal to the current section size.</td>
+<td><strong>AllocationSize</strong></td>
+<td>New section object size for the file. Ignored if less than or equal to the current section size.</td>
 </tr>
 <tr>
-  <td><strong>FileSize</strong></td>
-  <td>New file size for the file.</td>
+<td><strong>FileSize</strong></td>
+<td>New file size for the file.</td>
 </tr>
 <tr>
-  <td><strong>ValidDataLength</strong></td>
-  <td>New valid data length for the file.</td>
+<td><strong>ValidDataLength</strong></td>
+<td>New valid data length for the file.</td>
 </tr>
 </tbody>
 </table>
-
 <h3><code>PinAccess</code> [in]</h3>
-
 <p>Set to <strong>TRUE</strong> if <strong>CcPin</strong><em>Xxx</em> routines will be used on the file.</p>
-
 <h3><code>Callbacks</code> [in]</h3>
-
 <p>Pointer to a structure allocated from nonpaged pool, containing entry points of caller-supplied read-ahead and write-behind callback routines.This structure and its members are defined as follows:</p>
-
 <pre><code>typedef struct _CACHE_MANAGER_CALLBACKS {
     PACQUIRE_FOR_LAZY_WRITE AcquireForLazyWrite;
     PRELEASE_FROM_LAZY_WRITE ReleaseFromLazyWrite;
@@ -146,48 +132,28 @@ VOID (*PRELEASE_FROM_READ_AHEAD) (
              IN PVOID Context
              );
 </code></pre>
-
 <h3><code>LazyWriteContext</code> [in]</h3>
-
 <p>Pointer to context information to be passed to the callback routines specified in <em>Callbacks</em>.</p>
-
 <h2>Remarks</h2>
-
 <p><strong>CcInitializeCacheMap</strong> creates the data structures required for file data caching.</p>
-
 <p>If any failure occurs, <strong>CcInitializeCacheMap</strong> raises a status exception for that particular failure. For example, if a pool allocation failure occurs, <strong>CcInitializeCacheMap</strong> raises a STATUS_INSUFFICIENT_RESOURCES exception. Therefore, to gain control if a failure occurs, the driver should wrap the call to <strong>CcInitializeCacheMap</strong> in a <strong>try-except</strong> or <strong>try-finally</strong> statement.</p>
-
 <p>File systems must call <strong>CcInitializeCacheMap</strong> to cache a file before using any other cache manager routines on the file, unless the file was created with data caching disabled. In most file systems, file caching is enabled by default, but can be disabled by setting the <a href="file_no_intermediate_buffering" title="#define FILE_NO_INTERMEDIATE_BUFFERING 0x00000008">FILE_NO_INTERMEDIATE_BUFFERING</a> flag to <strong>TRUE</strong> in the file create options.</p>
-
 <p>After calling <strong>CcInitializeCacheMap</strong>, the file system can call <a href="ccsetadditionalcacheattributes" title="VOID CcSetAdditionalCacheAttributes(&#10;  [in] PFILE_OBJECT FileObject,&#10;  [in] BOOLEAN      DisableReadAhead,&#10;  [in] BOOLEAN      DisableWriteBehind&#10;);">CcSetAdditionalCacheAttributes</a> to disable read-ahead or write-behind, if desired.</p>
-
 <p>When closing a file, every file system that supports file caching must call <a href="ccuninitializecachemap" title="BOOLEAN CcUninitializeCacheMap(&#10;  [in]           PFILE_OBJECT              FileObject,&#10;  [in, optional] PLARGE_INTEGER            TruncateSize,&#10;                 PCACHE_UNINITIALIZE_EVENT UninitializeEvent&#10;);">CcUninitializeCacheMap</a> on that file, whether the file is cached or not. Even if the file was created with caching disabled, the file system still must call <strong><a href="ccuninitializecachemap" title="BOOLEAN CcUninitializeCacheMap(&#10;  [in]           PFILE_OBJECT              FileObject,&#10;  [in, optional] PLARGE_INTEGER            TruncateSize,&#10;                 PCACHE_UNINITIALIZE_EVENT UninitializeEvent&#10;);">CcUninitializeCacheMap</a></strong>.</p>
-
 <p>The <strong>CcIsFileCached</strong> macro determines whether a file is cached or not.</p>
+<pre lang="cpp"><code>BOOLEAN CcIsFileCached(
+  [in] <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">PFILE_OBJECT</a> FileObject
+);
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">BOOLEAN</span><span class="w"> </span><span class="nf">CcIsFileCached</span><span class="p">(</span>
-<span class="w">  </span><span class="p">[</span><span class="n">in</span><span class="p">]</span><span class="w"> </span><span class="n"><a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">PFILE_OBJECT</a></span><span class="w"> </span><span class="n">FileObject</span>
-<span class="p">);</span>
 </code></pre>
-</div>
-
 <p>Parameters</p>
-
 <p><em>FileObject[in]</em> [in]</p>
-
 <p>Pointer to a file object for the file.</p>
-
 <p>Return value</p>
-
 <p>Returns <strong>TRUE</strong> if the file is cached, <strong>FALSE</strong> otherwise.</p>
-
 <p><strong>Note</strong> Because multiple file objects can refer to the same file (that is, data stream), it is possible for the <strong>CcIsFileCached</strong> macro to return <strong>TRUE</strong> given a non-cached file object if another cached file object refers to the same data stream. In other words, if there is a set of file objects that refer to the same data stream and if at least one of the file objects in the set is cached, <strong>CcIsFileCached</strong> will return <strong>TRUE</strong> for all file objects in the set.</p>
-
 <h2>See also</h2>
-
 <p><a href="ccsetadditionalcacheattributes" title="VOID CcSetAdditionalCacheAttributes(&#10;  [in] PFILE_OBJECT FileObject,&#10;  [in] BOOLEAN      DisableReadAhead,&#10;  [in] BOOLEAN      DisableWriteBehind&#10;);">CcSetAdditionalCacheAttributes</a></p>
-
 <p><a href="ccuninitializecachemap" title="BOOLEAN CcUninitializeCacheMap(&#10;  [in]           PFILE_OBJECT              FileObject,&#10;  [in, optional] PLARGE_INTEGER            TruncateSize,&#10;                 PCACHE_UNINITIALIZE_EVENT UninitializeEvent&#10;);">CcUninitializeCacheMap</a></p>
 <hr>
 <div class="ntdoc-description-links">

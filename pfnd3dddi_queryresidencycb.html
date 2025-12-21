@@ -68,106 +68,82 @@ HRESULT Pfnd3dddiQueryresidencycb(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PFND3DDDI_QUERYRESIDENCYCB callback function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>pfnQueryResidencyCb</strong> function queries the residency status of a resource or list of allocations.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>hDevice</code></h3>
-
 <p>A handle to the display device (graphics context).</p>
-
 <h3><code>unnamedParam2</code></h3>
-
 <p><em>pData</em> [in, out]</p>
-
 <p>A pointer to a <a href="d3dddicb_queryresidency" title="typedef struct _D3DDDICB_QUERYRESIDENCY {&#10;  [in]  HANDLE                 hResource;&#10;  [in]  UINT                   NumAllocations;&#10;  [in]  const D3DKMT_HANDLE    *HandleList;&#10;  [out] D3DDDI_RESIDENCYSTATUS *pResidencyStatus;&#10;} D3DDDICB_QUERYRESIDENCY;">D3DDDICB_QUERYRESIDENCY</a> structure that describes the residency status of a resource or list of allocations.</p>
-
 <h2>Return value</h2>
-
 <p><strong>pfnQueryResidencyCb</strong> returns one of the following values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>S_OK</td>
-  <td>The residency status was successfully returned.</td>
+<td>S_OK</td>
+<td>The residency status was successfully returned.</td>
 </tr>
 <tr>
-  <td>E_INVALIDARG</td>
-  <td>Parameters were validated and determined to be incorrect.</td>
+<td>E_INVALIDARG</td>
+<td>Parameters were validated and determined to be incorrect.</td>
 </tr>
 </tbody>
 </table>
-
 <p>This function might also return other HRESULT values.</p>
-
 <h2>Remarks</h2>
-
 <p>The user-mode display driver can call the <strong>pfnQueryResidencyCb</strong> function to query the residency status of allocations either through a resource or through a list of allocations. If the driver queries the residency status of allocations through a resource, all of the allocations that belong to the resource are queried. Typically, the user-mode display driver queries the residency of a resource or list of allocations after the Microsoft Direct3D runtime calls the user-mode display driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_queryresourceresidency">QueryResourceResidency</a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dxgiddi/ns-dxgiddi-dxgi_ddi_base_functions">QueryResourceResidencyDXGI</a> function to determine the residency of a resource. However, the user-mode display driver can query the residency of a resource or list of allocations at any time.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example shows how to query for residency status.</p>
+<pre lang="cpp"><code>HRESULT
+CD3DContext::QueryResourceResidency(CONST <a href="d3dddiarg_queryresourceresidency" title="typedef struct _D3DDDIARG_QUERYRESOURCERESIDENCY {&#10;  [in] const HANDLE *pHandleList;&#10;  [in] UINT         NumResources;&#10;} D3DDDIARG_QUERYRESOURCERESIDENCY;">D3DDDIARG_QUERYRESOURCERESIDENCY</a>* pQRR)
+{
+    <a href="d3dddicb_queryresidency" title="typedef struct _D3DDDICB_QUERYRESIDENCY {&#10;  [in]  HANDLE                 hResource;&#10;  [in]  UINT                   NumAllocations;&#10;  [in]  const D3DKMT_HANDLE    *HandleList;&#10;  [out] D3DDDI_RESIDENCYSTATUS *pResidencyStatus;&#10;} D3DDDICB_QUERYRESIDENCY;">D3DDDICB_QUERYRESIDENCY</a> queryRes;
+    <a href="d3dddi_residencystatus" title="typedef enum _D3DDDI_RESIDENCYSTATUS {&#10;  D3DDDI_RESIDENCYSTATUS_RESIDENTINGPUMEMORY,&#10;  D3DDDI_RESIDENCYSTATUS_RESIDENTINSHAREDMEMORY,&#10;  D3DDDI_RESIDENCYSTATUS_NOTRESIDENT&#10;} D3DDDI_RESIDENCYSTATUS;">D3DDDI_RESIDENCYSTATUS</a>  resStatus = (<a href="d3dddi_residencystatus" title="typedef enum _D3DDDI_RESIDENCYSTATUS {&#10;  D3DDDI_RESIDENCYSTATUS_RESIDENTINGPUMEMORY,&#10;  D3DDDI_RESIDENCYSTATUS_RESIDENTINSHAREDMEMORY,&#10;  D3DDDI_RESIDENCYSTATUS_NOTRESIDENT&#10;} D3DDDI_RESIDENCYSTATUS;">D3DDDI_RESIDENCYSTATUS</a>)0;
+    HRESULT hr;
+    BOOL    bPartInSharedMem = FALSE;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">HRESULT</span>
-<span class="nf">CD3DContext::QueryResourceResidency</span><span class="p">(</span><span class="n">CONST</span><span class="w"> </span><span class="n"><a href="d3dddiarg_queryresourceresidency" title="typedef struct _D3DDDIARG_QUERYRESOURCERESIDENCY {&#10;  [in] const HANDLE *pHandleList;&#10;  [in] UINT         NumResources;&#10;} D3DDDIARG_QUERYRESOURCERESIDENCY;">D3DDDIARG_QUERYRESOURCERESIDENCY</a></span><span class="o">*</span><span class="w"> </span><span class="n">pQRR</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="d3dddicb_queryresidency" title="typedef struct _D3DDDICB_QUERYRESIDENCY {&#10;  [in]  HANDLE                 hResource;&#10;  [in]  UINT                   NumAllocations;&#10;  [in]  const D3DKMT_HANDLE    *HandleList;&#10;  [out] D3DDDI_RESIDENCYSTATUS *pResidencyStatus;&#10;} D3DDDICB_QUERYRESIDENCY;">D3DDDICB_QUERYRESIDENCY</a></span><span class="w"> </span><span class="n">queryRes</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="d3dddi_residencystatus" title="typedef enum _D3DDDI_RESIDENCYSTATUS {&#10;  D3DDDI_RESIDENCYSTATUS_RESIDENTINGPUMEMORY,&#10;  D3DDDI_RESIDENCYSTATUS_RESIDENTINSHAREDMEMORY,&#10;  D3DDDI_RESIDENCYSTATUS_NOTRESIDENT&#10;} D3DDDI_RESIDENCYSTATUS;">D3DDDI_RESIDENCYSTATUS</a></span><span class="w">  </span><span class="n">resStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="d3dddi_residencystatus" title="typedef enum _D3DDDI_RESIDENCYSTATUS {&#10;  D3DDDI_RESIDENCYSTATUS_RESIDENTINGPUMEMORY,&#10;  D3DDDI_RESIDENCYSTATUS_RESIDENTINSHAREDMEMORY,&#10;  D3DDDI_RESIDENCYSTATUS_NOTRESIDENT&#10;} D3DDDI_RESIDENCYSTATUS;">D3DDDI_RESIDENCYSTATUS</a></span><span class="p">)</span><span class="mi">0</span><span class="p">;</span>
-<span class="w">    </span><span class="n">HRESULT</span><span class="w"> </span><span class="n">hr</span><span class="p">;</span>
-<span class="w">    </span><span class="n">BOOL</span><span class="w">    </span><span class="n">bPartInSharedMem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
-
-<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="uint" title="typedef unsigned int UINT;">UINT</a></span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">pQRR</span><span class="o">-&gt;</span><span class="n">NumResources</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">memset</span><span class="p">(</span><span class="o">&amp;</span><span class="n">queryRes</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">queryRes</span><span class="p">));</span>
-<span class="w">        </span><span class="n">queryRes</span><span class="p">.</span><span class="n">hResource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_RTbl</span><span class="p">[(</span><span class="n"><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></span><span class="p">)(</span><span class="n"><a href="dword_ptr" title="typedef ULONG_PTR DWORD_PTR;">DWORD_PTR</a></span><span class="p">)</span><span class="n">pQRR</span><span class="o">-&gt;</span><span class="n">pHandleList</span><span class="p">[</span><span class="n">i</span><span class="p">]].</span><span class="n">m_hResRuntime</span><span class="p">;</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="w"> </span><span class="n">queryRes</span><span class="p">.</span><span class="n">hResource</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">DDERR_INVALIDPARAMS</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="n">queryRes</span><span class="p">.</span><span class="n">pResidencyStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">resStatus</span><span class="p">;</span>
-<span class="w">        </span><span class="n">hr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">m_d3dCallbacks</span><span class="p">.</span><span class="n">pfnQueryResidencyCb</span><span class="p">(</span><span class="n">m_hD3D</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">queryRes</span><span class="p">);</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">FAILED</span><span class="p">(</span><span class="n">hr</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">hr</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">        </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">resStatus</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">D3DDDI_RESIDENCYSTATUS_NOTRESIDENT</span><span class="p">:</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">S_NOT_RESIDENT</span><span class="p">;</span>
-<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">D3DDDI_RESIDENCYSTATUS_RESIDENTINSHAREDMEMORY</span><span class="p">:</span>
-<span class="w">            </span><span class="n">bPartInSharedMem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TRUE</span><span class="p">;</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">D3DDDI_RESIDENCYSTATUS_RESIDENTINGPUMEMORY</span><span class="p">:</span>
-<span class="w">            </span><span class="k">break</span><span class="p">;</span>
-<span class="w">        </span><span class="k">default</span><span class="o">:</span>
-<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">DDERR_GENERIC</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">bPartInSharedMem</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">S_RESIDENT_IN_SHARED_MEMORY</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w">  </span><span class="n">S_OK</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
+    for (<a href="uint" title="typedef unsigned int UINT;">UINT</a> i = 0; i &lt; pQRR-&gt;NumResources; i++) {
+        memset(&amp;queryRes, 0, sizeof(queryRes));
+        queryRes.hResource = m_RTbl[(<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>)(<a href="dword_ptr" title="typedef ULONG_PTR DWORD_PTR;">DWORD_PTR</a>)pQRR-&gt;pHandleList[i]].m_hResRuntime;
+        if (! queryRes.hResource) {
+            return (DDERR_INVALIDPARAMS);
+        }
+        queryRes.pResidencyStatus = &amp;resStatus;
+        hr = m_d3dCallbacks.pfnQueryResidencyCb(m_hD3D, &amp;queryRes);
+        if (FAILED(hr)) {
+            return (hr);
+        }
+        switch (resStatus) {
+        case D3DDDI_RESIDENCYSTATUS_NOTRESIDENT:
+            return S_NOT_RESIDENT;
+        case D3DDDI_RESIDENCYSTATUS_RESIDENTINSHAREDMEMORY:
+            bPartInSharedMem = TRUE;
+            break;
+        case D3DDDI_RESIDENCYSTATUS_RESIDENTINGPUMEMORY:
+            break;
+        default:
+            return DDERR_GENERIC;
+        }
+    }
+    if (bPartInSharedMem) {
+        return S_RESIDENT_IN_SHARED_MEMORY;
+    }
+    else {
+        return  S_OK;
+    }
+}
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="d3dddicb_queryresidency" title="typedef struct _D3DDDICB_QUERYRESIDENCY {&#10;  [in]  HANDLE                 hResource;&#10;  [in]  UINT                   NumAllocations;&#10;  [in]  const D3DKMT_HANDLE    *HandleList;&#10;  [out] D3DDDI_RESIDENCYSTATUS *pResidencyStatus;&#10;} D3DDDICB_QUERYRESIDENCY;">D3DDDICB_QUERYRESIDENCY</a></p>
-
 <p><a href="d3dddi_devicecallbacks" title="typedef struct _D3DDDI_DEVICECALLBACKS {&#10;  PFND3DDDI_ALLOCATECB                            pfnAllocateCb;&#10;  PFND3DDDI_DEALLOCATECB                          pfnDeallocateCb;&#10;  PFND3DDDI_SETPRIORITYCB                         pfnSetPriorityCb;&#10;  PFND3DDDI_QUERYRESIDENCYCB                      pfnQueryResidencyCb;&#10;  PFND3DDDI_SETDISPLAYMODECB                      pfnSetDisplayModeCb;&#10;  PFND3DDDI_PRESENTCB                             pfnPresentCb;&#10;  PFND3DDDI_RENDERCB                              pfnRenderCb;&#10;  PFND3DDDI_LOCKCB                                pfnLockCb;&#10;  PFND3DDDI_UNLOCKCB                              pfnUnlockCb;&#10;  PFND3DDDI_ESCAPECB                              pfnEscapeCb;&#10;  PFND3DDDI_CREATEOVERLAYCB                       pfnCreateOverlayCb;&#10;  PFND3DDDI_UPDATEOVERLAYCB                       pfnUpdateOverlayCb;&#10;  PFND3DDDI_FLIPOVERLAYCB                         pfnFlipOverlayCb;&#10;  PFND3DDDI_DESTROYOVERLAYCB                      pfnDestroyOverlayCb;&#10;  PFND3DDDI_CREATECONTEXTCB                       pfnCreateContextCb;&#10;  PFND3DDDI_DESTROYCONTEXTCB                      pfnDestroyContextCb;&#10;  PFND3DDDI_CREATESYNCHRONIZATIONOBJECTCB         pfnCreateSynchronizationObjectCb;&#10;  PFND3DDDI_DESTROYSYNCHRONIZATIONOBJECTCB        pfnDestroySynchronizationObjectCb;&#10;  PFND3DDDI_WAITFORSYNCHRONIZATIONOBJECTCB        pfnWaitForSynchronizationObjectCb;&#10;...">D3DDDI_DEVICECALLBACKS</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_queryresourceresidency">QueryResourceResidency</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dxgiddi/ns-dxgiddi-dxgi_ddi_base_functions">QueryResourceResidencyDXGI</a></p>
 <hr>
 <div class="ntdoc-description-links">

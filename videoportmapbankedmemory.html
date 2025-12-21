@@ -72,106 +72,70 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>VideoPortMapBankedMemory function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>VideoPortMapBankedMemory</strong> function is <strong>obsolete</strong>, and is supported only for Windows NT 4.0 and previous drivers. Windows 2000 and later drivers must use <a href="videoportmapmemory" title="VIDEOPORT_DEPRECATED VIDEOPORT_API VP_STATUS VideoPortMapMemory(&#10;  PVOID            HwDeviceExtension,&#10;  PHYSICAL_ADDRESS PhysicalAddress,&#10;  PULONG           Length,&#10;  PULONG           InIoSpace,&#10;  PVOID            *VirtualAddress&#10;);">VideoPortMapMemory</a>.</p>
-
 <p><strong>VideoPortMapBankedMemory</strong> remaps a bus-relative physical range of video memory into the corresponding display driver's virtual address space in response to a VRP with the <strong>IoControlCode</strong> member set to <a href="ioctl_video_share_video_memory" title="// CTL_CODE(0x0023, 0x11d, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_VIDEO_SHARE_VIDEO_MEMORY 0x00230474">IOCTL_VIDEO_SHARE_VIDEO_MEMORY</a> or <a href="ioctl_video_map_video_memory" title="// CTL_CODE(0x0023, 0x116, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_VIDEO_MAP_VIDEO_MEMORY 0x00230458">IOCTL_VIDEO_MAP_VIDEO_MEMORY</a>.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>HwDeviceExtension</code></h3>
-
 <p>Pointer to the miniport driver's device extension.</p>
-
 <h3><code>PhysicalAddress</code></h3>
-
 <p>Specifies the bus-relative base address of the range to be mapped.</p>
-
 <h3><code>Length</code></h3>
-
 <p>Pointer to a variable specifying the total number of bytes of device memory to be mapped (regardless of bank size). <strong>VideoPortMapBankedMemory</strong> returns the actual size of the memory mapped, which can be rounded to a system-determined alignment boundary, in this parameter. However, the miniport and display drivers cannot access memory outside the range delimited by the input value at <em>Length</em>.</p>
-
 <h3><code>InIoSpace</code></h3>
-
 <p>Indicates the location of the range. This parameter can be one of the following values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Value</th>
-  <th>Meaning</th>
+<th>Value</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>VIDEO_MEMORY_SPACE_DENSE</td>
-  <td>Obsolete</td>
+<td>VIDEO_MEMORY_SPACE_DENSE</td>
+<td>Obsolete</td>
 </tr>
 <tr>
-  <td>VIDEO_MEMORY_SPACE_IO</td>
-  <td>The range is in system I/O space rather than in memory space.</td>
+<td>VIDEO_MEMORY_SPACE_IO</td>
+<td>The range is in system I/O space rather than in memory space.</td>
 </tr>
 <tr>
-  <td>VIDEO_MEMORY_SPACE_MEMORY</td>
-  <td>The range is in memory space rather than in system I/O space.</td>
+<td>VIDEO_MEMORY_SPACE_MEMORY</td>
+<td>The range is in memory space rather than in system I/O space.</td>
 </tr>
 <tr>
-  <td>VIDEO_MEMORY_SPACE_P6CACHE</td>
-  <td>The processor aggregates a sequence of write operations and sends them to a given cache line. The processor then flushes the cache. This flag is meaningful only when VIDEO_MEMORY_SPACE_IO is not set.</td>
+<td>VIDEO_MEMORY_SPACE_P6CACHE</td>
+<td>The processor aggregates a sequence of write operations and sends them to a given cache line. The processor then flushes the cache. This flag is meaningful only when VIDEO_MEMORY_SPACE_IO is not set.</td>
 </tr>
 <tr>
-  <td>VIDEO_MEMORY_SPACE_USER_MODE</td>
-  <td>Indicates that the address range specified should be mapped into user mode rather than kernel mode. This flag is meaningful only when VIDEO_MEMORY_SPACE_IO is not set.</td>
+<td>VIDEO_MEMORY_SPACE_USER_MODE</td>
+<td>Indicates that the address range specified should be mapped into user mode rather than kernel mode. This flag is meaningful only when VIDEO_MEMORY_SPACE_IO is not set.</td>
 </tr>
 </tbody>
 </table>
-
 <h3><code>VirtualAddress</code></h3>
-
 <p>Is a handle to the process into which the memory must be mapped, or <strong>NULL</strong>. <strong>NULL</strong> specifies that the port driver should map the logical memory range at any location in the address space of the current process. Otherwise, this handle can be a value passed in a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/">VRP</a> by the miniport driver's corresponding display driver. On return from a successful call, <strong>VideoPortMapBankedMemory</strong> resets the variable to the base virtual address to which it has mapped the given <em>PhysicalAddress</em>.</p>
-
 <h3><code>BankLength</code></h3>
-
 <p>Specifies the size of a bank, in bytes.</p>
-
 <h3><code>ReadWriteBank</code></h3>
-
 <p>If set to <strong>TRUE</strong> the bank is Read\Write; if set to <strong>FALSE</strong> there are two independent read and write banks.</p>
-
 <h3><code>BankRoutine</code></h3>
-
 <p>Pointer to a driver-supplied <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/">HwVidBankedMemoryCallback</a> function to be called by the Memory Manager when a new bank is accessed by the display driver.</p>
-
 <h3><code>Context</code></h3>
-
 <p>Pointer to a miniport driver-supplied context that is passed back to the driver when the <em>BankRoutine</em> is called.</p>
-
 <h2>Return value</h2>
-
 <p><strong>VideoPortMapBankedMemory</strong> returns NO_ERROR if the given logical range was successfully mapped to a user-space virtual range. Otherwise, it can return ERROR_INVALID_PARAMETER.</p>
-
 <h2>Remarks</h2>
-
 <p><strong>VideoPortMapBankedMemory</strong> runs in kernel mode within the same context as the user-mode thread that initiated the call.</p>
-
 <p><strong>VideoPortMapBankedMemory</strong> is called by miniport drivers to efficiently manage x86 type devices that are limited to mapping a frame buffer in banks. When this routine returns to the caller, the frame buffer managed by the miniport driver is mapped as a linear frame buffer into the address space of the requesting process (see <em>VirtualAddress</em> parameter). When an access is made to an address in that mapped space, the Memory Manager calls the miniport driver to update the Bank Index Register to point to a new bank that contains the currently referenced address. The Bank Index Register is maintained by the miniport driver in <em>BankRoutine</em>. The correct Bank Index is calculated by the Memory Manager transparently to a display driver and passed to the miniport driver in the callback to <em>BankRoutine</em>.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/">HwVidBankedMemoryCallback</a></p>
-
 <p><a href="ioctl_video_map_video_memory" title="// CTL_CODE(0x0023, 0x116, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_VIDEO_MAP_VIDEO_MEMORY 0x00230458">IOCTL_VIDEO_MAP_VIDEO_MEMORY</a></p>
-
 <p><a href="ioctl_video_share_video_memory" title="// CTL_CODE(0x0023, 0x11d, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_VIDEO_SHARE_VIDEO_MEMORY 0x00230474">IOCTL_VIDEO_SHARE_VIDEO_MEMORY</a></p>
-
 <p><a href="ioctl_video_unshare_video_memory" title="// CTL_CODE(0x0023, 0x11e, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY 0x00230478">IOCTL_VIDEO_UNSHARE_VIDEO_MEMORY</a></p>
-
 <p><a href="video_request_packet" title="typedef struct _VIDEO_REQUEST_PACKET {&#10;  ULONG         IoControlCode;&#10;  PSTATUS_BLOCK StatusBlock;&#10;  PVOID         InputBuffer;&#10;  ULONG         InputBufferLength;&#10;  PVOID         OutputBuffer;&#10;  ULONG         OutputBufferLength;&#10;} VIDEO_REQUEST_PACKET, *PVIDEO_REQUEST_PACKET;">VIDEO_REQUEST_PACKET</a></p>
-
 <p><a href="videoportmapmemory" title="VIDEOPORT_DEPRECATED VIDEOPORT_API VP_STATUS VideoPortMapMemory(&#10;  PVOID            HwDeviceExtension,&#10;  PHYSICAL_ADDRESS PhysicalAddress,&#10;  PULONG           Length,&#10;  PULONG           InIoSpace,&#10;  PVOID            *VirtualAddress&#10;);">VideoPortMapMemory</a></p>
-
 <p><a href="videoportunmapmemory" title="VIDEOPORT_DEPRECATED VIDEOPORT_API VP_STATUS VideoPortUnmapMemory(&#10;  PVOID  HwDeviceExtension,&#10;  PVOID  VirtualAddress,&#10;  HANDLE ProcessHandle&#10;);">VideoPortUnmapMemory</a></p>
 <hr>
 <div class="ntdoc-description-links">

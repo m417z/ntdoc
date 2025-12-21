@@ -80,58 +80,34 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>_WDF_REQUEST_SEND_OPTIONS_FLAGS enumeration (wdfrequest.h)</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WDF_REQUEST_SEND_OPTIONS_FLAGS</strong> enumeration type defines flags that are used in a driver's <a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a> structure.</p>
-
 <h2>Constants</h2>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_TIMEOUT:0x00000001</code></h3>
-
 <p>If the driver sets this flag, the <strong>Timeout</strong> member of the <a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a> structure is valid.</p>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_SYNCHRONOUS:0x00000002</code></h3>
-
-<p>If the driver sets this flag, the framework handles the associated I/O request synchronously. (The driver does not have to set this flag if it is calling an object method whose name ends with "Synchronously", such as <a href="wdfiotargetsendreadsynchronously" title="NTSTATUS WdfIoTargetSendReadSynchronously(&#10;  [in]            WDFIOTARGET               IoTarget,&#10;  [in, optional]  WDFREQUEST                Request,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    OutputBuffer,&#10;  [in, optional]  PLONGLONG                 DeviceOffset,&#10;  [in, optional]  PWDF_REQUEST_SEND_OPTIONS RequestOptions,&#10;  [out, optional] PULONG_PTR                BytesRead&#10;);">WdfIoTargetSendReadSynchronously</a>.)</p>
-
+<p>If the driver sets this flag, the framework handles the associated I/O request synchronously. (The driver does not have to set this flag if it is calling an object method whose name ends with &quot;Synchronously&quot;, such as <a href="wdfiotargetsendreadsynchronously" title="NTSTATUS WdfIoTargetSendReadSynchronously(&#10;  [in]            WDFIOTARGET               IoTarget,&#10;  [in, optional]  WDFREQUEST                Request,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    OutputBuffer,&#10;  [in, optional]  PLONGLONG                 DeviceOffset,&#10;  [in, optional]  PWDF_REQUEST_SEND_OPTIONS RequestOptions,&#10;  [out, optional] PULONG_PTR                BytesRead&#10;);">WdfIoTargetSendReadSynchronously</a>.)</p>
 <h3><code>WDF_REQUEST_SEND_OPTION_IGNORE_TARGET_STATE:0x00000004</code></h3>
-
 <p>If the driver sets this flag, the framework sends the I/O request to the I/O target, regardless of the I/O target's state. If not set, the framework queues the request if the target is stopped. Setting this flag allows a driver to send a request, such as a request to reset a USB pipe, to a device after the driver has called <a href="wdfiotargetstop" title="VOID WdfIoTargetStop(&#10;  [in] WDFIOTARGET                  IoTarget,&#10;  [in] WDF_IO_TARGET_SENT_IO_ACTION Action&#10;);">WdfIoTargetStop</a>.</p>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET:0x00000008</code></h3>
-
 <p>If the driver sets this flag, the driver is sending the request asynchronously and does not need to be notified when the request is completed or canceled. The framework sends the I/O request to the I/O target, regardless of the I/O target's state. The driver does not set a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function or call <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> for the request. If the driver sets this flag, it cannot set any other flags. For more information about this flag, see the following Remarks section.</p>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_IMPERSONATE_CLIENT:0x00010000</code></h3>
-
 <p>This flag applies to UMDF only. If set, and if the I/O request type is <strong>WdfRequestTypeCreate</strong>, the <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> method attempts to pass the client's impersonation level to the driver's I/O target. The <strong><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></strong> method returns an error code if the impersonation attempt fails, unless the driver also sets the <strong>WDF_REQUEST_SEND_OPTION_IMPERSONATION_IGNORE_FAILURE</strong> flag.</p>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_IMPERSONATION_IGNORE_FAILURE:0x00020000</code></h3>
-
 <p>This flag applies to UMDF only. If set, the framework still sends the request even if impersonation fails. You can use this value only with <strong>WDF_REQUEST_SEND_OPTION_IMPERSONATE_CLIENT</strong>.</p>
-
 <h2>Remarks</h2>
-
 <p>A driver that sets the WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET flag typically does not format the I/O request before it calls <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> to send the request to an I/O target. In fact, a driver that sets this flag must not call any of the <strong>WdfIoTargetFormatRequestFor</strong><em>Xxx</em> methods before it calls <strong><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></strong>. The driver can use only the <a href="wdfrequestformatrequestusingcurrenttype" title="VOID WdfRequestFormatRequestUsingCurrentType(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestFormatRequestUsingCurrentType</a> or <a href="wdfrequestwdmformatusingstacklocation" title="VOID WdfRequestWdmFormatUsingStackLocation(&#10;  [in] WDFREQUEST         Request,&#10;  [in] PIO_STACK_LOCATION Stack&#10;);">WdfRequestWdmFormatUsingStackLocation</a> method to format the request.</p>
-
 <p>Your driver <em>cannot</em> set the WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET flag in the following situations:</p>
-
 <ul>
 <li>The driver created the request object by calling <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a>.</li>
 <li>The driver is sending the I/O request to a remote I/O target and the driver specified the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfiotarget/ne-wdfiotarget-_wdf_io_target_open_type">WdfIoTargetOpenByName</a> flag when it called <a href="wdfiotargetopen" title="NTSTATUS WdfIoTargetOpen(&#10;  [in] WDFIOTARGET                IoTarget,&#10;  [in] PWDF_IO_TARGET_OPEN_PARAMS OpenParams&#10;);">WdfIoTargetOpen</a>.</li>
 <li>The driver is sending the I/O request to a remote I/O target, and the driver specified both the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfiotarget/ne-wdfiotarget-_wdf_io_target_open_type">WdfIoTargetOpenUseExistingDevice</a> flag and a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfiotarget/ns-wdfiotarget-_wdf_io_target_open_params">TargetFileObject</a> pointer when it called <a href="wdfiotargetopen" title="NTSTATUS WdfIoTargetOpen(&#10;  [in] WDFIOTARGET                IoTarget,&#10;  [in] PWDF_IO_TARGET_OPEN_PARAMS OpenParams&#10;);">WdfIoTargetOpen</a>.</li>
 <li>The request type is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/ne-wdfrequest-_wdf_request_type">WdfRequestTypeCreate</a> and the driver has not set the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/ne-wdfdevice-_wdf_fileobject_class">WdfFileObjectNotRequired</a> flag. (For more information about this situation, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-file-objects">Framework File Objects</a>.)</li>
 </ul>
-
 <p>For the UMDF version of this enumeration, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/ne-wdfrequest-_wdf_request_send_options_flags">WDF_REQUEST_SEND_OPTIONS_FLAGS (UMDF)</a>.</p>
-
 <h2>See also</h2>
-
 <p><a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a></p>
-
 <p><a href="wdfiotargetstop" title="VOID WdfIoTargetStop(&#10;  [in] WDFIOTARGET                  IoTarget,&#10;  [in] WDF_IO_TARGET_SENT_IO_ACTION Action&#10;);">WdfIoTargetStop</a></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -146,53 +122,29 @@
 </div>
 <div class="ntdoc-description">
 <h1>_WDF_REQUEST_SEND_OPTIONS_FLAGS enumeration (wudfddi_types.h)</h1>
-
 <h2>Description</h2>
-
 <p>[<strong>Warning:</strong> UMDF 2 is the latest version of UMDF and supersedes UMDF 1. All new UMDF drivers should be written using UMDF 2. No new features are being added to UMDF 1 and there is limited support for UMDF 1 on newer versions of Windows 10. Universal Windows drivers must use UMDF 2. For more info, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/getting-started-with-umdf-version-2">Getting Started with UMDF</a>.]</p>
-
 <p>The <strong>WDF_REQUEST_SEND_OPTIONS_FLAGS</strong> enumeration type defines flags that a driver can specify when it calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-send">IWDFIoRequest::Send</a>.</p>
-
 <h2>Constants</h2>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_TIMEOUT</code></h3>
-
 <p>If set, the <em>Timeout</em> parameter of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-send">IWDFIoRequest::Send</a> method is valid.</p>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_SYNCHRONOUS</code></h3>
-
 <p>If set, UMDF sends the I/O request synchronously.</p>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_IGNORE_TARGET_STATE</code></h3>
-
 <p>If set, UMDF sends the I/O request to the I/O target, regardless of the I/O target's state. If not set, UMDF queues the request if the target is stopped. Setting this flag allows a driver to send a request, such as a request to reset a USB pipe, to a device after the driver has called <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiotargetstatemanagement-stop">IWDFIoTargetStateManagement::Stop</a>.</p>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET</code></h3>
-
 <p>If set, the driver is sending the request asynchronously and does not need to be notified when the request is completed or canceled. The driver does not set an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-irequestcallbackrequestcompletion-oncompletion">IRequestCallbackRequestCompletion::OnCompletion</a> callback function or call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-complete">IWDFIoRequest::Complete</a> for the request. For more information about this flag, see the following Remarks section.</p>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_IMPERSONATE_CLIENT</code></h3>
-
 <p>If set, and if the I/O request type is <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a>, the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-send">Send</a> method attempts to pass the client's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/handling-client-impersonation-in-umdf-drivers">impersonation</a> level to the driver's I/O target. This value is available in UMDF versions 1.9 and later.</p>
-
 <h3><code>WDF_REQUEST_SEND_OPTION_IMPERSONATION_IGNORE_FAILURE</code></h3>
-
 <p>If set, UMDF ignores impersonation failures. You can use this value only with WDF_REQUEST_SEND_OPTION_IMPERSONATE_CLIENT. This value is available in UMDF versions 1.9 and later.</p>
-
 <h2>Remarks</h2>
-
 <p>A driver that sets the WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET flag typically does not format the I/O request before it calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-send">IWDFIoRequest::Send</a> to send the request to an I/O target. In fact, a driver that sets this flag must not call any of the <strong>IWdfIoTarget::FormatRequestFor</strong><em>Xxx</em> methods before it calls <strong>IWDFIoRequest::Send</strong>. The driver can use only the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-formatusingcurrenttype">IWDFIoRequest::FormatUsingCurrentType</a> method to format the request.</p>
-
 <p>Your driver cannot set the WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET flag if the <em>pIoTarget</em> parameter of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-send">IWDFIoRequest::Send</a> points to a file-handle-based I/O target object. For more information about this type of I/O target, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/initializing-a-general-i-o-target-in-umdf">Initializing a General I/O Target in UMDF</a>.</p>
-
 <p>If the driver sets the WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET flag, it cannot set any other flags except WDF_REQUEST_SEND_OPTION_IMPERSONATE_CLIENT and WDF_REQUEST_SEND_OPTION_IMPERSONATION_IGNORE_FAILURE.</p>
-
 <p>For more information about client impersonation, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/handling-client-impersonation-in-umdf-drivers">Handling Client Impersonation</a>.</p>
-
 <p>For the KMDF version of this enumeration, see WDF_REQUEST_SEND_OPTIONS_FLAGS.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-send">IWDFIoRequest::Send</a></p>
 <hr>
 <div class="ntdoc-description-links">

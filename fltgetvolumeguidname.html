@@ -66,93 +66,63 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltGetVolumeGuidName function</h1>
-
 <h2>Description</h2>
-
 <p><strong>FltGetVolumeGuidName</strong> gets the volume name for a given volume, in volume globally unique identifier (GUID) format.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Volume</code> [in]</h3>
-
 <p>Opaque pointer for the volume. Must be a local file system volume. This parameter is required and cannot be <strong>NULL</strong>.</p>
-
 <h3><code>VolumeGuidName</code> [in/out, optional]</h3>
-
-<p>Pointer to a caller-allocated <strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong> structure that receives the volume's GUID name when <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> is returned. Be aware that pool for <strong>VolumeGuidName->Buffer</strong> is also caller-allocated.</p>
-
+<p>Pointer to a caller-allocated <strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong> structure that receives the volume's GUID name when <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> is returned. Be aware that pool for <strong>VolumeGuidName-&gt;Buffer</strong> is also caller-allocated.</p>
 <p>If <strong>VolumeGuidName</strong> is <strong>NULL</strong> and <strong>BufferSizeNeeded</strong> is not <strong>NULL</strong>, <strong>FltGetVolumeGuidName</strong> stores the buffer size needed for the requested volume GUID in the <strong>BufferSizeNeeded</strong> parameter and returns STATUS_BUFFER_TOO_SMALL. See Remarks.</p>
-
 <h3><code>BufferSizeNeeded</code> [out, optional]</h3>
-
 <p>Pointer to a caller-allocated variable that receives the size, in bytes, of the requested volume GUID name. This parameter is optional and can be <strong>NULL</strong>; however, it must be non-<strong>NULL</strong> if <strong>VolumeGuidName</strong> is <strong>NULL</strong> so that <strong>FltGetVolumeGuidName</strong> can store the buffer size needed for the requested volume GUID.</p>
-
 <h2>Return value</h2>
-
 <p><strong>FltGetVolumeGuidName</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value, such as one of the following:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>STATUS_BUFFER_TOO_SMALL</td>
-  <td>The buffer pointed to by <strong>VolumeGuidName</strong> is <strong>NULL</strong> or too small to hold the volume GUID. If the caller provides a non-<strong>NULL</strong> value for <strong>BufferSizeNeeded</strong>, <strong>FltGetVolumeGuidName</strong> stores the required buffer size in <strong>BufferSizeNeeded</strong>. This is considered an error code since the volume GUID name was not retrieved.</td>
+<td>STATUS_BUFFER_TOO_SMALL</td>
+<td>The buffer pointed to by <strong>VolumeGuidName</strong> is <strong>NULL</strong> or too small to hold the volume GUID. If the caller provides a non-<strong>NULL</strong> value for <strong>BufferSizeNeeded</strong>, <strong>FltGetVolumeGuidName</strong> stores the required buffer size in <strong>BufferSizeNeeded</strong>. This is considered an error code since the volume GUID name was not retrieved.</td>
 </tr>
 <tr>
-  <td>STATUS_INSUFFICIENT_RESOURCES</td>
-  <td><strong>FltGetVolumeGuidName</strong> encountered a pool allocation failure. This is an error code.</td>
+<td>STATUS_INSUFFICIENT_RESOURCES</td>
+<td><strong>FltGetVolumeGuidName</strong> encountered a pool allocation failure. This is an error code.</td>
 </tr>
 <tr>
-  <td>STATUS_INVALID_DEVICE_REQUEST</td>
-  <td>The <strong>Volume</strong> parameter is a handle for a network volume. This is an error code.</td>
+<td>STATUS_INVALID_DEVICE_REQUEST</td>
+<td>The <strong>Volume</strong> parameter is a handle for a network volume. This is an error code.</td>
 </tr>
 <tr>
-  <td>STATUS_FLT_VOLUME_NOT_FOUND</td>
-  <td>No matching volume was found. This is an error code.</td>
+<td>STATUS_FLT_VOLUME_NOT_FOUND</td>
+<td>No matching volume was found. This is an error code.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>The returned volume GUID name is expressed in the following format:</p>
-
-<p><strong>\??\Volume{</strong><em>GUID</em><strong>}</strong></p>
-
+<p><strong>\??\Volume{<em><strong>GUID</strong></em>}</strong></p>
 <p>where <em>GUID</em> is a globally unique identifier that identifies the volume. This format, which is the same as that used by the mount manager, is described in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/supporting-mount-manager-requests-in-a-storage-class-driver">Supporting Mount Manager Requests in a Storage Class Driver</a>.</p>
-
 <p>If <strong>BufferSizeNeeded</strong> is unknown, call <strong>FltGetVolumeGuidName</strong> twice:</p>
-
 <ul>
 <li>On the first call, set <strong>VolumeGuidName</strong> to <strong>NULL</strong> and <strong>BufferSizeNeeded</strong> to non-<strong>NULL</strong>. <strong>FltGetVolumeGuidName</strong> will store the number of bytes needed for the volume name GUID in <strong>BufferSizeNeeded</strong> and return STATUS_BUFFER_TOO_SMALL.</li>
 <li>On the second call, set <strong>VolumeGuidName</strong> to point to a structure that is the size of the <strong>BufferSizeNeeded</strong> value returned in the first call.</li>
 </ul>
-
 <p><strong>FltGetVolumeGuidName</strong> cannot safely be called from a pre-mount or post-mount callback. It cannot safely be called because even when the post-mount callback is called, the mount processing has not been completed by the I/O manager, and this causes a deadlock with the mount manager in certain cases.</p>
-
 <p>On Windows Vista and later, a minifilter driver can safely call <strong>FltGetVolumeGuidName</strong> from its <em>InstanceSetupCallback</em> routine (<strong><a href="pflt_instance_setup_callback" title="PFLT_INSTANCE_SETUP_CALLBACK PfltInstanceSetupCallback;&#10;&#10;NTSTATUS PfltInstanceSetupCallback(&#10;  [in] PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in] FLT_INSTANCE_SETUP_FLAGS Flags,&#10;  [in] DEVICE_TYPE VolumeDeviceType,&#10;  [in] FLT_FILESYSTEM_TYPE VolumeFilesystemType&#10;)&#10;{...}">PFLT_INSTANCE_SETUP_CALLBACK</a></strong>) because the callback is called on the first I/O operation for a new volume after all of the mount processing is completed.</p>
-
 <p>On Windows operating systems earlier than Windows Vista, <strong>FltGetVolumeGuidName</strong> cannot safely be called from an <em>InstanceSetupCallback</em> routine because the mount manager might issue a file I/O operation while holding a lock, which can cause a deadlock.</p>
-
 <p>It is important to note that the volume GUID is not the same as the volume object ID. The <em>volume GUID</em>, or <em>unique volume name</em>, is a file system-independent value; it is assigned to the underlying storage volume by the mount manager. The <em>volume object ID</em> is assigned to the file system volume by the file system.</p>
-
 <p>To get the volume object ID for a volume, call <strong><a href="ntqueryvolumeinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryVolumeInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FsInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FSINFOCLASS FsInformationClass&#10;    );">ZwQueryVolumeInformationFile</a></strong>, specifying <strong>FileFsObjectIdInformation</strong> for the <em>FsInformationClass</em> parameter.</p>
-
 <p><strong>FltGetVolumeGuidName</strong> is roughly equivalent to the Win32 <strong>GetVolumeNameForVolumeMountPoint</strong> function. (<strong>GetVolumeNameForVolumeMountPoint</strong> is documented in the Microsoft Windows SDK.)</p>
-
 <h2>See also</h2>
-
 <p><strong><a href="file_fs_objectid_information" title="typedef struct _FILE_FS_OBJECTID_INFORMATION&#10;{&#10;    UCHAR ObjectId[16];&#10;    union&#10;    {&#10;        struct&#10;        {&#10;            UCHAR BirthVolumeId[16];&#10;            UCHAR BirthObjectId[16];&#10;            UCHAR DomainId[16];&#10;        };&#10;        UCHAR ExtendedInfo[48];&#10;    };&#10;} FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;">FILE_FS_OBJECTID_INFORMATION</a></strong></p>
-
 <p><strong><a href="pflt_instance_setup_callback" title="PFLT_INSTANCE_SETUP_CALLBACK PfltInstanceSetupCallback;&#10;&#10;NTSTATUS PfltInstanceSetupCallback(&#10;  [in] PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in] FLT_INSTANCE_SETUP_FLAGS Flags,&#10;  [in] DEVICE_TYPE VolumeDeviceType,&#10;  [in] FLT_FILESYSTEM_TYPE VolumeFilesystemType&#10;)&#10;{...}">PFLT_INSTANCE_SETUP_CALLBACK</a></strong></p>
-
 <p><strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong></p>
-
 <p><strong><a href="ntqueryvolumeinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryVolumeInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FsInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FSINFOCLASS FsInformationClass&#10;    );">ZwQueryVolumeInformationFile</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

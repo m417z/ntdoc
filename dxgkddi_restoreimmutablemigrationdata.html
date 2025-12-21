@@ -68,44 +68,26 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>The receiving-side OS calls <strong>DxgkDdiRestoreImmutableMigrationData</strong> to restore immutable data that was saved by the sending-side driver in a previous call to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_saveimmutablemigrationdata"><strong>DxgkDdiSaveImmutableMigrationData</strong></a>.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>hAdapter</code></h3>
-
 <p>[in] A handle to a context block associated with a display adapter. The display miniport driver previously provided this handle to <em>Dxgkrnl</em> in the <strong>MiniportDeviceContext</strong> output parameter of the <strong><a href="dxgkddi_add_device" title="DXGKDDI_ADD_DEVICE DxgkddiAddDevice;&#10;&#10;NTSTATUS DxgkddiAddDevice(&#10;  [in]  IN_CONST_PDEVICE_OBJECT PhysicalDeviceObject,&#10;  [out] OUT_PPVOID MiniportDeviceContext&#10;)&#10;{...}">DXGKDDI_ADD_DEVICE</a></strong> function.</p>
-
 <h3><code>pArgs</code></h3>
-
 <p>[in] Pointer to a <strong><a href="dxgkarg_gpup_restore_immutable_migration_data" title="typedef struct _DXGKARG_GPUP_RESTORE_IMMUTABLE_MIGRATION_DATA {&#10;  UINT   vfIndex;&#10;  UINT64 DataSize;&#10;  BYTE   *Data;&#10;} DXGKARG_GPUP_RESTORE_IMMUTABLE_MIGRATION_DATA;">DXGKARG_GPUP_RESTORE_IMMUTABLE_MIGRATION_DATA</a></strong> structure that contains information needed to restore the immutable data.</p>
-
 <h2>Return value</h2>
-
 <p><strong>DxgkDdiRestoreImmutableMigrationData</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call is successful. Otherwise, it returns an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code such as the STATUS_OBJECT_TYPE_MISMATCH error code (see Remarks).</p>
-
 <h2>Remarks</h2>
-
 <p>Unlike the save/send side that is called twice, <strong>DxgkDdiRestoreImmutableMigrationData</strong> is called only once because it has all the data needed to present a full data buffer to the receiving side KMD. The driver should take the data and apply it to the VF being constructed, as well as any tracking for it, and it should validate the data invariants necessary for a successful restore.</p>
-
 <p>The buffer is the content that was filled on the source side in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_saveimmutablemigrationdata"><strong>DxgkDdiSaveImmutableMigrationData</strong></a>, so KMD should be tracking that data in a common type. There should also be a versioning scheme implemented in the content data if the data might potentially need to change with new drivers, and this scheme should be a part of the version checking done on the target.</p>
-
 <p>If the data indicates that the target system isn't configured properly to have the VF migrated from the source, KMD should do the following:</p>
-
 <ol>
 <li>Report this issue through the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkcb_log_etw_event"><strong>DxgkCbLogEtwEvent</strong></a> with the GUID_DxgkAzureTriageEvent identifier and specific details on what failed validation so that the issue can be triaged and corrected.</li>
 <li>Return from this DDI call with the STATUS_OBJECT_TYPE_MISMATCH error.</li>
 </ol>
-
 <p><strong>DxgkDdiRestoreImmutableMigrationData</strong> should only ever be called for VFs that are currently paused.</p>
-
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/live-migration-on-gpup-devices">Live migration on GPU-P devices</a>.</p>
-
 <h2>See also</h2>
-
 <p><strong><a href="dxgkarg_gpup_restore_immutable_migration_data" title="typedef struct _DXGKARG_GPUP_RESTORE_IMMUTABLE_MIGRATION_DATA {&#10;  UINT   vfIndex;&#10;  UINT64 DataSize;&#10;  BYTE   *Data;&#10;} DXGKARG_GPUP_RESTORE_IMMUTABLE_MIGRATION_DATA;">DXGKARG_GPUP_RESTORE_IMMUTABLE_MIGRATION_DATA</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_saveimmutablemigrationdata"><strong>DxgkDdiSaveImmutableMigrationData</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">

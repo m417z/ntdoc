@@ -68,87 +68,58 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PMRX_CHKFCB_CALLDOWN callback function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>MRxAreFilesAliased</strong> routine is called by <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/the-rdbss-driver-and-library">RDBSS</a> to request the network mini-redirector to determine if two FCB structures represent the same file.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Fcb1</code> [in]</h3>
-
 <p>A pointer to the first FCB structure.</p>
-
 <h3><code>Fcb2</code> [in]</h3>
-
 <p>A pointer to the second FCB structure.</p>
-
 <h2>Return value</h2>
-
 <p><strong>MRxAreFilesAliased</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> indicating that the files are not aliased, or an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value, such as the following:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>STATUS_MORE_PROCESSING_REQUIRED</td>
-  <td>The <strong>IndexNumber.QuadPart</strong> members of the two FCB structures are identical. This value indicates that the two files that are being compared are aliases.</td>
+<td>STATUS_MORE_PROCESSING_REQUIRED</td>
+<td>The <strong>IndexNumber.QuadPart</strong> members of the two FCB structures are identical. This value indicates that the two files that are being compared are aliases.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>RDBSS calls this routine when processing two files that appear to be the same but have different names (for example, an MS-DOS short name and a long name).</p>
-
 <p><strong>MRxAreFilesAliased</strong> is called by the <strong><a href="rxpurgerelatedfobxs" title="NTSTATUS RxPurgeRelatedFobxs(&#10;  PNET_ROOT   NetRoot,&#10;  PRX_CONTEXT RxContext,&#10;  BOOLEAN     AttemptFinalization,&#10;  PFCB        PurgingFcb&#10;);">RxPurgeRelatedFobxs</a></strong> routine when purging all the structures of an FOBX structure associated with a NET_ROOT structure. As part of this process, an attempt is made to purge all the FOBX structures that had a close pending before the purge request was received. RDBSS needs to scavenge any temporary FOBX structures in the following cases:</p>
-
 <ul>
-<li><p>The <strong>PurgingFcb</strong> parameter that is passed to the <strong><a href="rxpurgerelatedfobxs" title="NTSTATUS RxPurgeRelatedFobxs(&#10;  PNET_ROOT   NetRoot,&#10;  PRX_CONTEXT RxContext,&#10;  BOOLEAN     AttemptFinalization,&#10;  PFCB        PurgingFcb&#10;);">RxPurgeRelatedFobxs</a></strong> routine is the FCB structure for which the scavenging should occur. When this parameter is a directory, RDBSS needs to ensure that files that can potentially be in that directory are closed.</p></li>
-<li><p>The FCB structure that is associated with the FOBX structure on the <strong>FobxsToBeFinalized</strong> member of the RDBSS_SCAVENGER structure doesn't point to the same FCB structure as the <strong>PurgingFCB</strong> parameter passed to <strong><a href="rxpurgerelatedfobxs" title="NTSTATUS RxPurgeRelatedFobxs(&#10;  PNET_ROOT   NetRoot,&#10;  PRX_CONTEXT RxContext,&#10;  BOOLEAN     AttemptFinalization,&#10;  PFCB        PurgingFcb&#10;);">RxPurgeRelatedFobxs</a></strong>. This is complicated by the fact that they might not be the same FCB structures, but are actually the same file because of aliasing. In this case, the <strong>MRxAreFilesAliased</strong> routine is called to determine if the FCB structure is aliased.</p></li>
+<li>
+<p>The <strong>PurgingFcb</strong> parameter that is passed to the <strong><a href="rxpurgerelatedfobxs" title="NTSTATUS RxPurgeRelatedFobxs(&#10;  PNET_ROOT   NetRoot,&#10;  PRX_CONTEXT RxContext,&#10;  BOOLEAN     AttemptFinalization,&#10;  PFCB        PurgingFcb&#10;);">RxPurgeRelatedFobxs</a></strong> routine is the FCB structure for which the scavenging should occur. When this parameter is a directory, RDBSS needs to ensure that files that can potentially be in that directory are closed.</p>
+</li>
+<li>
+<p>The FCB structure that is associated with the FOBX structure on the <strong>FobxsToBeFinalized</strong> member of the RDBSS_SCAVENGER structure doesn't point to the same FCB structure as the <strong>PurgingFCB</strong> parameter passed to <strong><a href="rxpurgerelatedfobxs" title="NTSTATUS RxPurgeRelatedFobxs(&#10;  PNET_ROOT   NetRoot,&#10;  PRX_CONTEXT RxContext,&#10;  BOOLEAN     AttemptFinalization,&#10;  PFCB        PurgingFcb&#10;);">RxPurgeRelatedFobxs</a></strong>. This is complicated by the fact that they might not be the same FCB structures, but are actually the same file because of aliasing. In this case, the <strong>MRxAreFilesAliased</strong> routine is called to determine if the FCB structure is aliased.</p>
+</li>
 </ul>
-
 <p><strong>MRxAreFilesAliased</strong> is also called by the <strong><a href="rxscavengefobxsfornetroot" title="VOID RxScavengeFobxsForNetRoot(&#10;  PNET_ROOT NetRoot,&#10;  PFCB      PurgingFcb,&#10;  BOOLEAN   SynchronizeWithScavenger&#10;);">RxScavengeFobxsForNetRoot</a></strong> routine when purging all the file objects associated with a NET_ROOT structure. This is complicated by the fact that the <strong>PurgingFCB</strong> parameter passed to <strong><a href="rxscavengefobxsfornetroot" title="VOID RxScavengeFobxsForNetRoot(&#10;  PNET_ROOT NetRoot,&#10;  PFCB      PurgingFcb,&#10;  BOOLEAN   SynchronizeWithScavenger&#10;);">RxScavengeFobxsForNetRoot</a></strong> and the FCB structure that is associated with the NET_ROOT structure might actually be the same file because of aliasing. In this case, the <strong>MRxAreFilesAliased</strong> routine is called to determine if the FCB structure is aliased.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff549841(v=vs.85)"><strong>MRxCleanupFobx</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_calldown"><strong>MRxCloseSrvOpen</strong></a></p>
-
 <p><strong><a href="mrxcollapseopen" title="PMRX_CALLDOWN MRxCollapseOpen;&#10;&#10;NTSTATUS MRxCollapseOpen(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxCollapseOpen</a></strong></p>
-
 <p><strong><a href="mrxcreate" title="PMRX_CALLDOWN MRxCreate;&#10;&#10;NTSTATUS MRxCreate(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxCreate</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_deallocate_for_fcb"><strong>MRxDeallocateForFcb</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_deallocate_for_fobx"><strong>MRxDeallocateForFobx</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_extendfile_calldown"><strong>MRxExtendForCache</strong></a></p>
-
 <p><strong><a href="mrxextendfornoncache" title="PMRX_EXTENDFILE_CALLDOWN MRxExtendForNonCache;&#10;&#10;ULONG MRxExtendForNonCache(&#10;  _Inout_ PRX_CONTEXT    RxContext,&#10;  _Inout_ PLARGE_INTEGER pNewFileSize,&#10;  _Out_   PLARGE_INTEGER pNewAllocationSize&#10;)&#10;{ ... }">MRxExtendForNonCache</a></strong></p>
-
 <p><strong><a href="mrxflush" title="PMRX_CALLDOWN MRxFlush;&#10;&#10;NTSTATUS MRxFlush(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxFlush</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_forceclosed_calldown"><strong>MRxForceClosed</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_is_lock_realizable"><strong>MRxIsLockRealizable</strong></a></p>
-
 <p><strong><a href="mrxshouldtrytocollapsethisopen" title="PMRX_CALLDOWN MRxShouldTryToCollapseThisOpen;&#10;&#10;NTSTATUS MRxShouldTryToCollapseThisOpen(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxShouldTryToCollapseThisOpen</a></strong></p>
-
 <p><strong><a href="mrxtruncate" title="PMRX_CALLDOWN MRxTruncate;&#10;&#10;NTSTATUS MRxTruncate(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxTruncate</a></strong></p>
-
 <p><strong><a href="mrxzeroextend" title="PMRX_CALLDOWN MRxZeroExtend;&#10;&#10;NTSTATUS MRxZeroExtend(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxZeroExtend</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/rxprocs/nf-rxprocs-rxfinalizenetfcb"><strong>RxFinalizeNetFCB</strong></a></p>
-
 <p><strong><a href="rxpurgerelatedfobxs" title="NTSTATUS RxPurgeRelatedFobxs(&#10;  PNET_ROOT   NetRoot,&#10;  PRX_CONTEXT RxContext,&#10;  BOOLEAN     AttemptFinalization,&#10;  PFCB        PurgingFcb&#10;);">RxPurgeRelatedFobxs</a></strong></p>
-
 <p><strong><a href="rxscavengefobxsfornetroot" title="VOID RxScavengeFobxsForNetRoot(&#10;  PNET_ROOT NetRoot,&#10;  PFCB      PurgingFcb,&#10;  BOOLEAN   SynchronizeWithScavenger&#10;);">RxScavengeFobxsForNetRoot</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

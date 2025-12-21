@@ -69,87 +69,49 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_SERCX2_PIO_RECEIVE_READ_BUFFER callback function</h1>
-
 <h2>Description</h2>
-
 <p>The <em>EvtSerCx2PioReceiveReadBuffer</em> event callback function is called by version 2 of the serial framework extension (SerCx2) to use programmed I/O (PIO) to transfer data from the receive FIFO in the serial controller to a read buffer.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>PioReceive</code> [in]</h3>
-
 <p>A <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/serports/sercx2-object-handles">SERCX2PIORECEIVE</a> handle to a PIO-receive object. The serial controller driver previously called the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercx2pioreceivecreate">SerCx2PioReceiveCreate</a> method to create this object.</p>
-
 <h3><code>Buffer</code> [out]</h3>
-
 <p>A pointer to the read buffer. This parameter is the virtual address of a locked-down buffer in system memory.</p>
-
 <h3><code>Length</code> [in]</h3>
-
 <p>The number of bytes in the read buffer that are available to store received data.</p>
-
 <h2>Return value</h2>
-
 <p>The <em>EvtSerCx2PioReceiveReadBuffer</em> function returns the number of bytes of data that it successfully transferred from the receive FIFO in the serial controller hardware to the read buffer.</p>
-
 <h2>Remarks</h2>
-
 <p>Your serial controller driver must implement this function. The driver registers the function in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercx2pioreceivecreate">SerCx2PioReceiveCreate</a> call that creates the PIO-receive object.</p>
-
 <p>SerCx2 might call the <em>EvtSerCx2PioReceiveReadBuffer</em> function more than once during a PIO-receive transaction. A single <em>EvtSerCx2PioReceiveReadBuffer</em> call is sufficient if this call can fill the read buffer with data from the receive FIFO. Otherwise, SerCx2 continues to call this function, as more data becomes available in the receive FIFO, until the read buffer is filled.</p>
-
 <p>The <em>EvtSerCx2PioReceiveReadBuffer</em> function uses PIO to transfer as many bytes as it can from the receive FIFO to the read buffer. The function continues to transfer data from the FIFO for as long as the buffer passed to this function is not full and the line status register (LSR) indicates that more data is available from the FIFO. If the LSR indicates that the FIFO is empty, the function returns without filling the buffer. Otherwise, the function fills the buffer and returns. In either case, the value returned by this function is the number of bytes of data that were successfully transferred to the read buffer from the receive FIFO.</p>
-
 <p>Typically, the <em>EvtSerCx2PioReceiveReadBuffer</em> function does not enable any interrupts. Instead, if the receive FIFO runs out of data before the function can fill the read buffer, SerCx2 calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nc-sercx-evt_sercx2_pio_receive_enable_ready_notification">EvtSerCx2PioReceiveEnableReadyNotification</a> event callback function to enable a ready notification, and this function enables an interrupt that occurs when more data is available in the receive FIFO.</p>
-
 <p>For each successive call to the <em>EvtSerCx2PioReceiveReadBuffer</em> function, SerCx2 adjusts <em>Buffer</em> to point to the next buffer region to be filled, and sets <em>Length</em> to the number of bytes of unfilled space that remain in the buffer.</p>
-
 <p>The ready notification is never enabled when SerCx2 calls the <em>EvtSerCx2PioReceiveEnableReadyNotification</em> function. However, SerCx2 might call this function from the same thread from which the driver called the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercx2pioreceiveready">SerCx2PioReceiveReady</a> method.</p>
-
 <p>If the driver implements an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nc-sercx-evt_sercx2_pio_receive_initialize_transaction">EvtSerCx2PioReceiveInitializeTransaction</a> function, SerCx2 calls this function at the start of a PIO-transmit transaction, before the first call to the <em>EvtSerCx2PioReceiveReadBuffer</em> function. If the driver implements an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nc-sercx-evt_sercx2_pio_receive_cleanup_transaction">EvtSerCx2PioReceiveCleanupTransaction</a> function, SerCx2 calls this function at the end of a PIO-receive transaction, after the final call to the <em>EvtSerCx2PioReceiveReadBuffer</em> function.</p>
-
 <p>In addition to calling the <em>EvtSerCx2PioReceiveReadBuffer</em> function during PIO-receive transactions, SerCx2 calls this function to save the state of the receive FIFO just before the serial controller exits the D0 device power state. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercx2savereceivefifoond0exit">SerCx2SaveReceiveFifoOnD0Exit</a>.</p>
-
 <p>For more information about PIO-receive transactions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/dn265332(v=vs.85)">SerCx2 PIO-Receive Transactions</a>.</p>
-
 <h4>Examples</h4>
-
 <p>To define an <em>EvtSerCx2PioReceiveReadBuffer</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-
 <p>For example, to define an <em>EvtSerCx2PioReceiveReadBuffer</em> callback function that is named <code>MyPioReceiveReadBuffer</code>, use the <strong>EVT_SERCX2_PIO_RECEIVE_READ_BUFFER</strong> function type, as shown in this code example:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">EVT_SERCX2_PIO_RECEIVE_READ_BUFFER</span><span class="w">  </span><span class="n">MyPioReceiveReadBuffer</span><span class="p">;</span>
+<pre lang="cpp"><code>EVT_SERCX2_PIO_RECEIVE_READ_BUFFER  MyPioReceiveReadBuffer;
 </code></pre>
-</div>
-
 <p>Then, implement your callback function as follows:</p>
+<pre lang="cpp"><code>_Use_decl_annotations_
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>
+  MyPioReceiveReadBuffer(
+    SERCX2PIORECEIVE  PioReceive,
+    PUCHAR  Buffer,
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  Length
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">_Use_decl_annotations_</span>
-<span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span>
-<span class="w">  </span><span class="n">MyPioReceiveReadBuffer</span><span class="p">(</span>
-<span class="w">    </span><span class="n">SERCX2PIORECEIVE</span><span class="w">  </span><span class="n">PioReceive</span><span class="p">,</span>
-<span class="w">    </span><span class="n">PUCHAR</span><span class="w">  </span><span class="n">Buffer</span><span class="p">,</span>
-<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">Length</span>
-
-<span class="w">    </span><span class="p">)</span>
-<span class="w">  </span><span class="p">{...}</span>
+    )
+  {...}
 </code></pre>
-</div>
-
-<p>The <strong>EVT_SERCX2_PIO_RECEIVE_READ_BUFFER</strong> function type is defined in the Sercx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>EVT_SERCX2_PIO_RECEIVE_READ_BUFFER</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-
+<p>The <strong>EVT_SERCX2_PIO_RECEIVE_READ_BUFFER</strong> function type is defined in the Sercx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>EVT_SERCX2_PIO_RECEIVE_READ_BUFFER</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nc-sercx-evt_sercx2_pio_receive_cleanup_transaction">EvtSerCx2PioReceiveCleanupTransaction</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nc-sercx-evt_sercx2_pio_receive_enable_ready_notification">EvtSerCx2PioReceiveEnableReadyNotification</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nc-sercx-evt_sercx2_pio_receive_initialize_transaction">EvtSerCx2PioReceiveInitializeTransaction</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/serports/sercx2-object-handles">SERCX2PIORECEIVE</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercx2pioreceivecreate">SerCx2PioReceiveCreate</a></p>
 <hr>
 <div class="ntdoc-description-links">

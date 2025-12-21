@@ -63,83 +63,44 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>The <strong>IOCTL_GNSS_LISTEN_GEOFENCES_TRACKINGSTATUS</strong> control code is used to receive geofence tracking status from the driver.</p>
-
 <p>Applies to GNSS DDI version 2 and later.</p>
-
 <h2>Parameters</h2>
-
 <h3>Major code</h3>
-
 <h3>Input buffer</h3>
-
 <p>Set to NULL.</p>
-
 <h3>Input buffer length</h3>
-
 <p>Set to 0.</p>
-
 <h3>Output buffer</h3>
-
 <p>A pointer to a <a href="gnss_event" title="typedef struct {&#10;  ULONG           Size;&#10;  ULONG           Version;&#10;  GNSS_EVENT_TYPE EventType;&#10;  ULONG           EventDataSize;&#10;  BYTE            Unused[512];&#10;  union {&#10;    GNSS_FIXDATA                       FixData;&#10;    GNSS_AGNSS_REQUEST_PARAM           AgnssRequest;&#10;    GNSS_NI_REQUEST_PARAM              NiRequest;&#10;    GNSS_ERRORINFO                     ErrorInformation;&#10;    GNSS_NMEA_DATA                     NmeaData;&#10;    GNSS_GEOFENCE_ALERT_DATA           GeofenceAlertData;&#10;    GNSS_BREADCRUMBING_ALERT_DATA      BreadcrumbAlertData;&#10;    GNSS_GEOFENCES_TRACKINGSTATUS_DATA GeofencesTrackingStatus;&#10;    GNSS_DRIVER_REQUEST_DATA           DriverRequestData;&#10;    BYTE                               CustomData[ANYSIZE_ARRAY];&#10;  };&#10;} GNSS_EVENT, *PGNSS_EVENT;">GNSS_EVENT</a> structure.</p>
-
 <p>The EventType must be set to <strong>GNSS_Event_GeofencesTrackingStatus</strong> and the <strong>GeofencesTrackingStatus</strong> member filled in.</p>
-
 <h3>Output buffer length</h3>
-
 <p>Set to sizeof(<a href="gnss_event" title="typedef struct {&#10;  ULONG           Size;&#10;  ULONG           Version;&#10;  GNSS_EVENT_TYPE EventType;&#10;  ULONG           EventDataSize;&#10;  BYTE            Unused[512];&#10;  union {&#10;    GNSS_FIXDATA                       FixData;&#10;    GNSS_AGNSS_REQUEST_PARAM           AgnssRequest;&#10;    GNSS_NI_REQUEST_PARAM              NiRequest;&#10;    GNSS_ERRORINFO                     ErrorInformation;&#10;    GNSS_NMEA_DATA                     NmeaData;&#10;    GNSS_GEOFENCE_ALERT_DATA           GeofenceAlertData;&#10;    GNSS_BREADCRUMBING_ALERT_DATA      BreadcrumbAlertData;&#10;    GNSS_GEOFENCES_TRACKINGSTATUS_DATA GeofencesTrackingStatus;&#10;    GNSS_DRIVER_REQUEST_DATA           DriverRequestData;&#10;    BYTE                               CustomData[ANYSIZE_ARRAY];&#10;  };&#10;} GNSS_EVENT, *PGNSS_EVENT;">GNSS_EVENT</a>).</p>
-
 <h3>Input/output buffer</h3>
-
 <h3>Input/output buffer length</h3>
-
 <h3>Status block</h3>
-
-<p><strong>Irp->IoStatus.Status</strong> is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, <strong>Status</strong> to the appropriate error condition as a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">NTSTATUS</a> code.</p>
-
+<p><strong>Irp-&gt;IoStatus.Status</strong> is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, <strong>Status</strong> to the appropriate error condition as a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">NTSTATUS</a> code.</p>
 <h2>Remarks</h2>
-
 <h3>GNSS adapter notes</h3>
-
 <p>The GNSS adapter keeps a pending request all the time.</p>
-
 <p>When the driver completes the I/O call, the adapter issues another IOCTL to receive the next status change notification.</p>
-
 <p>The GNSS adapter may keep this IOCTL pending even if there are no geofences, or if geofence tracking operation has been reinitialized through the <strong>GNSS_ResetGeofencesTracking</strong> driver command. The GNSS driver must not treat this as an error condition.</p>
-
 <p>The HLOS reacts to the tracking failure alert by starting off its own standby application processor-based geofence tracking engine. The HLOS geofence tracking engine runs in parallel with the GNSS engine and tracks the exact same geofences that the GNSS engine has.</p>
-
 <p>During this time, any changes in the geofence set (for example, addition of new geofences or deletion of existing geofences) are also communicated to the GNSS engine (although the GNSS engine is unable to track those due to the prevailing low-signal conditions).</p>
-
 <p>The application processor-based geofence engine stays active for as long as the GNSS engine remains in the low-signal condition. Subsequently, when the GNSS engine is able to track geofences again by communicating a success tracking status alert through this IOCTL, the HLOS gracefully transfer full control back to the GNSS engine through the following steps.</p>
-
 <p>On receipt of this success tracking status alert, the HLOS brings down it's application processor-based geofence tracking engine, issues a <strong>GNSS_ResetGeofencesTracking</strong> command to the GNSS engine, and re-adds the currently active geofences together with the current entry/exit status of each geofence. This reset operation is necessary so that the GNSS engine can re-synchronize the states of all the geofences and raise any needed geofence alert for any of them</p>
-
 <h3>GNSS driver notes</h3>
-
 <p>There will be a pending IOCTL all the time. Whenever there is a tracking status change the I/O operation should be completed. When geofences are initially added to the GNSS engine, the HLOS optimistically assumes that the GNSS engine is able to track the geofences. Thus initially the IOCTL should be filled only when the GNSS engine is unable to track geofences, and the tracking status is a failure code. Subsequently, the adapter expects the IOCTL to be filled when the tracking status changes to success.</p>
-
 <p>A failure tracking status implies that the GNSS engine is unable to reliably track geofences due to bad signal conditions or other transient reasons. This status applies to the overall ability to reliably track geofences, as opposed to specific to one or more geofence. Thus a failure status must be reported even when the GNSS engine can track most of the fences, but cannot do so for a smaller number.</p>
-
 <p>When signal conditions degrade while geofences are being tracked, the GNSS engine must make allowances for several retries before declaring a failure status. This will prevent unneeded failovers when the signal degradation is due to transient conditions, for example, when a user enters a tunnel.</p>
-
 <p>A success status is raised when the GNSS engine had previously raised a failure status, and is now able to track all the geofences again (due to improved signal conditions or other reasons).</p>
-
 <p>If the GNSS engine had previously raised a failure status while geofences were being tracked, no further geofence alerts are expected till the GNSS engine can track all geofences again and has raised a subsequent success status.</p>
-
 <p>When the GNSS engine is unable to track geofences, it may continue to monitor the tracking condition so that it can resume geofence tracking when signal conditions improve. Since the monitoring of tracking condition can be power-intensive, especially under low GNSS signal conditions, the GNSS engine must optimize this activity in an implementation-specific way. The GNSS engine must not keep on consuming power for a prolonged time if the tracking conditions do not improve.</p>
-
 <p>Additionally, if geofence tracking is explicitly reset by the HLOS or the HLOS deletes all geofences, the tracking condition monitoring should immediately stop. When new geofences are subsequently added and the GNSS engine is still unable to track geofences, a subsequent failure status should be raised.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/creating-ioctl-requests-in-drivers">Creating IOCTL Requests in Drivers</a></p>
-
 <p><a href="wdfiotargetsendinternalioctlotherssynchronously" title="NTSTATUS WdfIoTargetSendInternalIoctlOthersSynchronously(&#10;  [in]            WDFIOTARGET               IoTarget,&#10;  [in, optional]  WDFREQUEST                Request,&#10;  [in]            ULONG                     IoctlCode,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    OtherArg1,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    OtherArg2,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    OtherArg4,&#10;  [in, optional]  PWDF_REQUEST_SEND_OPTIONS RequestOptions,&#10;  [out, optional] PULONG_PTR                BytesReturned&#10;);">WdfIoTargetSendInternalIoctlOthersSynchronously</a></p>
-
 <p><a href="wdfiotargetsendinternalioctlsynchronously" title="NTSTATUS WdfIoTargetSendInternalIoctlSynchronously(&#10;  [in]            WDFIOTARGET               IoTarget,&#10;  [in, optional]  WDFREQUEST                Request,&#10;  [in]            ULONG                     IoctlCode,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    InputBuffer,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    OutputBuffer,&#10;  [in, optional]  PWDF_REQUEST_SEND_OPTIONS RequestOptions,&#10;  [out, optional] PULONG_PTR                BytesReturned&#10;);">WdfIoTargetSendInternalIoctlSynchronously</a></p>
-
 <p><a href="wdfiotargetsendioctlsynchronously" title="NTSTATUS WdfIoTargetSendIoctlSynchronously(&#10;  [in]            WDFIOTARGET               IoTarget,&#10;  [in, optional]  WDFREQUEST                Request,&#10;  [in]            ULONG                     IoctlCode,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    InputBuffer,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    OutputBuffer,&#10;  [in, optional]  PWDF_REQUEST_SEND_OPTIONS RequestOptions,&#10;  [out, optional] PULONG_PTR                BytesReturned&#10;);">WdfIoTargetSendIoctlSynchronously</a></p>
 <hr>
 <div class="ntdoc-description-links">

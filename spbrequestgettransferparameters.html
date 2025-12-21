@@ -67,71 +67,49 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>SpbRequestGetTransferParameters function</h1>
-
 <h2>Description</h2>
-
 <p>The <em>SpbRequestGetTransferParameters</em> method retrieves the transfer parameters for an individual transfer in an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/i-o-transfer-sequences">I/O transfer sequence</a>.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>SpbRequest</code> [in]</h3>
-
 <p>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBREQUEST</a> handle to the I/O request from which to retrieve the transfer parameters. This parameter must be a handle to an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spb-ioctls#ioctl_spb_execute_sequence">IOCTL_SPB_EXECUTE_SEQUENCE</a> request.</p>
-
 <h3><code>Index</code> [in]</h3>
-
 <p>The index of a transfer in the I/O transfer sequence. For more information, see the following Remarks section.</p>
-
 <h3><code>TransferDescriptor</code> [out, optional]</h3>
-
 <p>A pointer to a caller-allocated <a href="spb_transfer_descriptor" title="typedef struct SPB_TRANSFER_DESCRIPTOR {&#10;  USHORT                 Size;&#10;  SPB_TRANSFER_DIRECTION Direction;&#10;  size_t                 TransferLength;&#10;  ULONG                  DelayInUs;&#10;} SPB_TRANSFER_DESCRIPTOR, *PSPB_TRANSFER_DESCRIPTOR;">SPB_TRANSFER_DESCRIPTOR</a> structure into which the method writes the transfer parameters. The <em>TransferDescriptor</em> parameter is optional and can be specified as NULL if the caller does not require the transfer parameters. For more information, see the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nf-spbcx-spbrequestgettransferparameters#remarks">Remarks</a> section.</p>
-
 <h3><code>TransferBuffer</code> [out, optional]</h3>
-
 <p>A pointer to a location into which the method writes a pointer to an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> (or an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> chain) that describes the physical memory in the transfer buffer. The caller must not modify the contents of this <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>. This parameter is optional and can be set to NULL if the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> is not needed. For more information, see the following Remarks section.</p>
-
 <h2>Remarks</h2>
-
 <p>To request an I/O transfer sequence, a client (peripheral driver) of the SPB controller driver sends an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spb-ioctls#ioctl_spb_execute_sequence">IOCTL_SPB_EXECUTE_SEQUENCE</a> request that contains a list of the transfers in the sequence. Your controller driver can call <em>SpbRequestGetTransferParameters</em> to obtain information about a particular transfer in the sequence.</p>
-
 <p>The <em>Index</em> parameter is an index that identifies a particular transfer in the sequence. If N is the number of transfers in the sequence, valid indexes range from 0 to N–1. To determine the number of transfers in the sequence, call the <a href="spbrequestgetparameters" title="VOID SpbRequestGetParameters(&#10;  [in]  SPBREQUEST             SpbRequest,&#10;  [out] SPB_REQUEST_PARAMETERS *Parameters&#10;);">SpbRequestGetParameters</a> method. This method retrieves an <a href="spb_transfer_descriptor" title="typedef struct SPB_TRANSFER_DESCRIPTOR {&#10;  USHORT                 Size;&#10;  SPB_TRANSFER_DIRECTION Direction;&#10;  size_t                 TransferLength;&#10;  ULONG                  DelayInUs;&#10;} SPB_TRANSFER_DESCRIPTOR, *PSPB_TRANSFER_DESCRIPTOR;">SPB_TRANSFER_DESCRIPTOR</a> structure that contains the request parameters. The <em>TransferCount</em> member of this structure specifies the number of transfers in the sequence.</p>
-
 <p>If <em>TransferDescriptor</em> is non-NULL, the caller must call the <a href="spb_transfer_descriptor_init" title="VOID SPB_TRANSFER_DESCRIPTOR_INIT(&#10;  [out] SPB_TRANSFER_DESCRIPTOR *Descriptor&#10;);">SPB_TRANSFER_DESCRIPTOR_INIT</a> function to initialize the structure before calling <em>SpbRequestGetTransferParameters</em>. After the structure is initialized, it can be reused as many times as needed without being reinitialized.</p>
-
 <p><em>TransferBuffer</em> is an optional pointer into which <em>SpbRequestGetTransferParameters</em> writes a pointer to an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> that describes the physical page layout for the transfer buffer. The transfer buffer can be described by a single <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> or by an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> chain. A simple buffer, which consists of a contiguous block of virtual memory, is described by a single <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>. If a transfer buffer is formatted as a scatter-gather list, each contiguous block of virtual memory in the buffer is described by an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> in an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> chain. For more information about MDLs, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-mdls">Using MDLs</a>.</p>
-
 <h3>Examples</h3>
+<pre lang="cpp"><code>//
+// Note that this snippet shows a transfer completing synchronously. This
+// is a horrible thing for a driver to do, but demonstrates the DDI nicely.
+//
 
-<div class="codehilite">
-<pre><span></span><code><span class="c1">//</span>
-<span class="c1">// Note that this snippet shows a transfer completing synchronously. This</span>
-<span class="c1">// is a horrible thing for a driver to do, but demonstrates the DDI nicely.</span>
-<span class="c1">//</span>
+<a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a> parameters;
+WDF_TRANSFER_DESCRIPTOR transfer;
 
-<span class="n"><a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a></span><span class="w"> </span><span class="n">parameters</span><span class="p">;</span>
-<span class="n">WDF_TRANSFER_DESCRIPTOR</span><span class="w"> </span><span class="n">transfer</span><span class="p">;</span>
+<a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;parameters);
+WDF_TRANSFER_DESCRIPTOR_INIT(&amp;transfer);
 
-<span class="n"><a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">parameters</span><span class="p">);</span>
-<span class="n">WDF_TRANSFER_DESCRIPTOR_INIT</span><span class="p">(</span><span class="o">&amp;</span><span class="n">transfer</span><span class="p">);</span>
+<a href="spbrequestgetparameters" title="VOID SpbRequestGetParameters(&#10;  [in]  SPBREQUEST             SpbRequest,&#10;  [out] SPB_REQUEST_PARAMETERS *Parameters&#10;);">SpbRequestGetParameters</a>(request, &amp;parameters);
 
-<span class="n"><a href="spbrequestgetparameters" title="VOID SpbRequestGetParameters(&#10;  [in]  SPBREQUEST             SpbRequest,&#10;  [out] SPB_REQUEST_PARAMETERS *Parameters&#10;);">SpbRequestGetParameters</a></span><span class="p">(</span><span class="n">request</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">parameters</span><span class="p">);</span>
+for (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> i = 0; i &lt; parameters.SequenceCount; i += 1)
+{
+    WDFMEMORY buffer;
 
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">parameters</span><span class="p">.</span><span class="n">SequenceCount</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">WDFMEMORY</span><span class="w"> </span><span class="n">buffer</span><span class="p">;</span>
+    SpbRequestGetTransferParameters(request, i, &amp;transfer, &amp;buffer);
 
-<span class="w">    </span><span class="n">SpbRequestGetTransferParameters</span><span class="p">(</span><span class="n">request</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">transfer</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">buffer</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">MyDriverPerformTransfer</span><span class="p">(</span><span class="n">deviceContext</span><span class="p">,</span>
-<span class="w">                            </span><span class="n">request</span><span class="p">,</span>
-<span class="w">                            </span><span class="n">transfer</span><span class="p">,</span>
-<span class="w">                            </span><span class="n">buffer</span><span class="p">);</span>
-<span class="p">}</span>
+    MyDriverPerformTransfer(deviceContext,
+                            request,
+                            transfer,
+                            buffer);
+}
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spb-ioctls#ioctl_spb_execute_sequence">IOCTL_SPB_EXECUTE_SEQUENCE</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBREQUEST</a></li>

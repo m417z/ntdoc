@@ -64,47 +64,26 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltReuseCallbackData function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>FltReuseCallbackData</strong> routine reinitializes a callback data structure so that it can be reused.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>CallbackData</code> [in, out]</h3>
-
 <p>Pointer to the callback data (<a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a>) structure to be reused. This structure must have been allocated by a previous call to <a href="fltallocatecallbackdata" title="NTSTATUS FLTAPI FltAllocateCallbackData(&#10;  [in]           PFLT_INSTANCE      Instance,&#10;  [in, optional] PFILE_OBJECT       FileObject,&#10;  [out]          PFLT_CALLBACK_DATA *RetNewCallbackData&#10;);">FltAllocateCallbackData</a>. This parameter is required and cannot be <strong>NULL</strong>.</p>
-
 <h2>Return value</h2>
-
 <p>None</p>
-
 <h2>Remarks</h2>
-
 <p><strong>FltReuseCallbackData</strong> reinitializes a callback data (<a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a>) structure so that it can be used in a new I/O operation. <strong>FltReuseCallbackData</strong> does not change the <strong>TargetInstance</strong> field or the <strong>TargetFileObject</strong> field of the callback data structure's I/O parameter block.</p>
-
 <p>The <strong>FltReuseCallbackData</strong> routine frees any <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> chain associated with the supplied <em>CallbackData</em> object. A pointer to an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> chain associated with a <a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a> object will be invalid after a call to <strong>FltReuseCallbackData</strong> for that object.</p>
-
 <p>Using <strong>FltReuseCallbackData</strong> to reuse a callback data structure is faster than freeing the structure and allocating a new one.</p>
-
 <p>A minifilter driver should use <strong>FltReuseCallbackData</strong> only on a callback data structure that the minifilter driver previously allocated with <a href="fltallocatecallbackdata" title="NTSTATUS FLTAPI FltAllocateCallbackData(&#10;  [in]           PFLT_INSTANCE      Instance,&#10;  [in, optional] PFILE_OBJECT       FileObject,&#10;  [out]          PFLT_CALLBACK_DATA *RetNewCallbackData&#10;);">FltAllocateCallbackData</a> and used in a call to <a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a> or <a href="fltperformasynchronousio" title="NTSTATUS FLTAPI FltPerformAsynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA               CallbackData,&#10;  [in]      PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in]      PVOID                            CallbackContext&#10;);">FltPerformAsynchronousIo</a>.</p>
-
 <p>If the callback data structure was used for asynchronous I/O, the minifilter driver should not call <strong>FltReuseCallbackData</strong> until the <em>CallbackRoutine</em> specified in the call to <a href="fltperformasynchronousio" title="NTSTATUS FLTAPI FltPerformAsynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA               CallbackData,&#10;  [in]      PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in]      PVOID                            CallbackContext&#10;);">FltPerformAsynchronousIo</a> is called.</p>
-
 <p>In particular, a minifilter driver should not use this routine for any callback data structures not allocated by the minifilter driver itself.</p>
-
 <h2>See also</h2>
-
 <p><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></p>
-
 <p><a href="fltallocatecallbackdata" title="NTSTATUS FLTAPI FltAllocateCallbackData(&#10;  [in]           PFLT_INSTANCE      Instance,&#10;  [in, optional] PFILE_OBJECT       FileObject,&#10;  [out]          PFLT_CALLBACK_DATA *RetNewCallbackData&#10;);">FltAllocateCallbackData</a></p>
-
 <p><a href="fltfreecallbackdata" title="VOID FLTAPI FltFreeCallbackData(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltFreeCallbackData</a></p>
-
 <p><a href="fltperformasynchronousio" title="NTSTATUS FLTAPI FltPerformAsynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA               CallbackData,&#10;  [in]      PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in]      PVOID                            CallbackContext&#10;);">FltPerformAsynchronousIo</a></p>
-
 <p><a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a></p>
-
 <p><a href="fltreissuesynchronousio" title="VOID FLTAPI FltReissueSynchronousIo(&#10;  [in] PFLT_INSTANCE      InitiatingInstance,&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltReissueSynchronousIo</a></p>
 <hr>
 <div class="ntdoc-description-links">

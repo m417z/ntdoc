@@ -72,58 +72,32 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>_DXGK_QUERYINTEGRATEDDISPLAYOUT2 structure</h1>
-
 <h2>Description</h2>
-
 <p>Used during a query for the integrated display output.</p>
-
 <h2>Members</h2>
-
 <h3><code>Flags</code> [out]</h3>
-
 <p>Pointer to a <a href="dxgk_integrateddisplayflags" title="typedef union _DXGK_INTEGRATEDDISPLAYFLAGS {&#10;  struct {&#10;    DXGK_DISPLAYPANELORIENTATION UndockedOrientation : 2;&#10;    DXGK_DISPLAYPANELORIENTATION DockedOrientation : 2;&#10;    UINT                         Reserved : 28;&#10;  };&#10;  UINT   Value;&#10;} DXGK_INTEGRATEDDISPLAYFLAGS, *PDXGK_INTEGRATEDDISPLAYFLAGS;">DXGK_INTEGRATEDDISPLAYFLAGS</a> structure that describes simple properties of an integrated display. Orientation values of 0 degrees indicate no override from the descriptor.</p>
-
 <h3><code>NativeTiming</code> [out]</h3>
-
 <p>Pointer to a [<a href="d3dkmdt_video_signal_info" title="typedef struct _D3DKMDT_VIDEO_SIGNAL_INFO {&#10;  D3DKMDT_VIDEO_SIGNAL_STANDARD VideoStandard;&#10;  D3DKMDT_2DREGION              TotalSize;&#10;  D3DKMDT_2DREGION              ActiveSize;&#10;  D3DDDI_RATIONAL               VSyncFreq;&#10;  D3DDDI_RATIONAL               HSyncFreq;&#10;  SIZE_T                        PixelRate;&#10;  union {&#10;    struct {&#10;      D3DDDI_VIDEO_SIGNAL_SCANLINE_ORDERING ScanLineOrdering : 3;&#10;      UINT                                  VSyncFreqDivider : 6;&#10;      UINT                                  Reserved : 23;&#10;    } AdditionalSignalInfo;&#10;    D3DDDI_VIDEO_SIGNAL_SCANLINE_ORDERING ScanLineOrdering;&#10;  };&#10;} D3DKMDT_VIDEO_SIGNAL_INFO;">D3DKMDT_VIDEO_SIGNAL_INFO</a>]/d3dkmdt/ns-d3dkmdt-_d3dkmdt_video_signal_info.md) structure that contains information about a native timing of the integrated display. Should be zeroed to indicate no override. This value overrides the native timing in the descriptor. Since the driver is responsible for providing the descriptor, the only expected usage of this override is to describe a timing which cannot be described by an EDID, most obviously, a display which has more than 4095 addressable pixels in either direction.
 If a NativeTiming override is provided, the OS will not call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_recommendmonitormodes">DxgkDdiRecommendMonitorModes</a> for this target. Generally, integrated panels do not support a large set of timings and the driver should be well matched to the EDID provided. If the driver needs to describe multiple overrides for monitor modes, it should leave the NativeTiming structure zeroed and report all the overrides using DxgkDdiRecommendMonitorModes.</p>
-
 <h3><code>LinkCapabilities</code> [out]</h3>
-
 <p>Pointer to a <a href="dxgk_monitorlinkinfo_capabilities" title="typedef union _DXGK_MONITORLINKINFO_CAPABILITIES {&#10;  struct {&#10;    UINT Stereo : 1;&#10;    UINT WideColorSpace : 1;&#10;    UINT HighColorSpace : 1;&#10;    UINT DynamicColorSpace : 1;&#10;    UINT DynamicBitsPerColorChannel : 1;&#10;    UINT DynamicColorEncodingFormat : 1;&#10;    UINT DedicatedTimingGeneration : 1;&#10;    UINT TargetIndependentPrimary : 1;&#10;    UINT SyncLockIdentical : 1;&#10;    UINT Hdr10Plus : 1;&#10;    UINT DolbyVisionLowLatency : 1;&#10;    UINT VariableRefresh : 1;&#10;#if ...&#10;    UINT Reserved : 20;&#10;#elif&#10;    UINT Reserved : 21;&#10;#elif&#10;    UINT Reserved : 22;&#10;...">DXGK_MONITORLINKINFO_CAPABILITIES</a> structure that describes the link capabilities for driving the monitor. This is the same link capabilities as the OS would query from an external display after hot-plug. Since an integrated display is exposed during adapter driver initialization, the capabilities are described directly rather make an additional DDI call.</p>
-
 <p>Starting in WDDM 2.6, this member is used to report synchronization support.</p>
-
 <h3><code>Colorimetry</code> [out]</h3>
-
 <p>Colorimetry related overrides for the display. See the description of <a href="dxgk_colorimetry" title="typedef struct _DXGK_COLORIMETRY {&#10;  D3DKMDT_2DOFFSET                   RedPoint;&#10;  D3DKMDT_2DOFFSET                   GreenPoint;&#10;  D3DKMDT_2DOFFSET                   BluePoint;&#10;  D3DKMDT_2DOFFSET                   WhitePoint;&#10;  ULONG                              MinLuminance;&#10;  ULONG                              MaxLuminance;&#10;  ULONG                              MaxFullFrameLuminance;&#10;  D3DKMDT_WIRE_FORMAT_AND_PREFERENCE FormatBitDepths;&#10;  DXGK_STANDARD_COLORIMETRY_FLAGS    StandardColorimetryFlags;&#10;} DXGK_COLORIMETRY, *PDXGK_COLORIMETRY;">DXGK_COLORIMETRY</a> for the field definitions and restrictions on the combinations of fields.</p>
-
 <h3><code>DisplayTechnology</code> [out]</h3>
-
 <p>Value that represents the technology of the display. Used to optimize experience, for example enabling a darker theme with reduced blue content on DXGK_DT_OLED displays.</p>
-
 <h3><code>IntendedUsage</code> [out]</h3>
-
 <p>Value that indicates the manufacturer’s intended usage of the display. The value reported should be DXGK_DU_GENERIC, unless the driver has information indicating a more specific usage. The expectation is that if the integrated display is intended to be used for AR, VR or auxiliary output, the driver would have to have enough specific handling that it would be able to report the correct usage.</p>
-
 <h3><code>Instance</code> [out]</h3>
-
 <p>A zero-based integer for the instance of integrated panel. Used to order multiple integrated panels. Values must be unique and contiguous across integrated targets but are not required to be reported in order.</p>
-
 <h3><code>DescriptorType</code> [out]</h3>
-
 <p>Value to indicate the type of descriptor. For WDDM 2.4 this value must be DXGK_DDT_EDID. From WDDM 2.5 and later, either DXGK_DDT_EDID or DXGK_DDT_DISPLAYID is allowed.</p>
-
 <h3><code>DitheringSupport</code> [out]</h3>
-
 <p>A <a href="d3dkmdt_wire_format_and_preference" title="typedef union _D3DKMDT_WIRE_FORMAT_AND_PREFERENCE {&#10;  struct {&#10;    D3DKMDT_MODE_PREFERENCE Preference : 2;&#10;    UINT                    Rgb : 6;&#10;    UINT                    YCbCr444 : 6;&#10;    UINT                    YCbCr422 : 6;&#10;    UINT                    YCbCr420 : 6;&#10;    UINT                    Intensity : 6;&#10;  };&#10;  UINT   Value;&#10;} D3DKMDT_WIRE_FORMAT_AND_PREFERENCE, *PD3DKMDT_WIRE_FORMAT_AND_PREFERENCE;">D3DKMDT_WIRE_FORMAT_AND_PREFERENCE</a> field that contains the flags for each wire-format. The driver should set the wire-format bit for each format where the driver and hardware supports dithering beneficial to image quality when the source pixel format contains higher precision than the wire-format.</p>
-
 <h2>Remarks</h2>
-
 <p>The fields provide overrides attributes of the display which could be provided by a descriptor, but either can't be described by an EDID or have commonly missing or incorrect in EDIDs. Where there is a conflict between the descriptor and these override fields, the OS will use the overrides when valid.</p>
-
 <p>The OS will sanity check the fields and will fail driver start if any fields are found to be inconsistent or invalid. For most fields, sanity checking simply means verifying that reported values are in range but the Colorimetry, Instance and Descriptor fields have further validation applied. For Colorimetry, see the description of <a href="dxgk_colorimetry" title="typedef struct _DXGK_COLORIMETRY {&#10;  D3DKMDT_2DOFFSET                   RedPoint;&#10;  D3DKMDT_2DOFFSET                   GreenPoint;&#10;  D3DKMDT_2DOFFSET                   BluePoint;&#10;  D3DKMDT_2DOFFSET                   WhitePoint;&#10;  ULONG                              MinLuminance;&#10;  ULONG                              MaxLuminance;&#10;  ULONG                              MaxFullFrameLuminance;&#10;  D3DKMDT_WIRE_FORMAT_AND_PREFERENCE FormatBitDepths;&#10;  DXGK_STANDARD_COLORIMETRY_FLAGS    StandardColorimetryFlags;&#10;} DXGK_COLORIMETRY, *PDXGK_COLORIMETRY;">DXGK_COLORIMETRY</a> for validation. Instance values are verified to be consistent across all integrated displays as noted above. The Descriptor must be a valid EDID.</p>
-
 <h2>See also</h2>
 <hr>
 <div class="ntdoc-description-links">

@@ -65,64 +65,42 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>IoCreateNotificationEvent function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>IoCreateNotificationEvent</strong> routine creates or opens a named notification event used to notify one or more threads of execution that an event has occurred.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>EventName</code> [in]</h3>
-
 <p>Pointer to a buffer containing a null-terminated Unicode string that names the event.</p>
-
 <h3><code>EventHandle</code> [out]</h3>
-
 <p>Pointer to a location in which to return a kernel handle for the event object.</p>
-
 <h2>Return value</h2>
-
 <p><strong>IoCreateNotificationEvent</strong> returns a pointer to the created or opened event object or <strong>NULL</strong> if the event object could not be created or opened.</p>
-
 <h2>Remarks</h2>
-
 <p>If the event object does not already exist, <strong>IoCreateNotificationEvent</strong> creates and opens it, and sets its state to Signaled.</p>
-
 <p>If the event object already exists, <strong>IoCreateNotificationEvent</strong> just opens the event object.</p>
-
 <p>Both notification events and synchronization events are used to coordinate execution. However, while a synchronization event resets itself, a notification event remains in the Signaled state until the driver calls <strong><a href="keclearevent" title="VOID KeClearEvent(&#10;  [in, out] PRKEVENT Event&#10;);">KeClearEvent</a></strong> or <strong><a href="keresetevent" title="LONG KeResetEvent(&#10;  [in, out] PRKEVENT Event&#10;);">KeResetEvent</a></strong>.</p>
-
 <p>To synchronize on a notification event:</p>
-
 <ol>
 <li>Open the notification event with <strong>IoCreateNotificationEvent</strong>. Identify the event with the <em>EventName</em> string.</li>
 <li>Wait for the event to be signaled by calling <strong><a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a></strong> with the PKEVENT returned by <strong>IoCreateNotificationEvent</strong>. More than one thread of execution can wait for a given notification event. To poll instead of stall, specify a <em>Timeout</em> of zero to <strong><a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a></strong>.</li>
 <li>Close the handle to the notification event with <strong><a href="ntclose" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">ZwClose</a></strong> when access to the event is no longer needed.</li>
 </ol>
-
 <p>There are two main methods for sharing event objects:</p>
-
 <ul>
-<li><p>The user-mode application creates the event object and passes a handle to the object to the driver by sending an IOCTL to the driver. The driver must handle the IOCTL in the context of the process that created the event object and must validate the handle by calling <strong><a href="obreferenceobjectbyhandle" title="NTSTATUS ObReferenceObjectByHandle(&#10;  [in]            HANDLE                     Handle,&#10;  [in]            ACCESS_MASK                DesiredAccess,&#10;  [in, optional]  POBJECT_TYPE               ObjectType,&#10;  [in]            KPROCESSOR_MODE            AccessMode,&#10;  [out]           PVOID                      *Object,&#10;  [out, optional] POBJECT_HANDLE_INFORMATION HandleInformation&#10;);">ObReferenceObjectByHandle</a></strong>. This method is the recommended method for sharing event objects between user and kernel modes.</p></li>
-<li><p>The driver creates a named event object in the global <code>\BaseNamedObjects</code> object directory. To access a kernel-mode event from user-mode, use the name <code>Global\\</code><em>Xxx</em>. Note that security settings can prevent an application from opening the event. The <code>\\BaseNamedObjects</code> object directory is not created until the Microsoft Win32 subsystem initializes, so drivers that are loaded at boot time cannot create event objects in the <code>\\BaseNamedObjects</code> directory in their <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver"><em>DriverEntry</em></a> routines.</p></li>
+<li>
+<p>The user-mode application creates the event object and passes a handle to the object to the driver by sending an IOCTL to the driver. The driver must handle the IOCTL in the context of the process that created the event object and must validate the handle by calling <strong><a href="obreferenceobjectbyhandle" title="NTSTATUS ObReferenceObjectByHandle(&#10;  [in]            HANDLE                     Handle,&#10;  [in]            ACCESS_MASK                DesiredAccess,&#10;  [in, optional]  POBJECT_TYPE               ObjectType,&#10;  [in]            KPROCESSOR_MODE            AccessMode,&#10;  [out]           PVOID                      *Object,&#10;  [out, optional] POBJECT_HANDLE_INFORMATION HandleInformation&#10;);">ObReferenceObjectByHandle</a></strong>. This method is the recommended method for sharing event objects between user and kernel modes.</p>
+</li>
+<li>
+<p>The driver creates a named event object in the global <code>\BaseNamedObjects</code> object directory. To access a kernel-mode event from user-mode, use the name <code>Global\\</code><em>Xxx</em>. Note that security settings can prevent an application from opening the event. The <code>\\BaseNamedObjects</code> object directory is not created until the Microsoft Win32 subsystem initializes, so drivers that are loaded at boot time cannot create event objects in the <code>\\BaseNamedObjects</code> directory in their <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver"><em>DriverEntry</em></a> routines.</p>
+</li>
 </ul>
-
 <p>For more information about events, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/event-objects">Event Objects</a>.</p>
-
 <h2>See also</h2>
-
 <p><a href="iocreatesynchronizationevent" title="PKEVENT IoCreateSynchronizationEvent(&#10;  [in]  PUNICODE_STRING EventName,&#10;  [out] PHANDLE         EventHandle&#10;);">IoCreateSynchronizationEvent</a></p>
-
 <p><a href="keclearevent" title="VOID KeClearEvent(&#10;  [in, out] PRKEVENT Event&#10;);">KeClearEvent</a></p>
-
 <p><a href="keresetevent" title="LONG KeResetEvent(&#10;  [in, out] PRKEVENT Event&#10;);">KeResetEvent</a></p>
-
 <p><a href="kesetevent" title="LONG KeSetEvent(&#10;  [in, out] PRKEVENT  Event,&#10;  [in]      KPRIORITY Increment,&#10;  [in]      BOOLEAN   Wait&#10;);">KeSetEvent</a></p>
-
 <p><a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a></p>
-
 <p><a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a></p>
-
 <p><a href="ntclose" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">ZwClose</a></p>
 <hr>
 <div class="ntdoc-description-links">

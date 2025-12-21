@@ -70,86 +70,54 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>ClfsWriteRestartArea function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>ClfsWriteRestartArea</strong> routine atomically appends a new restart record to a CLFS stream, flushes the restart record to stable storage, and optionally updates the base LSN of the stream.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>pvMarshalContext</code> [in, out]</h3>
-
 <p>A pointer to an opaque context that represents a marshalling area associated with a CLFS stream. The caller previously obtained this pointer by calling <a href="clfscreatemarshallingarea" title="CLFSUSER_API NTSTATUS ClfsCreateMarshallingArea(&#10;  [in]           PLOG_FILE_OBJECT   plfoLog,&#10;  [in]           POOL_TYPE          ePoolType,&#10;  [in, optional] PALLOCATE_FUNCTION pfnAllocBuffer,&#10;  [in, optional] PFREE_FUNCTION     pfnFreeBuffer,&#10;  [in]           ULONG              cbMarshallingBuffer,&#10;  [in]           ULONG              cMaxWriteBuffers,&#10;  [in]           ULONG              cMaxReadBuffers,&#10;  [out]          PVOID              *ppvMarshalContext&#10;);">ClfsCreateMarshallingArea</a>.</p>
-
 <h3><code>pvRestartBuffer</code> [in]</h3>
-
 <p>A pointer to a buffer that contains the data for the restart record.</p>
-
 <h3><code>cbRestartBuffer</code> [in]</h3>
-
 <p>The size, in bytes, of the buffer pointed to by <em>pvRestartBuffer</em>. This is the size of the restart data.</p>
-
 <h3><code>plsnBase</code> [in, optional]</h3>
-
 <p>A pointer to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_cls_lsn">CLFS_LSN</a> structure that specifies a new base LSN for the stream. If this parameter is <strong>NULL</strong>, the base LSN is not changed.</p>
-
 <h3><code>fFlags</code> [in]</h3>
-
 <p>This parameter must be one of the following values.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Value</th>
-  <th>Meaning</th>
+<th>Value</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>0</td>
-  <td>The restart record is placed in newly allocated space in an I/O block. The number of reserved records in the marshalling area is not changed.</td>
+<td>0</td>
+<td>The restart record is placed in newly allocated space in an I/O block. The number of reserved records in the marshalling area is not changed.</td>
 </tr>
 <tr>
-  <td>CLFS_FLAG_USE_RESERVATION</td>
-  <td>The restart record is placed in previously reserved space in an I/O block. The number of reserved records in the marshalling area is reduced by one.</td>
+<td>CLFS_FLAG_USE_RESERVATION</td>
+<td>The restart record is placed in previously reserved space in an I/O block. The number of reserved records in the marshalling area is reduced by one.</td>
 </tr>
 </tbody>
 </table>
-
 <h3><code>pcbWritten</code> [out, optional]</h3>
-
 <p>A pointer to a <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>-typed variable that receives the number of bytes actually forced to stable storage. This parameter can be <strong>NULL</strong>.</p>
-
 <h3><code>plsnNext</code> [out, optional]</h3>
-
 <p>A pointer to a <strong>CLFS_LSN</strong> structure that receives the LSN of the newly written restart record.</p>
-
 <h2>Return value</h2>
-
 <p><strong>ClfsWriteRestartArea</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if it succeeds; otherwise, it returns one of the error codes defined in Ntstatus.h.</p>
-
 <h2>Remarks</h2>
-
 <p>Typically ClfsWriteRestartArea is called as the last act of a client checkpoint.</p>
-
 <p>ClfsWriteRestartArea is a relatively expensive operation because it causes a flush of all records currently in the marshalling area along with a flush of stream and log metadata.</p>
-
 <p>At any one time, only one marshalling area should be used to write data to a stream. Having two marshalling areas writing into the stream might result in stream corruption.</p>
-
 <p>If you just want to set the base LSN of a stream, use <a href="clfsadvancelogbase" title="CLFSUSER_API NTSTATUS ClfsAdvanceLogBase(&#10;  [in, out] PVOID     pvMarshalContext,&#10;  [in]      PCLFS_LSN plsnBase,&#10;  [in]      ULONG     fFlags&#10;);">ClfsAdvanceLogBase</a>, which does not necessarily flush any data to stable storage.</p>
-
 <p>For an explanation of CLFS concepts and terminology, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-common-log-file-system">Common Log File System</a>.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_cls_lsn">CLFS_LSN</a></p>
-
 <p><a href="clfsadvancelogbase" title="CLFSUSER_API NTSTATUS ClfsAdvanceLogBase(&#10;  [in, out] PVOID     pvMarshalContext,&#10;  [in]      PCLFS_LSN plsnBase,&#10;  [in]      ULONG     fFlags&#10;);">ClfsAdvanceLogBase</a></p>
-
 <p><a href="clfscreatemarshallingarea" title="CLFSUSER_API NTSTATUS ClfsCreateMarshallingArea(&#10;  [in]           PLOG_FILE_OBJECT   plfoLog,&#10;  [in]           POOL_TYPE          ePoolType,&#10;  [in, optional] PALLOCATE_FUNCTION pfnAllocBuffer,&#10;  [in, optional] PFREE_FUNCTION     pfnFreeBuffer,&#10;  [in]           ULONG              cbMarshallingBuffer,&#10;  [in]           ULONG              cMaxWriteBuffers,&#10;  [in]           ULONG              cMaxReadBuffers,&#10;  [out]          PVOID              *ppvMarshalContext&#10;);">ClfsCreateMarshallingArea</a></p>
-
 <p><a href="clfsreadpreviousrestartarea" title="CLFSUSER_API NTSTATUS ClfsReadPreviousRestartArea(&#10;  [in]  PVOID     pvReadContext,&#10;  [out] PVOID     *ppvRestartBuffer,&#10;  [out] PULONG    pcbRestartBuffer,&#10;  [out] PCLFS_LSN plsnRestart&#10;);">ClfsReadPreviousRestartArea</a></p>
-
 <p><a href="clfsreadrestartarea" title="CLFSUSER_API NTSTATUS ClfsReadRestartArea(&#10;  [in, out] PVOID     pvMarshalContext,&#10;  [out]     PVOID     *ppvRestartBuffer,&#10;  [out]     PULONG    pcbRestartBuffer,&#10;  [out]     PCLFS_LSN plsn,&#10;  [out]     PVOID     *ppvReadContext&#10;);">ClfsReadRestartArea</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -67,79 +67,44 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_SERCX_WAITMASK callback function</h1>
-
 <h2>Description</h2>
-
 <p>The <em>EvtSerCxWaitmask</em> event callback function configures the serial controller to monitor the events in a wait mask, which is a bitmask value that specifies a set of hardware events.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Device</code> [in]</h3>
-
 <p>A WDFDEVICE handle to the framework device object that represents the serial controller.</p>
-
 <h2>Return value</h2>
-
 <p>The <em>EvtSerCxWaitmask</em> function returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call is successful. Otherwise, it returns an appropriate error status code.</p>
-
 <h2>Remarks</h2>
-
 <p>The serial controller driver implements this callback function. The serial framework extension (SerCx) calls this function to notify the driver when the wait mask changes. During this call, the <em>EvtSerCxWaitmask</em> function calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxgetwaitmask">SerCxGetWaitMask</a> method to get the new wait mask. The driver immediately starts to monitor the events in the new wait mask, and discards any old wait mask that might have been supplied in a previous <em>EvtSerCxWaitmask</em> call. If the new wait mask is zero, the driver simply discards the old wait mask and ceases to monitor any wait mask events.</p>
-
 <p>When SerCx receives an <a href="ioctl_serial_set_wait_mask" title="// CTL_CODE(0x001b, 0x011, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_SET_WAIT_MASK 0x001B0044">IOCTL_SERIAL_SET_WAIT_MASK</a> request from a client, the request handler in SerCx calls the <em>EvtSerCxWaitmask</em> function to set the new wait mask. For more information about the types of events that can be specified by a wait mask, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/serports/peripheral-drivers-for-devices-on-sercx2-managed-serial-ports">SERIAL_EV_XXX</a>.</p>
-
 <p>The <em>EvtSerCxWaitmask</em> function configures the serial controller hardware to monitor the events in the new wait mask. Typically, the function enables interrupts for these events. After configuring the hardware, the function should return immediately, without waiting for an event in the wait mask to occur.</p>
-
 <p>Later, when an event in the wait mask causes an interrupt to occur, the ISR in the serial controller driver schedules a DPC function to run. This DPC function calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxcompletewait">SerCxCompleteWait</a> method to notify SerCx of the event.</p>
-
-<p>Initially, after a client opens a connection to the serial port and before the first <em>EvtSerCxWaitmask</em> call, the wait mask is effectively zero, and the serial controller driver is not monitoring any <strong>SERIAL_EV_*XXX</strong>* events.</p>
-
+<p>Initially, after a client opens a connection to the serial port and before the first <em>EvtSerCxWaitmask</em> call, the wait mask is effectively zero, and the serial controller driver is not monitoring any <strong>SERIAL_EV_<em>XXX</em></strong> events.</p>
 <p>To register an <em>EvtSerCxWaitmask</em> callback function, the controller driver calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a> method during the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback.</p>
-
 <h4>Examples</h4>
-
 <p>The function type for this callback is declared in Sercx.h, as follows.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="w">  </span><span class="nf">EVT_SERCX_WAITMASK</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span>
-<span class="w">    </span><span class="p">);</span>
+<pre lang="cpp"><code>typedef <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  EVT_SERCX_WAITMASK(
+    __in WDFDEVICE Device
+    );
 </code></pre>
-</div>
-
 <p>To define an <em>EvtSerCxWaitmask</em> callback function that is named <code>MyEvtSerCxWaitmask</code>, you must first provide a function declaration that <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV) and other verification tools require, as follows.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">EVT_SERCX_WAITMASK</span><span class="w"> </span><span class="n">MyEvtSerCxWaitmask</span><span class="p">;</span>
+<pre lang="cpp"><code>EVT_SERCX_WAITMASK MyEvtSerCxWaitmask;
 </code></pre>
-</div>
-
 <p>Then, implement your callback function as follows.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="w">  </span><span class="nf">MyEvtSerCxWaitmask</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  MyEvtSerCxWaitmask(
+    __in WDFDEVICE Device
+    )
+{ ... }
 </code></pre>
-</div>
-
 <p>For more information about SDV requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions Using Function Role Types for KMDF Drivers</a>.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a></p>
-
 <p><a href="ioctl_serial_set_wait_mask" title="// CTL_CODE(0x001b, 0x011, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_SET_WAIT_MASK 0x001B0044">IOCTL_SERIAL_SET_WAIT_MASK</a></p>
-
 <p><a href="ioctl_serial_wait_on_mask" title="// CTL_CODE(0x001b, 0x012, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_WAIT_ON_MASK 0x001B0048">IOCTL_SERIAL_WAIT_ON_MASK</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/serports/peripheral-drivers-for-devices-on-sercx2-managed-serial-ports">SERIAL_EV_XXX</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxgetwaitmask">SerCxGetWaitMask</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a></p>
 <hr>
 <div class="ntdoc-description-links">

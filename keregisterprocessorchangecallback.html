@@ -66,81 +66,45 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>The <strong>KeRegisterProcessorChangeCallback</strong> routine registers a callback function with the operating system so that the operating system will notify the driver when a new processor is added to the hardware partition.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>CallbackFunction</code> [in]</h3>
-
 <p>A pointer to a driver-supplied processor change callback function that is to be called by the operating system whenever a new processor is added to the hardware partition. A processor change callback function is defined as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="w">  </span><span class="nf">ProcessorCallback</span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">CallbackContext</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a></span><span class="w"> </span><span class="n">ChangeContext</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__inout</span><span class="w"> </span><span class="n"><a href="pntstatus" title="typedef NTSTATUS *PNTSTATUS;">PNTSTATUS</a></span><span class="w"> </span><span class="n">OperationStatus</span>
-<span class="w">    </span><span class="p">);</span>
+<pre lang="cpp"><code>VOID
+  ProcessorCallback(
+    __in PVOID CallbackContext,
+    __in <a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a> ChangeContext,
+    __inout <a href="pntstatus" title="typedef NTSTATUS *PNTSTATUS;">PNTSTATUS</a> OperationStatus
+    );
 </code></pre>
-</div>
-
 <h4>CallbackContext</h4>
-
 <p>The context that was supplied in the <em>CallbackContext</em> parameter to the <strong>KeRegisterProcessorChangeCallback</strong> routine when the callback function was registered with the operating system.</p>
-
 <h4>ChangeContext</h4>
-
 <p>A pointer to a <strong><a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a></strong> structure that describes the processor change notification event.</p>
-
 <h4>OperationStatus</h4>
-
 <p>A pointer to a variable that contains an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code. A device driver must not change the value of this variable except if an error occurs during the processing of the callback function when the <strong>State</strong> member of the <strong><a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a></strong> structure that is pointed to by the <em>ChangeContext</em> parameter contains <strong>KeProcessorAddStartNotify</strong>.</p>
-
 <p>The processor change callback function is called at IRQL = PASSIVE_LEVEL.</p>
-
 <h3><code>CallbackContext</code> [in, optional]</h3>
-
 <p>A driver-supplied context that is passed to the callback function. This parameter can be <strong>NULL</strong>.</p>
-
 <h3><code>Flags</code> [in]</h3>
-
 <p>Optional flags that modify the behavior of the <strong>KeRegisterProcessorChangeCallback</strong> routine. The following is one possible flag:</p>
-
 <h4>KE_PROCESSOR_CHANGE_ADD_EXISTING</h4>
-
 <p>If this flag is set, the registered callback function is immediately called for each active processor that currently exists in the hardware partition, in addition to being called whenever a new processor is added to the hardware partition. If this flag is not set, the registered callback function is only called whenever a new processor is added to the system.</p>
-
 <h2>Return value</h2>
-
 <p><strong>KeRegisterProcessorChangeCallback</strong> returns a non-<strong>NULL</strong> callback registration handle if the callback function is successfully registered with the operating system. Otherwise, <strong>KeRegisterProcessorChangeCallback</strong> returns <strong>NULL</strong>. For more information about this handle, see the following Remarks section.</p>
-
 <h2>Remarks</h2>
-
 <p>A device driver calls the <strong>KeRegisterProcessorChangeCallback</strong> routine to register a callback function that is to be called by the operating system whenever a new processor is added to the hardware partition. When a user hot-plugs a new processor into the partition, the operating system calls the registered callback functions to rebalance the system resources that are allocated among the processors in the partition.</p>
-
 <p>The registered callback function is called two times whenever a new processor is added to the hardware partition. The first time that the callback function is called, the <strong>State</strong> member of the <strong><a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a></strong> structure that is pointed to by the <em>ChangeContext</em> parameter contains <strong>KeProcessorAddStartNotify</strong>. It is during this callback that the device driver should allocate any per-processor resources and perform any other tasks in preparation for the new processor to become active in the hardware partition. If an error occurs while the device driver processes this callback that could cause a bugcheck to occur if the operating system continues to add the new processor to the hardware partition, the callback function sets the variable that is pointed to by the <em>OperationStatus</em> parameter to an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code that describes the error condition. For example, if the device driver experiences a memory allocation failure for a per-processor data structure for a new processor, the callback function sets this variable to STATUS_INSUFFICIENT_RESOURCES. If the callback is processed successfully, the contents of the variable that is pointed to by the <em>OperationStatus</em> parameter should not be changed.</p>
-
 <p>The second time that the callback function is called, the <strong>State</strong> member of the <strong><a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a></strong> structure that is pointed to by the <em>ChangeContext</em> parameter contains either <strong>KeProcessorAddCompleteNotify</strong>, which indicates that the operating system has added the new processor to the hardware partition successfully, or <strong>KeProcessorAddFailureNotify</strong>, which indicates that the operating system did not add the new processor to the hardware partition. If the operating system successfully adds the new processor to the hardware partition, the callback function is not called the second time until after the new processor has been started and is available for thread scheduling. If the operating system did not add the new processor to the hardware partition, the device driver should free any per-processor resources during the second callback that it allocated during the first callback.</p>
-
 <p>If the device driver specifies the KE_PROCESSOR_CHANGE_ADD_EXISTING flag in the <em>Flags</em> parameter when it calls the <strong>KeRegisterProcessorChangeCallback</strong> routine, the callback function is immediately called one time for each active processor that currently exists in the hardware partition. For these callbacks, the <strong>State</strong> member of the <strong><a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a></strong> structure that is pointed to by the <em>ChangeContext</em> parameter contains <strong>KeProcessorAddStartNotify</strong>. It is during these callbacks that the device driver should allocate any per-processor resources and perform any other tasks to prepare to use the existing processors in the hardware partition. If the device driver successfully processes this callback for all active processors that currently exist in the hardware partition, the callback function is immediately called again for each active processor that currently exists in the hardware partition. For these callbacks, the <strong>State</strong> member of the <strong><a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a></strong> structure that is pointed to by the <em>ChangeContext</em> parameter contains <strong>KeProcessorAddCompleteNotify</strong>. <strong>KeRegisterProcessorChangeCallback</strong> returns after these callbacks complete.</p>
-
 <p>If an error occurs while the device driver processes the first callback for one of the existing active processors in the hardware partition that could cause a bugcheck to occur if the driver were to continue to load, the callback function sets the variable pointed to by the <em>OperationStatus</em> parameter to an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code that describes the error condition. For example, if the device driver experiences a memory allocation failure for a per-processor data structure for an existing active processor, the callback function sets this variable to STATUS_INSUFFICIENT_RESOURCES. If the callback is processed successfully, the contents of the variable that is pointed to by the <em>OperationStatus</em> parameter should not be changed.</p>
-
 <p>If the device driver indicates an error when the first callback for one of the existing active processors in the hardware partition is processed, the callback function is not called for any more of the existing active processors. Instead, the callback function is immediately called a second time for each active processor for which the callback was called the first time, excluding the active processor for which the callback indicated the error. For these callbacks, the <strong>State</strong> member of the <strong><a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a></strong> structure that is pointed to by the <em>ChangeContext</em> parameter contains <strong>KeProcessorAddFailureNotify</strong>.</p>
-
 <p>A device driver typically calls the <strong>KeRegisterProcessorChangeCallback</strong> routine from within its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a> routine. If the call to the <strong>KeRegisterProcessorChangeCallback</strong> routine returns <strong>NULL</strong>, the device driver's <strong><a href="driverentry" title="NTSTATUS DriverEntry(&#10;  [in] PDRIVER_OBJECT  DriverObject,&#10;  [in] PUNICODE_STRING RegistryPath&#10;);">DriverEntry</a></strong> routine should return an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code that describes the error condition.</p>
-
 <p>A device driver can use the context that is passed in the <em>CallbackContext</em> parameter to the <strong>KeRegisterProcessorChangeCallback</strong> routine as a place where the callback function can store the <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code that describes the error condition. This <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code can then be used as the return value for the device driver's <strong><a href="driverentry" title="NTSTATUS DriverEntry(&#10;  [in] PDRIVER_OBJECT  DriverObject,&#10;  [in] PUNICODE_STRING RegistryPath&#10;);">DriverEntry</a></strong> routine.</p>
-
 <p>The status value returned by <strong>KeRegisterProcessorChangeCallback</strong> indicates only whether the registration of the callback function succeeds or fails. It does not indicate the success or failure of any calls to callback functions that might occur before <strong>KeRegisterProcessorChangeCallback</strong> returns.</p>
-
 <p>A callback function that has been registered for notification of processor changes must be unregistered before the device driver is unloaded from the operating system. To unregister the callback function, the device driver calls the <a href="kederegisterprocessorchangecallback" title="VOID KeDeregisterProcessorChangeCallback(&#10;  [in] PVOID CallbackHandle&#10;);">KeDeregisterProcessorChangeCallback</a> routine, and passes, as an input parameter to this routine, the registration handle that was returned by the call to the <strong>KeRegisterProcessorChangeCallback</strong> routine.</p>
-
 <h2>See also</h2>
-
 <p><strong><a href="ke_processor_change_notify_context" title="typedef struct _KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT {&#10;  KE_PROCESSOR_CHANGE_NOTIFY_STATE State;&#10;  ULONG                            NtNumber;&#10;  NTSTATUS                         Status;&#10;  PROCESSOR_NUMBER                 ProcNumber;&#10;} KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT, *PKE_PROCESSOR_CHANGE_NOTIFY_CONTEXT;">KE_PROCESSOR_CHANGE_NOTIFY_CONTEXT</a></strong></p>
-
 <p><a href="kederegisterprocessorchangecallback" title="VOID KeDeregisterProcessorChangeCallback(&#10;  [in] PVOID CallbackHandle&#10;);">KeDeregisterProcessorChangeCallback</a></p>
 <hr>
 <div class="ntdoc-description-links">

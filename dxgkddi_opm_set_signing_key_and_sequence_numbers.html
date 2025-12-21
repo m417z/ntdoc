@@ -69,62 +69,39 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS callback function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>DxgkDdiOPMSetSigningKeyAndSequenceNumbers</strong> function sets the given protected output object's signing key and two sequence numbers.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>MiniportDeviceContext</code> [in]</h3>
-
 <p>A handle to a context block associated with a display adapter. Previously, the display miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a> function provided this handle to the DirectX graphics kernel subsystem.</p>
-
 <h3><code>ProtectedOutputHandle</code> [in]</h3>
-
 <p>The handle to a protected output object. The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_create_protected_output"><strong>DxgkDdiOPMCreateProtectedOutput</strong></a> function creates the protected output object and returns the handle to the object.</p>
-
 <h3><code>EncryptedParameters</code> [in]</h3>
-
 <p>A pointer to a <strong><a href="dxgkmdt_opm_encrypted_parameters" title="typedef struct _DXGKMDT_OPM_ENCRYPTED_PARAMETERS {&#10;  BYTE abEncryptedParameters[DXGKMDT_OPM_ENCRYPTED_PARAMETERS_SIZE];&#10;} DXGKMDT_OPM_ENCRYPTED_PARAMETERS, *PDXGKMDT_OPM_ENCRYPTED_PARAMETERS;">DXGKMDT_OPM_ENCRYPTED_PARAMETERS</a></strong> structure that contains a 256-byte array. The array contains between 40 and 256 bytes of data that is encrypted with the public key from the appropriate certificate. For more information about the public key, download the Output Content Protection document from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/supporting-output-protection-manager">Supporting Output Protection Manager</a>. If the protected output has OPM semantics, the data is encrypted with the public key from the display miniport driver's OPM certificate. If the protected output has Certified Output Protection Protocol (COPP) semantics, the data is encrypted with the public key from the display miniport driver's COPP certificate.</p>
-
 <p>The algorithm that the display miniport driver should use to decrypt the data in the array depends on the semantics of the protected output. Protected outputs with OPM semantics use the RSAES-OAEP encryption scheme to decrypt the data. For more information about RSAES-OAEP, see the <a rel="noopener" target="_blank" href="https://www.rsa.com/">RSA Laboratories</a> website. Protected outputs with COPP semantics use the standard RSA encryption algorithm to decrypt the encrypted data.</p>
-
 <p>After the display miniport driver decrypts the data, only the first 40 bytes of the data is currently useful. The first 16 bytes of the decrypted data contain the random number that the display miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_random_number"><strong>DxgkDdiOPMGetRandomNumber</strong></a> function returned when the handle in the <em>ProtectedOutputHandle</em> parameter was passed to it. The next 16 bytes contain the 128-bit AES signing key. The next 4 bytes contain the sequence number that is used by <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_information"><strong>DxgkDdiOPMGetInformation</strong></a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_copp_compatible_information"><strong>DxgkDdiOPMGetCOPPCompatibleInformation</strong></a>. The final 4 bytes contain the sequence number that is used by <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_configure_protected_output"><strong>DxgkDdiOPMConfigureProtectedOutput</strong></a>. The remainder of the decrypted data should be ignored if it exists.</p>
-
 <h2>Return value</h2>
-
 <p><strong>DxgkDdiOPMSetSigningKeyAndSequenceNumbers</strong> returns <strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong> if the function successfully set the signing key and two sequence numbers. Otherwise, it might return <strong>STATUS_OPM_INVALID_ENCRYPTED_PARAMETERS</strong> for one of the following reasons:</p>
-
 <ul>
 <li>If the protected output has OPM semantics, the data that the display miniport driver decrypted was not encoded with the RSAES-OAEP encoding algorithm. For more information about RSAES-OAEP, see section 7.1.2 in the PKCS #1 v2.1: RSA Cryptography Standard, at the <a rel="noopener" target="_blank" href="https://www.rsa.com">RSA Laboratories</a> website.</li>
 <li>The data was not encrypted by the caller with the appropriate public key. If the output has OPM semantics, the caller should encrypt the data with the public key from the display miniport driver's OPM certificate. If the output has COPP semantics, the caller should encrypt the data with the public key from the display miniport driver's COPP certificate.</li>
 <li>The caller did not encrypt at least 40 bytes of data.</li>
 <li>The 16-byte random number in the data that the display miniport driver decrypted did not match the 16-byte random number that the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_random_number"><strong>DxgkDdiOPMGetRandomNumber</strong></a> function returned.</li>
 </ul>
-
 <p>This function might also return other error codes that are defined in <em>Ntstatus.h</em>.</p>
-
 <h2>Prototype</h2>
+<pre lang="cpp"><code>DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS DxgkDdiOPMSetSigningKeyAndSequenceNumbers;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">DXGKDDI_OPM_SET_SIGNING_KEY_AND_SEQUENCE_NUMBERS</span><span class="w"> </span><span class="n">DxgkDdiOPMSetSigningKeyAndSequenceNumbers</span><span class="p">;</span>
-
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="nf">DxgkDdiOPMSetSigningKeyAndSequenceNumbers</span><span class="p">(</span>
-<span class="w">  </span><span class="n">_In_</span><span class="w">       </span><span class="n">PVOID</span><span class="w">                             </span><span class="n">MiniportDeviceContext</span><span class="p">,</span>
-<span class="w">  </span><span class="n">_In_</span><span class="w">       </span><span class="n">HANDLE</span><span class="w">                            </span><span class="n">ProtectedOutputHandle</span><span class="p">,</span>
-<span class="w">  </span><span class="n">_In_</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n"><a href="dxgkmdt_opm_encrypted_parameters" title="typedef struct _DXGKMDT_OPM_ENCRYPTED_PARAMETERS {&#10;  BYTE abEncryptedParameters[DXGKMDT_OPM_ENCRYPTED_PARAMETERS_SIZE];&#10;} DXGKMDT_OPM_ENCRYPTED_PARAMETERS, *PDXGKMDT_OPM_ENCRYPTED_PARAMETERS;">PDXGKMDT_OPM_ENCRYPTED_PARAMETERS</a></span><span class="w"> </span><span class="n">EncryptedParameters</span>
-<span class="p">)</span>
-<span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> DxgkDdiOPMSetSigningKeyAndSequenceNumbers(
+  _In_       PVOID                             MiniportDeviceContext,
+  _In_       HANDLE                            ProtectedOutputHandle,
+  _In_ const <a href="dxgkmdt_opm_encrypted_parameters" title="typedef struct _DXGKMDT_OPM_ENCRYPTED_PARAMETERS {&#10;  BYTE abEncryptedParameters[DXGKMDT_OPM_ENCRYPTED_PARAMETERS_SIZE];&#10;} DXGKMDT_OPM_ENCRYPTED_PARAMETERS, *PDXGKMDT_OPM_ENCRYPTED_PARAMETERS;">PDXGKMDT_OPM_ENCRYPTED_PARAMETERS</a> EncryptedParameters
+)
+{ ... }
 </code></pre>
-</div>
-
 <h2>Remarks</h2>
-
 <p>The signing key is used to verify that data that is passed to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_configure_protected_output"><strong>DxgkDdiOPMConfigureProtectedOutput</strong></a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_information"><strong>DxgkDdiOPMGetInformation</strong></a> functions comes from the application that indirectly uses the protected output. The signing key is also used to sign the data that is returned by the <strong>DxgkDdiOPMGetInformation</strong> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_copp_compatible_information"><strong>DxgkDdiOPMGetCOPPCompatibleInformation</strong></a> functions. One of the sequence numbers is used by <strong>DxgkDdiOPMConfigureProtectedOutput</strong>. The other sequence number is used by <strong>DxgkDdiOPMGetInformation</strong> or <strong>DxgkDdiOPMGetCOPPCompatibleInformation</strong>.</p>
-
 <p><strong>DxgkDdiOPMSetSigningKeyAndSequenceNumbers</strong> should return a failure code if an error occurs or if the data in the <strong><a href="dxgkmdt_opm_encrypted_parameters" title="typedef struct _DXGKMDT_OPM_ENCRYPTED_PARAMETERS {&#10;  BYTE abEncryptedParameters[DXGKMDT_OPM_ENCRYPTED_PARAMETERS_SIZE];&#10;} DXGKMDT_OPM_ENCRYPTED_PARAMETERS, *PDXGKMDT_OPM_ENCRYPTED_PARAMETERS;">DXGKMDT_OPM_ENCRYPTED_PARAMETERS</a></strong> structure that is pointed to by the <strong>EncryptedParameters</strong> parameter is not in the required format. Otherwise, <strong>DxgkDdiOPMSetSigningKeyAndSequenceNumbers</strong> should perform the following sequence of operations:</p>
-
 <ol>
 <li>Decrypt the data that is pointed to by <strong>EncryptedParameters</strong> with the appropriate private key and encryption scheme. If the output has OPM semantics, the display miniport driver should use its OPM private key to decrypt the data. If the output has COPP semantics, the display miniport driver should use its COPP private key to decrypt the data.</li>
 <li>If the output has OPM semantics, verify that the data that was decrypted was encoded with the RSAES-OAEP encoding algorithm.</li>
@@ -132,29 +109,17 @@
 <li>Verify that the random number that is contained in the first 16 bytes of the data that was decrypted matches the random number that the display miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_random_number"><strong>DxgkDdiOPMGetRandomNumber</strong></a> returned when the handle in the <strong>ProtectedOutputHandle</strong> parameter was passed to it.</li>
 <li>Cache the 128-bit AES signing key and the two 32-bit sequence numbers.</li>
 </ol>
-
 <p>Before a protected output object's handle is passed to <strong>DxgkDdiOPMSetSigningKeyAndSequenceNumbers</strong>, it is passed to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_random_number"><strong>DxgkDdiOPMGetRandomNumber</strong></a>. Each protected output object handle is only passed to <strong>DxgkDdiOPMSetSigningKeyAndSequenceNumbers</strong> once.</p>
-
 <p><strong>DxgkDdiOPMSetSigningKeyAndSequenceNumbers</strong> should be made pageable.</p>
-
 <h3>RSAES-OAEP and MGF1 Parameters</h3>
-
 <p>RSAES-OAEP is a parameterized encryption scheme and MGF1 is a parameterized mask generation function. Following are the parameters OPM uses when it uses RSAES-OAEP and MGF1. For more information about the following terms and the RSA Cryptography Standard, see the <a rel="noopener" target="_blank" href="https://www.rsa.com/">RSA Laboratories</a> and <a rel="noopener" target="_blank" href="https://csrc.nist.gov/projects/hash-functions">Secure Hashing</a> websites.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_copp_compatible_information"><strong>DxgkDdiOPMGetCOPPCompatibleInformation</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_create_protected_output"><strong>DxgkDdiOPMCreateProtectedOutput</strong></a></p>
-
 <p><strong><a href="dxgkmdt_opm_encrypted_parameters" title="typedef struct _DXGKMDT_OPM_ENCRYPTED_PARAMETERS {&#10;  BYTE abEncryptedParameters[DXGKMDT_OPM_ENCRYPTED_PARAMETERS_SIZE];&#10;} DXGKMDT_OPM_ENCRYPTED_PARAMETERS, *PDXGKMDT_OPM_ENCRYPTED_PARAMETERS;">DXGKMDT_OPM_ENCRYPTED_PARAMETERS</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_random_number"><strong>DxgkDdiOPMGetRandomNumber</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_get_information"><strong>DxgkDdiOPMGetInformation</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_opm_configure_protected_output"><strong>DxgkDdiOPMConfigureProtectedOutput</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">

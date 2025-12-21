@@ -66,62 +66,43 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>The <strong>SECTION_OBJECT_POINTERS</strong> structure, allocated by a file system or a redirector driver, is used by the memory manager and cache manager to store file-mapping and cache-related information for a file stream.</p>
-
 <h2>Members</h2>
-
 <h3><code>DataSectionObject</code></h3>
-
 <p>Opaque pointer to a data section object (that is, a <strong>CONTROL_AREA</strong> structure) that is used to track state information for a data file stream. Memory manager sets this member when the operating system first caches the data stream. A <strong>NULL</strong> value indicates that the data stream is currently not in memory; this value, however, can change at any time.</p>
-
 <h3><code>SharedCacheMap</code></h3>
-
 <p>Opaque pointer to a cache map object (that is, a <strong>SHARED_CACHE_MAP</strong> structure) that is used to track views that are mapped to the data file stream. Cache manager sets this member when the operating system first caches the stream. A <strong>NULL</strong> value indicates that the data stream is currently not cached; this value, however, can change at any time.</p>
-
 <h3><code>ImageSectionObject</code></h3>
-
 <p>Opaque pointer to an image section object (that is, a <strong>CONTROL_AREA</strong> structure) that is used to track state information for an executable file stream. Memory manager sets this member whenever an executable image section is created for the stream. A <strong>NULL</strong> value indicates that the executable image is currently not in memory; this value, however, can change at any time.</p>
-
 <h2>Remarks</h2>
-
 <p>The <strong>SECTION_OBJECT_POINTERS</strong> structure links a file object to a file stream's section object. That is, through its members, the <strong>SECTION_OBJECT_POINTERS</strong> structure connects a particular file object to virtual memory control structures that keep track of the stream's contents when they are in memory, and allow the operating system to fetch those contents when they are not.</p>
-
 <p>There is a one-to-one relationship between a <strong>SECTION_OBJECT_POINTERS</strong> structure and a file stream. Multiple file objects can be associated with a particular file stream, each representing an open instance of the stream. However, only one <strong>SECTION_OBJECT_POINTERS</strong> structure can be associated with a given stream. If there are multiple file objects for a stream, the <strong>SectionObjectPointer</strong> member for all file objects must point to the same <strong>SECTION_OBJECT_POINTERS</strong> structure (that is associated with the stream).</p>
-
 <p>For the first file stream open request, the file system or the redirector driver must:</p>
-
 <ol>
-<li><p>Allocate a <strong>SECTION_OBJECT_POINTERS</strong> structure from a nonpaged pool.</p></li>
-<li><p>Initialize all members of the allocated <strong>SECTION_OBJECT_POINTERS</strong> structure to <strong>NULL</strong>.</p></li>
-<li><p>Set the <strong>SectionObjectPointer</strong> member of the associate file object to point to the initialized <strong>SECTION_OBJECT_POINTERS</strong> structure.</p></li>
+<li>
+<p>Allocate a <strong>SECTION_OBJECT_POINTERS</strong> structure from a nonpaged pool.</p>
+</li>
+<li>
+<p>Initialize all members of the allocated <strong>SECTION_OBJECT_POINTERS</strong> structure to <strong>NULL</strong>.</p>
+</li>
+<li>
+<p>Set the <strong>SectionObjectPointer</strong> member of the associate file object to point to the initialized <strong>SECTION_OBJECT_POINTERS</strong> structure.</p>
+</li>
 </ol>
-
 <p>For subsequent open requests to the same file stream, the file system or the redirector driver must set the <strong>SectionObjectPointer</strong> member of the associated file object to point to the previously allocated <strong>SECTION_OBJECT_POINTERS</strong> structure for the file stream.</p>
-
 <blockquote>
-  <p>[!WARNING]
-  File system filter drivers must treat the members of the <strong>SECTION_OBJECT_POINTERS</strong> structure as opaque because the underlying file system is responsible for the synchronization of the members and, therefore, could change their values at any time.</p>
+<p>[!WARNING]
+File system filter drivers must treat the members of the <strong>SECTION_OBJECT_POINTERS</strong> structure as opaque because the underlying file system is responsible for the synchronization of the members and, therefore, could change their values at any time.</p>
 </blockquote>
-
 <p>A file is composed of one or more streams, depending on the file system. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/file-streams--stream-contexts--and-per-stream-contexts">File Streams, Stream Contexts, and Per-Stream Contexts</a>.</p>
-
 <h2>See also</h2>
-
 <p><a href="ccinitializecachemap" title="VOID CcInitializeCacheMap(&#10;  [in] PFILE_OBJECT             FileObject,&#10;  [in] PCC_FILE_SIZES           FileSizes,&#10;  [in] BOOLEAN                  PinAccess,&#10;  [in] PCACHE_MANAGER_CALLBACKS Callbacks,&#10;  [in] PVOID                    LazyWriteContext&#10;);">CcInitializeCacheMap</a></p>
-
 <p><a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">DEVICE_OBJECT</a></p>
-
 <p><a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/the-fobx-structure">FOBX</a></p>
-
 <p><a href="fsrtl_advanced_fcb_header" title="typedef struct _FSRTL_ADVANCED_FCB_HEADER {&#10;  FSRTL_COMMON_FCB_HEADER          DUMMYSTRUCTNAME;&#10;  PFAST_MUTEX                      FastMutex;&#10;  LIST_ENTRY                       FilterContexts;&#10;  EX_PUSH_LOCK                     PushLock;&#10;  PVOID                            *FileContextSupportPointer;&#10;  union {&#10;    OPLOCK Oplock;&#10;    PVOID  ReservedForRemote;&#10;  };&#10;  PVOID                            AePushLock;&#10;  PVOID                            ReservedContextLegacy;&#10;  ULONG                            BypassIoOpenCount;&#10;  struct _FSRTL_PER_STREAM_CONTEXT *ReservedContext;&#10;} FSRTL_ADVANCED_FCB_HEADER;">FSRTL_ADVANCED_FCB_HEADER</a></p>
-
 <p><a href="iogetdeviceobjectpointer" title="NTSTATUS IoGetDeviceObjectPointer(&#10;  [in]  PUNICODE_STRING ObjectName,&#10;  [in]  ACCESS_MASK     DesiredAccess,&#10;  [out] PFILE_OBJECT    *FileObject,&#10;  [out] PDEVICE_OBJECT  *DeviceObject&#10;);">IoGetDeviceObjectPointer</a></p>
-
 <p><a href="mmflushimagesection" title="BOOLEAN MmFlushImageSection(&#10;       PSECTION_OBJECT_POINTERS SectionObjectPointer,&#10;  [in] MMFLUSH_TYPE             FlushType&#10;);">MmFlushImageSection</a></p>
-
 <p><a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a></p>
 <hr>
 <div class="ntdoc-description-links">

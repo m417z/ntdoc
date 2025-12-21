@@ -65,86 +65,58 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfRequestChangeTarget function</h1>
-
 <h2>Description</h2>
-
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfRequestChangeTarget</strong> method verifies that a specified I/O request can be sent to a specified I/O target.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>Request</code> [in]</h3>
-
 <p>A handle to a framework request object.</p>
-
 <h3><code>IoTarget</code> [in]</h3>
-
 <p>A handle to a framework I/O target object.</p>
-
 <h2>Return value</h2>
-
 <p><strong>WdfRequestChangeTarget</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, this method might return one of the following values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
-  <td>An input parameter is invalid.</td>
+<td><strong>STATUS_INVALID_PARAMETER</strong></td>
+<td>An input parameter is invalid.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-  <td>There are insufficient system resources to complete the operation.</td>
+<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+<td>There are insufficient system resources to complete the operation.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_REQUEST_NOT_ACCEPTED</strong></td>
-  <td>The request's array of I/O stack locations is not large enough to allow the driver to send the request to the I/O target.</td>
+<td><strong>STATUS_REQUEST_NOT_ACCEPTED</strong></td>
+<td>The request's array of I/O stack locations is not large enough to allow the driver to send the request to the I/O target.</td>
 </tr>
 </tbody>
 </table>
-
 <p>This method also might return other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
 <h2>Remarks</h2>
-
 <p>Your driver should call the <strong>WdfRequestChangeTarget</strong> method before it calls <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>, if the driver sends a single I/O request to multiple I/O targets. <strong>WdfRequestChangeTarget</strong> verifies that the request can be sent to the specified I/O target.</p>
-
 <p>Most drivers send each request to only one device and thus to only one I/O target. A driver either <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/receiving-i-o-requests">receives the request</a> or it creates a new request by calling <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a>.</p>
-
 <p>If the driver is sending the request to one device, it calls <a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a> to determine the device's I/O target and then calls <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> to send the request to the target.</p>
-
 <p>If the driver is sending the request to multiple devices, it calls <a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a> for each device to determine the device's I/O target. Before calling <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>, the driver must call <strong>WdfRequestChangeTarget</strong> to ensure that each I/O target is accessible.</p>
-
 <p>For more information about <strong>WdfRequestChangeTarget</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/forwarding-i-o-requests">Forwarding I/O Requests</a>.</p>
-
 <h4>Examples</h4>
-
 <p>The following code example verifies that an I/O request can be sent to a specified device's local I/O target.</p>
+<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="p">;</span>
-
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfRequestChangeTarget</span><span class="p">(</span>
-<span class="w">                                </span><span class="n">request</span><span class="p">,</span>
-<span class="w">                                </span><span class="n"><a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a></span><span class="p">(</span><span class="n">Device</span><span class="p">)</span>
-<span class="w">                                </span><span class="p">);</span>
+status = WdfRequestChangeTarget(
+                                request,
+                                <a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a>(Device)
+                                );
 </code></pre>
-</div>
-
 <h2>See also</h2>
-
 <p><a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a></p>
-
 <p><a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a></p>
-
 <p><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></p>
 <hr>
 <div class="ntdoc-description-links">

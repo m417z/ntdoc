@@ -73,84 +73,45 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PFN_GET_NEXT_CHUNK_DATA callback function</h1>
-
 <h2>Description</h2>
-
 <p>Provides info about the next Miracast encode chunk that was reported to the Microsoft DirectX graphics kernel subsystem when the <a href="dxgk_interrupt_type" title="typedef enum _DXGK_INTERRUPT_TYPE {&#10;  DXGK_INTERRUPT_DMA_COMPLETED = 1,&#10;  DXGK_INTERRUPT_DMA_PREEMPTED = 2,&#10;  DXGK_INTERRUPT_CRTC_VSYNC = 3,&#10;  DXGK_INTERRUPT_DMA_FAULTED = 4,&#10;  DXGK_INTERRUPT_DISPLAYONLY_VSYNC = 5,&#10;  DXGK_INTERRUPT_DISPLAYONLY_PRESENT_PROGRESS = 6,&#10;  DXGK_INTERRUPT_CRTC_VSYNC_WITH_MULTIPLANE_OVERLAY = 7,&#10;  DXGK_INTERRUPT_MICACAST_CHUNK_PROCESSING_COMPLETE = 8,&#10;  DXGK_INTERRUPT_DMA_PAGE_FAULTED = 9,&#10;  DXGK_INTERRUPT_CRTC_VSYNC_WITH_MULTIPLANE_OVERLAY2 = 10,&#10;  DXGK_INTERRUPT_MONITORED_FENCE_SIGNALED = 11,&#10;  DXGK_INTERRUPT_HWQUEUE_PAGE_FAULTED = 12,&#10;  DXGK_INTERRUPT_HWCONTEXTLIST_SWITCH_COMPLETED = 13,&#10;  DXGK_INTERRUPT_PERIODIC_MONITORED_FENCE_SIGNALED = 14,&#10;  DXGK_INTERRUPT_SCHEDULING_LOG_INTERRUPT = 15,&#10;  DXGK_INTERRUPT_GPU_ENGINE_TIMEOUT = 16,&#10;  DXGK_INTERRUPT_SUSPEND_CONTEXT_COMPLETED = 17,&#10;  DXGK_INTERRUPT_CRTC_VSYNC_WITH_MULTIPLANE_OVERLAY3 = 18,&#10;  DXGK_INTERRUPT_NATIVE_FENCE_SIGNALED = 19,&#10;...">DXGK_INTERRUPT_TYPE</a> interrupt type is <strong>DXGK_INTERRUPT_MICACAST_CHUNK_PROCESSING_COMPLETE</strong>.The data type of this function is <strong>PFN_GET_NEXT_CHUNK_DATA</strong>.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>hMiracastDeviceHandle</code> [in]</h3>
-
 <p>A handle that represents a Miracast device. The Miracast user-mode driver previously obtained this handle as the <em>hMiracastDeviceHandle</em> parameter in a call to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/netdispumdddi/nc-netdispumdddi-pfn_create_miracast_context">CreateMiracastContext</a> function.</p>
-
 <h3><code>TimeoutInMilliseconds</code> [in]</h3>
-
 <p>The timeout interval value, in milliseconds, supplied by the Miracast user-mode driver.</p>
-
 <p>If this value is <strong>INFINITE</strong>, the operating system blocks calls to <strong>GetNextChunkData</strong> until a chunk becomes available.</p>
-
 <p>If this value is zero and a chunk is not ready, the operating system will not block a call to <strong>GetNextChunkData</strong>.</p>
-
 <h3><code>AdditionalWaitEventCount</code> [in]</h3>
-
 <p>The number of additional events that are supplied in the <em>pAdditionalWaitEvents</em> parameter.</p>
-
 <p>A maximum of 4 wait events can be supplied.</p>
-
 <h3><code>pAdditionalWaitEvents</code> [in, optional]</h3>
-
 <p>An optional pointer to an array of events that <strong>GetNextChunkData</strong> will wait on while waiting for a new encode chunk.</p>
-
 <h3><code>pChunkDataBufferSize</code> [in, out]</h3>
-
 <p>A pointer to a variable that contains the size, in bytes, of the <em>pChunkDataBuffer</em> buffer.</p>
-
 <p>When <strong>GetNextChunkData</strong> is called, this parameter contains the size of <em>pChunkDataBuffer</em>.</p>
-
 <p>When <strong>GetNextChunkData</strong> returns a success code, this parameter contains the size of actual encode chunk data returned in <em>pChunkDataBuffer</em>.</p>
-
 <h3><code>pChunkDataBuffer</code> [out]</h3>
-
 <p>A pointer to a buffer of type <a href="miracast_chunk_data" title="typedef struct {&#10;  MIRACAST_CHUNK_INFO ChunkInfo;&#10;  UINT                PrivateDriverDataSize;&#10;  UCHAR               PrivateDriverData[1];&#10;} MIRACAST_CHUNK_DATA;">MIRACAST_CHUNK_DATA</a> that the operating system provides to store information about the next encode chunk. This parameter is provided only if the call to <strong>GetNextChunkData</strong> is successful.</p>
-
 <h3><code>pOutstandingChunksToProcess</code> [out]</h3>
-
 <p>A pointer to a variable that contains the number of outstanding encode chunks that are available for the driver at the time this call returned. This parameter is provided only if the call to <strong>GetNextChunkData</strong> is successful.</p>
-
 <p>Note that as chunks are completed by the GPU asynchronously, this parameter only gives an indication of the number of outstanding chunks.</p>
-
 <h2>Return value</h2>
-
-<p>If info on an encode chunk was returned successfully, the <strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong> status code is returned, and the value of <em>*pChunkDataBufferSize</em> is non-zero.</p>
-
+<p>If info on an encode chunk was returned successfully, the <strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong> status code is returned, and the value of *<em>pChunkDataBufferSize</em> is non-zero.</p>
 <p>These additional status codes can be returned:</p>
-
 <h2>Remarks</h2>
-
 <p>This function is optional. The user-mode display driver should only call it if the display miniport driver responds to interrupts from the GPU when the GPU completes the encoding of a chunk by passing data in the <a href="miracast_chunk_data" title="typedef struct {&#10;  MIRACAST_CHUNK_INFO ChunkInfo;&#10;  UINT                PrivateDriverDataSize;&#10;  UCHAR               PrivateDriverData[1];&#10;} MIRACAST_CHUNK_DATA;">MIRACAST_CHUNK_DATA</a>.<strong>PrivateDriverData</strong> member at that interrupt time.</p>
-
 <p>The user-mode display driver can use the sizes of the <a href="miracast_chunk_data" title="typedef struct {&#10;  MIRACAST_CHUNK_INFO ChunkInfo;&#10;  UINT                PrivateDriverDataSize;&#10;  UCHAR               PrivateDriverData[1];&#10;} MIRACAST_CHUNK_DATA;">MIRACAST_CHUNK_DATA</a> structure and the <strong><a href="miracast_chunk_data" title="typedef struct {&#10;  MIRACAST_CHUNK_INFO ChunkInfo;&#10;  UINT                PrivateDriverDataSize;&#10;  UCHAR               PrivateDriverData[1];&#10;} MIRACAST_CHUNK_DATA;">MIRACAST_CHUNK_DATA</a></strong>.<strong>PrivateDriverData</strong> member to compute the size of a chunk and hence how to move from chunk to chunk in the returned buffer.</p>
-
 <p>In a call to this function, as many available packets as can fit will be placed sequentially in the supplied buffer. This code snippet shows how to calculate the size of each packet:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">ChunkSize</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n"><a href="field_offset" title="void FIELD_OFFSET(&#10;  type,&#10;  field&#10;);">FIELD_OFFSET</a></span>
-<span class="w">    </span><span class="p">(</span><span class="n"><a href="d3dkmt_miracast_chunk_data" title="typedef struct {&#10;  DXGK_MIRACAST_CHUNK_INFO ChunkInfo;&#10;  UINT                     PrivateDriverDataSize;&#10;  BYTE                     PrivateDriverData[1];&#10;} D3DKMT_MIRACAST_CHUNK_DATA;">D3DKMT_MIRACAST_CHUNK_DATA</a></span><span class="p">,</span><span class="w"> </span><span class="n">PrivateDriverData</span><span class="p">)</span><span class="w"> </span>\
-<span class="w">    </span><span class="o">+</span><span class="w"> </span><span class="n">Chunk</span><span class="o">-&gt;</span><span class="n">ChunkData</span><span class="p">.</span><span class="n">PrivateDriverDataSize</span><span class="p">;</span>
+<pre lang="cpp"><code>ChunkSize == <a href="field_offset" title="void FIELD_OFFSET(&#10;  type,&#10;  field&#10;);">FIELD_OFFSET</a>
+    (<a href="d3dkmt_miracast_chunk_data" title="typedef struct {&#10;  DXGK_MIRACAST_CHUNK_INFO ChunkInfo;&#10;  UINT                     PrivateDriverDataSize;&#10;  BYTE                     PrivateDriverData[1];&#10;} D3DKMT_MIRACAST_CHUNK_DATA;">D3DKMT_MIRACAST_CHUNK_DATA</a>, PrivateDriverData) \
+    + Chunk-&gt;ChunkData.PrivateDriverDataSize;
 </code></pre>
-</div>
-
 <h4>Thread Safety</h4>
-
 <p>Only one thread should call this function at a time. Otherwise it's unpredictable which call would receive chunk info and which call would fail.</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/netdispumdddi/nc-netdispumdddi-pfn_create_miracast_context">CreateMiracastContext</a></p>
-
 <p><a href="dxgk_interrupt_type" title="typedef enum _DXGK_INTERRUPT_TYPE {&#10;  DXGK_INTERRUPT_DMA_COMPLETED = 1,&#10;  DXGK_INTERRUPT_DMA_PREEMPTED = 2,&#10;  DXGK_INTERRUPT_CRTC_VSYNC = 3,&#10;  DXGK_INTERRUPT_DMA_FAULTED = 4,&#10;  DXGK_INTERRUPT_DISPLAYONLY_VSYNC = 5,&#10;  DXGK_INTERRUPT_DISPLAYONLY_PRESENT_PROGRESS = 6,&#10;  DXGK_INTERRUPT_CRTC_VSYNC_WITH_MULTIPLANE_OVERLAY = 7,&#10;  DXGK_INTERRUPT_MICACAST_CHUNK_PROCESSING_COMPLETE = 8,&#10;  DXGK_INTERRUPT_DMA_PAGE_FAULTED = 9,&#10;  DXGK_INTERRUPT_CRTC_VSYNC_WITH_MULTIPLANE_OVERLAY2 = 10,&#10;  DXGK_INTERRUPT_MONITORED_FENCE_SIGNALED = 11,&#10;  DXGK_INTERRUPT_HWQUEUE_PAGE_FAULTED = 12,&#10;  DXGK_INTERRUPT_HWCONTEXTLIST_SWITCH_COMPLETED = 13,&#10;  DXGK_INTERRUPT_PERIODIC_MONITORED_FENCE_SIGNALED = 14,&#10;  DXGK_INTERRUPT_SCHEDULING_LOG_INTERRUPT = 15,&#10;  DXGK_INTERRUPT_GPU_ENGINE_TIMEOUT = 16,&#10;  DXGK_INTERRUPT_SUSPEND_CONTEXT_COMPLETED = 17,&#10;  DXGK_INTERRUPT_CRTC_VSYNC_WITH_MULTIPLANE_OVERLAY3 = 18,&#10;  DXGK_INTERRUPT_NATIVE_FENCE_SIGNALED = 19,&#10;...">DXGK_INTERRUPT_TYPE</a></p>
-
 <p><a href="miracast_chunk_data" title="typedef struct {&#10;  MIRACAST_CHUNK_INFO ChunkInfo;&#10;  UINT                PrivateDriverDataSize;&#10;  UCHAR               PrivateDriverData[1];&#10;} MIRACAST_CHUNK_DATA;">MIRACAST_CHUNK_DATA</a></p>
 <hr>
 <div class="ntdoc-description-links">

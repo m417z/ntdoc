@@ -82,133 +82,92 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <p>The <strong>KS_FRAME_INFO</strong> structure extends the <strong><a href="ksstream_header" title="typedef struct {&#10;  ULONG    Size;&#10;  ULONG    TypeSpecificFlags;&#10;  KSTIME   PresentationTime;&#10;  LONGLONG Duration;&#10;  ULONG    FrameExtent;&#10;  ULONG    DataUsed;&#10;  PVOID    Data;&#10;  ULONG    OptionsFlags;&#10;  ULONG    Reserved;&#10;} KSSTREAM_HEADER, *PKSSTREAM_HEADER;">KSSTREAM_HEADER</a></strong> structure for video streams.</p>
-
 <h2>Members</h2>
-
 <h3><code>ExtendedHeaderSize</code></h3>
-
 <p>Specifies the size of this structure, in bytes.</p>
-
 <h3><code>dwFrameFlags</code></h3>
-
 <p>Specifies flags indicating additional information about the frame captured. During capture, the minidriver sets this member to one of the following values that are defined in <em>ksmedia.h</em>:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Flag</th>
-  <th>Meaning</th>
+<th>Flag</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>KS_VIDEO_FLAG_FRAME</td>
-  <td>Indicates a complete frame.</td>
+<td>KS_VIDEO_FLAG_FRAME</td>
+<td>Indicates a complete frame.</td>
 </tr>
 <tr>
-  <td>KS_VIDEO_FLAG_FIELD1</td>
-  <td>Indicates Field 1 of a two-field sequence.</td>
+<td>KS_VIDEO_FLAG_FIELD1</td>
+<td>Indicates Field 1 of a two-field sequence.</td>
 </tr>
 <tr>
-  <td>KS_VIDEO_FLAG_FIELD2</td>
-  <td>Indicates Field 2 of a two-field sequence.</td>
+<td>KS_VIDEO_FLAG_FIELD2</td>
+<td>Indicates Field 2 of a two-field sequence.</td>
 </tr>
 <tr>
-  <td>KS_VIDEO_FLAG_I_FRAME</td>
-  <td>Indicates that this frame can be completely decoded without reference to any other frames.</td>
+<td>KS_VIDEO_FLAG_I_FRAME</td>
+<td>Indicates that this frame can be completely decoded without reference to any other frames.</td>
 </tr>
 <tr>
-  <td>KS_VIDEO_FLAG_P_FRAME</td>
-  <td>Indicates that this is a predicted frame.</td>
+<td>KS_VIDEO_FLAG_P_FRAME</td>
+<td>Indicates that this is a predicted frame.</td>
 </tr>
 <tr>
-  <td>KS_VIDEO_FLAG_B_FRAME</td>
-  <td>Indicates that this is a bidirectional frame.</td>
+<td>KS_VIDEO_FLAG_B_FRAME</td>
+<td>Indicates that this is a bidirectional frame.</td>
 </tr>
 </tbody>
 </table>
-
 <h3><code>PictureNumber</code></h3>
-
 <p>Specifies a count representing the current picture number. Initialize or update this value on transition into KSSTATE_ACQUIRE.</p>
-
 <h3><code>DropCount</code></h3>
-
 <p>Specifies the number of pictures that were not captured. During capture, the minidriver sets this member. This counter should be incremented whenever a frame should have been captured but was not; this condition usually arises when no buffers were available during capture. Initialize or update this value on transition into KSSTATE_ACQUIRE.</p>
-
 <h3><code>hDirectDraw</code></h3>
-
 <p>Specifies the user-mode handle to DirectDraw. This handle is only provided to the minidriver when capturing to a DirectDraw surface for preview or overlay purposes.</p>
-
 <h3><code>hSurfaceHandle</code></h3>
-
 <p>Specifies the user-mode handle to the DirectDraw surface. This handle is only provided to the minidriver when capturing to a DirectDraw surface for preview or overlay purposes.</p>
-
 <h3><code>DirectDrawRect</code></h3>
-
 <p>Specifies the portion of the DirectDraw surface that has been locked. This is normally the entire surface.</p>
-
 <h3><code>lSurfacePitch</code></h3>
-
 <p>Contains surface pitch (also known as stride).</p>
-
 <h3><code>Reserved1</code></h3>
-
 <p>Reserved and should not be used by the minidriver.</p>
-
 <h3><code>Reserved2</code></h3>
-
 <p>Reserved and should not be used by the minidriver.</p>
-
 <h3><code>Reserved3</code></h3>
-
 <p>Reserved and should not be used by the minidriver.</p>
-
 <h3><code>Reserved4</code></h3>
-
 <p>Reserved and should not be used by the minidriver.</p>
-
 <h3><code>FrameCompletionNumber</code></h3>
-
 <p>An identifying sequence number for the frame in the completed queue. This number is used to verify proper frame order. When this value is 0, the frame was cancelled.</p>
-
 <p>This member is available starting with Windows 8.1.</p>
-
 <h2>Remarks</h2>
-
 <p>The <strong>KS_FRAME_INFO</strong> structure provides a way to return information about the frame captured, as well as a way to pass Microsoft DirectDraw handles used when capturing to a DirectDraw surface.</p>
-
 <p>The <strong>PictureNumber</strong> member count represents the count of the current picture, which is calculated in one of two ways depending on the device:</p>
-
 <ul>
 <li>Measure the time since the stream was started and divide by the frame duration. This method is appropriate for devices that do not provide their own clock. For example:</li>
 </ul>
+<pre lang="cpp"><code>    PictureNumber = ElapsedTime / FrameDuration;
+    ```
 
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="n">PictureNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ElapsedTime</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">FrameDuration</span><span class="p">;</span>
-<span class="w">   </span>
+* Add together the count of frames captured and the count of frame dropped. This method is appropriate for devices that provide their own clock. For example:
+
+```cpp
+    PictureNumber = FramesCaptured + FramesDropped;
+    ```
+
+When calculating **PictureNumber** and **DropCount**, it is important to use the frame duration specified when the stream was opened, which may not necessarily match the rate at which the device is actually producing images. For example, a USB camera may only produce images at 7.5 fps, but a client could open the stream at 8 fps. In this case, all calculations should use the 8 fps number.
+
+For more information about updating **PictureNumber** and **DropCount** see [Capturing Video](https://learn.microsoft.com/windows-hardware/drivers/stream/capturing-video).
+
+## See also
+
+[<a href="ksstream_header" title="typedef struct {&#10;  ULONG    Size;&#10;  ULONG    TypeSpecificFlags;&#10;  KSTIME   PresentationTime;&#10;  LONGLONG Duration;&#10;  ULONG    FrameExtent;&#10;  ULONG    DataUsed;&#10;  PVOID    Data;&#10;  ULONG    OptionsFlags;&#10;  ULONG    Reserved;&#10;} KSSTREAM_HEADER, *PKSSTREAM_HEADER;">KSSTREAM_HEADER</a>](https://learn.microsoft.com/windows-hardware/drivers/ddi/ks/ns-ks-ksstream_header)
 </code></pre>
-</div>
-
-<ul>
-<li>Add together the count of frames captured and the count of frame dropped. This method is appropriate for devices that provide their own clock. For example:</li>
-</ul>
-
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="n">PictureNumber</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FramesCaptured</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">FramesDropped</span><span class="p">;</span>
-<span class="w">   </span>
-</code></pre>
-</div>
-
-<p>When calculating <strong>PictureNumber</strong> and <strong>DropCount</strong>, it is important to use the frame duration specified when the stream was opened, which may not necessarily match the rate at which the device is actually producing images. For example, a USB camera may only produce images at 7.5 fps, but a client could open the stream at 8 fps. In this case, all calculations should use the 8 fps number.</p>
-
-<p>For more information about updating <strong>PictureNumber</strong> and <strong>DropCount</strong> see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/stream/capturing-video">Capturing Video</a>.</p>
-
-<h2>See also</h2>
-
-<p><a href="ksstream_header" title="typedef struct {&#10;  ULONG    Size;&#10;  ULONG    TypeSpecificFlags;&#10;  KSTIME   PresentationTime;&#10;  LONGLONG Duration;&#10;  ULONG    FrameExtent;&#10;  ULONG    DataUsed;&#10;  PVOID    Data;&#10;  ULONG    OptionsFlags;&#10;  ULONG    Reserved;&#10;} KSSTREAM_HEADER, *PKSSTREAM_HEADER;">KSSTREAM_HEADER</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

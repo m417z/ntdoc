@@ -68,95 +68,77 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-
 <blockquote>
-  <p>[!NOTE]
-  This function is used for Driver Hot-Swap V1 only. New drivers should use Driver Hot-Swap V2, which handles endpoint registration automatically through compiler-based endpoint enumeration.</p>
+<p>[!NOTE]
+This function is used for Driver Hot-Swap V1 only. New drivers should use Driver Hot-Swap V2, which handles endpoint registration automatically through compiler-based endpoint enumeration.</p>
 </blockquote>
-
 <p>The <strong>IoRegisterDriverProxyEndpoints</strong> function registers endpoint functions to a DriverProxy extension, enabling hot-swappable driver functionality in Driver Hot-Swap V1 implementations.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>DriverProxyExtension</code></h3>
-
 <p>[in] A pointer to the DriverProxy extension that the endpoints will be registered to. This extension must have been created with <strong><a href="iocreatedriverproxyextension" title="NTSTATUS IoCreateDriverProxyExtension(&#10;  PDRIVER_OBJECT                        OwningDriverObject,&#10;  DRIVER_PROXY_EXTENSION_CREATION_FLAGS Flags,&#10;  PDRIVER_PROXY_EXTENSION               *DriverProxyExtension&#10;);">IoCreateDriverProxyExtension</a></strong>.</p>
-
 <h3><code>EndpointInfo</code></h3>
-
 <p>[in, out] An array of <strong><a href="driver_proxy_endpoint_information" title="typedef struct _DRIVER_PROXY_ENDPOINT_INFORMATION {&#10;  DRIVER_PROXY_ENDPOINT_FUNCTION_ID Id;&#10;  PDRIVER_PROXY_ENDPOINT_FUNCTION   EndpointFunction;&#10;  ULONG                             ParameterCount;&#10;} DRIVER_PROXY_ENDPOINT_INFORMATION, *PDRIVER_PROXY_ENDPOINT_INFORMATION;">DRIVER_PROXY_ENDPOINT_INFORMATION</a></strong> structures that describe the endpoint functions to register. The function may modify the contents of this array during registration.</p>
-
 <h3><code>Count</code></h3>
-
 <p>[in] The number of elements in the <strong>EndpointInfo</strong> array.</p>
-
 <h3><code>PhasedCallback</code></h3>
-
 <p>[in, optional] An optional pointer to a <strong><a href="driver_proxy_register_callback" title="DRIVER_PROXY_REGISTER_CALLBACK DriverProxyRegisterCallback;&#10;&#10;NTSTATUS DriverProxyRegisterCallback(&#10;  DRIVER_PROXY_REGISTER_CALLBACK_PHASE Phase,&#10;  PVOID Context&#10;)&#10;{...}">DRIVER_PROXY_REGISTER_CALLBACK</a></strong> function that will be called at various phases during the registration process to allow driver-specific operations.</p>
-
 <h3><code>Context</code></h3>
-
 <p>[in, optional] An optional context pointer that will be passed to the <strong>PhasedCallback</strong> function.</p>
-
 <h2>Return value</h2>
-
 <p><strong>IoRegisterDriverProxyEndpoints</strong> returns one of the following <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
-  <td>The endpoints were successfully registered.</td>
+<td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
+<td>The endpoints were successfully registered.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-  <td>Insufficient memory was available to register the endpoints.</td>
+<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+<td>Insufficient memory was available to register the endpoints.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INVALID_PARAMETER_3</strong></td>
-  <td>One or more endpoint information structures attempted to overwrite an existing function with a different parameter count.</td>
+<td><strong>STATUS_INVALID_PARAMETER_3</strong></td>
+<td>One or more endpoint information structures attempted to overwrite an existing function with a different parameter count.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_UNSUCCESSFUL</strong></td>
-  <td>The operation timed out while waiting for existing function calls to complete.</td>
+<td><strong>STATUS_UNSUCCESSFUL</strong></td>
+<td>The operation timed out while waiting for existing function calls to complete.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>This function establishes the mapping between original driver functions and their hot-swappable wrappers. Once registered, calls to the original functions will be redirected through the DriverProxy system, allowing the functions to be replaced at runtime without unloading the driver.</p>
-
 <p>This function performs a complex multi-phase operation to safely replace function pointers while existing calls may be in progress. The registration process includes:</p>
-
 <ul>
-<li><p>Pre-processing phase: The optional <strong>PhasedCallback</strong> is called with <strong>DriverProxyRegisterCallbackPreProcess</strong> to allow driver preparation.</p></li>
-<li><p>Rundown acquisition: The function waits for all existing calls to registered endpoints to complete before proceeding.</p></li>
-<li><p>Proxy stalled phase: The <strong>PhasedCallback</strong> is called with <strong>DriverProxyRegisterCallbackProxyStalled</strong> while all calls are blocked.</p></li>
-<li><p>Function replacement: The actual function pointers are updated atomically.</p></li>
-<li><p>Post-processing phase: The <strong>PhasedCallback</strong> is called with <strong>DriverProxyRegisterCallbackPostProcess</strong> to allow driver cleanup.</p></li>
+<li>
+<p>Pre-processing phase: The optional <strong>PhasedCallback</strong> is called with <strong>DriverProxyRegisterCallbackPreProcess</strong> to allow driver preparation.</p>
+</li>
+<li>
+<p>Rundown acquisition: The function waits for all existing calls to registered endpoints to complete before proceeding.</p>
+</li>
+<li>
+<p>Proxy stalled phase: The <strong>PhasedCallback</strong> is called with <strong>DriverProxyRegisterCallbackProxyStalled</strong> while all calls are blocked.</p>
+</li>
+<li>
+<p>Function replacement: The actual function pointers are updated atomically.</p>
+</li>
+<li>
+<p>Post-processing phase: The <strong>PhasedCallback</strong> is called with <strong>DriverProxyRegisterCallbackPostProcess</strong> to allow driver cleanup.</p>
+</li>
 </ul>
-
 <p>If an endpoint has the same ID as an existing registered endpoint, the endpoint will be replaced, but only if it has the same parameter count.</p>
-
 <p>This function serves dual purposes in Driver Hot-Swap V1: initial endpoint registration (where <strong>PhasedCallback</strong> should be NULL) and endpoint swapping during hot-swap operations.</p>
-
 <p>The function must be called at PASSIVE_LEVEL as it may need to wait for existing function calls to complete.</p>
-
 <h2>See also</h2>
-
 <p><strong><a href="iocreatedriverproxyextension" title="NTSTATUS IoCreateDriverProxyExtension(&#10;  PDRIVER_OBJECT                        OwningDriverObject,&#10;  DRIVER_PROXY_EXTENSION_CREATION_FLAGS Flags,&#10;  PDRIVER_PROXY_EXTENSION               *DriverProxyExtension&#10;);">IoCreateDriverProxyExtension</a></strong></p>
-
 <p><strong><a href="driver_proxy_endpoint_information" title="typedef struct _DRIVER_PROXY_ENDPOINT_INFORMATION {&#10;  DRIVER_PROXY_ENDPOINT_FUNCTION_ID Id;&#10;  PDRIVER_PROXY_ENDPOINT_FUNCTION   EndpointFunction;&#10;  ULONG                             ParameterCount;&#10;} DRIVER_PROXY_ENDPOINT_INFORMATION, *PDRIVER_PROXY_ENDPOINT_INFORMATION;">DRIVER_PROXY_ENDPOINT_INFORMATION</a></strong></p>
-
 <p><strong><a href="driver_proxy_register_callback" title="DRIVER_PROXY_REGISTER_CALLBACK DriverProxyRegisterCallback;&#10;&#10;NTSTATUS DriverProxyRegisterCallback(&#10;  DRIVER_PROXY_REGISTER_CALLBACK_PHASE Phase,&#10;  PVOID Context&#10;)&#10;{...}">DRIVER_PROXY_REGISTER_CALLBACK</a></strong></p>
-
 <p><strong><a href="iogetdriverproxywrapperfromendpoint" title="void IoGetDriverProxyWrapperFromEndpoint(&#10;  DriverProxyExtension,&#10;  Endpoint,&#10;  Wrapper&#10;);">IoGetDriverProxyWrapperFromEndpoint</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

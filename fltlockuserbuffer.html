@@ -64,46 +64,34 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltLockUserBuffer function</h1>
-
 <h2>Description</h2>
-
 <p>The <strong>FltLockUserBuffer</strong> routine locks the user buffer for a given I/O operation.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>CallbackData</code> [in]</h3>
-
 <p>Pointer to the <strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong> callback data structure for the I/O operation.</p>
-
 <h2>Return value</h2>
-
 <p><strong>FltLockUserBuffer</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if it successfully locks the user buffer (or if the buffer was already locked by a previous call to <strong>FltLockUserBuffer</strong>.) Otherwise, it returns an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value, such as one of the following:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>STATUS_INSUFFICIENT_RESOURCES</td>
-  <td><strong>FltLockUserBuffer</strong> encountered a pool allocation failure. This is an error code.</td>
+<td>STATUS_INSUFFICIENT_RESOURCES</td>
+<td><strong>FltLockUserBuffer</strong> encountered a pool allocation failure. This is an error code.</td>
 </tr>
 <tr>
-  <td>STATUS_INVALID_PARAMETER</td>
-  <td>An invalid parameter was encountered. For example, the I/O operation does not have an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> parameter, or the <a href="irp_mj_read" title="#define IRP_MJ_READ 0x03">IRP_MJ_READ</a> or <a href="irp_mj_write" title="#define IRP_MJ_WRITE 0x04">IRP_MJ_WRITE</a> I/O operations have a minor code of IRP_MN_MDL. This is an error code.</td>
+<td>STATUS_INVALID_PARAMETER</td>
+<td>An invalid parameter was encountered. For example, the I/O operation does not have an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> parameter, or the <a href="irp_mj_read" title="#define IRP_MJ_READ 0x03">IRP_MJ_READ</a> or <a href="irp_mj_write" title="#define IRP_MJ_WRITE 0x04">IRP_MJ_WRITE</a> I/O operations have a minor code of IRP_MN_MDL. This is an error code.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <p>For best performance, filter drivers should not call <strong>FltLockUserBuffer</strong> unless absolutely necessary. The performance slowdown is not because of <strong>FltLockUserBuffer</strong> itself, but rather because of the performance penalty incurred by the subsequent call to <strong><a href="mmgetsystemaddressformdlsafe" title="PVOID MmGetSystemAddressForMdlSafe(&#10;  [in] PMDL  Mdl,&#10;  [in] ULONG Priority&#10;);">MmGetSystemAddressForMdlSafe</a></strong>; see later Remarks for more information.</p>
-
 <p>A minifilter driver can call <strong>FltLockUserBuffer</strong> to lock the user buffer for one of the following I/O operations:</p>
-
 <ul>
 <li><a href="irp_mj_device_control" title="#define IRP_MJ_DEVICE_CONTROL 0x0e">IRP_MJ_DEVICE_CONTROL</a></li>
 <li><a href="irp_mj_directory_control" title="#define IRP_MJ_DIRECTORY_CONTROL 0x0c">IRP_MJ_DIRECTORY_CONTROL</a></li>
@@ -117,65 +105,35 @@
 <li><a href="irp_mj_set_quota" title="#define IRP_MJ_SET_QUOTA 0x1a">IRP_MJ_SET_QUOTA</a></li>
 <li><a href="irp_mj_write" title="#define IRP_MJ_WRITE 0x04">IRP_MJ_WRITE</a> (except with IRP_MN_MDL)</li>
 </ul>
-
 <p><strong>FltLockUserBuffer</strong> determines the appropriate access method (IoReadAccess, IoWriteAccess, or IoModifyAccess) to apply for the locked buffer based on the type of I/O operation.</p>
-
 <p><strong>FltLockUserBuffer</strong> sets the <strong>MdlAddress</strong> (or <strong>OutputMdlAddress</strong>) member in the callback data parameter structure (<strong><a href="flt_parameters" title="typedef union _FLT_PARAMETERS {&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;    USHORT POINTER_ALIGNMENT FileAttributes;&#10;    USHORT                   ShareAccess;&#10;    ULONG POINTER_ALIGNMENT  EaLength;&#10;    PVOID                    EaBuffer;&#10;    LARGE_INTEGER            AllocationSize;&#10;  } Create;&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;    USHORT POINTER_ALIGNMENT Reserved;&#10;    USHORT                   ShareAccess;&#10;    PVOID                    Parameters;&#10;  } CreatePipe;&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;...">FLT_PARAMETERS</a></strong>) to point to the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> for the locked pages. If there is no <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>, <strong>FltLockUserBuffer</strong> allocates one. (Note that FltMgr cannot generate an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> before the file system does, which is why <strong>FltLockUserBuffer</strong> returns STATUS_INVALID_PARAMETER for <a href="irp_mj_read" title="#define IRP_MJ_READ 0x03">IRP_MJ_READ</a> or <a href="irp_mj_write" title="#define IRP_MJ_WRITE 0x04">IRP_MJ_WRITE</a> with IRP_MN_MDL).</p>
-
-<p>If the callback data parameter structure contains a system buffer (<strong>Irp->AssociatedIrp.SystemBuffer</strong>) and does not contain a user buffer (<strong>Irp->UserBuffer</strong>), <strong>FltLockUserBuffer</strong> locks the system buffer. If there is no <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> for the system buffer, <strong>FltLockUserBuffer</strong> allocates one.</p>
-
+<p>If the callback data parameter structure contains a system buffer (<strong>Irp-&gt;AssociatedIrp.SystemBuffer</strong>) and does not contain a user buffer (<strong>Irp-&gt;UserBuffer</strong>), <strong>FltLockUserBuffer</strong> locks the system buffer. If there is no <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> for the system buffer, <strong>FltLockUserBuffer</strong> allocates one.</p>
 <p>If the callback data parameter structure contains a user buffer, <strong>FltLockUserBuffer</strong> <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-mmprobeandlockpages">probes and locks</a> the user buffer.</p>
-
 <p>The caller can be running in any process context. <strong>FltLockUserBuffer</strong> automatically locks the buffer in the correct process context.</p>
-
 <p>If <strong>FltLockUserBuffer</strong> is called from a pre-operation callback routine (<strong><a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a></strong>) and it allocates an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>, <strong>FltLockUserBuffer</strong> sets the <a href="fltfl_callback_data_dirty" title="#define FLTFL_CALLBACK_DATA_DIRTY 0x80000000 // Set by caller if parameters were changed">FLTFL_CALLBACK_DATA_DIRTY</a> flag in the callback data structure (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>) so that the I/O system frees the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> when the I/O operation is completed.</p>
-
 <p>To conserve system page table entries (PTEs), <strong>FltLockUserBuffer</strong> doesn't map the locked pages. After calling <strong>FltLockUserBuffer</strong>, the caller must call <strong><a href="mmgetsystemaddressformdlsafe" title="PVOID MmGetSystemAddressForMdlSafe(&#10;  [in] PMDL  Mdl,&#10;  [in] ULONG Priority&#10;);">MmGetSystemAddressForMdlSafe</a></strong>, passing the <strong>MdlAddress</strong> (or <strong>OutputMdlAddress</strong>) member in the callback data parameter structure as the value of the <strong>Mdl</strong> parameter, to get a system buffer that represents this memory.</p>
-
 <p>When the callback data structure is freed, the locked buffer is automatically unlocked, and the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> is freed. The caller should never free the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>; the I/O system does this automatically.</p>
-
 <p><strong>FltLockUserBuffer</strong> can be called for fast I/O and <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based operations.</p>
-
 <h2>See also</h2>
-
 <p><strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong></p>
-
 <p><strong><a href="flt_is_fastio_operation" title="void FLT_IS_FASTIO_OPERATION(&#10;  [in] Data&#10;);">FLT_IS_FASTIO_OPERATION</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544654(v=vs.85)"><strong>FLT_IS_IRP_OPERATION</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544663(v=vs.85)"><strong>FLT_IS_SYSTEM_BUFFER</strong></a></p>
-
 <p><strong><a href="flt_parameters" title="typedef union _FLT_PARAMETERS {&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;    USHORT POINTER_ALIGNMENT FileAttributes;&#10;    USHORT                   ShareAccess;&#10;    ULONG POINTER_ALIGNMENT  EaLength;&#10;    PVOID                    EaBuffer;&#10;    LARGE_INTEGER            AllocationSize;&#10;  } Create;&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;    USHORT POINTER_ALIGNMENT Reserved;&#10;    USHORT                   ShareAccess;&#10;    PVOID                    Parameters;&#10;  } CreatePipe;&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;...">FLT_PARAMETERS</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-device-control-and-irp-mj-internal-device-co"><strong>FLT_PARAMETERS for IRP_MJ_DEVICE_CONTROL and IRP_MJ_INTERNAL_DEVICE_CONTROL</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-directory-control"><strong>FLT_PARAMETERS for IRP_MJ_DIRECTORY_CONTROL</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-file-system-control"><strong>FLT_PARAMETERS for IRP_MJ_FILE_SYSTEM_CONTROL</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-ea"><strong>FLT_PARAMETERS for IRP_MJ_QUERY_EA</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-quota"><strong>FLT_PARAMETERS for IRP_MJ_QUERY_QUOTA</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-security"><strong>FLT_PARAMETERS for IRP_MJ_QUERY_SECURITY</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-read"><strong>FLT_PARAMETERS for IRP_MJ_READ</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-ea"><strong>FLT_PARAMETERS for IRP_MJ_SET_EA</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-quota"><strong>FLT_PARAMETERS for IRP_MJ_SET_QUOTA</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-write"><strong>FLT_PARAMETERS for IRP_MJ_WRITE</strong></a></p>
-
 <p><strong><a href="fltdecodeparameters" title="NTSTATUS FLTAPI FltDecodeParameters(&#10;  [in]            PFLT_CALLBACK_DATA CallbackData,&#10;  [out]           PMDL               **MdlAddressPointer,&#10;  [out]           PVOID              **Buffer,&#10;  [out]           PULONG             *Length,&#10;  [out, optional] LOCK_OPERATION     *DesiredAccess&#10;);">FltDecodeParameters</a></strong></p>
-
 <p><strong><a href="mmgetsystemaddressformdlsafe" title="PVOID MmGetSystemAddressForMdlSafe(&#10;  [in] PMDL  Mdl,&#10;  [in] ULONG Priority&#10;);">MmGetSystemAddressForMdlSafe</a></strong></p>
-
 <p><strong><a href="mmprobeandlockpages" title="VOID MmProbeAndLockPages(&#10;  [in, out] PMDL            MemoryDescriptorList,&#10;  [in]      KPROCESSOR_MODE AccessMode,&#10;  [in]      LOCK_OPERATION  Operation&#10;);">MmProbeAndLockPages</a></strong></p>
-
 <p><strong><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></strong></p>
-
 <p><strong><a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">
