@@ -67,26 +67,47 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-<p>The <strong>KsDeviceRegisterAdapterObject</strong> function registers a DMA adapter object with AVStream for performing scatter/gather DMA on the specified device. All drivers compiled for Win64 should use <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ks/nf-ks-iksdevicefunctions-registeradapterobjectex">IKsDeviceFunctions::RegisterAdapterObjectEx</a> instead.</p>
+
+<p>The <strong>KsDeviceRegisterAdapterObject</strong> function registers a DMA adapter object with AVStream for performing scatter/gather DMA on the specified device. All drivers compiled for Win64 should use <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ks/nf-ks-iksdevicefunctions-registeradapterobjectex">IKsDeviceFunctions::RegisterAdapterObjectEx</a> instead.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Device</code> [in]</h3>
+
 <p>A pointer to the <a href="ksdevice" title="typedef struct _KSDEVICE {&#10;  const KSDEVICE_DESCRIPTOR *Descriptor;&#10;  KSOBJECT_BAG              Bag;&#10;  PVOID                     Context;&#10;  PDEVICE_OBJECT            FunctionalDeviceObject;&#10;  PDEVICE_OBJECT            PhysicalDeviceObject;&#10;  PDEVICE_OBJECT            NextDeviceObject;&#10;  BOOLEAN                   Started;&#10;  SYSTEM_POWER_STATE        SystemPowerState;&#10;  DEVICE_POWER_STATE        DevicePowerState;&#10;} KSDEVICE, *PKSDEVICE;">KSDEVICE</a> structure representing the AVStream device for which to register an adapter object.</p>
+
 <h3><code>AdapterObject</code> [in]</h3>
+
 <p>A pointer to the <a href="padapter_object" title="typedef struct _DMA_ADAPTER {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  PDMA_OPERATIONS DmaOperations;&#10;} *PADAPTER_OBJECT, DMA_ADAPTER, *PDMA_ADAPTER;">DMA_ADAPTER</a> structure returned by <a href="iogetdmaadapter" title="_DMA_ADAPTER * IoGetDmaAdapter(&#10;  [in, optional] PDEVICE_OBJECT      PhysicalDeviceObject,&#10;  [in]           _DEVICE_DESCRIPTION *DeviceDescription,&#10;  [out]          PULONG              NumberOfMapRegisters&#10;);">IoGetDmaAdapter</a> that represents the DMA controller..</p>
+
 <h3><code>MaxMappingsByteCount</code> [in]</h3>
+
 <p>This parameter specifies the maximum number of bytes that the device can handle for a single mapping. Allows AVStream to automatically break up large chunks of contiguous physical memory into multiple scatter/gather elements for devices that impose a size limit on individual mappings in DMA transfers. Breaks are not guaranteed to occur on page boundaries.</p>
+
 <h3><code>MappingTableStride</code> [in]</h3>
+
 <p>This parameter specifies how many bytes each entry in the mapping table requires. This must be at least <strong>sizeof</strong> (<a href="ksmapping" title="typedef struct _KSMAPPING {&#10;  PHYSICAL_ADDRESS PhysicalAddress;&#10;  ULONG            ByteCount;&#10;  ULONG            Alignment;&#10;} KSMAPPING, *PKSMAPPING;">KSMAPPING</a>) and can be as large as necessary.</p>
+
 <p>Additional space can be used by the minidriver as context information.</p>
+
 <h2>Remarks</h2>
+
 <p>A minidriver that calls <strong>KsDeviceRegisterAdapterObject</strong> is responsible for previously acquiring the adapter object through <a href="iogetdmaadapter" title="_DMA_ADAPTER * IoGetDmaAdapter(&#10;  [in, optional] PDEVICE_OBJECT      PhysicalDeviceObject,&#10;  [in]           _DEVICE_DESCRIPTION *DeviceDescription,&#10;  [out]          PULONG              NumberOfMapRegisters&#10;);">IoGetDmaAdapter</a>.</p>
-<p>Also note that if the minidriver specifies the KSPIN_FLAG_GENERATE_MAPPINGS flag for any pin on any filter on the device, the minidriver must call <strong>KsDeviceRegisterAdapterObject</strong> before processing any data. More information about this flag can be found in the reference page for <a href="kspin_descriptor_ex" title="typedef struct _KSPIN_DESCRIPTOR_EX {&#10;  const KSPIN_DISPATCH         *Dispatch;&#10;  const KSAUTOMATION_TABLE     *AutomationTable;&#10;  KSPIN_DESCRIPTOR             PinDescriptor;&#10;  ULONG                        Flags;&#10;  ULONG                        InstancesPossible;&#10;  ULONG                        InstancesNecessary;&#10;  const KSALLOCATOR_FRAMING_EX *AllocatorFraming;&#10;  PFNKSINTERSECTHANDLEREX      IntersectHandler;&#10;} KSPIN_DESCRIPTOR_EX, *PKSPIN_DESCRIPTOR_EX;">KSPIN_DESCRIPTOR_EX</a>. Also see <a href="https://learn.microsoft.com/windows-hardware/drivers/stream/avstream-dma-services">AVStream DMA Services</a>.</p>
+
+<p>Also note that if the minidriver specifies the KSPIN_FLAG_GENERATE_MAPPINGS flag for any pin on any filter on the device, the minidriver must call <strong>KsDeviceRegisterAdapterObject</strong> before processing any data. More information about this flag can be found in the reference page for <a href="kspin_descriptor_ex" title="typedef struct _KSPIN_DESCRIPTOR_EX {&#10;  const KSPIN_DISPATCH         *Dispatch;&#10;  const KSAUTOMATION_TABLE     *AutomationTable;&#10;  KSPIN_DESCRIPTOR             PinDescriptor;&#10;  ULONG                        Flags;&#10;  ULONG                        InstancesPossible;&#10;  ULONG                        InstancesNecessary;&#10;  const KSALLOCATOR_FRAMING_EX *AllocatorFraming;&#10;  PFNKSINTERSECTHANDLEREX      IntersectHandler;&#10;} KSPIN_DESCRIPTOR_EX, *PKSPIN_DESCRIPTOR_EX;">KSPIN_DESCRIPTOR_EX</a>. Also see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/stream/avstream-dma-services">AVStream DMA Services</a>.</p>
+
 <p>If you set <em>MaxMappingByteCount</em> to one physical page in length, mappings are not guaranteed to reside on a single physical page. In addition, as noted in the member description above, setting <em>MaxMappingsByteCount</em> does not guarantee that breaks will occur on page boundaries. If you require breaks on page boundaries, consider not specifying a limit on mapping sizes; instead, break the returned scatter/gather mappings into page-aligned chunks manually.</p>
-<p>Also see <a href="https://learn.microsoft.com/windows-hardware/drivers/stream/supporting-dma-in-64-bit-avstream-drivers">Supporting DMA in 64-Bit AVStream Drivers</a>.</p>
+
+<p>Also see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/stream/supporting-dma-in-64-bit-avstream-drivers">Supporting DMA in 64-Bit AVStream Drivers</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="iogetdmaadapter" title="_DMA_ADAPTER * IoGetDmaAdapter(&#10;  [in, optional] PDEVICE_OBJECT      PhysicalDeviceObject,&#10;  [in]           _DEVICE_DESCRIPTION *DeviceDescription,&#10;  [out]          PULONG              NumberOfMapRegisters&#10;);">IoGetDmaAdapter</a></p>
+
 <p><a href="ksfilter_descriptor" title="typedef struct _KSFILTER_DESCRIPTOR {&#10;  const KSFILTER_DISPATCH     *Dispatch;&#10;  const KSAUTOMATION_TABLE    *AutomationTable;&#10;  ULONG                       Version;&#10;  ULONG                       Flags;&#10;  const GUID                  *ReferenceGuid;&#10;  ULONG                       PinDescriptorsCount;&#10;  ULONG                       PinDescriptorSize;&#10;  const KSPIN_DESCRIPTOR_EX   *PinDescriptors;&#10;  ULONG                       CategoriesCount;&#10;  const GUID                  *Categories;&#10;  ULONG                       NodeDescriptorsCount;&#10;  ULONG                       NodeDescriptorSize;&#10;  const KSNODE_DESCRIPTOR     *NodeDescriptors;&#10;  ULONG                       ConnectionsCount;&#10;  const KSTOPOLOGY_CONNECTION *Connections;&#10;  const KSCOMPONENTID         *ComponentId;&#10;} KSFILTER_DESCRIPTOR, *PKSFILTER_DESCRIPTOR;">KSFILTER_DESCRIPTOR</a></p>
+
 <p><a href="ksmapping" title="typedef struct _KSMAPPING {&#10;  PHYSICAL_ADDRESS PhysicalAddress;&#10;  ULONG            ByteCount;&#10;  ULONG            Alignment;&#10;} KSMAPPING, *PKSMAPPING;">KSMAPPING</a></p>
+
 <p><a href="kspin_descriptor_ex" title="typedef struct _KSPIN_DESCRIPTOR_EX {&#10;  const KSPIN_DISPATCH         *Dispatch;&#10;  const KSAUTOMATION_TABLE     *AutomationTable;&#10;  KSPIN_DESCRIPTOR             PinDescriptor;&#10;  ULONG                        Flags;&#10;  ULONG                        InstancesPossible;&#10;  ULONG                        InstancesNecessary;&#10;  const KSALLOCATOR_FRAMING_EX *AllocatorFraming;&#10;  PFNKSINTERSECTHANDLEREX      IntersectHandler;&#10;} KSPIN_DESCRIPTOR_EX, *PKSPIN_DESCRIPTOR_EX;">KSPIN_DESCRIPTOR_EX</a></p>
 <hr>
 <div class="ntdoc-description-links">

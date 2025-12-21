@@ -63,58 +63,82 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>IOCTL_EHSTOR_DRIVER_REPORT_CAPABILITIES IOCTL</h1>
+
 <h2>Description</h2>
+
 <p>This IOCTL is used to inform the enhanced storage (EHSTOR) class driver of the silo driver's capabilities. The silo driver sends this IOCTL with a <a href="silo_driver_capabilities" title="typedef struct _SILO_DRIVER_CAPABILITIES {&#10;  ULONG StructSize;&#10;  ULONG Capabilities;&#10;  ULONG MaxLbaFilterCount;&#10;  ULONG RedirectedIoctlListCount;&#10;  ULONG RedirectedIoctlListOffset;&#10;} SILO_DRIVER_CAPABILITIES, *PSILO_DRIVER_CAPABILITIES;">SILO_DRIVER_CAPABILITIES</a> structure that indicates whether authentication and banding are supported along with a list of EHSTOR IOCTLs it will handle.</p>
+
 <h2>Parameters</h2>
+
 <h3>Major code</h3>
+
 <h3>Input buffer</h3>
-<p>The input buffer at <strong>Irp-&gt;AssociatedIrp.SystemBuffer</strong> must contain a structure of type <a href="silo_driver_capabilities" title="typedef struct _SILO_DRIVER_CAPABILITIES {&#10;  ULONG StructSize;&#10;  ULONG Capabilities;&#10;  ULONG MaxLbaFilterCount;&#10;  ULONG RedirectedIoctlListCount;&#10;  ULONG RedirectedIoctlListOffset;&#10;} SILO_DRIVER_CAPABILITIES, *PSILO_DRIVER_CAPABILITIES;">SILO_DRIVER_CAPABILITIES</a>. This structure is followed immediately by a list of which redirected IOCTLs the silo driver will handle.</p>
+
+<p>The input buffer at <strong>Irp->AssociatedIrp.SystemBuffer</strong> must contain a structure of type <a href="silo_driver_capabilities" title="typedef struct _SILO_DRIVER_CAPABILITIES {&#10;  ULONG StructSize;&#10;  ULONG Capabilities;&#10;  ULONG MaxLbaFilterCount;&#10;  ULONG RedirectedIoctlListCount;&#10;  ULONG RedirectedIoctlListOffset;&#10;} SILO_DRIVER_CAPABILITIES, *PSILO_DRIVER_CAPABILITIES;">SILO_DRIVER_CAPABILITIES</a>. This structure is followed immediately by a list of which redirected IOCTLs the silo driver will handle.</p>
+
 <h3>Input buffer length</h3>
+
 <p>The length of the buffer.</p>
+
 <h3>Output buffer</h3>
+
 <p>None.</p>
+
 <h3>Output buffer length</h3>
+
 <p>None.</p>
+
 <h3>Input/output buffer</h3>
+
 <h3>Input/output buffer length</h3>
+
 <h3>Status block</h3>
+
 <p>One of the following values can be returned in the <strong>Status</strong> field.</p>
+
 <table>
 <thead>
 <tr>
-<th>Status Value</th>
-<th>Description</th>
+  <th>Status Value</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
-<td>The silo driver's capabilities were registered with the EHSTOR class driver.</td>
+  <td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
+  <td>The silo driver's capabilities were registered with the EHSTOR class driver.</td>
 </tr>
 <tr>
-<td>STATUS_INVALID_BUFFER_SIZE</td>
-<td>The input buffer length supplied is of incorrect size.</td>
+  <td>STATUS_INVALID_BUFFER_SIZE</td>
+  <td>The input buffer length supplied is of incorrect size.</td>
 </tr>
 <tr>
-<td>STATUS_INVALID_PARAMETER</td>
-<td>A capability parameter is incorrect.</td>
+  <td>STATUS_INVALID_PARAMETER</td>
+  <td>A capability parameter is incorrect.</td>
 </tr>
 <tr>
-<td>STATUS_INSUFFICIENT_RESOURCES</td>
-<td>The IOCTL redirection list cannot be copied.</td>
+  <td>STATUS_INSUFFICIENT_RESOURCES</td>
+  <td>The IOCTL redirection list cannot be copied.</td>
 </tr>
 <tr>
-<td>STATUS_NOT_SUPPORTED</td>
-<td>The sending device is not a silo device.</td>
+  <td>STATUS_NOT_SUPPORTED</td>
+  <td>The sending device is not a silo device.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>This IOCTL is used by the Trusted Computing Group (TCG) standard authentication silo driver in Windows 8. On device initialization, the TCG silo driver will notify the EHSTOR class driver (EhStorClass.sys) of its capabilities by sending a <strong>IOCTL_EHSTOR_DRIVER_REPORT_CAPABILITIES</strong> request with a <a href="silo_driver_capabilities" title="typedef struct _SILO_DRIVER_CAPABILITIES {&#10;  ULONG StructSize;&#10;  ULONG Capabilities;&#10;  ULONG MaxLbaFilterCount;&#10;  ULONG RedirectedIoctlListCount;&#10;  ULONG RedirectedIoctlListOffset;&#10;} SILO_DRIVER_CAPABILITIES, *PSILO_DRIVER_CAPABILITIES;">SILO_DRIVER_CAPABILITIES</a> structure.</p>
+
 <p>Silo device objects exist outside the storage device stack. Any EHSTOR request intended for a silo driver must be explicitly forwarded to it. This is the case for all band management IOCTLs. Band management requests are made on a file object representing a physical drive. These requests are sent down the storage device stack. If the silo driver has registered support for the IOCTL, the EHSTOR class driver will redirect the request to the silo driver.</p>
+
 <p>IOCTL requests supported by a silo driver are included in an array following <a href="silo_driver_capabilities" title="typedef struct _SILO_DRIVER_CAPABILITIES {&#10;  ULONG StructSize;&#10;  ULONG Capabilities;&#10;  ULONG MaxLbaFilterCount;&#10;  ULONG RedirectedIoctlListCount;&#10;  ULONG RedirectedIoctlListOffset;&#10;} SILO_DRIVER_CAPABILITIES, *PSILO_DRIVER_CAPABILITIES;">SILO_DRIVER_CAPABILITIES</a> in the system buffer. The size of the information in the system buffer should be specified as <strong>sizeof</strong>(<a href="silo_driver_capabilities" title="typedef struct _SILO_DRIVER_CAPABILITIES {&#10;  ULONG StructSize;&#10;  ULONG Capabilities;&#10;  ULONG MaxLbaFilterCount;&#10;  ULONG RedirectedIoctlListCount;&#10;  ULONG RedirectedIoctlListOffset;&#10;} SILO_DRIVER_CAPABILITIES, *PSILO_DRIVER_CAPABILITIES;">SILO_DRIVER_CAPABILITIES</a>) + (<strong>sizeof</strong>(<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>) * <em>RedirectedIoctlListCount</em>).</p>
+
 <p>A vendor supplied non-TCG authentication silo driver must notify the EHSTOR class driver of its capabilities using this IOCTL.</p>
+
 <h2>See also</h2>
+
 <p><a href="silo_driver_capabilities" title="typedef struct _SILO_DRIVER_CAPABILITIES {&#10;  ULONG StructSize;&#10;  ULONG Capabilities;&#10;  ULONG MaxLbaFilterCount;&#10;  ULONG RedirectedIoctlListCount;&#10;  ULONG RedirectedIoctlListOffset;&#10;} SILO_DRIVER_CAPABILITIES, *PSILO_DRIVER_CAPABILITIES;">SILO_DRIVER_CAPABILITIES</a></p>
 <hr>
 <div class="ntdoc-description-links">

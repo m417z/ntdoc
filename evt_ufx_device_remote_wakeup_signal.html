@@ -67,72 +67,86 @@ VOID EvtUfxDeviceRemoteWakeupSignal(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_UFX_DEVICE_REMOTE_WAKEUP_SIGNAL callback function</h1>
+
 <h2>Description</h2>
+
 <p>The client driver's implementation to initiate remote wake-up on the function controller.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>unnamedParam1</code> [in]</h3>
-<p>The handle to a USB device object that the client driver received in a previous call to the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a> method.</p>
+
+<p>The handle to a USB device object that the client driver received in a previous call to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a> method.</p>
+
 <h2>Remarks</h2>
-<p>The client driver for the function host controller registers its <em>EVT_UFX_DEVICE_REMOTE_WAKEUP_SIGNAL</em> implementation with the USB function class extension (UFX) by calling the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a> method.</p>
-<p>The client driver indicates completion of this event by calling the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdeviceeventcomplete">UfxDeviceEventComplete</a> method.</p>
+
+<p>The client driver for the function host controller registers its <em>EVT_UFX_DEVICE_REMOTE_WAKEUP_SIGNAL</em> implementation with the USB function class extension (UFX) by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a> method.</p>
+
+<p>The client driver indicates completion of this event by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdeviceeventcomplete">UfxDeviceEventComplete</a> method.</p>
+
 <h3>Examples</h3>
-<pre lang="cpp"><code>EVT_UFX_DEVICE_REMOTE_WAKEUP_SIGNAL UfxDevice_EvtDeviceRemoteWakeupSignal;
 
-VOID
-UfxDevice_EvtDeviceRemoteWakeupSignal (
- _In_ UFXDEVICE UfxDevice
- )
-/*++
-Routine Description:
+<div class="codehilite">
+<pre><span></span><code><span class="n">EVT_UFX_DEVICE_REMOTE_WAKEUP_SIGNAL</span><span class="w"> </span><span class="n">UfxDevice_EvtDeviceRemoteWakeupSignal</span><span class="p">;</span>
 
- Signals Remote Wakeup to the Host by issuing a link state change command.
- It acquires and releases the power reference to ensure a valid power state
- before accessing the device.
+<span class="n">VOID</span>
+<span class="nf">UfxDevice_EvtDeviceRemoteWakeupSignal</span><span class="w"> </span><span class="p">(</span>
+<span class="w"> </span><span class="n">_In_</span><span class="w"> </span><span class="n">UFXDEVICE</span><span class="w"> </span><span class="n">UfxDevice</span>
+<span class="w"> </span><span class="p">)</span>
+<span class="cm">/*++</span>
+<span class="cm">Routine Description:</span>
 
-Arguments:
+<span class="cm"> Signals Remote Wakeup to the Host by issuing a link state change command.</span>
+<span class="cm"> It acquires and releases the power reference to ensure a valid power state</span>
+<span class="cm"> before accessing the device.</span>
 
- UfxDevice - UFXDEVICE object representing the device.
+<span class="cm">Arguments:</span>
 
---*/
-{
- <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status;
- PUFXDEVICE_CONTEXT DeviceContext;
+<span class="cm"> UfxDevice - UFXDEVICE object representing the device.</span>
 
- PAGED_CODE();
+<span class="cm">--*/</span>
+<span class="p">{</span>
+<span class="w"> </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">Status</span><span class="p">;</span>
+<span class="w"> </span><span class="n">PUFXDEVICE_CONTEXT</span><span class="w"> </span><span class="n">DeviceContext</span><span class="p">;</span>
 
- TraceEntry();
+<span class="w"> </span><span class="n">PAGED_CODE</span><span class="p">();</span>
 
- DeviceContext = UfxDeviceGetContext(UfxDevice);
+<span class="w"> </span><span class="n">TraceEntry</span><span class="p">();</span>
 
- //
- // Stop Idle to ensure the device is in working state
- //
+<span class="w"> </span><span class="n">DeviceContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UfxDeviceGetContext</span><span class="p">(</span><span class="n">UfxDevice</span><span class="p">);</span>
 
- Status = <a href="wdfdevicestopidle" title="NTSTATUS WdfDeviceStopIdle(&#10;   _In_ WDFDEVICE Device,&#10;   _In_ BOOLEAN WaitForD0&#10;);">WdfDeviceStopIdle</a>(DeviceContext-&gt;FdoWdfDevice, TRUE);
- if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
-  TraceError(&quot;Failed to stop idle %!STATUS!&quot;, Status);
-  goto End;
- }
+<span class="w"> </span><span class="c1">//</span>
+<span class="w"> </span><span class="c1">// Stop Idle to ensure the device is in working state</span>
+<span class="w"> </span><span class="c1">//</span>
 
- //
- // Issue a Link State Change Request.
- //
+<span class="w"> </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfdevicestopidle" title="NTSTATUS WdfDeviceStopIdle(&#10;   _In_ WDFDEVICE Device,&#10;   _In_ BOOLEAN WaitForD0&#10;);">WdfDeviceStopIdle</a></span><span class="p">(</span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">FdoWdfDevice</span><span class="p">,</span><span class="w"> </span><span class="n">TRUE</span><span class="p">);</span>
+<span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">Status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="n">TraceError</span><span class="p">(</span><span class="s">&quot;Failed to stop idle %!STATUS!&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Status</span><span class="p">);</span>
+<span class="w">  </span><span class="k">goto</span><span class="w"> </span><span class="n">End</span><span class="p">;</span>
+<span class="w"> </span><span class="p">}</span>
 
- //
- // #### TODO: Insert code to issue a link state change on the controller ####
- //
+<span class="w"> </span><span class="c1">//</span>
+<span class="w"> </span><span class="c1">// Issue a Link State Change Request.</span>
+<span class="w"> </span><span class="c1">//</span>
 
- <a href="wdfdeviceresumeidle" title="void WdfDeviceResumeIdle(&#10;  [in] Device&#10;);">WdfDeviceResumeIdle</a>(DeviceContext-&gt;FdoWdfDevice);
+<span class="w"> </span><span class="c1">//</span>
+<span class="w"> </span><span class="c1">// #### TODO: Insert code to issue a link state change on the controller ####</span>
+<span class="w"> </span><span class="c1">//</span>
 
-End:
- UfxDeviceEventComplete(UfxDevice, Status);
- TraceExit();
-}
+<span class="w"> </span><span class="n"><a href="wdfdeviceresumeidle" title="void WdfDeviceResumeIdle(&#10;  [in] Device&#10;);">WdfDeviceResumeIdle</a></span><span class="p">(</span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">FdoWdfDevice</span><span class="p">);</span>
+
+<span class="nl">End</span><span class="p">:</span>
+<span class="w"> </span><span class="n">UfxDeviceEventComplete</span><span class="p">(</span><span class="n">UfxDevice</span><span class="p">,</span><span class="w"> </span><span class="n">Status</span><span class="p">);</span>
+<span class="w"> </span><span class="n">TraceExit</span><span class="p">();</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
+
 <ul>
-<li><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a></li>
-<li><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdeviceeventcomplete">UfxDeviceEventComplete</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdeviceeventcomplete">UfxDeviceEventComplete</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

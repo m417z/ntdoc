@@ -66,25 +66,43 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>UcmTcpciPortControllerAlert function</h1>
+
 <h2>Description</h2>
+
 <p>Sends information about the hardware alerts that are received on the port controller to UcmTcpciCx.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>PortControllerObject</code> [in]</h3>
+
 <p>Handle to the port controller object that the client driver received in the previous call to <a href="ucmtcpciportcontrollercreate" title="NTSTATUS UcmTcpciPortControllerCreate(&#10;  WDFDEVICE                        WdfDevice,&#10;  PUCMTCPCI_PORT_CONTROLLER_CONFIG Config,&#10;  PWDF_OBJECT_ATTRIBUTES           Attributes,&#10;  UCMTCPCIPORTCONTROLLER           *PortControllerObject&#10;);">UcmTcpciPortControllerCreate</a>.</p>
+
 <h3><code>AlertData</code></h3>
+
 <p>A pointer to an array of <a href="ucmtcpci_port_controller_alert_data" title="typedef struct _UCMTCPCI_PORT_CONTROLLER_ALERT_DATA {&#10;  ULONG                               Size;&#10;  UCMTCPCI_PORT_CONTROLLER_ALERT_TYPE AlertType;&#10;  union {&#10;    UCMTCPCI_PORT_CONTROLLER_CC_STATUS       CCStatus;&#10;    UCMTCPCI_PORT_CONTROLLER_POWER_STATUS    PowerStatus;&#10;    UCMTCPCI_PORT_CONTROLLER_FAULT_STATUS    FaultStatus;&#10;    PUCMTCPCI_PORT_CONTROLLER_RECEIVE_BUFFER ReceiveBuffer;&#10;  };&#10;} UCMTCPCI_PORT_CONTROLLER_ALERT_DATA, *PUCMTCPCI_PORT_CONTROLLER_ALERT_DATA;">UCMTCPCI_PORT_CONTROLLER_ALERT_DATA</a> that contains all current alerts that have not been sent to UcmTcpciCx. This value cannot be NULL.</p>
+
 <h3><code>NumberOfAlerts</code></h3>
+
 <p>The number of items in the array pointed to by <em>AlertData</em>. This value cannot be 0.</p>
+
 <h2>Remarks</h2>
-<p><strong>UcmTcpciPortControllerAlert</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, this inline function may return an appropriate <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS</a> error code.</p>
+
+<p><strong>UcmTcpciPortControllerAlert</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, this inline function may return an appropriate <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS</a> error code.</p>
+
 <p>The client driver must call <strong>UcmTcpciPortControllerAlert</strong> that has been previously started by calling <a href="ucmtcpciportcontrollerstart" title="NTSTATUS UcmTcpciPortControllerStart(&#10;  UCMTCPCIPORTCONTROLLER PortControllerObject&#10;);">UcmTcpciPortControllerStart</a>.</p>
+
 <p>When a hardware alert occurs, the client driver must determine the type of alerts, fetch any auxiliary information associated with that alert, such as a PD message, populate the array, and then call <strong>UcmTcpciPortControllerAlert</strong>.</p>
-<p>The client driver must report the alerts sequentially. The driver must not call this method on threads that are running simultaneously as that can lead to race conditions. Even though the class extension ensures that all internal data is correctly lock-protected, if the driver calls <strong>UcmTcpciPortControllerAlert</strong> from multiple threads at the same time without any external synchronization, it is not guaranteed that set of received alerts is current. To avoid that scenario, the driver must call this method within the <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/interrupt-service-routines">Interrupt Service Routine</a> (ISR)or a <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/dpc-objects-and-dpcs">DPC object</a> that is queued for the ISR. The ISR should be synchronized correctly to have only one instance running at any given time.</p>
+
+<p>The client driver must report the alerts sequentially. The driver must not call this method on threads that are running simultaneously as that can lead to race conditions. Even though the class extension ensures that all internal data is correctly lock-protected, if the driver calls <strong>UcmTcpciPortControllerAlert</strong> from multiple threads at the same time without any external synchronization, it is not guaranteed that set of received alerts is current. To avoid that scenario, the driver must call this method within the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/interrupt-service-routines">Interrupt Service Routine</a> (ISR)or a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/dpc-objects-and-dpcs">DPC object</a> that is queued for the ISR. The ISR should be synchronized correctly to have only one instance running at any given time.</p>
+
 <p>The client driver must assume that the class extension may submit requests before <strong>UcmTcpciPortControllerAlert</strong> returns, from within this call.</p>
+
 <p>When handling alerts, UcmTcpciCx may send hardware requests to the client driver before the <strong>UcmTcpciPortControllerAlert</strong> call returns. If the driver holds a lock while calling <strong>UcmTcpciPortControllerAlert</strong> and also attempts to acquire the same lock when handling the hardware request, deadlock can occur.</p>
+
 <h2>See also</h2>
+
 <ul>
-<li><a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/handling-hardware-interrupts">Handling Hardware Interrupts</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/handling-hardware-interrupts">Handling Hardware Interrupts</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

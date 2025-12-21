@@ -68,51 +68,79 @@ HRESULT Pfnd3dddiSetasynccallbackscb(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PFND3DDDI_SETASYNCCALLBACKSCB callback function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>pfnSetAsyncCallbacksCb</strong> function notifies the Microsoft Direct3D runtime whether the runtime will start or stop receiving calls to the runtime's callback functions from a worker thread.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>hDevice</code></h3>
+
 <p>A handle to the display device (graphics context).</p>
+
 <h3><code>Enable</code></h3>
+
 <p>A Boolean value that specifies whether the runtime will start or stop receiving calls to the runtime's callback functions from a worker thread. <strong>TRUE</strong> indicates that the runtime will start receiving calls to its callback functions from a worker thread; <strong>FALSE</strong> indicates that the runtime will stop receiving calls to its callback functions from a worker thread.</p>
+
 <h2>Return value</h2>
+
 <p><strong>pfnSetAsyncCallbacksCb</strong> returns one of the following values:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>S_OK</td>
-<td>The Direct3D runtime was successfully notified.</td>
+  <td>S_OK</td>
+  <td>The Direct3D runtime was successfully notified.</td>
 </tr>
 <tr>
-<td>E_INVALIDARG</td>
-<td>Parameters were validated and determined to be incorrect.</td>
+  <td>E_INVALIDARG</td>
+  <td>Parameters were validated and determined to be incorrect.</td>
 </tr>
 </tbody>
 </table>
+
 <p>This function might also return other HRESULT values.</p>
+
 <h2>Remarks</h2>
-<p>If a user-mode display driver implements its own multiple-processor optimizations (that is, the driver creates a worker thread and processes commands in that thread), the driver must call <strong>pfnSetAsyncCallbacksCb</strong> to notify the Direct3D runtime whether the runtime will start or stop receiving calls to the runtime's callback functions from the worker thread. Additionally, such drivers must not implement the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_lockasync">LockAsync</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_unlockasync">UnlockAsync</a>, and <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_rename">Rename</a> functions. This ensures that the runtime does not attempt to use its own multiple-processor optimizations.</p>
+
+<p>If a user-mode display driver implements its own multiple-processor optimizations (that is, the driver creates a worker thread and processes commands in that thread), the driver must call <strong>pfnSetAsyncCallbacksCb</strong> to notify the Direct3D runtime whether the runtime will start or stop receiving calls to the runtime's callback functions from the worker thread. Additionally, such drivers must not implement the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_lockasync">LockAsync</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_unlockasync">UnlockAsync</a>, and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_rename">Rename</a> functions. This ensures that the runtime does not attempt to use its own multiple-processor optimizations.</p>
+
 <p>The user-mode display driver can call <strong>pfnSetAsyncCallbacksCb</strong> only on the main application thread (that is, the thread that called into the driver). The driver's worker thread cannot call <strong>pfnSetAsyncCallbacksCb</strong>. At any point in time, only one thread that references a particular rendering device can run in any of the runtime's callback functions.</p>
+
 <p>Before the user-mode display driver calls any of the runtime's callback functions on a thread other than the main application thread, the driver must pass <strong>TRUE</strong> to the <em>Enable</em> parameter in a call to <strong>pfnSetAsyncCallbacksCb</strong>. Before the user-mode display driver calls any of the runtime's callback functions on the main application thread, the driver must pass <strong>FALSE</strong> to the <em>Enable</em> parameter in a call to <strong>pfnSetAsyncCallbacksCb</strong>.</p>
-<p>Within the implementation of <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfworkitem-flush">Flush</a> for each rendering device, the driver calls <strong>pfnSetAsyncCallbacksCb</strong> and passes <strong>FALSE</strong> to the <em>Enable</em> parameter.</p>
+
+<p>Within the implementation of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfworkitem-flush">Flush</a> for each rendering device, the driver calls <strong>pfnSetAsyncCallbacksCb</strong> and passes <strong>FALSE</strong> to the <em>Enable</em> parameter.</p>
+
 <p>When the driver passes <strong>TRUE</strong> to the <em>Enable</em> parameter in a call to <strong>pfnSetAsyncCallbacksCb</strong>, the runtime puts itself in a state where it does not immediately respond to device-lost situations in its callback functions. Instead, when the runtime detects a device lost in a callback function while in this state, it sets a bit that indicates that the event occurred. When the driver passes <strong>FALSE</strong> to the <em>Enable</em> parameter in a call to <strong>pfnSetAsyncCallbacksCb</strong>, the runtime checks the bit to determine if a device lost occurred. If the bit is set, the runtime performs its typical device-lost handling. After this point, the driver no longer receives most calls to its functions from the runtime.</p>
-<p>Only DirectX 9 and DirectX 9L versions of the runtime support <strong>pfnSetAsyncCallbacksCb</strong>. DirectX 10 and later versions of the runtime set the <strong>pfnSetAsyncCallbacksCb</strong> member of the <a href="d3dddi_devicecallbacks" title="typedef struct _D3DDDI_DEVICECALLBACKS {&#10;  PFND3DDDI_ALLOCATECB                            pfnAllocateCb;&#10;  PFND3DDDI_DEALLOCATECB                          pfnDeallocateCb;&#10;  PFND3DDDI_SETPRIORITYCB                         pfnSetPriorityCb;&#10;  PFND3DDDI_QUERYRESIDENCYCB                      pfnQueryResidencyCb;&#10;  PFND3DDDI_SETDISPLAYMODECB                      pfnSetDisplayModeCb;&#10;  PFND3DDDI_PRESENTCB                             pfnPresentCb;&#10;  PFND3DDDI_RENDERCB                              pfnRenderCb;&#10;  PFND3DDDI_LOCKCB                                pfnLockCb;&#10;  PFND3DDDI_UNLOCKCB                              pfnUnlockCb;&#10;  PFND3DDDI_ESCAPECB                              pfnEscapeCb;&#10;  PFND3DDDI_CREATEOVERLAYCB                       pfnCreateOverlayCb;&#10;  PFND3DDDI_UPDATEOVERLAYCB                       pfnUpdateOverlayCb;&#10;  PFND3DDDI_FLIPOVERLAYCB                         pfnFlipOverlayCb;&#10;  PFND3DDDI_DESTROYOVERLAYCB                      pfnDestroyOverlayCb;&#10;  PFND3DDDI_CREATECONTEXTCB                       pfnCreateContextCb;&#10;  PFND3DDDI_DESTROYCONTEXTCB                      pfnDestroyContextCb;&#10;  PFND3DDDI_CREATESYNCHRONIZATIONOBJECTCB         pfnCreateSynchronizationObjectCb;&#10;  PFND3DDDI_DESTROYSYNCHRONIZATIONOBJECTCB        pfnDestroySynchronizationObjectCb;&#10;  PFND3DDDI_WAITFORSYNCHRONIZATIONOBJECTCB        pfnWaitForSynchronizationObjectCb;&#10;...">D3DDDI_DEVICECALLBACKS</a> structure to <strong>NULL</strong> when the runtime calls the user-mode display driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_createdevice">CreateDevice(D3D10)</a> function to create a rendering device.</p>
+
+<p>Only DirectX 9 and DirectX 9L versions of the runtime support <strong>pfnSetAsyncCallbacksCb</strong>. DirectX 10 and later versions of the runtime set the <strong>pfnSetAsyncCallbacksCb</strong> member of the <a href="d3dddi_devicecallbacks" title="typedef struct _D3DDDI_DEVICECALLBACKS {&#10;  PFND3DDDI_ALLOCATECB                            pfnAllocateCb;&#10;  PFND3DDDI_DEALLOCATECB                          pfnDeallocateCb;&#10;  PFND3DDDI_SETPRIORITYCB                         pfnSetPriorityCb;&#10;  PFND3DDDI_QUERYRESIDENCYCB                      pfnQueryResidencyCb;&#10;  PFND3DDDI_SETDISPLAYMODECB                      pfnSetDisplayModeCb;&#10;  PFND3DDDI_PRESENTCB                             pfnPresentCb;&#10;  PFND3DDDI_RENDERCB                              pfnRenderCb;&#10;  PFND3DDDI_LOCKCB                                pfnLockCb;&#10;  PFND3DDDI_UNLOCKCB                              pfnUnlockCb;&#10;  PFND3DDDI_ESCAPECB                              pfnEscapeCb;&#10;  PFND3DDDI_CREATEOVERLAYCB                       pfnCreateOverlayCb;&#10;  PFND3DDDI_UPDATEOVERLAYCB                       pfnUpdateOverlayCb;&#10;  PFND3DDDI_FLIPOVERLAYCB                         pfnFlipOverlayCb;&#10;  PFND3DDDI_DESTROYOVERLAYCB                      pfnDestroyOverlayCb;&#10;  PFND3DDDI_CREATECONTEXTCB                       pfnCreateContextCb;&#10;  PFND3DDDI_DESTROYCONTEXTCB                      pfnDestroyContextCb;&#10;  PFND3DDDI_CREATESYNCHRONIZATIONOBJECTCB         pfnCreateSynchronizationObjectCb;&#10;  PFND3DDDI_DESTROYSYNCHRONIZATIONOBJECTCB        pfnDestroySynchronizationObjectCb;&#10;  PFND3DDDI_WAITFORSYNCHRONIZATIONOBJECTCB        pfnWaitForSynchronizationObjectCb;&#10;...">D3DDDI_DEVICECALLBACKS</a> structure to <strong>NULL</strong> when the runtime calls the user-mode display driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_createdevice">CreateDevice(D3D10)</a> function to create a rendering device.</p>
+
 <p><strong>Note</strong> DirectX versions earlier than 9 do not support multiple-processor optimizations.</p>
-<p>Drivers can call the runtime's callback functions only from a worker thread if the runtime previously set the <strong>pfnSetAsyncCallbacksCb</strong> member of <a href="d3dddi_devicecallbacks" title="typedef struct _D3DDDI_DEVICECALLBACKS {&#10;  PFND3DDDI_ALLOCATECB                            pfnAllocateCb;&#10;  PFND3DDDI_DEALLOCATECB                          pfnDeallocateCb;&#10;  PFND3DDDI_SETPRIORITYCB                         pfnSetPriorityCb;&#10;  PFND3DDDI_QUERYRESIDENCYCB                      pfnQueryResidencyCb;&#10;  PFND3DDDI_SETDISPLAYMODECB                      pfnSetDisplayModeCb;&#10;  PFND3DDDI_PRESENTCB                             pfnPresentCb;&#10;  PFND3DDDI_RENDERCB                              pfnRenderCb;&#10;  PFND3DDDI_LOCKCB                                pfnLockCb;&#10;  PFND3DDDI_UNLOCKCB                              pfnUnlockCb;&#10;  PFND3DDDI_ESCAPECB                              pfnEscapeCb;&#10;  PFND3DDDI_CREATEOVERLAYCB                       pfnCreateOverlayCb;&#10;  PFND3DDDI_UPDATEOVERLAYCB                       pfnUpdateOverlayCb;&#10;  PFND3DDDI_FLIPOVERLAYCB                         pfnFlipOverlayCb;&#10;  PFND3DDDI_DESTROYOVERLAYCB                      pfnDestroyOverlayCb;&#10;  PFND3DDDI_CREATECONTEXTCB                       pfnCreateContextCb;&#10;  PFND3DDDI_DESTROYCONTEXTCB                      pfnDestroyContextCb;&#10;  PFND3DDDI_CREATESYNCHRONIZATIONOBJECTCB         pfnCreateSynchronizationObjectCb;&#10;  PFND3DDDI_DESTROYSYNCHRONIZATIONOBJECTCB        pfnDestroySynchronizationObjectCb;&#10;  PFND3DDDI_WAITFORSYNCHRONIZATIONOBJECTCB        pfnWaitForSynchronizationObjectCb;&#10;...">D3DDDI_DEVICECALLBACKS</a> to non-<strong>NULL</strong> in a call to the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_createdevice">CreateDevice</a> function.</p>
+
+<p>Drivers can call the runtime's callback functions only from a worker thread if the runtime previously set the <strong>pfnSetAsyncCallbacksCb</strong> member of <a href="d3dddi_devicecallbacks" title="typedef struct _D3DDDI_DEVICECALLBACKS {&#10;  PFND3DDDI_ALLOCATECB                            pfnAllocateCb;&#10;  PFND3DDDI_DEALLOCATECB                          pfnDeallocateCb;&#10;  PFND3DDDI_SETPRIORITYCB                         pfnSetPriorityCb;&#10;  PFND3DDDI_QUERYRESIDENCYCB                      pfnQueryResidencyCb;&#10;  PFND3DDDI_SETDISPLAYMODECB                      pfnSetDisplayModeCb;&#10;  PFND3DDDI_PRESENTCB                             pfnPresentCb;&#10;  PFND3DDDI_RENDERCB                              pfnRenderCb;&#10;  PFND3DDDI_LOCKCB                                pfnLockCb;&#10;  PFND3DDDI_UNLOCKCB                              pfnUnlockCb;&#10;  PFND3DDDI_ESCAPECB                              pfnEscapeCb;&#10;  PFND3DDDI_CREATEOVERLAYCB                       pfnCreateOverlayCb;&#10;  PFND3DDDI_UPDATEOVERLAYCB                       pfnUpdateOverlayCb;&#10;  PFND3DDDI_FLIPOVERLAYCB                         pfnFlipOverlayCb;&#10;  PFND3DDDI_DESTROYOVERLAYCB                      pfnDestroyOverlayCb;&#10;  PFND3DDDI_CREATECONTEXTCB                       pfnCreateContextCb;&#10;  PFND3DDDI_DESTROYCONTEXTCB                      pfnDestroyContextCb;&#10;  PFND3DDDI_CREATESYNCHRONIZATIONOBJECTCB         pfnCreateSynchronizationObjectCb;&#10;  PFND3DDDI_DESTROYSYNCHRONIZATIONOBJECTCB        pfnDestroySynchronizationObjectCb;&#10;  PFND3DDDI_WAITFORSYNCHRONIZATIONOBJECTCB        pfnWaitForSynchronizationObjectCb;&#10;...">D3DDDI_DEVICECALLBACKS</a> to non-<strong>NULL</strong> in a call to the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_createdevice">CreateDevice</a> function.</p>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_createdevice">CreateDevice</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_createdevice">CreateDevice(D3D10)</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_createdevice">CreateDevice</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_createdevice">CreateDevice(D3D10)</a></p>
+
 <p><a href="d3dddi_devicecallbacks" title="typedef struct _D3DDDI_DEVICECALLBACKS {&#10;  PFND3DDDI_ALLOCATECB                            pfnAllocateCb;&#10;  PFND3DDDI_DEALLOCATECB                          pfnDeallocateCb;&#10;  PFND3DDDI_SETPRIORITYCB                         pfnSetPriorityCb;&#10;  PFND3DDDI_QUERYRESIDENCYCB                      pfnQueryResidencyCb;&#10;  PFND3DDDI_SETDISPLAYMODECB                      pfnSetDisplayModeCb;&#10;  PFND3DDDI_PRESENTCB                             pfnPresentCb;&#10;  PFND3DDDI_RENDERCB                              pfnRenderCb;&#10;  PFND3DDDI_LOCKCB                                pfnLockCb;&#10;  PFND3DDDI_UNLOCKCB                              pfnUnlockCb;&#10;  PFND3DDDI_ESCAPECB                              pfnEscapeCb;&#10;  PFND3DDDI_CREATEOVERLAYCB                       pfnCreateOverlayCb;&#10;  PFND3DDDI_UPDATEOVERLAYCB                       pfnUpdateOverlayCb;&#10;  PFND3DDDI_FLIPOVERLAYCB                         pfnFlipOverlayCb;&#10;  PFND3DDDI_DESTROYOVERLAYCB                      pfnDestroyOverlayCb;&#10;  PFND3DDDI_CREATECONTEXTCB                       pfnCreateContextCb;&#10;  PFND3DDDI_DESTROYCONTEXTCB                      pfnDestroyContextCb;&#10;  PFND3DDDI_CREATESYNCHRONIZATIONOBJECTCB         pfnCreateSynchronizationObjectCb;&#10;  PFND3DDDI_DESTROYSYNCHRONIZATIONOBJECTCB        pfnDestroySynchronizationObjectCb;&#10;  PFND3DDDI_WAITFORSYNCHRONIZATIONOBJECTCB        pfnWaitForSynchronizationObjectCb;&#10;...">D3DDDI_DEVICECALLBACKS</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfworkitem-flush">Flush</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_lockasync">LockAsync</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_rename">Rename</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_unlockasync">UnlockAsync</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfworkitem-flush">Flush</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_lockasync">LockAsync</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_rename">Rename</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_unlockasync">UnlockAsync</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

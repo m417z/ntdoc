@@ -82,7 +82,7 @@
 <h1>NtDoc</h1>
 </div>
 <div class="ntdoc-description">
-<p>This structure is <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_file_object">documented in Windows Driver Kit</a>.</p>
+<p>This structure is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_file_object">documented in Windows Driver Kit</a>.</p>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/file_object.md">Edit description on GitHub</a>
 </div>
@@ -92,222 +92,308 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>FILE_OBJECT</strong> structure is used by the system to represent a file object. To user-mode protected subsystems, a file object represents an open instance of a file, device, directory, or volume. To device and intermediate drivers, a file object usually represents a device object. To drivers in the file system stack, a file object usually represents a directory or file.</p>
+
 <p>A file object is partially opaque. Certain types of drivers, such as file system drivers and network transport drivers, use some of the fields of file objects.</p>
+
 <h2>Members</h2>
+
 <h3><code>Type</code></h3>
+
 <p>A read-only member used by the system to indicate that the object is a file object. If the object is a file object, the value of this member is 5.</p>
+
 <h3><code>Size</code></h3>
+
 <p>A read-only member that specifies the size, in bytes, of the file object. This size does not include the file object extension, if one is present.</p>
+
 <h3><code>DeviceObject</code></h3>
+
 <p>A pointer to the device object on which the file is opened.</p>
+
 <h3><code>Vpb</code></h3>
+
 <p>A pointer to the volume parameter block associated with the file object.</p>
+
 <p>Note that if the <strong>Vpb</strong> member is non-<strong>NULL</strong>, the file resides on a mounted volume.</p>
+
 <h3><code>FsContext</code></h3>
+
 <p>A pointer to whatever optional state a driver maintains about the file object; otherwise, <strong>NULL</strong>. For file system drivers, this member must point to a <strong><a href="fsrtl_advanced_fcb_header" title="typedef struct _FSRTL_ADVANCED_FCB_HEADER {&#10;  FSRTL_COMMON_FCB_HEADER          DUMMYSTRUCTNAME;&#10;  PFAST_MUTEX                      FastMutex;&#10;  LIST_ENTRY                       FilterContexts;&#10;  EX_PUSH_LOCK                     PushLock;&#10;  PVOID                            *FileContextSupportPointer;&#10;  union {&#10;    OPLOCK Oplock;&#10;    PVOID  ReservedForRemote;&#10;  };&#10;  PVOID                            AePushLock;&#10;  PVOID                            ReservedContextLegacy;&#10;  ULONG                            BypassIoOpenCount;&#10;  struct _FSRTL_PER_STREAM_CONTEXT *ReservedContext;&#10;} FSRTL_ADVANCED_FCB_HEADER;">FSRTL_ADVANCED_FCB_HEADER</a></strong> header structure that is contained within a file-system-specific structure; otherwise system instability can result. Usually, this header structure is embedded in a file control block (FCB). However, on some file systems that support multiple data streams, such as NTFS, this header structure is a stream control block (SCB).</p>
+
 <p>In a WDM device stack, only the functional device object (FDO) can use the two context pointers. File system drivers share this member across multiple opens to the same data stream.</p>
+
 <h3><code>FsContext2</code></h3>
+
 <p>A pointer to whatever additional state a driver maintains about the file object; otherwise, <strong>NULL</strong>.</p>
+
 <p>This member is opaque for drivers in the file system stack because the underlying file system utilizes this member.</p>
+
 <h3><code>SectionObjectPointer</code></h3>
+
 <p>A pointer to the file object's read-only section object. This member is set only by file systems and used for Cache Manager interaction.</p>
+
 <h3><code>PrivateCacheMap</code></h3>
+
 <p>An opaque member, set only by file systems, that points to handle-specific information and that is used for Cache Manager interaction.</p>
+
 <h3><code>FinalStatus</code></h3>
+
 <p>A read-only member that is used, in certain synchronous cases, to indicate the final status of the file object's I/O request.</p>
+
 <h3><code>RelatedFileObject</code></h3>
-<p>A pointer to a <strong>FILE_OBJECT</strong> structure used to indicate that the current file object has been opened relative to an already open file object. The file object pointed to by this member is usually a directory (meaning the current file has been opened relative to this directory). However, a file can be reopened relative to itself, and alternate data streams for a file can be opened relative to an already open primary data stream for that same file. The <strong>RelatedFileObject</strong> member is only valid during the processing of the <a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a> requests.</p>
+
+<p>A pointer to a <strong>FILE_OBJECT</strong> structure used to indicate that the current file object has been opened relative to an already open file object. The file object pointed to by this member is usually a directory (meaning the current file has been opened relative to this directory). However, a file can be reopened relative to itself, and alternate data streams for a file can be opened relative to an already open primary data stream for that same file. The <strong>RelatedFileObject</strong> member is only valid during the processing of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a> requests.</p>
+
 <h3><code>LockOperation</code></h3>
+
 <p>A read-only member. If <strong>FALSE</strong>, a lock operation (<strong><a href="ntlockfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtLockFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ PLARGE_INTEGER ByteOffset,&#10;    _In_ PLARGE_INTEGER Length,&#10;    _In_ ULONG Key,&#10;    _In_ BOOLEAN FailImmediately,&#10;    _In_ BOOLEAN ExclusiveLock&#10;    );">NtLockFile</a></strong>) has never been performed on the file object. If <strong>TRUE</strong>, at least one lock operation has been performed on the file object. Once set to <strong>TRUE</strong>, this member always remains <strong>TRUE</strong> (for example, releasing file locks on the file object does not reset this member to <strong>FALSE</strong>).</p>
+
 <h3><code>DeletePending</code></h3>
+
 <p>A read-only member. If <strong>TRUE</strong>, a delete operation for the file associated with the file object exists. If <strong>FALSE</strong>, there currently is no pending delete operation for the file object.</p>
+
 <h3><code>ReadAccess</code></h3>
+
 <p>A read-only member. If <strong>TRUE</strong>, the file associated with the file object has been opened for read access. If <strong>FALSE</strong>, the file has been opened without read access. This information is used when checking and/or setting the share access of the file.</p>
+
 <h3><code>WriteAccess</code></h3>
+
 <p>A read-only member. If <strong>TRUE</strong>, the file associated with the file object has been opened for write access. If <strong>FALSE</strong>, the file has been opened without write access. This information is used when checking and/or setting the share access of the file.</p>
+
 <h3><code>DeleteAccess</code></h3>
+
 <p>A read-only member. If <strong>TRUE</strong>, the file associated with the file object has been opened for delete access. If <strong>FALSE</strong>, the file has been opened without delete access. This information is used when checking and/or setting the share access of the file.</p>
+
 <h3><code>SharedRead</code></h3>
+
 <p>A read-only member. If <strong>TRUE</strong>, the file associated with the file object has been opened for read sharing access. If <strong>FALSE</strong>, the file has been opened without read sharing access. This information is used when checking and/or setting the share access of the file.</p>
+
 <h3><code>SharedWrite</code></h3>
+
 <p>A read-only member. If <strong>TRUE</strong>, the file associated with the file object has been opened for write sharing access. If <strong>FALSE</strong>, the file has been opened without write sharing access. This information is used when checking and/or setting the share access of the file.</p>
+
 <h3><code>SharedDelete</code></h3>
+
 <p>A read-only member. If <strong>TRUE</strong>, the file associated with the file object has been opened for delete sharing access. If <strong>FALSE</strong>, the file has been opened without delete sharing access. This information is used when checking and/or setting the share access of the file.</p>
+
 <h3><code>Flags</code></h3>
+
 <p>A read-only member used by the system to hold one or more (a bitwise inclusive OR combination) of the following private flag values.</p>
+
 <table>
 <thead>
 <tr>
-<th>Flag</th>
-<th>Meaning</th>
+  <th>Flag</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong><a href="fo_file_open" title="#define FO_FILE_OPEN 0x00000001">FO_FILE_OPEN</a></strong></td>
-<td>Deprecated.</td>
+  <td><strong><a href="fo_file_open" title="#define FO_FILE_OPEN 0x00000001">FO_FILE_OPEN</a></strong></td>
+  <td>Deprecated.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_synchronous_io" title="#define FO_SYNCHRONOUS_IO 0x00000002">FO_SYNCHRONOUS_IO</a></strong></td>
-<td>The file object is opened for synchronous I/O.</td>
+  <td><strong><a href="fo_synchronous_io" title="#define FO_SYNCHRONOUS_IO 0x00000002">FO_SYNCHRONOUS_IO</a></strong></td>
+  <td>The file object is opened for synchronous I/O.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_alertable_io" title="#define FO_ALERTABLE_IO 0x00000004">FO_ALERTABLE_IO</a></strong></td>
-<td>Any wait in the I/O manager, as a result of a request made to this file object, is alertable.</td>
+  <td><strong><a href="fo_alertable_io" title="#define FO_ALERTABLE_IO 0x00000004">FO_ALERTABLE_IO</a></strong></td>
+  <td>Any wait in the I/O manager, as a result of a request made to this file object, is alertable.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_no_intermediate_buffering" title="#define FO_NO_INTERMEDIATE_BUFFERING 0x00000008">FO_NO_INTERMEDIATE_BUFFERING</a></strong></td>
-<td>The file associated with the file object cannot be cached or buffered in a driver's internal buffers.</td>
+  <td><strong><a href="fo_no_intermediate_buffering" title="#define FO_NO_INTERMEDIATE_BUFFERING 0x00000008">FO_NO_INTERMEDIATE_BUFFERING</a></strong></td>
+  <td>The file associated with the file object cannot be cached or buffered in a driver's internal buffers.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_write_through" title="#define FO_WRITE_THROUGH 0x00000010">FO_WRITE_THROUGH</a></strong></td>
-<td>System services, file system drivers, and drivers that write data to the file must transfer the data into the file before any requested write operation is considered complete.</td>
+  <td><strong><a href="fo_write_through" title="#define FO_WRITE_THROUGH 0x00000010">FO_WRITE_THROUGH</a></strong></td>
+  <td>System services, file system drivers, and drivers that write data to the file must transfer the data into the file before any requested write operation is considered complete.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_sequential_only" title="#define FO_SEQUENTIAL_ONLY 0x00000020">FO_SEQUENTIAL_ONLY</a></strong></td>
-<td>The file associated with the file object was opened for sequential I/O operations only.</td>
+  <td><strong><a href="fo_sequential_only" title="#define FO_SEQUENTIAL_ONLY 0x00000020">FO_SEQUENTIAL_ONLY</a></strong></td>
+  <td>The file associated with the file object was opened for sequential I/O operations only.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_cache_supported" title="#define FO_CACHE_SUPPORTED 0x00000040">FO_CACHE_SUPPORTED</a></strong></td>
-<td>The file associated with the file object is cacheable. This flag should be set only by a file system driver, and only if the <strong>FsContext</strong> member points to a valid <strong><a href="fsrtl_advanced_fcb_header" title="typedef struct _FSRTL_ADVANCED_FCB_HEADER {&#10;  FSRTL_COMMON_FCB_HEADER          DUMMYSTRUCTNAME;&#10;  PFAST_MUTEX                      FastMutex;&#10;  LIST_ENTRY                       FilterContexts;&#10;  EX_PUSH_LOCK                     PushLock;&#10;  PVOID                            *FileContextSupportPointer;&#10;  union {&#10;    OPLOCK Oplock;&#10;    PVOID  ReservedForRemote;&#10;  };&#10;  PVOID                            AePushLock;&#10;  PVOID                            ReservedContextLegacy;&#10;  ULONG                            BypassIoOpenCount;&#10;  struct _FSRTL_PER_STREAM_CONTEXT *ReservedContext;&#10;} FSRTL_ADVANCED_FCB_HEADER;">FSRTL_ADVANCED_FCB_HEADER</a></strong> structure.</td>
+  <td><strong><a href="fo_cache_supported" title="#define FO_CACHE_SUPPORTED 0x00000040">FO_CACHE_SUPPORTED</a></strong></td>
+  <td>The file associated with the file object is cacheable. This flag should be set only by a file system driver, and only if the <strong>FsContext</strong> member points to a valid <strong><a href="fsrtl_advanced_fcb_header" title="typedef struct _FSRTL_ADVANCED_FCB_HEADER {&#10;  FSRTL_COMMON_FCB_HEADER          DUMMYSTRUCTNAME;&#10;  PFAST_MUTEX                      FastMutex;&#10;  LIST_ENTRY                       FilterContexts;&#10;  EX_PUSH_LOCK                     PushLock;&#10;  PVOID                            *FileContextSupportPointer;&#10;  union {&#10;    OPLOCK Oplock;&#10;    PVOID  ReservedForRemote;&#10;  };&#10;  PVOID                            AePushLock;&#10;  PVOID                            ReservedContextLegacy;&#10;  ULONG                            BypassIoOpenCount;&#10;  struct _FSRTL_PER_STREAM_CONTEXT *ReservedContext;&#10;} FSRTL_ADVANCED_FCB_HEADER;">FSRTL_ADVANCED_FCB_HEADER</a></strong> structure.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_named_pipe" title="#define FO_NAMED_PIPE 0x00000080">FO_NAMED_PIPE</a></strong></td>
-<td>The file object represents a named pipe.</td>
+  <td><strong><a href="fo_named_pipe" title="#define FO_NAMED_PIPE 0x00000080">FO_NAMED_PIPE</a></strong></td>
+  <td>The file object represents a named pipe.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_stream_file" title="#define FO_STREAM_FILE 0x00000100">FO_STREAM_FILE</a></strong></td>
-<td>The file object represents a file stream.</td>
+  <td><strong><a href="fo_stream_file" title="#define FO_STREAM_FILE 0x00000100">FO_STREAM_FILE</a></strong></td>
+  <td>The file object represents a file stream.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_mailslot" title="#define FO_MAILSLOT 0x00000200">FO_MAILSLOT</a></strong></td>
-<td>The file object represents a mailslot.</td>
+  <td><strong><a href="fo_mailslot" title="#define FO_MAILSLOT 0x00000200">FO_MAILSLOT</a></strong></td>
+  <td>The file object represents a mailslot.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_generate_audit_on_close" title="#define FO_GENERATE_AUDIT_ON_CLOSE 0x00000400">FO_GENERATE_AUDIT_ON_CLOSE</a></strong></td>
-<td>Deprecated.</td>
+  <td><strong><a href="fo_generate_audit_on_close" title="#define FO_GENERATE_AUDIT_ON_CLOSE 0x00000400">FO_GENERATE_AUDIT_ON_CLOSE</a></strong></td>
+  <td>Deprecated.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_queue_irp_to_thread" title="#define FO_QUEUE_IRP_TO_THREAD FO_GENERATE_AUDIT_ON_CLOSE">FO_QUEUE_IRP_TO_THREAD</a></strong></td>
-<td>IRPs will not be queued to this file object.</td>
+  <td><strong><a href="fo_queue_irp_to_thread" title="#define FO_QUEUE_IRP_TO_THREAD FO_GENERATE_AUDIT_ON_CLOSE">FO_QUEUE_IRP_TO_THREAD</a></strong></td>
+  <td>IRPs will not be queued to this file object.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_direct_device_open" title="#define FO_DIRECT_DEVICE_OPEN 0x00000800">FO_DIRECT_DEVICE_OPEN</a></strong></td>
-<td>The device targeted by this file object was opened directly.</td>
+  <td><strong><a href="fo_direct_device_open" title="#define FO_DIRECT_DEVICE_OPEN 0x00000800">FO_DIRECT_DEVICE_OPEN</a></strong></td>
+  <td>The device targeted by this file object was opened directly.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_file_modified" title="#define FO_FILE_MODIFIED 0x00001000">FO_FILE_MODIFIED</a></strong></td>
-<td>The file associated with the file object has been modified.</td>
+  <td><strong><a href="fo_file_modified" title="#define FO_FILE_MODIFIED 0x00001000">FO_FILE_MODIFIED</a></strong></td>
+  <td>The file associated with the file object has been modified.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_file_size_changed" title="#define FO_FILE_SIZE_CHANGED 0x00002000">FO_FILE_SIZE_CHANGED</a></strong></td>
-<td>The file associated with the file object has changed in size.</td>
+  <td><strong><a href="fo_file_size_changed" title="#define FO_FILE_SIZE_CHANGED 0x00002000">FO_FILE_SIZE_CHANGED</a></strong></td>
+  <td>The file associated with the file object has changed in size.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_cleanup_complete" title="#define FO_CLEANUP_COMPLETE 0x00004000">FO_CLEANUP_COMPLETE</a></strong></td>
-<td>The file system has completed its cleanup for this file object.</td>
+  <td><strong><a href="fo_cleanup_complete" title="#define FO_CLEANUP_COMPLETE 0x00004000">FO_CLEANUP_COMPLETE</a></strong></td>
+  <td>The file system has completed its cleanup for this file object.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_temporary_file" title="#define FO_TEMPORARY_FILE 0x00008000">FO_TEMPORARY_FILE</a></strong></td>
-<td>The file associated with the file object is a temporary file.</td>
+  <td><strong><a href="fo_temporary_file" title="#define FO_TEMPORARY_FILE 0x00008000">FO_TEMPORARY_FILE</a></strong></td>
+  <td>The file associated with the file object is a temporary file.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_delete_on_close" title="#define FO_DELETE_ON_CLOSE 0x00010000">FO_DELETE_ON_CLOSE</a></strong></td>
-<td>The file associated with the file object will be deleted by the file system upon close.</td>
+  <td><strong><a href="fo_delete_on_close" title="#define FO_DELETE_ON_CLOSE 0x00010000">FO_DELETE_ON_CLOSE</a></strong></td>
+  <td>The file associated with the file object will be deleted by the file system upon close.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_opened_case_sensitive" title="#define FO_OPENED_CASE_SENSITIVE 0x00020000">FO_OPENED_CASE_SENSITIVE</a></strong></td>
-<td>The file name case of the file associated with the file object is respected.</td>
+  <td><strong><a href="fo_opened_case_sensitive" title="#define FO_OPENED_CASE_SENSITIVE 0x00020000">FO_OPENED_CASE_SENSITIVE</a></strong></td>
+  <td>The file name case of the file associated with the file object is respected.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_handle_created" title="#define FO_HANDLE_CREATED 0x00040000">FO_HANDLE_CREATED</a></strong></td>
-<td>A file handle was created for file object.</td>
+  <td><strong><a href="fo_handle_created" title="#define FO_HANDLE_CREATED 0x00040000">FO_HANDLE_CREATED</a></strong></td>
+  <td>A file handle was created for file object.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_file_fast_io_read" title="#define FO_FILE_FAST_IO_READ 0x00080000">FO_FILE_FAST_IO_READ</a></strong></td>
-<td>A fast I/O read was performed on this file object.</td>
+  <td><strong><a href="fo_file_fast_io_read" title="#define FO_FILE_FAST_IO_READ 0x00080000">FO_FILE_FAST_IO_READ</a></strong></td>
+  <td>A fast I/O read was performed on this file object.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_random_access" title="#define FO_RANDOM_ACCESS 0x00100000">FO_RANDOM_ACCESS</a></strong></td>
-<td>The file associated with the file object was opened for random access.</td>
+  <td><strong><a href="fo_random_access" title="#define FO_RANDOM_ACCESS 0x00100000">FO_RANDOM_ACCESS</a></strong></td>
+  <td>The file associated with the file object was opened for random access.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_file_open_cancelled" title="#define FO_FILE_OPEN_CANCELLED 0x00200000">FO_FILE_OPEN_CANCELLED</a></strong></td>
-<td>The create request for this file object was canceled before completing.</td>
+  <td><strong><a href="fo_file_open_cancelled" title="#define FO_FILE_OPEN_CANCELLED 0x00200000">FO_FILE_OPEN_CANCELLED</a></strong></td>
+  <td>The create request for this file object was canceled before completing.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_volume_open" title="#define FO_VOLUME_OPEN 0x00400000">FO_VOLUME_OPEN</a></strong></td>
-<td>The file object represents a volume open request.</td>
+  <td><strong><a href="fo_volume_open" title="#define FO_VOLUME_OPEN 0x00400000">FO_VOLUME_OPEN</a></strong></td>
+  <td>The file object represents a volume open request.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_remote_origin" title="#define FO_REMOTE_ORIGIN 0x01000000">FO_REMOTE_ORIGIN</a></strong></td>
-<td>The create request for the file associated with the file object originated on a remote machine.</td>
+  <td><strong><a href="fo_remote_origin" title="#define FO_REMOTE_ORIGIN 0x01000000">FO_REMOTE_ORIGIN</a></strong></td>
+  <td>The create request for the file associated with the file object originated on a remote machine.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_skip_completion_port" title="#define FO_SKIP_COMPLETION_PORT FO_DISALLOW_EXCLUSIVE">FO_SKIP_COMPLETION_PORT</a></strong></td>
-<td>For a file object associated with a port, determines if the system should skip queuing to the completion port when the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is completed synchronously with a non-error status return value.</td>
+  <td><strong><a href="fo_skip_completion_port" title="#define FO_SKIP_COMPLETION_PORT FO_DISALLOW_EXCLUSIVE">FO_SKIP_COMPLETION_PORT</a></strong></td>
+  <td>For a file object associated with a port, determines if the system should skip queuing to the completion port when the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is completed synchronously with a non-error status return value.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_skip_set_event" title="#define FO_SKIP_SET_EVENT 0x04000000">FO_SKIP_SET_EVENT</a></strong></td>
-<td>Skip setting the event for the file object upon <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> completion.</td>
+  <td><strong><a href="fo_skip_set_event" title="#define FO_SKIP_SET_EVENT 0x04000000">FO_SKIP_SET_EVENT</a></strong></td>
+  <td>Skip setting the event for the file object upon <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> completion.</td>
 </tr>
 <tr>
-<td><strong><a href="fo_skip_set_fast_io" title="#define FO_SKIP_SET_FAST_IO 0x08000000">FO_SKIP_SET_FAST_IO</a></strong></td>
-<td>Skip setting an event supplied to a system service when the fast I/O path is successful.</td>
+  <td><strong><a href="fo_skip_set_fast_io" title="#define FO_SKIP_SET_FAST_IO 0x08000000">FO_SKIP_SET_FAST_IO</a></strong></td>
+  <td>Skip setting an event supplied to a system service when the fast I/O path is successful.</td>
 </tr>
 </tbody>
 </table>
+
 <h3><code>FileName</code></h3>
-<p>A <strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong> structure whose <strong>Buffer</strong> member points to a read-only Unicode string that holds the name of the file opened on the volume. If the volume is being opened, the <strong>Length</strong> member of the <strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong> structure will be zero. Note that the file name in this string is valid only during the initial processing of an <a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a> request. This file name should not be considered valid after the file system starts to process the <strong><a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a></strong> request. The storage for the string pointed to by the <strong>Buffer</strong> member of the <strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong> structure is allocated in paged system memory. For more information about obtaining a file name, see <a href="fltgetfilenameinformation" title="NTSTATUS FLTAPI FltGetFileNameInformation(&#10;  [in]  PFLT_CALLBACK_DATA         CallbackData,&#10;  [in]  FLT_FILE_NAME_OPTIONS      NameOptions,&#10;  [out] PFLT_FILE_NAME_INFORMATION *FileNameInformation&#10;);">FltGetFileNameInformation</a>.</p>
+
+<p>A <strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong> structure whose <strong>Buffer</strong> member points to a read-only Unicode string that holds the name of the file opened on the volume. If the volume is being opened, the <strong>Length</strong> member of the <strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong> structure will be zero. Note that the file name in this string is valid only during the initial processing of an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a> request. This file name should not be considered valid after the file system starts to process the <strong><a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a></strong> request. The storage for the string pointed to by the <strong>Buffer</strong> member of the <strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong> structure is allocated in paged system memory. For more information about obtaining a file name, see <a href="fltgetfilenameinformation" title="NTSTATUS FLTAPI FltGetFileNameInformation(&#10;  [in]  PFLT_CALLBACK_DATA         CallbackData,&#10;  [in]  FLT_FILE_NAME_OPTIONS      NameOptions,&#10;  [out] PFLT_FILE_NAME_INFORMATION *FileNameInformation&#10;);">FltGetFileNameInformation</a>.</p>
+
 <h3><code>CurrentByteOffset</code></h3>
+
 <p>A read-only member that specifies the file offset, in bytes, associated with the file object.</p>
+
 <h3><code>Waiters</code></h3>
+
 <p>A read-only member used by the system to count the number of outstanding waiters on a file object opened for synchronous access.</p>
+
 <h3><code>Busy</code></h3>
+
 <p>A read-only member used by the system to indicate whether a file object opened for synchronous access is currently busy.</p>
+
 <h3><code>LastLock</code></h3>
+
 <p>An opaque pointer to the last lock applied to the file object.</p>
+
 <h3><code>Lock</code></h3>
+
 <p>An opaque member used by the system to hold a file object event lock. The event lock is used to control synchronous access to the file object. Applicable only to file objects that are opened for synchronous access.</p>
+
 <h3><code>Event</code></h3>
+
 <p>An opaque member used by the system to hold an event object for the file object. The event object is used to signal the completion of an I/O request on the file object if no user event was supplied or a synchronous API was called.</p>
+
 <h3><code>CompletionContext</code></h3>
+
 <p>An opaque pointer to completion port information (port pointer and key) associated with the file object, if any.</p>
+
 <h3><code>IrpListLock</code></h3>
-<p>An opaque pointer to a <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-spin-locks">KSPIN_LOCK</a> structure that serves as the spin lock used to synchronize access to the file object's <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> list.</p>
+
+<p>An opaque pointer to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-spin-locks">KSPIN_LOCK</a> structure that serves as the spin lock used to synchronize access to the file object's <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> list.</p>
+
 <h3><code>IrpList</code></h3>
+
 <p>An opaque pointer to the head of the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> list associated with the file object.</p>
+
 <h3><code>FileObjectExtension</code></h3>
-<p>An opaque pointer to the file object's file object extension (<a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/the-fobx-structure">FOBX</a>) structure. The <strong>FOBX</strong> structure contains various opaque contexts used internally as well as the per-file object contexts available through <strong>FsRtl<em>Xxx</em></strong> routines.</p>
+
+<p>An opaque pointer to the file object's file object extension (<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/the-fobx-structure">FOBX</a>) structure. The <strong>FOBX</strong> structure contains various opaque contexts used internally as well as the per-file object contexts available through <strong>FsRtl*Xxx</strong>* routines.</p>
+
 <h3><code>_IOP_FILE_OBJECT_EXTENSION</code></h3>
+
 <p>A <strong>_IOP_FILE_OBJECT_EXTENSION</strong> structure.</p>
+
 <h2>Remarks</h2>
+
 <p>Drivers can use the <strong>FsContext</strong> and <strong>FsContext2</strong> members to maintain driver-determined state about an open file object. A driver cannot use these members unless the file object is accessible in the driver's I/O stack location of an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>.</p>
+
 <p>All remaining members in a file object are either opaque or read-only:</p>
+
 <ul>
-<li>
-<p>Opaque members within a file object should be considered inaccessible. Drivers with dependencies on object field locations or access to opaque members might not remain portable and interoperable with other drivers over time.</p>
-</li>
-<li>
-<p>Drivers can use read-only members to acquire relevant information but must not modify read-only members and, if a pointer, the object that the member points to.</p>
-</li>
+<li><p>Opaque members within a file object should be considered inaccessible. Drivers with dependencies on object field locations or access to opaque members might not remain portable and interoperable with other drivers over time.</p></li>
+<li><p>Drivers can use read-only members to acquire relevant information but must not modify read-only members and, if a pointer, the object that the member points to.</p></li>
 </ul>
-<p>During the processing of an <a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a> request, a file system driver calls the <a href="iosetshareaccess" title="VOID IoSetShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [out]     PSHARE_ACCESS ShareAccess&#10;);">IoSetShareAccess</a> routine (if the client is the first to open the file) or the <a href="iocheckshareaccess" title="NTSTATUS IoCheckShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [in, out] PSHARE_ACCESS ShareAccess,&#10;  [in]      BOOLEAN       Update&#10;);">IoCheckShareAccess</a> routine (for subsequent clients that want to share the file). <strong><a href="iosetshareaccess" title="VOID IoSetShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [out]     PSHARE_ACCESS ShareAccess&#10;);">IoSetShareAccess</a></strong> and <strong><a href="iocheckshareaccess" title="NTSTATUS IoCheckShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [in, out] PSHARE_ACCESS ShareAccess,&#10;  [in]      BOOLEAN       Update&#10;);">IoCheckShareAccess</a></strong> update the <strong>ReadAccess</strong>, <strong>WriteAccess</strong>, and <strong>DeleteAccess</strong> members to indicate the access rights that are granted to the client if the client has exclusive access to the file. Additionally, <strong><a href="iocheckshareaccess" title="NTSTATUS IoCheckShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [in, out] PSHARE_ACCESS ShareAccess,&#10;  [in]      BOOLEAN       Update&#10;);">IoCheckShareAccess</a></strong> updates the <strong>SharedRead</strong>, <strong>SharedWrite</strong>, and <strong>SharedDelete</strong> members to indicate the access rights that are simultaneously granted to two or more clients that share the file. If the driver for a device other than a file system has to monitor the access rights of clients, this driver typically stores access rights information in context buffers that are pointed to by the <strong>FsContext</strong> and <strong>FsContext2</strong> members.</p>
+
+<p>During the processing of an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a> request, a file system driver calls the <a href="iosetshareaccess" title="VOID IoSetShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [out]     PSHARE_ACCESS ShareAccess&#10;);">IoSetShareAccess</a> routine (if the client is the first to open the file) or the <a href="iocheckshareaccess" title="NTSTATUS IoCheckShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [in, out] PSHARE_ACCESS ShareAccess,&#10;  [in]      BOOLEAN       Update&#10;);">IoCheckShareAccess</a> routine (for subsequent clients that want to share the file). <strong><a href="iosetshareaccess" title="VOID IoSetShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [out]     PSHARE_ACCESS ShareAccess&#10;);">IoSetShareAccess</a></strong> and <strong><a href="iocheckshareaccess" title="NTSTATUS IoCheckShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [in, out] PSHARE_ACCESS ShareAccess,&#10;  [in]      BOOLEAN       Update&#10;);">IoCheckShareAccess</a></strong> update the <strong>ReadAccess</strong>, <strong>WriteAccess</strong>, and <strong>DeleteAccess</strong> members to indicate the access rights that are granted to the client if the client has exclusive access to the file. Additionally, <strong><a href="iocheckshareaccess" title="NTSTATUS IoCheckShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [in, out] PSHARE_ACCESS ShareAccess,&#10;  [in]      BOOLEAN       Update&#10;);">IoCheckShareAccess</a></strong> updates the <strong>SharedRead</strong>, <strong>SharedWrite</strong>, and <strong>SharedDelete</strong> members to indicate the access rights that are simultaneously granted to two or more clients that share the file. If the driver for a device other than a file system has to monitor the access rights of clients, this driver typically stores access rights information in context buffers that are pointed to by the <strong>FsContext</strong> and <strong>FsContext2</strong> members.</p>
+
 <p>The type of object (for example, a file, directory, or volume) that a given file object represents cannot be determined by only examining the contents of the file object structure. For information about how to determine the type of object that a file object represents, see <a href="ntqueryinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass&#10;    );">ZwQueryInformationFile</a>.</p>
+
 <p>The Common Log File System (CLFS) uses the <strong>LOG_FILE_OBJECT</strong> structure to represent logs. The <a href="clfscreatelogfile" title="CLFSUSER_API NTSTATUS ClfsCreateLogFile(&#10;  [out]          PPLOG_FILE_OBJECT    pplfoLog,&#10;  [in]           PUNICODE_STRING      puszLogFileName,&#10;  [in]           ACCESS_MASK          fDesiredAccess,&#10;  [in]           ULONG                dwShareMode,&#10;  [in, optional] PSECURITY_DESCRIPTOR psdLogFile,&#10;  [in]           ULONG                fCreateDisposition,&#10;  [in]           ULONG                fCreateOptions,&#10;  [in]           ULONG                fFlagsAndAttributes,&#10;  [in]           ULONG                fLogOptionFlag,&#10;  [in, optional] PVOID                pvContext,&#10;  [in]           ULONG                cbContext&#10;);">ClfsCreateLogFile</a> function returns a pointer to a <strong>LOG_FILE_OBJECT</strong> structure, which clients then pass to other CLFS functions.</p>
+
 <p>CLFS clients do not directly access the members of a <strong>LOG_FILE_OBJECT</strong> structure.</p>
-<pre lang="cpp"><code>typedef FILE_OBJECT LOG_FILE_OBJECT, *PLOG_FILE_OBJECT, **PPLOG_FILE_OBJECT;
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n">FILE_OBJECT</span><span class="w"> </span><span class="n">LOG_FILE_OBJECT</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">PLOG_FILE_OBJECT</span><span class="p">,</span><span class="w"> </span><span class="o">**</span><span class="n">PPLOG_FILE_OBJECT</span><span class="p">;</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
+
 <p><strong><a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">DEVICE_OBJECT</a></strong></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/the-fobx-structure">FOBX</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/the-fobx-structure">FOBX</a></p>
+
 <p><strong><a href="fsrtl_advanced_fcb_header" title="typedef struct _FSRTL_ADVANCED_FCB_HEADER {&#10;  FSRTL_COMMON_FCB_HEADER          DUMMYSTRUCTNAME;&#10;  PFAST_MUTEX                      FastMutex;&#10;  LIST_ENTRY                       FilterContexts;&#10;  EX_PUSH_LOCK                     PushLock;&#10;  PVOID                            *FileContextSupportPointer;&#10;  union {&#10;    OPLOCK Oplock;&#10;    PVOID  ReservedForRemote;&#10;  };&#10;  PVOID                            AePushLock;&#10;  PVOID                            ReservedContextLegacy;&#10;  ULONG                            BypassIoOpenCount;&#10;  struct _FSRTL_PER_STREAM_CONTEXT *ReservedContext;&#10;} FSRTL_ADVANCED_FCB_HEADER;">FSRTL_ADVANCED_FCB_HEADER</a></strong></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a></p>
+
 <p><a href="iocheckshareaccess" title="NTSTATUS IoCheckShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [in, out] PSHARE_ACCESS ShareAccess,&#10;  [in]      BOOLEAN       Update&#10;);">IoCheckShareAccess</a></p>
+
 <p><a href="iogetdeviceobjectpointer" title="NTSTATUS IoGetDeviceObjectPointer(&#10;  [in]  PUNICODE_STRING ObjectName,&#10;  [in]  ACCESS_MASK     DesiredAccess,&#10;  [out] PFILE_OBJECT    *FileObject,&#10;  [out] PDEVICE_OBJECT  *DeviceObject&#10;);">IoGetDeviceObjectPointer</a></p>
+
 <p><a href="iosetshareaccess" title="VOID IoSetShareAccess(&#10;  [in]      ACCESS_MASK   DesiredAccess,&#10;  [in]      ULONG         DesiredShareAccess,&#10;  [in, out] PFILE_OBJECT  FileObject,&#10;  [out]     PSHARE_ACCESS ShareAccess&#10;);">IoSetShareAccess</a></p>
+
 <p><a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a></p>
+
 <p><a href="ntqueryinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass&#10;    );">ZwQueryInformationFile</a></p>
 <hr>
 <div class="ntdoc-description-links">

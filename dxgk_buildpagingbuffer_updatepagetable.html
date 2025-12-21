@@ -77,37 +77,69 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>_DXGK_BUILDPAGINGBUFFER_UPDATEPAGETABLE structure</h1>
+
 <h2>Description</h2>
+
 <p><strong>DXGK_BUILDPAGINGBUFFER_UPDATEPAGETABLE</strong> is used as part of a page table update operation.</p>
+
 <h2>Members</h2>
+
 <h3><code>PageTableLevel</code></h3>
+
 <p>Level of a page table, which is updated.</p>
+
 <h3><code>hAllocation</code></h3>
-<p>Kernel mode driver handle of an allocation, which is mapped by the page table entries. The handle is returned by the kernel mode driver from <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_createallocation">DxgkDdiCreateAllocation</a>. The handle can be <strong>NULL</strong> for allocations, which do not have a kernel mode driver handle (page tables, page directories, etc.).</p>
+
+<p>Kernel mode driver handle of an allocation, which is mapped by the page table entries. The handle is returned by the kernel mode driver from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_createallocation">DxgkDdiCreateAllocation</a>. The handle can be <strong>NULL</strong> for allocations, which do not have a kernel mode driver handle (page tables, page directories, etc.).</p>
+
 <h3><code>PageTableAddress</code></h3>
+
 <p>Address of the page table to update. If <strong>DXGK_VIRTUALADDRESSCAPS:: PageTableUpdateMode</strong> is <strong>DXGK_PAGETABLEUPDATE_CPU_VIRTUAL</strong>, the CPU virtual address is in the <strong>CpuVirtual</strong> field. If <strong>DXGK_VIRTUALADDRESSCAPS:: PageTableUpdateMode</strong> is <strong>DXGK_PAGETABLEUPDATE_GPU_VIRTUAL</strong>, the GPU virtual address is in the <strong>GpuVirtual</strong> field. If <strong>DXGK_VIRTUALADDRESSCAPS:: PageTableUpdateMode</strong> is <strong>DXGK_PAGETABLEUPDATE_GPU_PHYSICAL</strong>, the GPU physical address is in the <strong>GpuPhysical</strong> field.</p>
+
 <h3><code>pPageTableEntries</code></h3>
+
 <p>The entries which need to be copied. The index zero in the <strong>pPageTableEntries</strong> array corresponds to the <strong>StartIndex</strong> in the driver page table entry array.</p>
+
 <h3><code>StartIndex</code></h3>
+
 <p>The starting index of a page table entry within the page table where the entries should be copied. The page table entry array index is zero-based.</p>
+
 <h3><code>NumPageTableEntries</code></h3>
+
 <p>The number of entries which need to be copied.</p>
+
 <h3><code>Reserved0</code></h3>
+
 <p>This member is reserved and should be set to zero.</p>
+
 <h3><code>Flags</code></h3>
+
 <p><a href="dxgk_updatepagetableflags" title="typedef struct _DXGK_UPDATEPAGETABLEFLAGS {&#10;  UINT Repeat : 1;&#10;  UINT InitialUpdate : 1;&#10;  UINT NotifyEviction : 1;&#10;  UINT Use64KBPages : 1;&#10;  UINT NativeFence : 1;&#10;#if ...&#10;  UINT Reserved : 27;&#10;#else&#10;  UINT Reserved : 28;&#10;#endif&#10;} DXGK_UPDATEPAGETABLEFLAGS;">DXGK_UPDATEPAGETABLEFLAGS</a> structure describing the update operation.</p>
+
 <h3><code>DriverProtection</code></h3>
+
 <p>Passed by UMD in MapGpuVirtualAddressRangeCb.</p>
+
 <h3><code>AllocationOffsetInBytes</code></h3>
+
 <p>When <strong>hAllocation</strong> is non-NULL, this field specifies the relative offset, in bytes, from the beginning of the allocation to the first page being targeted by this update operation. If the update target multiple pages from <strong>hAllocation</strong>, those pages are guaranteed to be sequential. For example, video memory manager may be updating a GPU virtual address to page 4,5,6,7 in <strong>hAllocation</strong>. There will never be a case where a driver would see a single update operation which target non sequential pages (ex. 4,5,7). Note that although the pages are guaranteed to be sequential from the point of view of the allocation, they may not be physically contiguous in memory.</p>
+
 <h3><code>hProcess</code></h3>
-<p>Kernel mode driver process handle for the process whose page table entries are updated. This is the value returned from <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_createprocess">DxgkDdiCreateProcess</a>.</p>
+
+<p>Kernel mode driver process handle for the process whose page table entries are updated. This is the value returned from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_createprocess">DxgkDdiCreateProcess</a>.</p>
+
 <h3><code>UpdateMode</code></h3>
+
 <p>Defines the meaning of <strong>PageTableAddress</strong>. When initializing page tables for the paging process, the update mode is always <strong>DXGK_PAGETABLEUPDATE_CPU_VIRTUAL</strong> and <strong>pDmaBuffer</strong> is set to <strong>NULL</strong>. In this case the driver must update page tables immediately. In other cases the <strong>UpdateMode</strong> is set to the value, which is specified in <strong>DXGK_VIRTUALADDRESSCAPS::GpuMmu.PageTableUpdateMode</strong>.</p>
+
 <p>When updating page table entries for a leaf page table, video memory manager assumes that each entry covers a 4KB page. If a GPU page is bigger (4 KB * 2n), the video memory manager will provide entries in the array, which point within GPU pages. The kernel mode driver might only need to initialize page table entries, which point to the beginning of GPU pages. The following figure illustrates this for the case when GPU page is 16 KB.</p>
+
 <h3><code>pPageTableEntries64KB</code></h3>
+
 <p>The entries which need to be copied from the 64KB page tables. The index zero in the <strong>pPageTableEntries</strong> array corresponds to the <strong>StartIndex</strong> in the driver page table entry array. The array should be use only when the <strong><a href="dxgk_gpummucaps" title="typedef struct _DXGK_GPUMMUCAPS {&#10;  union {&#10;    struct {&#10;      UINT ReadOnlyMemorySupported : 1;&#10;      UINT NoExecuteMemorySupported : 1;&#10;      UINT ZeroInPteSupported : 1;&#10;      UINT ExplicitPageTableInvalidation : 1;&#10;      UINT CacheCoherentMemorySupported : 1;&#10;      UINT PageTableUpdateRequireAddressSpaceIdle : 1;&#10;      UINT LargePageSupported : 1;&#10;      UINT DualPteSupported : 1;&#10;      UINT AllowNonAlignedLargePageAddress : 1;&#10;      UINT SysMem64KBPageSupported : 1;&#10;      UINT InvalidTlbEntriesNotCached : 1;&#10;      UINT SysMemLargePageSupported : 1;&#10;      UINT CachedPageTables : 1;&#10;#if ...&#10;      UINT Reserved : 19;&#10;#elif&#10;      UINT Reserved : 20;&#10;...">DXGK_GPUMMUCAPS</a>::DualPteSupported</strong> cap is set.</p>
+
 <h3><code>FirstPteVirtualAddress</code></h3>
+
 <p>The GPU virtual address that is mapped by the first updated page table entry.</p>
 <hr>
 <div class="ntdoc-description-links">

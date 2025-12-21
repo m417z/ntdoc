@@ -63,113 +63,144 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>IOCTL_SRIOV_NOTIFICATION IOCTL</h1>
+
 <h2>Major Code</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-device-control">IRP_MJ_DEVICE_CONTROL</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-device-control">IRP_MJ_DEVICE_CONTROL</a></p>
+
 <h2>Description</h2>
+
 <p>The request indicates that the virtualization stack wants to be notified when one of the events listed in
 <a href="sriov_pf_event" title="typedef enum _SRIOV_PF_EVENT {&#10;  SriovEventPfQueryStopDevice,&#10;  SriovEventPfRestart,&#10;  SriovEventPfMaximum&#10;} SRIOV_PF_EVENT;">SRIOV_PF_EVENT</a> occurs.</p>
+
 <h2>Parameters</h2>
+
 <h3>Input buffer</h3>
+
 <p>None. This IOCTL does not use an input buffer.</p>
+
 <h3>Input buffer length</h3>
+
 <p>Zero.</p>
+
 <h3>Output buffer</h3>
+
 <p>A buffer that contains an <a href="sriov_pf_event" title="typedef enum _SRIOV_PF_EVENT {&#10;  SriovEventPfQueryStopDevice,&#10;  SriovEventPfRestart,&#10;  SriovEventPfMaximum&#10;} SRIOV_PF_EVENT;">SRIOV_PF_EVENT</a>-type value filled by the physical function (PF) driver when it completes the request.</p>
+
 <h3>Output buffer length</h3>
+
 <p>A pointer to a variable to contain the number of bytes written to the output buffer when the request is completed.</p>
+
 <h3>Input/output buffer</h3>
+
 <p>Not used with this operation; set to <strong>NULL</strong>.</p>
+
 <h3>Input/output buffer length</h3>
+
 <p>Not used with this operation; set to zero.</p>
+
 <h3>Status block</h3>
-<p><strong>Irp-&gt;IoStatus.Status</strong> is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, <strong>Status</strong> is set to the appropriate error condition as a <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS</a> code.</p>
+
+<p><strong>Irp->IoStatus.Status</strong> is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, <strong>Status</strong> is set to the appropriate error condition as a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS</a> code.</p>
+
 <h2>Remarks</h2>
+
 <p>This IOCTL request is sent by the virtualization stack to the PCI Express SR-IOV Physical Function (PF) driver that exposes GUID_DEVINTERFACE_VIRTUALIZABLE_DEVICE.</p>
+
 <p>The <strong>IOCTL_SRIOV_NOTIFICATION</strong> request is held in a queue by the PF driver until the request is either cancelled by sender or the device experiences one of the events listed in
 <a href="sriov_pf_event" title="typedef enum _SRIOV_PF_EVENT {&#10;  SriovEventPfQueryStopDevice,&#10;  SriovEventPfRestart,&#10;  SriovEventPfMaximum&#10;} SRIOV_PF_EVENT;">SRIOV_PF_EVENT</a>. The driver then completes the pending request.</p>
+
 <p>If the PF driver receives this IOCTL request while processing a Plug and Play event for which the driver has not yet completed a notification, it should complete the IOCTL request immediately with the event details in the output buffer. Otherwise, the driver should queue the request until either it is cancelled or a Plug and Play event that requires notification occurs.</p>
+
 <p>The virtualization stack can send the <strong>IOCTL_SRIOV_NOTIFICATION</strong> request immediately after the previous <strong>IOCTL_SRIOV_NOTIFICATION</strong> request completes. The PF driver must keep track of the fact
 that an event notification has been delivered and must not complete two IOCTL requests for the same event twice.</p>
+
 <p>It is pended by the PF driver until it is canceled by the sender or until the PF driver experiences one of several PnP events, at which point it is completed.</p>
-<pre lang="cpp"><code>case IOCTL_SRIOV_NOTIFICATION:
-        TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL,
-            &quot;IOCTL_SRIOV_NOTIFICATION:\n&quot;);
 
-        status = <a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a>(Request,
-                                            fdoContext-&gt;NotificationQueue);
-        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
-        {
-            // not able to push it into manual queue, too bad.
-            TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP,
-                        &quot;<a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a> failed status=%!STATUS!\n&quot;,
-                        status);
-            break;
-        }
+<div class="codehilite">
+<pre><span></span><code><span class="k">case</span><span class="w"> </span><span class="no">IOCTL_SRIOV_NOTIFICATION</span><span class="p">:</span>
+<span class="w">        </span><span class="n">TraceEvents</span><span class="p">(</span><span class="n">TRACE_LEVEL_VERBOSE</span><span class="p">,</span><span class="w"> </span><span class="n">DBG_IOCTL</span><span class="p">,</span>
+<span class="w">            </span><span class="s">&quot;IOCTL_SRIOV_NOTIFICATION:</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
 
-        // Pnp might arrived before SRIOV_NOTIFICATION. Serve the new
-        // outstanding pnp if there is one.
-        CheckPendingNotifications(fdoContext);
-        status = STATUS_PENDING;
-        break;
+<span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a></span><span class="p">(</span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                                            </span><span class="n">fdoContext</span><span class="o">-&gt;</span><span class="n">NotificationQueue</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="c1">// not able to push it into manual queue, too bad.</span>
+<span class="w">            </span><span class="n">TraceEvents</span><span class="p">(</span><span class="n">TRACE_LEVEL_ERROR</span><span class="p">,</span><span class="w"> </span><span class="n">DBG_PNP</span><span class="p">,</span>
+<span class="w">                        </span><span class="s">&quot;<a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a> failed status=%!STATUS!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+<span class="w">                        </span><span class="n">status</span><span class="p">);</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="c1">// Pnp might arrived before SRIOV_NOTIFICATION. Serve the new</span>
+<span class="w">        </span><span class="c1">// outstanding pnp if there is one.</span>
+<span class="w">        </span><span class="n">CheckPendingNotifications</span><span class="p">(</span><span class="n">fdoContext</span><span class="p">);</span>
+<span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STATUS_PENDING</span><span class="p">;</span>
+<span class="w">        </span><span class="k">break</span><span class="p">;</span>
 </code></pre>
-<pre lang="cpp"><code>VOID
-CheckPendingNotifications(
-    __in PDEVICE_CONTEXT DeviceContext
-    )
-/*
-Routine Description:
-    This routine checks if there is a pending event and a pending request
-    for notification and if so completes the request.
+</div>
 
-Arguments:
-    DeviceContext - Pointer to the device context
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="nf">CheckPendingNotifications</span><span class="p">(</span>
+<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">PDEVICE_CONTEXT</span><span class="w"> </span><span class="n">DeviceContext</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="cm">/*</span>
+<span class="cm">Routine Description:</span>
+<span class="cm">    This routine checks if there is a pending event and a pending request</span>
+<span class="cm">    for notification and if so completes the request.</span>
 
-Return Value:
-    None.
-*/
-{
-    <a href="sriov_pf_event" title="typedef enum _SRIOV_PF_EVENT {&#10;  SriovEventPfQueryStopDevice,&#10;  SriovEventPfRestart,&#10;  SriovEventPfMaximum&#10;} SRIOV_PF_EVENT;">PSRIOV_PF_EVENT</a> notification;
-    WDFQUEUE        queue;
-    WDFREQUEST      request;
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>        status;
+<span class="cm">Arguments:</span>
+<span class="cm">    DeviceContext - Pointer to the device context</span>
 
-    PAGED_CODE();
+<span class="cm">Return Value:</span>
+<span class="cm">    None.</span>
+<span class="cm">*/</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="sriov_pf_event" title="typedef enum _SRIOV_PF_EVENT {&#10;  SriovEventPfQueryStopDevice,&#10;  SriovEventPfRestart,&#10;  SriovEventPfMaximum&#10;} SRIOV_PF_EVENT;">PSRIOV_PF_EVENT</a></span><span class="w"> </span><span class="n">notification</span><span class="p">;</span>
+<span class="w">    </span><span class="n">WDFQUEUE</span><span class="w">        </span><span class="n">queue</span><span class="p">;</span>
+<span class="w">    </span><span class="n">WDFREQUEST</span><span class="w">      </span><span class="n">request</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">        </span><span class="n">status</span><span class="p">;</span>
 
-    <a href="wdfwaitlockacquire" title="NTSTATUS WdfWaitLockAcquire(&#10;  [in]           WDFWAITLOCK Lock,&#10;  [in, optional] PLONGLONG   Timeout&#10;);">WdfWaitLockAcquire</a>(DeviceContext-&gt;PnpStateLock, NULL);
+<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
 
-    queue = DeviceContext-&gt;NotificationQueue;
-    if (DeviceContext-&gt;PnpEventNew
-        &amp;&amp; <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(<a href="wdfioqueueretrievenextrequest" title="NTSTATUS WdfIoQueueRetrieveNextRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveNextRequest</a>(queue, &amp;request)))
-    {
-        <a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a>(DeviceContext-&gt;PnpEventPending != FALSE);
-        DeviceContext-&gt;PnpEventNew = FALSE;
+<span class="w">    </span><span class="n"><a href="wdfwaitlockacquire" title="NTSTATUS WdfWaitLockAcquire(&#10;  [in]           WDFWAITLOCK Lock,&#10;  [in, optional] PLONGLONG   Timeout&#10;);">WdfWaitLockAcquire</a></span><span class="p">(</span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">PnpStateLock</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
 
-        status = <a href="wdfrequestretrieveoutputbuffer" title="NTSTATUS WdfRequestRetrieveOutputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredSize,&#10;  [out]           PVOID      *Buffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveOutputBuffer</a>(request,
-                                                sizeof(*notification),
-                                                &amp;notification,
-                                                NULL);
-        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
-        {
-            TraceEvents(TRACE_LEVEL_ERROR, DBG_PNP,
-                &quot;<a href="wdfrequestretrieveoutputbuffer" title="NTSTATUS WdfRequestRetrieveOutputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredSize,&#10;  [out]           PVOID      *Buffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveOutputBuffer</a>[SRIOV_NOTIFICATION] fail: %!STATUS!&quot;, status);
-            <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(request, status);
-        }
-        else
-        {
-            TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, &quot;Retrieved IoQueue request buffer (notification)\n&quot;);
+<span class="w">    </span><span class="n">queue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">NotificationQueue</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">PnpEventNew</span>
+<span class="w">        </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n"><a href="wdfioqueueretrievenextrequest" title="NTSTATUS WdfIoQueueRetrieveNextRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveNextRequest</a></span><span class="p">(</span><span class="n">queue</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">request</span><span class="p">)))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n"><a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a></span><span class="p">(</span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">PnpEventPending</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">);</span>
+<span class="w">        </span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">PnpEventNew</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
 
-            *notification = DeviceContext-&gt;PnpEventCode;
-            <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(request,
-                                              <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>,
-                                              sizeof(*notification));
-        }
-    }
+<span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfrequestretrieveoutputbuffer" title="NTSTATUS WdfRequestRetrieveOutputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredSize,&#10;  [out]           PVOID      *Buffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveOutputBuffer</a></span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+<span class="w">                                                </span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">notification</span><span class="p">),</span>
+<span class="w">                                                </span><span class="o">&amp;</span><span class="n">notification</span><span class="p">,</span>
+<span class="w">                                                </span><span class="nb">NULL</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">TraceEvents</span><span class="p">(</span><span class="n">TRACE_LEVEL_ERROR</span><span class="p">,</span><span class="w"> </span><span class="n">DBG_PNP</span><span class="p">,</span>
+<span class="w">                </span><span class="s">&quot;<a href="wdfrequestretrieveoutputbuffer" title="NTSTATUS WdfRequestRetrieveOutputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredSize,&#10;  [out]           PVOID      *Buffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveOutputBuffer</a>[SRIOV_NOTIFICATION] fail: %!STATUS!&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">);</span>
+<span class="w">            </span><span class="n"><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></span><span class="p">(</span><span class="n">request</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">else</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">TraceEvents</span><span class="p">(</span><span class="n">TRACE_LEVEL_VERBOSE</span><span class="p">,</span><span class="w"> </span><span class="n">DBG_IOCTL</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;Retrieved IoQueue request buffer (notification)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
 
-    <a href="wdfwaitlockrelease" title="VOID WdfWaitLockRelease(&#10;  [in] WDFWAITLOCK Lock&#10;);">WdfWaitLockRelease</a>(DeviceContext-&gt;PnpStateLock);
+<span class="w">            </span><span class="o">*</span><span class="n">notification</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">PnpEventCode</span><span class="p">;</span>
+<span class="w">            </span><span class="n"><a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a></span><span class="p">(</span><span class="n">request</span><span class="p">,</span>
+<span class="w">                                              </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">,</span>
+<span class="w">                                              </span><span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">notification</span><span class="p">));</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
 
-    return;
-}
+<span class="w">    </span><span class="n"><a href="wdfwaitlockrelease" title="VOID WdfWaitLockRelease(&#10;  [in] WDFWAITLOCK Lock&#10;);">WdfWaitLockRelease</a></span><span class="p">(</span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">PnpStateLock</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
 <hr>
 <div class="ntdoc-description-links">
 <p>

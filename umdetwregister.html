@@ -64,82 +64,101 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>UMDEtwRegister function</h1>
+
 <h2>Description</h2>
+
 <p>Registers the event trace provider. The driver should call this function before it makes any calls to log events.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>CbRundown</code></h3>
+
 <p>A pointer to a callback function that returns information about the current state of the user-mode driver.</p>
+
 <p>This callback function should call the <a href="umdetwlogmapallocation" title="void UMDEtwLogMapAllocation(&#10;  ULONGLONG                  hD3DAllocation,&#10;  ULONGLONG                  hDxgAllocation,&#10;  ULONGLONG                  Offset,&#10;  ULONGLONG                  Size,&#10;  UMDETW_ALLOCATION_USAGE    Usage,&#10;  UMDETW_ALLOCATION_SEMANTIC Semantic&#10;);">UMDEtwLogMapAllocation</a> function for every current allocation mapping.</p>
+
 <h2>Remarks</h2>
+
 <p>The data type for the <em>CbRundown</em> parameter is defined as:</p>
-<pre lang="cpp"><code>typedef void (*PFNUMDETW_RUNDOWN)();
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><span class="n">PFNUMDETW_RUNDOWN</span><span class="p">)();</span>
 </code></pre>
+</div>
+
 <p><strong>UMDEtwRegister</strong> is defined inline in Umdprovider.h as:</p>
-<pre lang="cpp"><code>// GUID for UMD ETW provider
-// {A688EE40-D8D9-4736-B6F9-6B74935BA3B1}
-static const GUID UMDEtwProviderId =
-{ 0xa688ee40, 0xd8d9, 0x4736, { 0xb6, 0xf9, 0x6b, 0x74, 0x93, 0x5b, 0xa3, 0xb1 } };
 
-// Registration handle, returned by EventRegister and passed to EventUnregister
-__declspec(selectany) <a href="reghandle" title="typedef ULONGLONG REGHANDLE, *PREGHANDLE;">REGHANDLE</a> RegHandle = NULL;
+<div class="codehilite">
+<pre><span></span><code><span class="c1">// GUID for UMD ETW provider</span>
+<span class="c1">// {A688EE40-D8D9-4736-B6F9-6B74935BA3B1}</span>
+<span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">GUID</span><span class="w"> </span><span class="n">UMDEtwProviderId</span><span class="w"> </span><span class="o">=</span>
+<span class="p">{</span><span class="w"> </span><span class="mh">0xa688ee40</span><span class="p">,</span><span class="w"> </span><span class="mh">0xd8d9</span><span class="p">,</span><span class="w"> </span><span class="mh">0x4736</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="mh">0xb6</span><span class="p">,</span><span class="w"> </span><span class="mh">0xf9</span><span class="p">,</span><span class="w"> </span><span class="mh">0x6b</span><span class="p">,</span><span class="w"> </span><span class="mh">0x74</span><span class="p">,</span><span class="w"> </span><span class="mh">0x93</span><span class="p">,</span><span class="w"> </span><span class="mh">0x5b</span><span class="p">,</span><span class="w"> </span><span class="mh">0xa3</span><span class="p">,</span><span class="w"> </span><span class="mh">0xb1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">};</span>
 
-// Whether any level of logging is enabled.
-__declspec(selectany) BOOLEAN Enabled = FALSE;
+<span class="c1">// Registration handle, returned by EventRegister and passed to EventUnregister</span>
+<span class="kr">__declspec</span><span class="p">(</span><span class="n">selectany</span><span class="p">)</span><span class="w"> </span><span class="n"><a href="reghandle" title="typedef ULONGLONG REGHANDLE, *PREGHANDLE;">REGHANDLE</a></span><span class="w"> </span><span class="n">RegHandle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
-// Whether we are currently in a rundown
-__declspec(selectany) BOOLEAN InRundown = FALSE;
+<span class="c1">// Whether any level of logging is enabled.</span>
+<span class="kr">__declspec</span><span class="p">(</span><span class="n">selectany</span><span class="p">)</span><span class="w"> </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">Enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
 
-// Callback to the driver when a rundown is needed
-__declspec(selectany) PFNUMDETW_RUNDOWN Rundown = NULL;
+<span class="c1">// Whether we are currently in a rundown</span>
+<span class="kr">__declspec</span><span class="p">(</span><span class="n">selectany</span><span class="p">)</span><span class="w"> </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">InRundown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
 
-FORCEINLINE void NTAPI EnableCallback(
-  __in      LPCGUID SourceId,
-  __in      <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> IsEnabled,
-  __in      <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Level,
-  __in      <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> MatchAnyKeyword,
-  __in      <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> MatchAllKeywords,
-  __in_opt  <a href="pevent_filter_descriptor" title="typedef struct _EVENT_FILTER_DESCRIPTOR *PEVENT_FILTER_DESCRIPTOR;">PEVENT_FILTER_DESCRIPTOR</a> FilterData,
-  __in_opt  PVOID CallbackContext
-)
-{
-    switch (IsEnabled)
-    {
-        case EVENT_CONTROL_CODE_DISABLE_PROVIDER:
-            Enabled = FALSE;
-            break;
-        case EVENT_CONTROL_CODE_ENABLE_PROVIDER:
-            Enabled = TRUE;
-            break;
-        case EVENT_CONTROL_CODE_CAPTURE_STATE:
-            // Temporarily enable logging during the rundown
-            BOOLEAN OldEnabled = Enabled;
-            Enabled = TRUE;
+<span class="c1">// Callback to the driver when a rundown is needed</span>
+<span class="kr">__declspec</span><span class="p">(</span><span class="n">selectany</span><span class="p">)</span><span class="w"> </span><span class="n">PFNUMDETW_RUNDOWN</span><span class="w"> </span><span class="n">Rundown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
-            InRundown = TRUE;
-            Rundown();
-            InRundown = FALSE;
+<span class="n">FORCEINLINE</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">NTAPI</span><span class="w"> </span><span class="n">EnableCallback</span><span class="p">(</span>
+<span class="w">  </span><span class="n">__in</span><span class="w">      </span><span class="n">LPCGUID</span><span class="w"> </span><span class="n">SourceId</span><span class="p">,</span>
+<span class="w">  </span><span class="n">__in</span><span class="w">      </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">IsEnabled</span><span class="p">,</span>
+<span class="w">  </span><span class="n">__in</span><span class="w">      </span><span class="n"><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a></span><span class="w"> </span><span class="n">Level</span><span class="p">,</span>
+<span class="w">  </span><span class="n">__in</span><span class="w">      </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">MatchAnyKeyword</span><span class="p">,</span>
+<span class="w">  </span><span class="n">__in</span><span class="w">      </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">MatchAllKeywords</span><span class="p">,</span>
+<span class="w">  </span><span class="n">__in_opt</span><span class="w">  </span><span class="n"><a href="pevent_filter_descriptor" title="typedef struct _EVENT_FILTER_DESCRIPTOR *PEVENT_FILTER_DESCRIPTOR;">PEVENT_FILTER_DESCRIPTOR</a></span><span class="w"> </span><span class="n">FilterData</span><span class="p">,</span>
+<span class="w">  </span><span class="n">__in_opt</span><span class="w">  </span><span class="n">PVOID</span><span class="w"> </span><span class="n">CallbackContext</span>
+<span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">IsEnabled</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">EVENT_CONTROL_CODE_DISABLE_PROVIDER</span><span class="p">:</span>
+<span class="w">            </span><span class="n">Enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">EVENT_CONTROL_CODE_ENABLE_PROVIDER</span><span class="p">:</span>
+<span class="w">            </span><span class="n">Enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TRUE</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">EVENT_CONTROL_CODE_CAPTURE_STATE</span><span class="p">:</span>
+<span class="w">            </span><span class="c1">// Temporarily enable logging during the rundown</span>
+<span class="w">            </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">OldEnabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Enabled</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TRUE</span><span class="p">;</span>
 
-            // Restore Enabled to its original state
-            Enabled = OldEnabled;
+<span class="w">            </span><span class="n">InRundown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TRUE</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Rundown</span><span class="p">();</span>
+<span class="w">            </span><span class="n">InRundown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
 
-            break;
-    }
-}
+<span class="w">            </span><span class="c1">// Restore Enabled to its original state</span>
+<span class="w">            </span><span class="n">Enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">OldEnabled</span><span class="p">;</span>
 
-FORCEINLINE void UMDEtwRegister(PFNUMDETW_RUNDOWN RundownCb)
-{
-    Rundown = RundownCb;
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 
-    // Register the provider
-    EventRegister(&amp;UMDEtwProviderId,
-                  EnableCallback,
-                  NULL,
-                  &amp;RegHandle);
-}
+<span class="n">FORCEINLINE</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">UMDEtwRegister</span><span class="p">(</span><span class="n">PFNUMDETW_RUNDOWN</span><span class="w"> </span><span class="n">RundownCb</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">Rundown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">RundownCb</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Register the provider</span>
+<span class="w">    </span><span class="n">EventRegister</span><span class="p">(</span><span class="o">&amp;</span><span class="n">UMDEtwProviderId</span><span class="p">,</span>
+<span class="w">                  </span><span class="n">EnableCallback</span><span class="p">,</span>
+<span class="w">                  </span><span class="nb">NULL</span><span class="p">,</span>
+<span class="w">                  </span><span class="o">&amp;</span><span class="n">RegHandle</span><span class="p">);</span>
+<span class="p">}</span>
 </code></pre>
-<p>The <a href="https://learn.microsoft.com/windows/win32/api/evntprov/nf-evntprov-eventregister">EventRegister</a> function and the <strong>EVENT_CONTROL_CODE_XXX</strong> values are described in the <a href="https://learn.microsoft.com/windows/desktop/Events/windows-events">Windows Events</a> documentation.</p>
+</div>
+
+<p>The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/evntprov/nf-evntprov-eventregister">EventRegister</a> function and the <strong>EVENT_CONTROL_CODE_XXX</strong> values are described in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/Events/windows-events">Windows Events</a> documentation.</p>
+
 <h2>See also</h2>
+
 <p><a href="umdetwlogmapallocation" title="void UMDEtwLogMapAllocation(&#10;  ULONGLONG                  hD3DAllocation,&#10;  ULONGLONG                  hDxgAllocation,&#10;  ULONGLONG                  Offset,&#10;  ULONGLONG                  Size,&#10;  UMDETW_ALLOCATION_USAGE    Usage,&#10;  UMDETW_ALLOCATION_SEMANTIC Semantic&#10;);">UMDEtwLogMapAllocation</a></p>
+
 <p><a href="umdetwunregister" title="void UMDEtwUnregister();">UMDEtwUnregister</a></p>
 <hr>
 <div class="ntdoc-description-links">

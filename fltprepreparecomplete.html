@@ -66,57 +66,93 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltPrePrepareComplete function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>FltPrePrepareComplete</strong> routine acknowledges a TRANSACTION_NOTIFY_PREPREPARE notification.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Instance</code> [in]</h3>
+
 <p>Opaque instance pointer for the caller.</p>
+
 <h3><code>Transaction</code> [in]</h3>
+
 <p>Opaque transaction pointer for the transaction.</p>
+
 <h3><code>TransactionContext</code> [in, optional]</h3>
+
 <p>Pointer to the minifilter driver's transaction context.</p>
+
 <h2>Return value</h2>
+
 <p><strong>FltPrePrepareComplete</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value, such as the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_NOT_FOUND</strong></td>
-<td>The minifilter driver did not set a context on the transaction. This is an error code.</td>
+  <td><strong>STATUS_NOT_FOUND</strong></td>
+  <td>The minifilter driver did not set a context on the transaction. This is an error code.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>A minifilter driver that is enlisted in a transaction can receive a TRANSACTION_NOTIFY_PREPREPARE notification when the transaction enters the pre-prepare for commit phase. To send the notification to the minifilter driver, the filter manager calls the minifilter driver's <em>TransactionNotificationCallback</em> routine. The minifilter driver acknowledges this notification in one of two ways:</p>
+
 <ul>
 <li>The minifilter driver's <em>TransactionNotificationCallback</em> routine performs any needed processing and returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. In this case, the minifilter driver does not call <strong>FltPrePrepareComplete</strong>.</li>
 <li>The minifilter driver's <em>TransactionNotificationCallback</em> routine posts any needed processing to a worker thread and returns STATUS_PENDING. After performing the processing asynchronously, the minifilter driver's work routine must call <strong>FltPrePrepareComplete</strong> to indicate that it has finished this processing. If the minifilter driver's work routine does not call <strong>FltPrePrepareComplete</strong>, the transaction pre-prepare operation cannot be completed by the kernel transaction manager.</li>
 </ul>
+
 <p>To register a <em>TransactionNotificationCallback</em> routine, a minifilter driver stores the address of a routine of type <a href="pflt_transaction_notification_callback" title="PFLT_TRANSACTION_NOTIFICATION_CALLBACK PfltTransactionNotificationCallback;&#10;&#10;NTSTATUS PfltTransactionNotificationCallback(&#10;  [in] PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in] PFLT_CONTEXT TransactionContext,&#10;  [in] ULONG NotificationMask&#10;)&#10;{...}">PFLT_TRANSACTION_NOTIFICATION_CALLBACK</a> in the <strong>TransactionNotificationCallback</strong> member of the <a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a> structure that the minifilter driver passes as the <em>Registration</em> parameter of <a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a>.</p>
+
 <p>To enlist in a transaction, call <a href="fltenlistintransaction" title="NTSTATUS FLTAPI FltEnlistInTransaction(&#10;  [in] PFLT_INSTANCE     Instance,&#10;  [in] PKTRANSACTION     Transaction,&#10;  [in] PFLT_CONTEXT      TransactionContext,&#10;  [in] NOTIFICATION_MASK NotificationMask&#10;);">FltEnlistInTransaction</a>.</p>
+
 <p>To allocate a new transaction context, call <a href="fltallocatecontext" title="NTSTATUS FLTAPI FltAllocateContext(&#10;  [in]  PFLT_FILTER      Filter,&#10;  [in]  FLT_CONTEXT_TYPE ContextType,&#10;  [in]  SIZE_T           ContextSize,&#10;  [in]  POOL_TYPE        PoolType,&#10;  [out] PFLT_CONTEXT     *ReturnedContext&#10;);">FltAllocateContext</a>.</p>
+
 <p>To retrieve a transaction context, call <a href="fltgettransactioncontext" title="NTSTATUS FLTAPI FltGetTransactionContext(&#10;  [in]  PFLT_INSTANCE Instance,&#10;  [in]  PKTRANSACTION Transaction,&#10;  [out] PFLT_CONTEXT  *Context&#10;);">FltGetTransactionContext</a>.</p>
+
 <p>To delete a transaction context, call <a href="fltdeletetransactioncontext" title="NTSTATUS FLTAPI FltDeleteTransactionContext(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PKTRANSACTION Transaction,&#10;  [out, optional] PFLT_CONTEXT  *OldContext&#10;);">FltDeleteTransactionContext</a> or <a href="fltdeletecontext" title="VOID FLTAPI FltDeleteContext(&#10;  [in] PFLT_CONTEXT Context&#10;);">FltDeleteContext</a>.</p>
+
 <p>To set a transaction context, call <a href="fltsettransactioncontext" title="NTSTATUS FLTAPI FltSetTransactionContext(&#10;  [in]            PFLT_INSTANCE             Instance,&#10;  [in]            PKTRANSACTION             Transaction,&#10;  [in]            FLT_SET_CONTEXT_OPERATION Operation,&#10;  [in]            PFLT_CONTEXT              NewContext,&#10;  [out, optional] PFLT_CONTEXT              *OldContext&#10;);">FltSetTransactionContext</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a></p>
+
 <p><a href="fltallocatecontext" title="NTSTATUS FLTAPI FltAllocateContext(&#10;  [in]  PFLT_FILTER      Filter,&#10;  [in]  FLT_CONTEXT_TYPE ContextType,&#10;  [in]  SIZE_T           ContextSize,&#10;  [in]  POOL_TYPE        PoolType,&#10;  [out] PFLT_CONTEXT     *ReturnedContext&#10;);">FltAllocateContext</a></p>
+
 <p><a href="fltcommitcomplete" title="NTSTATUS FLTAPI FltCommitComplete(&#10;  [in]           PFLT_INSTANCE Instance,&#10;  [in]           PKTRANSACTION Transaction,&#10;  [in, optional] PFLT_CONTEXT  TransactionContext&#10;);">FltCommitComplete</a></p>
+
 <p><a href="fltdeletecontext" title="VOID FLTAPI FltDeleteContext(&#10;  [in] PFLT_CONTEXT Context&#10;);">FltDeleteContext</a></p>
+
 <p><a href="fltdeletetransactioncontext" title="NTSTATUS FLTAPI FltDeleteTransactionContext(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PKTRANSACTION Transaction,&#10;  [out, optional] PFLT_CONTEXT  *OldContext&#10;);">FltDeleteTransactionContext</a></p>
+
 <p><a href="fltenlistintransaction" title="NTSTATUS FLTAPI FltEnlistInTransaction(&#10;  [in] PFLT_INSTANCE     Instance,&#10;  [in] PKTRANSACTION     Transaction,&#10;  [in] PFLT_CONTEXT      TransactionContext,&#10;  [in] NOTIFICATION_MASK NotificationMask&#10;);">FltEnlistInTransaction</a></p>
+
 <p><a href="fltgettransactioncontext" title="NTSTATUS FLTAPI FltGetTransactionContext(&#10;  [in]  PFLT_INSTANCE Instance,&#10;  [in]  PKTRANSACTION Transaction,&#10;  [out] PFLT_CONTEXT  *Context&#10;);">FltGetTransactionContext</a></p>
+
 <p><a href="fltpreparecomplete" title="NTSTATUS FLTAPI FltPrepareComplete(&#10;  [in]           PFLT_INSTANCE Instance,&#10;  [in]           PKTRANSACTION Transaction,&#10;  [in, optional] PFLT_CONTEXT  TransactionContext&#10;);">FltPrepareComplete</a></p>
+
 <p><a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a></p>
+
 <p><a href="fltreleasecontext" title="VOID FLTAPI FltReleaseContext(&#10;  [in] PFLT_CONTEXT Context&#10;);">FltReleaseContext</a></p>
+
 <p><a href="fltrollbackcomplete" title="NTSTATUS FLTAPI FltRollbackComplete(&#10;  [in]           PFLT_INSTANCE Instance,&#10;  [in]           PKTRANSACTION Transaction,&#10;  [in, optional] PFLT_CONTEXT  TransactionContext&#10;);">FltRollbackComplete</a></p>
+
 <p><a href="fltrollbackenlistment" title="NTSTATUS FLTAPI FltRollbackEnlistment(&#10;  [in]           PFLT_INSTANCE Instance,&#10;  [in]           PKTRANSACTION Transaction,&#10;  [in, optional] PFLT_CONTEXT  TransactionContext&#10;);">FltRollbackEnlistment</a></p>
+
 <p><a href="fltsettransactioncontext" title="NTSTATUS FLTAPI FltSetTransactionContext(&#10;  [in]            PFLT_INSTANCE             Instance,&#10;  [in]            PKTRANSACTION             Transaction,&#10;  [in]            FLT_SET_CONTEXT_OPERATION Operation,&#10;  [in]            PFLT_CONTEXT              NewContext,&#10;  [out, optional] PFLT_CONTEXT              *OldContext&#10;);">FltSetTransactionContext</a></p>
+
 <p><a href="pflt_transaction_notification_callback" title="PFLT_TRANSACTION_NOTIFICATION_CALLBACK PfltTransactionNotificationCallback;&#10;&#10;NTSTATUS PfltTransactionNotificationCallback(&#10;  [in] PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in] PFLT_CONTEXT TransactionContext,&#10;  [in] ULONG NotificationMask&#10;)&#10;{...}">PFLT_TRANSACTION_NOTIFICATION_CALLBACK</a></p>
 <hr>
 <div class="ntdoc-description-links">

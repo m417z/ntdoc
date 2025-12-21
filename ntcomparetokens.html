@@ -91,17 +91,24 @@ ZwCompareTokens(
 <h1>NtDoc</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<p>Determines if two tokens are identical for the purpose of access checks. This function is <a href="https://learn.microsoft.com/en-us/windows/win32/secauthz/ntcomparetokens">documented in Windows SDK</a>.</p>
+<p>Determines if two tokens are identical for the purpose of access checks. This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/secauthz/ntcomparetokens">documented in Windows SDK</a>.</p>
+
 <h1>Parameters</h1>
+
 <ul>
 <li><code>FirstTokenHandle</code> - a handle to the first token. The handle must grant <code>TOKEN_QUERY</code> access.</li>
 <li><code>SecondTokenHandle</code> - a handle to the second token. The handle must grant <code>TOKEN_QUERY</code> access.</li>
 <li><code>Equal</code> - a pointer to a variable that receives whether the two tokens are equal.</li>
 </ul>
+
 <h1>Implementation details</h1>
+
 <p>The function compares the user, groups, restricting SIDs, privileges, trust level, mandatory policy, AppContainer <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>, capabilities, claims, and security attributes.</p>
+
 <p>Note that this function does not support token pseudo-handles such as <code><a href="ntcurrentprocesstoken" title="#define NtCurrentProcessToken() ((HANDLE)(LONG_PTR)-4) // NtOpenProcessToken(NtCurrentProcess())">NtCurrentProcessToken</a></code>. If you want to compare the current process/thread token, you need to open it first.</p>
+
 <h1>See also</h1>
+
 <ul>
 <li><code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code></li>
 <li><code><a href="ntduplicatetoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDuplicateToken(&#10;    _In_ HANDLE ExistingTokenHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ BOOLEAN EffectiveOnly,&#10;    _In_ TOKEN_TYPE Type,&#10;    _Out_ PHANDLE NewTokenHandle&#10;    );">NtDuplicateToken</a></code></li>
@@ -115,50 +122,67 @@ ZwCompareTokens(
 </div>
 <div class="ntdoc-description">
 <h1>NtCompareTokens function</h1>
-<p>The <strong>NtCompareTokens</strong> function compares two <a href="https://learn.microsoft.com/windows/desktop/SecGloss/a-gly"><em>access tokens</em></a> and determines whether they are equivalent with respect to a call to the <a href="https://learn.microsoft.com/windows/win32/api/securitybaseapi/nf-securitybaseapi-accesscheck"><strong>AccessCheck</strong></a> function.</p>
+
+<p>The <strong>NtCompareTokens</strong> function compares two <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/SecGloss/a-gly"><em>access tokens</em></a> and determines whether they are equivalent with respect to a call to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/securitybaseapi/nf-securitybaseapi-accesscheck"><strong>AccessCheck</strong></a> function.</p>
+
 <h2>Parameters</h2>
+
 <p><em>FirstTokenHandle</em> [in]</p>
+
 <p>A handle to the first access token to compare. The token must be open for <strong>TOKEN_QUERY</strong> access.</p>
+
 <p><em>SecondTokenHandle</em> [in]</p>
+
 <p>A handle to the second access token to compare. The token must be open for <strong>TOKEN_QUERY</strong> access.</p>
+
 <p><em>Equal</em> [out]</p>
+
 <p>A pointer to a variable that receives a value that indicates whether the tokens represented by the <em>FirstTokenHandle</em> and <em>SecondTokenHandle</em> parameters are equivalent.</p>
+
 <h2>Return value</h2>
+
 <p>If the function succeeds, the function returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
+
 <p>If the function fails, it returns an <strong><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></strong> error code.</p>
+
 <h2>Remarks</h2>
+
 <p>Two access control tokens are considered to be equivalent if all of the following conditions are true:</p>
+
 <ul>
-<li>Every <a href="https://learn.microsoft.com/windows/desktop/SecGloss/s-gly"><em>security identifier</em></a> (<a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>) that is present in either token is also present in the other token.</li>
+<li>Every <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/SecGloss/s-gly"><em>security identifier</em></a> (<a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>) that is present in either token is also present in the other token.</li>
 <li>Neither or both of the tokens are restricted.</li>
 <li>If both tokens are restricted, every <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> that is restricted in one token is also restricted in the other token.</li>
 <li>Every privilege present in either token is also present in the other token.</li>
 </ul>
-<p>This function has no associated import library or header file; you must call it using the <a href="https://learn.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibrarya"><strong>LoadLibrary</strong></a> and <a href="https://learn.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-getprocaddress"><strong>GetProcAddress</strong></a> functions.</p>
+
+<p>This function has no associated import library or header file; you must call it using the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-loadlibrarya"><strong>LoadLibrary</strong></a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/libloaderapi/nf-libloaderapi-getprocaddress"><strong>GetProcAddress</strong></a> functions.</p>
+
 <h2>Requirements</h2>
+
 <table>
 <thead>
 <tr>
-<th>Requirement</th>
-<th>Value</th>
+  <th>Requirement</th>
+  <th>Value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Minimum supported client<!-- raw HTML omitted --></td>
-<td>Windows XP [desktop apps only]<!-- raw HTML omitted --></td>
+  <td>Minimum supported client<br></td>
+  <td>Windows XP [desktop apps only]<br></td>
 </tr>
 <tr>
-<td>Minimum supported server<!-- raw HTML omitted --></td>
-<td>Windows Server 2003 [desktop apps only]<!-- raw HTML omitted --></td>
+  <td>Minimum supported server<br></td>
+  <td>Windows Server 2003 [desktop apps only]<br></td>
 </tr>
 <tr>
-<td>Header<!-- raw HTML omitted --></td>
-<td>Ntseapi.h</td>
+  <td>Header<br></td>
+  <td>Ntseapi.h</td>
 </tr>
 <tr>
-<td>DLL<!-- raw HTML omitted --></td>
-<td>Ntdll.dll</td>
+  <td>DLL<br></td>
+  <td>Ntdll.dll</td>
 </tr>
 </tbody>
 </table>

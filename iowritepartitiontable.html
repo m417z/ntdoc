@@ -68,52 +68,78 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>IoWritePartitionTable</strong> routine is <strong>obsolete</strong> and is provided only to support existing drivers. New drivers must use <a href="iowritepartitiontableex" title="NTSTATUS IoWritePartitionTableEx(&#10;  [in] PDEVICE_OBJECT               DeviceObject,&#10;       _DRIVE_LAYOUT_INFORMATION_EX *DriveLayout&#10;);">IoWritePartitionTableEx</a>.</p>
+
 <p><strong>IoWritePartitionTable</strong> writes partition tables from the entries in the partition list buffer for each partition on the disk represented by the given device object.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>DeviceObject</code> [in]</h3>
+
 <p>Pointer to the device object representing the disk whose partition tables are to be written.</p>
+
 <h3><code>SectorSize</code> [in]</h3>
+
 <p>Specifies the size in bytes of sectors on the device.</p>
+
 <h3><code>SectorsPerTrack</code> [in]</h3>
+
 <p>Specifies the track size on the device.</p>
+
 <h3><code>NumberOfHeads</code> [in]</h3>
+
 <p>Specifies the number of tracks per cylinder.</p>
+
 <h3><code>PartitionBuffer</code> [in]</h3>
+
 <p>Pointer to the drive layout buffer that contains the partition list entries. For more detailed information see <a href="drive_layout_information" title="typedef struct _DRIVE_LAYOUT_INFORMATION {&#10;  ULONG                 PartitionCount;&#10;  ULONG                 Signature;&#10;  PARTITION_INFORMATION PartitionEntry[1];&#10;} DRIVE_LAYOUT_INFORMATION, *PDRIVE_LAYOUT_INFORMATION;">DRIVE_LAYOUT_INFORMATION</a>.</p>
+
 <h2>Return value</h2>
+
 <p><strong>IoWritePartitionTablo</strong> returns a status code of <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if all writes were completed without error. In case of failure, the error codes returned by <strong>IoWritePartitionTable</strong> might include, but are not limited to, the following list:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_DEVICE_NOT_READY</strong></td>
-<td>Indicates a failure read the correct disk geometry.</td>
+  <td><strong>STATUS_DEVICE_NOT_READY</strong></td>
+  <td>Indicates a failure read the correct disk geometry.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-<td>Indicates a failure to allocate necessary resources (for example, heap memory, IRPs, etc.).</td>
+  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+  <td>Indicates a failure to allocate necessary resources (for example, heap memory, IRPs, etc.).</td>
 </tr>
 <tr>
-<td><strong>STATUS_UNSUCCESSFUL</strong></td>
-<td>Indicates that sector zero did not have the expected MBR disk signature.</td>
+  <td><strong>STATUS_UNSUCCESSFUL</strong></td>
+  <td>Indicates that sector zero did not have the expected MBR disk signature.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p><strong>IoWritePartitionTable</strong> must only be used by disk drivers. Other drivers should use the <a href="ioctl_disk_set_drive_layout" title="// CTL_CODE(0x0007, 0x004, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_DISK_SET_DRIVE_LAYOUT 0x0007C010">IOCTL_DISK_SET_DRIVE_LAYOUT</a> disk I/O request instead.</p>
+
 <p><strong>IoWritePartitionTable</strong> is called when a disk device driver is requested to set the partition type in a partition table entry or to repartition the disk by an <a href="irp_mj_device_control" title="#define IRP_MJ_DEVICE_CONTROL 0x0e">IRP_MJ_DEVICE_CONTROL</a> request. The device control request is generally issued by the format utility, which performs I/O control functions on the partitions and disks in the machine.</p>
+
 <p>To reset a partition type, the driver passes a pointer to the device object representing the physical disk and the number of the partition associated with the device object that the format utility has open. When a disk is to be repartitioned dynamically, the disk driver must tear down its set of device objects representing the current disk partitions and create a new set of device objects representing the new partitions on the disk.</p>
+
 <p>Applications that create and delete partitions and require full descriptions of the system should call <strong><a href="ioreadpartitiontable" title="NTSTATUS IoReadPartitionTable(&#10;  [in]  PDEVICE_OBJECT            DeviceObject,&#10;  [in]  ULONG                     SectorSize,&#10;  [in]  BOOLEAN                   ReturnRecognizedPartitions,&#10;  [out] _DRIVE_LAYOUT_INFORMATION **PartitionBuffer&#10;);">IoReadPartitionTable</a></strong> with <em>ReturnRecognizedPartitions</em> set to <strong>FALSE</strong>. The drive layout structure can be modified by the system format utility to reflect a new configuration of the disk.</p>
+
 <p><strong>IoWritePartitionTable</strong> is synchronous. It must be called by the disk driver's Dispatch routine or by a driver thread. Thus, all user and file system threads must be prepared to enter a wait state when issuing the device control request to reset partition types for the device.</p>
+
 <h2>See also</h2>
+
 <p><a href="iocreatedevice" title="NTSTATUS IoCreateDevice(&#10;  [in]           PDRIVER_OBJECT  DriverObject,&#10;  [in]           ULONG           DeviceExtensionSize,&#10;  [in, optional] PUNICODE_STRING DeviceName,&#10;  [in]           DEVICE_TYPE     DeviceType,&#10;  [in]           ULONG           DeviceCharacteristics,&#10;  [in]           BOOLEAN         Exclusive,&#10;  [out]          PDEVICE_OBJECT  *DeviceObject&#10;);">IoCreateDevice</a></p>
+
 <p><a href="ioreadpartitiontable" title="NTSTATUS IoReadPartitionTable(&#10;  [in]  PDEVICE_OBJECT            DeviceObject,&#10;  [in]  ULONG                     SectorSize,&#10;  [in]  BOOLEAN                   ReturnRecognizedPartitions,&#10;  [out] _DRIVE_LAYOUT_INFORMATION **PartitionBuffer&#10;);">IoReadPartitionTable</a></p>
+
 <p><a href="iosetpartitioninformation" title="NTSTATUS IoSetPartitionInformation(&#10;  [in] PDEVICE_OBJECT DeviceObject,&#10;  [in] ULONG          SectorSize,&#10;  [in] ULONG          PartitionNumber,&#10;  [in] ULONG          PartitionType&#10;);">IoSetPartitionInformation</a></p>
 <hr>
 <div class="ntdoc-description-links">

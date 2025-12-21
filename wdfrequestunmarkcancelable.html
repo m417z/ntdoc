@@ -64,131 +64,162 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfRequestUnmarkCancelable function</h1>
+
 <h2>Description</h2>
+
 <p>[Applies to KMDF and UMDF]</p>
+
 <p>The <strong>WdfRequestUnmarkCancelable</strong> method disables cancellation of a specified I/O request.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Request</code> [in]</h3>
+
 <p>A handle to a framework request object.</p>
+
 <h2>Return value</h2>
+
 <p><strong>WdfRequestUnmarkCancelable</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, this method might return one of the following values:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INVALID_PARAMETER</strong></td>
-<td>An input parameter is invalid or the request is already not cancelable.</td>
+  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
+  <td>An input parameter is invalid or the request is already not cancelable.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
-<td>The driver does not own the request.</td>
+  <td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
+  <td>The driver does not own the request.</td>
 </tr>
 <tr>
-<td><strong>STATUS_CANCELLED</strong></td>
-<td>The request has been canceled.</td>
+  <td><strong>STATUS_CANCELLED</strong></td>
+  <td>The request has been canceled.</td>
 </tr>
 </tbody>
 </table>
-<p>This method might also return other <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
+
+<p>This method might also return other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
+
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
+
 <h2>Remarks</h2>
+
 <p>A driver can call <strong>WdfRequestUnmarkCancelable</strong> to disable cancellation of an I/O request, if the driver previously called <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a> or <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a> to enable cancellation of the request.</p>
-<p>If <strong>WdfRequestUnmarkCancelable</strong> returns a value other than STATUS_CANCELLED, the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function will not be called for the request.</p>
-<p>If the driver previously called <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a> or <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a>, the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function can call <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> with a <em>Status</em> parameter of STATUS_CANCELLED. The <em>EvtRequestCancel</em> callback function does not have to call <strong>WdfRequestUnmarkCancelable</strong>. If the driver calls <strong><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></strong> outside of its <em>EvtRequestCancel</em> callback function, the driver must first call <strong>WdfRequestUnmarkCancelable</strong>.</p>
-<p>However, the driver must not call <strong>WdfRequestUnmarkCancelable</strong> after <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> calls <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>. In the following Example section, the example stores a local copy of the request handle and then clears it when the <em>EvtRequestCancel</em> callback function calls <strong><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></strong>. The driver does not call <strong>WdfRequestUnmarkCancelable</strong> if the local copy of the request handle has been cleared. This example uses the framework's <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-automatic-synchronization">automatic synchronization</a> to synchronize the callback functions.</p>
-<p>Note that calling <a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a> to add an additional reference to the request object does <em>not</em> enable your driver to call <strong>WdfRequestUnmarkCancelable</strong> after the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function calls <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>.</p>
-<p>If <strong>WdfRequestUnmarkCancelable</strong> returns STATUS_CANCELLED, and then <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> completes the request, the driver must not subsequently use the request object.</p>
-<p>If <strong>WdfRequestUnmarkCancelable</strong> returns STATUS_CANCELLED, the driver must not complete the request before the framework calls <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a>. Otherwise, the framework might call the driver's <em>EvtRequestCancel</em> with an invalid request. For related code examples, please see <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-unmarkcancelable">IWDFIoRequest::UnmarkCancelable</a>.</p>
-<p>For more information about <strong>WdfRequestUnmarkCancelable</strong>, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/canceling-i-o-requests">Canceling I/O Requests</a>.</p>
+
+<p>If <strong>WdfRequestUnmarkCancelable</strong> returns a value other than STATUS_CANCELLED, the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function will not be called for the request.</p>
+
+<p>If the driver previously called <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a> or <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a>, the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function can call <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> with a <em>Status</em> parameter of STATUS_CANCELLED. The <em>EvtRequestCancel</em> callback function does not have to call <strong>WdfRequestUnmarkCancelable</strong>. If the driver calls <strong><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></strong> outside of its <em>EvtRequestCancel</em> callback function, the driver must first call <strong>WdfRequestUnmarkCancelable</strong>.</p>
+
+<p>However, the driver must not call <strong>WdfRequestUnmarkCancelable</strong> after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> calls <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>. In the following Example section, the example stores a local copy of the request handle and then clears it when the <em>EvtRequestCancel</em> callback function calls <strong><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></strong>. The driver does not call <strong>WdfRequestUnmarkCancelable</strong> if the local copy of the request handle has been cleared. This example uses the framework's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-automatic-synchronization">automatic synchronization</a> to synchronize the callback functions.</p>
+
+<p>Note that calling <a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a> to add an additional reference to the request object does <em>not</em> enable your driver to call <strong>WdfRequestUnmarkCancelable</strong> after the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function calls <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>.</p>
+
+<p>If <strong>WdfRequestUnmarkCancelable</strong> returns STATUS_CANCELLED, and then <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> completes the request, the driver must not subsequently use the request object.</p>
+
+<p>If <strong>WdfRequestUnmarkCancelable</strong> returns STATUS_CANCELLED, the driver must not complete the request before the framework calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a>. Otherwise, the framework might call the driver's <em>EvtRequestCancel</em> with an invalid request. For related code examples, please see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-unmarkcancelable">IWDFIoRequest::UnmarkCancelable</a>.</p>
+
+<p>For more information about <strong>WdfRequestUnmarkCancelable</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/canceling-i-o-requests">Canceling I/O Requests</a>.</p>
+
 <h4>Examples</h4>
-<p>The following code example provides simplified versions of the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_read">EvtIoRead</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> and <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback functions that the <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">ECHO sample driver</a> contains. This example shows how to call <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a>, <strong>WdfRequestUnmarkCancelable</strong>, and <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> in a driver that uses the framework's <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-automatic-synchronization">automatic synchronization</a>. (The ECHO sample uses device-level synchronization.)</p>
-<p>If your driver does not use the framework's automatic synchronization, see the two examples on <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-unmarkcancelable">IWDFIoRequest::UnmarkCancelable</a>. While written for a UMDF driver, these examples demonstrate techniques you can use to manage synchronization between the cancel callback and another thread that calls the <em>Unmark</em> routine.</p>
-<pre lang="cpp"><code>VOID
-  EchoEvtIoRead(
-    IN WDFQUEUE  Queue,
-    IN WDFREQUEST  Request,
-    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  Length
-    )
-{
-    PQUEUE_CONTEXT queueContext = QueueGetContext(Queue);
 
-    // Prepare for read operation here.
-    // (See the Echo sample driver for details.)
- ...
-    // Enable cancellation.
-    <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a>(
-                             Request,
-                             EchoEvtRequestCancel
-                             );
+<p>The following code example provides simplified versions of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_read">EvtIoRead</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback functions that the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">ECHO sample driver</a> contains. This example shows how to call <a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a>, <strong>WdfRequestUnmarkCancelable</strong>, and <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> in a driver that uses the framework's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-automatic-synchronization">automatic synchronization</a>. (The ECHO sample uses device-level synchronization.)</p>
 
-    // Save the request handle. We'll clear it after
-    // we call <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>.
-    queueContext-&gt;CurrentRequest = Request;
-    return
-}
+<p>If your driver does not use the framework's automatic synchronization, see the two examples on <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfiorequest-unmarkcancelable">IWDFIoRequest::UnmarkCancelable</a>. While written for a UMDF driver, these examples demonstrate techniques you can use to manage synchronization between the cancel callback and another thread that calls the <em>Unmark</em> routine.</p>
 
-VOID
- EchoEvtRequestCancel(
-    IN WDFREQUEST  Request
-    )
-{
-    PQUEUE_CONTEXT queueContext =
-        QueueGetContext(<a href="wdfrequestgetioqueue" title="WDFQUEUE WdfRequestGetIoQueue(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetIoQueue</a>(Request));
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="w">  </span><span class="nf">EchoEvtIoRead</span><span class="p">(</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFQUEUE</span><span class="w">  </span><span class="n">Queue</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w">  </span><span class="n">Length</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">PQUEUE_CONTEXT</span><span class="w"> </span><span class="n">queueContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">QueueGetContext</span><span class="p">(</span><span class="n">Queue</span><span class="p">);</span>
 
-    <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
-                       Request,
-                       STATUS_CANCELLED,
-     );
-    // Clear the request handle so EchEvtTimerFunc will
-    // know that we called <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>.
-    queueContext-&gt;CurrentRequest = NULL;
+<span class="w">    </span><span class="c1">// Prepare for read operation here.</span>
+<span class="w">    </span><span class="c1">// (See the Echo sample driver for details.)</span>
+<span class="w"> </span><span class="p">...</span>
+<span class="w">    </span><span class="c1">// Enable cancellation.</span>
+<span class="w">    </span><span class="n"><a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a></span><span class="p">(</span>
+<span class="w">                             </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">EchoEvtRequestCancel</span>
+<span class="w">                             </span><span class="p">);</span>
 
-    return;
-}
+<span class="w">    </span><span class="c1">// Save the request handle. We&#39;ll clear it after</span>
+<span class="w">    </span><span class="c1">// we call <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>.</span>
+<span class="w">    </span><span class="n">queueContext</span><span class="o">-&gt;</span><span class="n">CurrentRequest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Request</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
 
-VOID
-  EchoEvtTimerFunc(
-    IN WDFTIMER  Timer
-    )
-{
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  Status;
-    WDFREQUEST  Request;
-    WDFQUEUE  queue;
-    PQUEUE_CONTEXT  queueContext;
+<span class="n">VOID</span>
+<span class="w"> </span><span class="nf">EchoEvtRequestCancel</span><span class="p">(</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">PQUEUE_CONTEXT</span><span class="w"> </span><span class="n">queueContext</span><span class="w"> </span><span class="o">=</span>
+<span class="w">        </span><span class="n">QueueGetContext</span><span class="p">(</span><span class="n"><a href="wdfrequestgetioqueue" title="WDFQUEUE WdfRequestGetIoQueue(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetIoQueue</a></span><span class="p">(</span><span class="n">Request</span><span class="p">));</span>
 
-    // Retrieve our saved copy of the request handle.
-    queue = <a href="wdftimergetparentobject" title="WDFOBJECT WdfTimerGetParentObject(&#10;  [in] WDFTIMER Timer&#10;);">WdfTimerGetParentObject</a>(Timer);
-    queueContext = QueueGetContext(queue);
-    Request = queueContext-&gt;CurrentRequest;
+<span class="w">    </span><span class="n"><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></span><span class="p">(</span>
+<span class="w">                       </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                       </span><span class="n">STATUS_CANCELLED</span><span class="p">,</span>
+<span class="w">     </span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// Clear the request handle so EchEvtTimerFunc will</span>
+<span class="w">    </span><span class="c1">// know that we called <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>.</span>
+<span class="w">    </span><span class="n">queueContext</span><span class="o">-&gt;</span><span class="n">CurrentRequest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
-    // We cannot call WdfRequestUnmarkCancelable
-    // after a request completes, so check here to see
-    // if EchoEvtRequestCancel cleared our saved
-    // request handle.
-    if( Request != NULL ) {
-        Status = WdfRequestUnmarkCancelable(Request);
-        if(Status != STATUS_CANCELLED) {
-            queueContext-&gt;CurrentRequest = NULL;
-            Status = queueContext-&gt;CurrentStatus;
-            <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
-                               Request,
-                               Status
-                               );
-        }
-    }
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
 
-    return;
-}
+<span class="n">VOID</span>
+<span class="w">  </span><span class="nf">EchoEvtTimerFunc</span><span class="p">(</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFTIMER</span><span class="w">  </span><span class="n">Timer</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">Status</span><span class="p">;</span>
+<span class="w">    </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span><span class="p">;</span>
+<span class="w">    </span><span class="n">WDFQUEUE</span><span class="w">  </span><span class="n">queue</span><span class="p">;</span>
+<span class="w">    </span><span class="n">PQUEUE_CONTEXT</span><span class="w">  </span><span class="n">queueContext</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// Retrieve our saved copy of the request handle.</span>
+<span class="w">    </span><span class="n">queue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdftimergetparentobject" title="WDFOBJECT WdfTimerGetParentObject(&#10;  [in] WDFTIMER Timer&#10;);">WdfTimerGetParentObject</a></span><span class="p">(</span><span class="n">Timer</span><span class="p">);</span>
+<span class="w">    </span><span class="n">queueContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">QueueGetContext</span><span class="p">(</span><span class="n">queue</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">queueContext</span><span class="o">-&gt;</span><span class="n">CurrentRequest</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1">// We cannot call WdfRequestUnmarkCancelable</span>
+<span class="w">    </span><span class="c1">// after a request completes, so check here to see</span>
+<span class="w">    </span><span class="c1">// if EchoEvtRequestCancel cleared our saved</span>
+<span class="w">    </span><span class="c1">// request handle.</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="w"> </span><span class="n">Request</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfRequestUnmarkCancelable</span><span class="p">(</span><span class="n">Request</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">Status</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">STATUS_CANCELLED</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="n">queueContext</span><span class="o">-&gt;</span><span class="n">CurrentRequest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">            </span><span class="n">Status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">queueContext</span><span class="o">-&gt;</span><span class="n">CurrentStatus</span><span class="p">;</span>
+<span class="w">            </span><span class="n"><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></span><span class="p">(</span>
+<span class="w">                               </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                               </span><span class="n">Status</span>
+<span class="w">                               </span><span class="p">);</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a></p>
+
 <p><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></p>
+
 <p><a href="wdfrequestmarkcancelable" title="VOID WdfRequestMarkCancelable(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelable</a></p>
+
 <p><a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -68,26 +68,46 @@ VOID EvtSpbTargetDisconnect(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_SPB_TARGET_DISCONNECT callback function</h1>
+
 <h2>Description</h2>
-<p>An SPB controller driver's <em>EvtSpbTargetDisconnect</em> event callback function closes a connection to a target device that was previously opened by a call to the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a> event callback function.</p>
+
+<p>An SPB controller driver's <em>EvtSpbTargetDisconnect</em> event callback function closes a connection to a target device that was previously opened by a call to the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a> event callback function.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Controller</code> [in]</h3>
-<p>A WDFDEVICE handle to the <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-device-object">framework device object</a> that represents the SPB controller.</p>
+
+<p>A WDFDEVICE handle to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-device-object">framework device object</a> that represents the SPB controller.</p>
+
 <h3><code>Target</code> [in]</h3>
-<p>A <a href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBTARGET</a> handle to the target to close. The target is a peripheral device or port that is attached to the bus. The SPB framework extension (SpbCx) previously assigned this handle to the target in the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a> callback that opened the connection to the target.</p>
+
+<p>A <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBTARGET</a> handle to the target to close. The target is a peripheral device or port that is attached to the bus. The SPB framework extension (SpbCx) previously assigned this handle to the target in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a> callback that opened the connection to the target.</p>
+
 <h2>Remarks</h2>
+
 <p>Implementation of this function by the SPB controller driver is optional.</p>
-<p>SpbCx manages the I/O queue for the SPB controller. If the SPB controller driver registers an <em>EvtSpbTargetDisconnect</em> callback function, SpbCx calls this function when a client (peripheral driver) of the controller driver sends an <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-close">IRP_MJ_CLOSE</a> request to close an SPBTARGET handle. This handle represents a connection to a target device on the bus that the client opened in a previous <a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a> request. If the <em>EvtSpbTargetDisconnect</em> function returns an error code, SpbCx fails the <strong><a href="irp_mj_close" title="#define IRP_MJ_CLOSE 0x02">IRP_MJ_CLOSE</a></strong> request.</p>
+
+<p>SpbCx manages the I/O queue for the SPB controller. If the SPB controller driver registers an <em>EvtSpbTargetDisconnect</em> callback function, SpbCx calls this function when a client (peripheral driver) of the controller driver sends an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-close">IRP_MJ_CLOSE</a> request to close an SPBTARGET handle. This handle represents a connection to a target device on the bus that the client opened in a previous <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a> request. If the <em>EvtSpbTargetDisconnect</em> function returns an error code, SpbCx fails the <strong><a href="irp_mj_close" title="#define IRP_MJ_CLOSE 0x02">IRP_MJ_CLOSE</a></strong> request.</p>
+
 <p>The <em>EvtSpbTargetDisconnect</em> function is called synchronously from the context of the client's closing thread after all client-initiated I/O operations have ended and after the client has unlocked the controller (if the client previously locked the controller).</p>
+
 <p>If the SPB controller driver has allocated I/O requests and sent them to the next-lower driver in the I/O-request chain for the target device, the <em>EvtSpbTargetDisconnect</em> function should cancel these requests before it returns.</p>
-<p>A client driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_dispatch">DispatchCleanup</a> and <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nf-ntddk-pssetcreateprocessnotifyroutine">CreateProcessNotifyEx</a> callback routines can be called at any time after the <em>EvtSpbTargetDisconnect</em> callback returns. When the client driver's process exits, its <em>CreateProcessNotifyEx</em> routine is called just before the last thread to exit the process is destroyed.</p>
+
+<p>A client driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_dispatch">DispatchCleanup</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nf-ntddk-pssetcreateprocessnotifyroutine">CreateProcessNotifyEx</a> callback routines can be called at any time after the <em>EvtSpbTargetDisconnect</em> callback returns. When the client driver's process exits, its <em>CreateProcessNotifyEx</em> routine is called just before the last thread to exit the process is destroyed.</p>
+
 <p>To register an <em>EvtSpbTargetDisconnect</em> callback function, call the <a href="spbdeviceinitialize" title="NTSTATUS SpbDeviceInitialize(&#10;  [in] WDFDEVICE              FxDevice,&#10;  [in] PSPB_CONTROLLER_CONFIG Config&#10;);">SpbDeviceInitialize</a> method.</p>
+
 <h4>Examples</h4>
-<p>To define an <em>EvtSpbTargetDisconnect</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>To define an <em>EvtSpbTargetDisconnect</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
 <p>For example, to define an <em>EvtSpbTargetDisconnect</em> callback function that is named <code>MyEvtSpbTargetDisconnect</code>, use the EVT_SPB_TARGET_DISCONNECT function type, as shown in this code example:</p>
+
 <pre><code>EVT_SPB_TARGET_DISCONNECT  MyEvtSpbTargetDisconnect;
 </code></pre>
+
 <p>Then, implement your callback function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 VOID
   MyEvtSpbTargetDisconnect(
@@ -96,12 +116,19 @@ VOID
     )
 { ... }
 </code></pre>
-<p>The EVT_SPB_TARGET_DISCONNECT function type is defined in the Spbcx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the EVT_SPB_TARGET_DISCONNECT function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about <em>Use_decl_annotations</em>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<p>The EVT_SPB_TARGET_DISCONNECT function type is defined in the Spbcx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the EVT_SPB_TARGET_DISCONNECT function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-close">IRP_MJ_CLOSE</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBTARGET</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-close">IRP_MJ_CLOSE</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBTARGET</a></p>
+
 <p><a href="spbdeviceinitialize" title="NTSTATUS SpbDeviceInitialize(&#10;  [in] WDFDEVICE              FxDevice,&#10;  [in] PSPB_CONTROLLER_CONFIG Config&#10;);">SpbDeviceInitialize</a></p>
 <hr>
 <div class="ntdoc-description-links">

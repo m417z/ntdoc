@@ -66,58 +66,82 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>IoCreateDriverProxyExtension</strong> function allocates and initializes a DriverProxy extension that enables hot-swappable driver functionality.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>OwningDriverObject</code></h3>
+
 <p>[in, optional] An optional pointer to the <strong><a href="driver_object" title="typedef struct _DRIVER_OBJECT {&#10;  CSHORT             Type;&#10;  CSHORT             Size;&#10;  PDEVICE_OBJECT     DeviceObject;&#10;  ULONG              Flags;&#10;  PVOID              DriverStart;&#10;  ULONG              DriverSize;&#10;  PVOID              DriverSection;&#10;  PDRIVER_EXTENSION  DriverExtension;&#10;  UNICODE_STRING     DriverName;&#10;  PUNICODE_STRING    HardwareDatabase;&#10;  PFAST_IO_DISPATCH  FastIoDispatch;&#10;  PDRIVER_INITIALIZE DriverInit;&#10;  PDRIVER_STARTIO    DriverStartIo;&#10;  PDRIVER_UNLOAD     DriverUnload;&#10;  PDRIVER_DISPATCH   MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];&#10;} DRIVER_OBJECT, *PDRIVER_OBJECT;">DRIVER_OBJECT</a></strong> that will own the DriverProxy extension. If provided, the extension will be associated with this driver object. If NULL, the extension is created without an owning driver.</p>
+
 <h3><code>Flags</code></h3>
+
 <p>[in] A <strong><a href="driver_proxy_extension_creation_flags" title="typedef union _DRIVER_PROXY_EXTENSION_CREATION_FLAGS {&#10;  ULONG  AsUlong;&#10;  struct {&#10;    ULONG ReservedZero : 32;&#10;  };&#10;} DRIVER_PROXY_EXTENSION_CREATION_FLAGS, *PDRIVER_PROXY_EXTENSION_CREATION_FLAGS;">DRIVER_PROXY_EXTENSION_CREATION_FLAGS</a></strong> value that provides additional configuration options for extension creation. Currently, no flags are defined, so this parameter should be set to 0.</p>
+
 <h3><code>DriverProxyExtension</code></h3>
+
 <p>[out] A pointer to a variable that receives a pointer to the newly created DriverProxy extension. This extension can be used with other DriverProxy APIs.</p>
+
 <h2>Return value</h2>
+
 <p><strong>IoCreateDriverProxyExtension</strong> returns one of the following <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> values:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
-<td>The extension was successfully allocated and initialized.</td>
+  <td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
+  <td>The extension was successfully allocated and initialized.</td>
 </tr>
 <tr>
-<td><strong>STATUS_NOT_SUPPORTED</strong></td>
-<td>The current system does not support DriverProxy extensions.</td>
+  <td><strong>STATUS_NOT_SUPPORTED</strong></td>
+  <td>The current system does not support DriverProxy extensions.</td>
 </tr>
 <tr>
-<td><strong>STATUS_DRIVER_BLOCKED</strong></td>
-<td>The specified driver is excluded from DriverProxy operations via registry settings.</td>
+  <td><strong>STATUS_DRIVER_BLOCKED</strong></td>
+  <td>The specified driver is excluded from DriverProxy operations via registry settings.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-<td>Insufficient memory was available to allocate the extension.</td>
+  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+  <td>Insufficient memory was available to allocate the extension.</td>
 </tr>
 <tr>
-<td><strong>STATUS_RESOURCE_IN_USE</strong></td>
-<td>The specified driver object already owns a DriverProxy extension.</td>
+  <td><strong>STATUS_RESOURCE_IN_USE</strong></td>
+  <td>The specified driver object already owns a DriverProxy extension.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>A DriverProxy extension is required for any driver that wants to use Driver Hot-Swap functionality. The extension serves as an opaque token that holds all relevant DriverProxy information and enables hot-swappable operations.</p>
-<p>Drivers using Driver Hot-Swap should create a DriverProxy extension during <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/writing-a-driverentry-routine"><strong>DriverEntry</strong></a>, preferably early in the function. It is recommended to store the result in a global variable for easy access throughout the driver's lifetime.</p>
+
+<p>Drivers using Driver Hot-Swap should create a DriverProxy extension during <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/writing-a-driverentry-routine"><strong>DriverEntry</strong></a>, preferably early in the function. It is recommended to store the result in a global variable for easy access throughout the driver's lifetime.</p>
+
 <p>Before calling <strong>IoCreateDriverProxyExtension</strong>, drivers should call <strong><a href="iogetdriverproxyfeatures" title="VOID IoGetDriverProxyFeatures(&#10;  PDRIVER_OBJECT              DriverObject,&#10;  PDRIVER_PROXY_FEATURE_FLAGS Flags&#10;);">IoGetDriverProxyFeatures</a></strong> to verify that DriverProxy functionality is available and enabled.</p>
+
 <p>Each driver object can own at most one DriverProxy extension. If a driver object already has an associated extension, the function returns <strong>STATUS_RESOURCE_IN_USE</strong>.</p>
+
 <p>In Driver Hot-Swap V2, once the extension is successfully created, endpoint wrappers are automatically available without requiring explicit registration calls. The compiler and linker automatically generate the endpoint information during the build process.</p>
+
 <p>The system automatically manages the lifecycle of the DriverProxy extension. When the owning driver object is unloaded, the extension is automatically cleaned up.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="iogetdriverproxyfeatures" title="VOID IoGetDriverProxyFeatures(&#10;  PDRIVER_OBJECT              DriverObject,&#10;  PDRIVER_PROXY_FEATURE_FLAGS Flags&#10;);">IoGetDriverProxyFeatures</a></strong></p>
+
 <p><strong><a href="iogetdriverproxywrapperfromendpoint" title="void IoGetDriverProxyWrapperFromEndpoint(&#10;  DriverProxyExtension,&#10;  Endpoint,&#10;  Wrapper&#10;);">IoGetDriverProxyWrapperFromEndpoint</a></strong></p>
+
 <p><strong><a href="iogetdriverproxyextensionfromdriverobject" title="PDRIVER_PROXY_EXTENSION IoGetDriverProxyExtensionFromDriverObject(&#10;  PDRIVER_OBJECT DriverObject&#10;);">IoGetDriverProxyExtensionFromDriverObject</a></strong></p>
+
 <p><strong><a href="driver_proxy_extension_creation_flags" title="typedef union _DRIVER_PROXY_EXTENSION_CREATION_FLAGS {&#10;  ULONG  AsUlong;&#10;  struct {&#10;    ULONG ReservedZero : 32;&#10;  };&#10;} DRIVER_PROXY_EXTENSION_CREATION_FLAGS, *PDRIVER_PROXY_EXTENSION_CREATION_FLAGS;">DRIVER_PROXY_EXTENSION_CREATION_FLAGS</a></strong></p>
+
 <p><strong><a href="driver_object" title="typedef struct _DRIVER_OBJECT {&#10;  CSHORT             Type;&#10;  CSHORT             Size;&#10;  PDEVICE_OBJECT     DeviceObject;&#10;  ULONG              Flags;&#10;  PVOID              DriverStart;&#10;  ULONG              DriverSize;&#10;  PVOID              DriverSection;&#10;  PDRIVER_EXTENSION  DriverExtension;&#10;  UNICODE_STRING     DriverName;&#10;  PUNICODE_STRING    HardwareDatabase;&#10;  PFAST_IO_DISPATCH  FastIoDispatch;&#10;  PDRIVER_INITIALIZE DriverInit;&#10;  PDRIVER_STARTIO    DriverStartIo;&#10;  PDRIVER_UNLOAD     DriverUnload;&#10;  PDRIVER_DISPATCH   MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];&#10;} DRIVER_OBJECT, *PDRIVER_OBJECT;">DRIVER_OBJECT</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

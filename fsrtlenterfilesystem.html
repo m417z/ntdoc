@@ -64,60 +64,91 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FsRtlEnterFileSystem function</h1>
+
 <p>The <strong>FsRtlEnterFileSystem</strong> macro temporarily disables the delivery of normal kernel-mode asynchronous procedure calls (APC). Special kernel-mode APCs are still delivered.</p>
+
 <h2>Parameters</h2>
+
 <p>None</p>
+
 <h2>Return value</h2>
+
 <p>This function doesn't return a value.</p>
+
 <h2>Remarks</h2>
+
 <p>Every file system driver entry point routine must call <strong>FsRtlEnterFileSystem</strong> immediately before acquiring a resource required in performing a file I/O request and call <strong><a href="fsrtlexitfilesystem" title="VOID FsRtlExitFileSystem(&#10;   VOID &#10;);">FsRtlExitFileSystem</a></strong> immediately afterward. This ensures that the routine can't be suspended while running and thus block other file I/O requests.</p>
+
 <p>Every successful call to <strong>FsRtlEnterFileSystem</strong> must be matched by a subsequent call to <strong><a href="fsrtlexitfilesystem" title="VOID FsRtlExitFileSystem(&#10;   VOID &#10;);">FsRtlExitFileSystem</a></strong>.</p>
+
 <p>File system filter drivers can disable delivery of normal kernel APCs by calling <strong>FsRtlEnterFileSystem</strong> or <strong><a href="keentercriticalregion" title="VOID KeEnterCriticalRegion();">KeEnterCriticalRegion</a></strong> prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> only if <strong><a href="fsrtlexitfilesystem" title="VOID FsRtlExitFileSystem(&#10;   VOID &#10;);">FsRtlExitFileSystem</a></strong> or <strong><a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a></strong> is in the same dispatch routine. They shouldn't call <strong>FsRtlEnterFileSystem</strong> or <strong><a href="keentercriticalregion" title="VOID KeEnterCriticalRegion();">KeEnterCriticalRegion</a></strong> prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> and then call <strong><a href="fsrtlexitfilesystem" title="VOID FsRtlExitFileSystem(&#10;   VOID &#10;);">FsRtlExitFileSystem</a></strong> or <strong><a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a></strong> in the <em>completion routine</em> of the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>. Driver Verifier has a rule to help catch this condition.</p>
+
 <p>File system filter drivers should disable normal kernel APCs before acquiring any resource. File system filter drivers acquire resources with the following routines:</p>
+
 <ul>
-<li><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceExclusive</strong></a></li>
-<li><a href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)"><strong>ExAcquireResourceExclusiveLite</strong></a></li>
-<li><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceShared</strong></a></li>
-<li><a href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)"><strong>ExAcquireResourceSharedLite</strong></a></li>
-<li><a href="https://learn.microsoft.com/previous-versions/ff544367(v=vs.85)"><strong>ExAcquireSharedStarveExclusive</strong></a></li>
-<li><a href="https://learn.microsoft.com/previous-versions/ff544370(v=vs.85)"><strong>ExAcquireSharedWaitForExclusive</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceExclusive</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)"><strong>ExAcquireResourceExclusiveLite</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceShared</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)"><strong>ExAcquireResourceSharedLite</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544367(v=vs.85)"><strong>ExAcquireSharedStarveExclusive</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544370(v=vs.85)"><strong>ExAcquireSharedWaitForExclusive</strong></a></li>
 </ul>
+
 <p>As an alternative to <strong>FsRtlEnterFileSystem</strong>, minifilter drivers can use the <strong><a href="fltacquireresourceexclusive" title="VOID FLTAPI FltAcquireResourceExclusive(&#10;  [in/out] PERESOURCE Resource&#10;);">FltAcquireResourceExclusive</a></strong>, <strong><a href="fltacquireresourceshared" title="VOID FLTAPI FltAcquireResourceShared(&#10;  [in/out] PERESOURCE Resource&#10;);">FltAcquireResourceShared</a></strong>, and <strong><a href="fltreleaseresource" title="VOID FLTAPI FltReleaseResource(&#10;  [in/out] PERESOURCE Resource&#10;);">FltReleaseResource</a></strong> routines, which properly handle APCs when acquiring and releasing a resource.</p>
+
 <h2>Requirements</h2>
+
 <table>
 <thead>
 <tr>
-<th>Requirement type</th>
-<th>Requirement</th>
+  <th>Requirement type</th>
+  <th>Requirement</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Header</td>
-<td><em>Ntifs.h</em> (include <em>Ntifs.h</em>)</td>
+  <td>Header</td>
+  <td><em>Ntifs.h</em> (include <em>Ntifs.h</em>)</td>
 </tr>
 <tr>
-<td>IRQL</td>
-<td>&lt;= APC_LEVEL</td>
+  <td>IRQL</td>
+  <td>&lt;= APC_LEVEL</td>
 </tr>
 </tbody>
 </table>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceExclusive</strong></a></p>
-<p><a href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)"><strong>ExAcquireResourceExclusiveLite</strong></a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceShared</strong></a></p>
-<p><a href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)"><strong>ExAcquireResourceSharedLite</strong></a></p>
-<p><a href="https://learn.microsoft.com/previous-versions/ff544370(v=vs.85)"><strong>ExAcquireSharedWaitForExclusive</strong></a></p>
-<p><a href="https://learn.microsoft.com/previous-versions/ff544367(v=vs.85)"><strong>ExAcquireSharedStarveExclusive</strong></a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExReleaseResource</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceExclusive</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)"><strong>ExAcquireResourceExclusiveLite</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceShared</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)"><strong>ExAcquireResourceSharedLite</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544370(v=vs.85)"><strong>ExAcquireSharedWaitForExclusive</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544367(v=vs.85)"><strong>ExAcquireSharedStarveExclusive</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExReleaseResource</strong></a></p>
+
 <p><strong><a href="exreleaseresourcelite" title="VOID ExReleaseResourceLite(&#10;  [in, out] PERESOURCE Resource&#10;);">ExReleaseResourceLite</a></strong></p>
-<p><a href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff545647(v=vs.85)"><strong>ExTryToAcquireFastMutex</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff545647(v=vs.85)"><strong>ExTryToAcquireFastMutex</strong></a></p>
+
 <p><strong><a href="fltacquireresourceexclusive" title="VOID FLTAPI FltAcquireResourceExclusive(&#10;  [in/out] PERESOURCE Resource&#10;);">FltAcquireResourceExclusive</a></strong></p>
+
 <p><strong><a href="fltacquireresourceshared" title="VOID FLTAPI FltAcquireResourceShared(&#10;  [in/out] PERESOURCE Resource&#10;);">FltAcquireResourceShared</a></strong></p>
+
 <p><strong><a href="fltreleaseresource" title="VOID FLTAPI FltReleaseResource(&#10;  [in/out] PERESOURCE Resource&#10;);">FltReleaseResource</a></strong></p>
+
 <p><strong><a href="fsrtlexitfilesystem" title="VOID FsRtlExitFileSystem(&#10;   VOID &#10;);">FsRtlExitFileSystem</a></strong></p>
+
 <p><strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong></p>
+
 <p><strong><a href="keentercriticalregion" title="VOID KeEnterCriticalRegion();">KeEnterCriticalRegion</a></strong></p>
+
 <p><strong><a href="keraiseirqltodpclevel" title="_DECL_HAL_KE_IMPORT KIRQL KeRaiseIrqlToDpcLevel();">KeRaiseIrqlToDpcLevel</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

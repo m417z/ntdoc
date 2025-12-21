@@ -68,85 +68,118 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-<p>The <code>PcwCreateInstance</code> function creates a new counterset instance. Most developers will use a <a href="https://learn.microsoft.com/windows/win32/perfctrs/ctrpp">CTRPP</a>-generated CreateXxx function instead of calling this function directly.</p>
+
+<p>The <code>PcwCreateInstance</code> function creates a new counterset instance. Most developers will use a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/perfctrs/ctrpp">CTRPP</a>-generated CreateXxx function instead of calling this function directly.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Instance</code> [out]</h3>
+
 <p>A pointer to receive the newly created instance. The instance should be closed using <a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a>.</p>
+
 <h3><code>Registration</code> [in]</h3>
+
 <p>A pointer to the counterset registration that owns this instance. The registration is created using <a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a>.</p>
+
 <h3><code>Name</code> [in]</h3>
+
 <p>A pointer to the Unicode string that contains the name of the instance of the counterset. This must not be NULL.</p>
+
 <p>Instance <code>Name</code> values MUST be stable over time (the same logical instance should use the same <code>Name</code> value for all invocations of the callback) and MUST be unique. If the counterset is registered as single-instance, the instance <code>Name</code> should be blank (0-length). If the counterset registered as multi-instance, the instance <code>Name</code> should not be blank. Instance name matching is not case-sensitive, so <code>Name</code> values should not differ only by case.</p>
+
 <h3><code>Count</code> [in]</h3>
+
 <p>The number of descriptors provided in the <code>Data</code> parameter.</p>
+
 <h3><code>Data</code> [in]</h3>
+
 <p>An array of descriptors for the provider data blocks that contain the counter values of this instance. The data blocks referenced by the descriptors may be accessed at any time and must remain valid until the instance is closed by <code><a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a></code> or <code><a href="pcwunregister" title="VOID PcwUnregister(&#10;  PPCW_REGISTRATION Registration&#10;);">PcwUnregister</a></code>.</p>
+
 <h2>Return value</h2>
+
 <p><code>PcwCreateInstance</code> returns one of the following values:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code></td>
-<td>The instance was successfully created.</td>
+  <td><code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code></td>
+  <td>The instance was successfully created.</td>
 </tr>
 <tr>
-<td><code>STATUS_INVALID_PARAMETER_4</code></td>
-<td>The number of structures, specified by <code>Count</code>, is not valid for the registered provider.</td>
+  <td><code>STATUS_INVALID_PARAMETER_4</code></td>
+  <td>The number of structures, specified by <code>Count</code>, is not valid for the registered provider.</td>
 </tr>
 <tr>
-<td><code>STATUS_INVALID_BUFFER_SIZE</code></td>
-<td>One of the provider data blocks is too small. For example, suppose that during the call to <a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a>, the provider specifies that counter <code>X</code> is at offset 100 of the first data block of size 4 bytes. If the call to <code>PcwCreateInstance</code> specifies that the first data block is 50 bytes, this error status is returned.</td>
+  <td><code>STATUS_INVALID_BUFFER_SIZE</code></td>
+  <td>One of the provider data blocks is too small. For example, suppose that during the call to <a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a>, the provider specifies that counter <code>X</code> is at offset 100 of the first data block of size 4 bytes. If the call to <code>PcwCreateInstance</code> specifies that the first data block is 50 bytes, this error status is returned.</td>
 </tr>
 <tr>
-<td><code>STATUS_INTEGER_OVERFLOW</code></td>
-<td>The size of the structure, specified by <code>Count</code>, overflows the data buffer.</td>
+  <td><code>STATUS_INTEGER_OVERFLOW</code></td>
+  <td>The size of the structure, specified by <code>Count</code>, overflows the data buffer.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>Counterset providers can supply information to the consumer through two different systems:</p>
+
 <ul>
 <li>The provider can supply a <code><a href="pcw_callback" title="PCW_CALLBACK PcwCallback;&#10;&#10;NTSTATUS PcwCallback(&#10;  [in]           PCW_CALLBACK_TYPE Type,&#10;  [in]           PPCW_CALLBACK_INFORMATION Info,&#10;  [in, optional] PVOID Context&#10;)&#10;{...}">PCW_CALLBACK</a></code> function that will be invoked by the Performance Counter Library as needed to collect data. For more information on this system, refer to the documentation for <a href="pcw_callback" title="PCW_CALLBACK PcwCallback;&#10;&#10;NTSTATUS PcwCallback(&#10;  [in]           PCW_CALLBACK_TYPE Type,&#10;  [in]           PPCW_CALLBACK_INFORMATION Info,&#10;  [in, optional] PVOID Context&#10;)&#10;{...}">PCW_CALLBACK</a>.</li>
 <li>The provider can use <code>PcwCreateInstance</code> and <code><a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a></code> to maintain a list of available instances and the corresponding counter data. This system is simple to implement but limited in flexibility.</li>
 </ul>
+
 <p>Before the provider uses this function, the provider must call the <code><a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a></code> function to create a registration.</p>
+
 <p>When a new instance arrives (e.g. when a device is plugged in), the provider should allocate and initialize a data block for the instance, call <code>PcwCreateInstance</code> with the name and data block for the instance, and then keep the values in the data block updated with counter values for the instance. When the instance becomes invalid (e.g. when a device is unplugged), the provider should call <code><a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a></code> and then delete the data block.</p>
+
 <p>The provider must maintain data blocks (usually in paged or nonpaged pool) containing the current counter values for each instance.</p>
+
 <p><code>PcwCreateInstance</code> will automatically assign a unique id for the instance. To provide specific values for the instance id, implement a <code><a href="pcw_callback" title="PCW_CALLBACK PcwCallback;&#10;&#10;NTSTATUS PcwCallback(&#10;  [in]           PCW_CALLBACK_TYPE Type,&#10;  [in]           PPCW_CALLBACK_INFORMATION Info,&#10;  [in, optional] PVOID Context&#10;)&#10;{...}">PCW_CALLBACK</a></code> function instead of using <code>PcwCreateInstance</code>.</p>
+
 <p>Use the <a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a> function to close the instance.</p>
+
 <h3>CTRPP-generated CreateXxx function</h3>
+
 <p>Most developers do not need to call <code>PcwCreateInstance</code> directly. Instead, they will compile a manifest with the CTRPP tool and use the CreateXxx function from the CTRPP-generated header. The generated function will look like this:</p>
-<pre lang="c"><code><a href="extern_c" title="#define EXTERN_C extern &quot;C&quot;">EXTERN_C</a> __inline <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-CreateMyCounterset(
-    __deref_out PPCW_INSTANCE *Instance,
-    __in <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a> Name,
-    __in const MY_COUNTER_DATA *MyCounterData
-    )
-{
-    <a href="pcw_data" title="typedef struct _PCW_DATA {&#10;  const VOID *Data;&#10;  ULONG      Size;&#10;} PCW_DATA, *PPCW_DATA;">PCW_DATA</a> Data[1];
 
-    PAGED_CODE();
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="extern_c" title="#define EXTERN_C extern &quot;C&quot;">EXTERN_C</a></span><span class="w"> </span><span class="kr">__inline</span><span class="w"> </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="n">CreateMyCounterset</span><span class="p">(</span>
+<span class="w">    </span><span class="n">__deref_out</span><span class="w"> </span><span class="n">PPCW_INSTANCE</span><span class="w"> </span><span class="o">*</span><span class="n">Instance</span><span class="p">,</span>
+<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a></span><span class="w"> </span><span class="n">Name</span><span class="p">,</span>
+<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">MY_COUNTER_DATA</span><span class="w"> </span><span class="o">*</span><span class="n">MyCounterData</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="pcw_data" title="typedef struct _PCW_DATA {&#10;  const VOID *Data;&#10;  ULONG      Size;&#10;} PCW_DATA, *PPCW_DATA;">PCW_DATA</a></span><span class="w"> </span><span class="n">Data</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
 
-    Data[0].Data = MyCounterData;
-    Data[0].Size = sizeof(MY_COUNTER_DATA);
+<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
 
-    return PcwCreateInstance(Instance,
-                             MyCounterset,
-                             Name,
-                             1,
-                             Data);
-}
+<span class="w">    </span><span class="n">Data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">Data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MyCounterData</span><span class="p">;</span>
+<span class="w">    </span><span class="n">Data</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">Size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">MY_COUNTER_DATA</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">PcwCreateInstance</span><span class="p">(</span><span class="n">Instance</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">MyCounterset</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">Name</span><span class="p">,</span>
+<span class="w">                             </span><span class="mi">1</span><span class="p">,</span>
+<span class="w">                             </span><span class="n">Data</span><span class="p">);</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <p>The CTRPP-generated Create function will be named <em>Prefix</em>Create<em>Counterset</em>. <em>Prefix</em> is usually blank, but may be present if the <code>-prefix</code> parameter was used on the CTRPP command-line. <em>Counterset</em> is the name of the counterset, as specified in the manifest. The function will have Data parameters based on the structures defined in the manifest. The function will wrap the user-provided data block(s) into an array of <code><a href="pcw_data" title="typedef struct _PCW_DATA {&#10;  const VOID *Data;&#10;  ULONG      Size;&#10;} PCW_DATA, *PPCW_DATA;">PCW_DATA</a></code> structures and then call <code>PcwCreateInstance</code>. Note that the function references a <em>Counterset</em> variable (<code>MyCounterset</code> in the example), which is a global variable that holds the counterset registration handle initialized by the CTRPP-generated RegisterXxx function.</p>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-pcwcloseinstance">PcwCloseInstance function</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-pcwregister">PcwRegister function</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-pcwcloseinstance">PcwCloseInstance function</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-pcwregister">PcwRegister function</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

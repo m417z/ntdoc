@@ -68,33 +68,45 @@ VOID PoFxDirectedPowerUpCallback(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
-<p>The PO_FX_DIRECTED_POWER_UP_CALLBACK callback function is implemented by the client driver to handle driver-specific power up activities on behalf of DFx (Directed <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/overview-of-the-power-management-framework">PoFx</a>).</p>
+
+<p>The PO_FX_DIRECTED_POWER_UP_CALLBACK callback function is implemented by the client driver to handle driver-specific power up activities on behalf of DFx (Directed <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/overview-of-the-power-management-framework">PoFx</a>).</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Context</code></h3>
+
 <p>Supplies a pointer to the context passed in to <strong><a href="pofxregisterdevice" title="NTSTATUS PoFxRegisterDevice(&#10;  [in]  PDEVICE_OBJECT Pdo,&#10;  [in]  PPO_FX_DEVICE  Device,&#10;  [out] POHANDLE       *Handle&#10;);">PoFxRegisterDevice</a></strong>.</p>
+
 <h3><code>Flags</code></h3>
+
 <p>Reserved for future use.</p>
+
 <h2>Remarks</h2>
+
 <p>WDM drivers that register with PoFx for runtime idle power management support need to implement this callback to add DFx support.</p>
+
 <p>Register your implementation of this callback function by setting the appropriate member of the <strong><a href="po_fx_device_v3" title="typedef struct _PO_FX_DEVICE_V3 {&#10;  ULONG                                      Version;&#10;  ULONGLONG                                  Flags;&#10;  PPO_FX_COMPONENT_ACTIVE_CONDITION_CALLBACK ComponentActiveConditionCallback;&#10;  PPO_FX_COMPONENT_IDLE_CONDITION_CALLBACK   ComponentIdleConditionCallback;&#10;  PPO_FX_COMPONENT_IDLE_STATE_CALLBACK       ComponentIdleStateCallback;&#10;  PPO_FX_DEVICE_POWER_REQUIRED_CALLBACK      DevicePowerRequiredCallback;&#10;  PPO_FX_DEVICE_POWER_NOT_REQUIRED_CALLBACK  DevicePowerNotRequiredCallback;&#10;  PPO_FX_POWER_CONTROL_CALLBACK              PowerControlCallback;&#10;  PPO_FX_DIRECTED_POWER_UP_CALLBACK          DirectedPowerUpCallback;&#10;  PPO_FX_DIRECTED_POWER_DOWN_CALLBACK        DirectedPowerDownCallback;&#10;  ULONG                                      DirectedFxTimeoutInSeconds;&#10;  PVOID                                      DeviceContext;&#10;  ULONG                                      ComponentCount;&#10;  PO_FX_COMPONENT_V2                         Components[ANYSIZE_ARRAY];&#10;} PO_FX_DEVICE_V3, *PPO_FX_DEVICE_V3;">PO_FX_DEVICE_V3</a></strong> structure and then calling <strong><a href="pofxregisterdevice" title="NTSTATUS PoFxRegisterDevice(&#10;  [in]  PDEVICE_OBJECT Pdo,&#10;  [in]  PPO_FX_DEVICE  Device,&#10;  [out] POHANDLE       *Handle&#10;);">PoFxRegisterDevice</a></strong>.</p>
-<p>This callback is invoked when the system determines the device needs to power up after having previously being powered down in the <em><a href="po_fx_directed_power_down_callback" title="PO_FX_DIRECTED_POWER_DOWN_CALLBACK PoFxDirectedPowerDownCallback;&#10;&#10;VOID PoFxDirectedPowerDownCallback(&#10;  PVOID Context,&#10;  ULONG Flags&#10;)&#10;{...}">PO_FX_DIRECTED_POWER_DOWN_CALLBACK</a></em> callback function. The device may need to be powered up when the system exits Modern Standby, <a href="https://learn.microsoft.com/windows-hardware/design/device-experiences/activators">activators</a> start to run, or a hardware-initiated wake occurs.</p>
+
+<p>This callback is invoked when the system determines the device needs to power up after having previously being powered down in the <em><a href="po_fx_directed_power_down_callback" title="PO_FX_DIRECTED_POWER_DOWN_CALLBACK PoFxDirectedPowerDownCallback;&#10;&#10;VOID PoFxDirectedPowerDownCallback(&#10;  PVOID Context,&#10;  ULONG Flags&#10;)&#10;{...}">PO_FX_DIRECTED_POWER_DOWN_CALLBACK</a></em> callback function. The device may need to be powered up when the system exits Modern Standby, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/design/device-experiences/activators">activators</a> start to run, or a hardware-initiated wake occurs.</p>
+
 <p>When this callback is invoked, the driver typically performs the following high-level tasks:</p>
+
 <ul>
-<li>
-<p>Request a D0 <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> to power up the device.</p>
-</li>
-<li>
-<p>After the D0 <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> completes, call <strong><a href="pofxreportdevicepoweredon" title="VOID PoFxReportDevicePoweredOn(&#10;  [in] POHANDLE Handle&#10;);">PoFxReportDevicePoweredOn</a></strong>.</p>
-</li>
-<li>
-<p>Unblock I/O queues and start processing requests normally.</p>
-</li>
+<li><p>Request a D0 <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> to power up the device.</p></li>
+<li><p>After the D0 <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> completes, call <strong><a href="pofxreportdevicepoweredon" title="VOID PoFxReportDevicePoweredOn(&#10;  [in] POHANDLE Handle&#10;);">PoFxReportDevicePoweredOn</a></strong>.</p></li>
+<li><p>Unblock I/O queues and start processing requests normally.</p></li>
 </ul>
+
 <p>Once the driver completes the Directed power up call, it can resume runtime-idle (RTD3) behavior.</p>
+
 <p>The contract is very similar to S0, although no S-IRPs are involved.</p>
-<p>Note that if a device hierarchy is involved, the directed power framework asks the child devices to power down before the parent device. For a given parent device, direct children (ones enumerated by the parent) and indirect children due to <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-device-relations">power relations</a> are considered.</p>
+
+<p>Note that if a device hierarchy is involved, the directed power framework asks the child devices to power down before the parent device. For a given parent device, direct children (ones enumerated by the parent) and indirect children due to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-device-relations">power relations</a> are considered.</p>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-the-directed-power-management-framework">Introduction to the Directed Power Management Framework</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-the-directed-power-management-framework">Introduction to the Directed Power Management Framework</a></p>
+
 <p><a href="po_fx_directed_power_down_callback" title="PO_FX_DIRECTED_POWER_DOWN_CALLBACK PoFxDirectedPowerDownCallback;&#10;&#10;VOID PoFxDirectedPowerDownCallback(&#10;  PVOID Context,&#10;  ULONG Flags&#10;)&#10;{...}">PO_FX_DIRECTED_POWER_DOWN_CALLBACK</a></p>
 <hr>
 <div class="ntdoc-description-links">

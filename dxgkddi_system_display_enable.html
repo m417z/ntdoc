@@ -72,54 +72,95 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>DXGKDDI_SYSTEM_DISPLAY_ENABLE callback function</h1>
+
 <h2>Description</h2>
+
 <p>The OS calls the kernel-mode display driver's (KMD) <strong>DxgkddiSystemDisplayEnable</strong> function to request that KMD reset the current display device to a specified state.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>MiniportDeviceContext</code> [in]</h3>
-<p>Handle to a context block associated with a display adapter. KMD's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a> function previously provided this handle to <em>Dxgkrnl</em>.</p>
+
+<p>Handle to a context block associated with a display adapter. KMD's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a> function previously provided this handle to <em>Dxgkrnl</em>.</p>
+
 <h3><code>TargetId</code> [in]</h3>
-<p>A <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmdt/ns-d3dkmdt-_d3dkmdt_video_present_target"><strong>D3DDDI_VIDEO_PRESENT_TARGET_ID</strong></a> value that specifies the identifier of the video present target on the display adapter that the display device is connected to. This identifier could be for the target that was left in the current video present network (VidPn) state during the previous call to <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_commitvidpn"><strong>DxgkDdiCommitVidPn</strong></a>.</p>
+
+<p>A <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmdt/ns-d3dkmdt-_d3dkmdt_video_present_target"><strong>D3DDDI_VIDEO_PRESENT_TARGET_ID</strong></a> value that specifies the identifier of the video present target on the display adapter that the display device is connected to. This identifier could be for the target that was left in the current video present network (VidPn) state during the previous call to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_commitvidpn"><strong>DxgkDdiCommitVidPn</strong></a>.</p>
+
 <h3><code>Flags</code> [in]</h3>
+
 <p>Pointer to a <strong><a href="dxgkarg_system_display_enable_flags" title="typedef struct _DXGKARG_SYSTEM_DISPLAY_ENABLE_FLAGS {&#10;  union {&#10;    struct {&#10;      UINT Reserved : 32;&#10;    };&#10;    UINT Value;&#10;  };&#10;} DXGKARG_SYSTEM_DISPLAY_ENABLE_FLAGS, *PDXGKARG_SYSTEM_DISPLAY_ENABLE_FLAGS;">DXGKARG_SYSTEM_DISPLAY_ENABLE_FLAGS</a></strong> value that contains a bitwise OR of flags. This member is reserved by the OS.</p>
+
 <h3><code>Width</code> [out]</h3>
+
 <p>Width of the display mode of the specified device, in pixels.</p>
+
 <h3><code>Height</code> [out]</h3>
+
 <p>Height of the display mode of the specified device, in pixels.</p>
+
 <h3><code>ColorFormat</code> [out]</h3>
+
 <p>Pointer to a <strong><a href="d3dddiformat" title="typedef enum _D3DDDIFORMAT {&#10;  D3DDDIFMT_UNKNOWN,&#10;  D3DDDIFMT_R8G8B8,&#10;  D3DDDIFMT_A8R8G8B8,&#10;  D3DDDIFMT_X8R8G8B8,&#10;  D3DDDIFMT_R5G6B5,&#10;  D3DDDIFMT_X1R5G5B5,&#10;  D3DDDIFMT_A1R5G5B5,&#10;  D3DDDIFMT_A4R4G4B4,&#10;  D3DDDIFMT_R3G3B2,&#10;  D3DDDIFMT_A8,&#10;  D3DDDIFMT_A8R3G3B2,&#10;  D3DDDIFMT_X4R4G4B4,&#10;  D3DDDIFMT_A2B10G10R10,&#10;  D3DDDIFMT_A8B8G8R8,&#10;  D3DDDIFMT_X8B8G8R8,&#10;  D3DDDIFMT_G16R16,&#10;  D3DDDIFMT_A2R10G10B10,&#10;  D3DDDIFMT_A16B16G16R16,&#10;  D3DDDIFMT_A8P8,&#10;...">D3DDDIFORMAT</a></strong> value that specifies the color format of the display device.</p>
+
 <h2>Return value</h2>
+
 <p><strong>DxgkDdiSystemDisplayEnable</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if it succeeds. If the target specified by the <strong>TargetId</strong> parameter isn't connected to a display device, the function returns STATUS_NOT_SUPPORTED. Otherwise, it returns one of the error codes defined in <em>Ntstatus.h</em>.</p>
+
 <h2>Remarks</h2>
+
 <p>The OS calls <strong>DxgkddiSystemDisplayEnable</strong> during a bugcheck operation following a system stop error.</p>
+
 <h3>Required steps by KMD</h3>
+
 <p>The KMD must follow these steps when its <strong>DxgkDdiSystemDisplayEnable</strong> function is called:</p>
+
 <ol>
 <li>Cancel all GPU operations or reset the GPU to the idle state.</li>
-<li>The OS indicates the video present target through the <strong>TargetId</strong> parameter. The driver must keep the display associated with this target powered on and visible. If the driver can't power on the display, it must fail the call to this function. In such a failure case, the OS might call <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_reset_device"><strong>DxgkDdiResetDevice</strong></a> and cause a system bugcheck to occur.</li>
+<li>The OS indicates the video present target through the <strong>TargetId</strong> parameter. The driver must keep the display associated with this target powered on and visible. If the driver can't power on the display, it must fail the call to this function. In such a failure case, the OS might call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_reset_device"><strong>DxgkDdiResetDevice</strong></a> and cause a system bugcheck to occur.</li>
 <li>Check the connectivity of the display associated with this target. If the target doesn't have a display connected, the driver must complete the call to this function and return the STATUS_NOT_SUPPORTED error code.</li>
 <li>Disable the signal to all other displays that are connected to the display adapter. If this isn't possible, the driver should attempt to place a blank image on all other displays. If this isn't possible, the driver must leave the last image on the screen unchanged.</li>
 <li>Keep the current display mode on the indicated target and provide this mode back to the OS as part of this function call.</li>
 <li>If the driver can't maintain the current display mode, or if the target is not part of the active topology, the driver should attempt to set a frame buffer on another target that is capable of a display resolution of at least 640 x 480 pixels in a format of 24 bits per pixel. If this isn't possible, the driver can fail this function call, which will result in a system bugcheck and the display of a black screen.</li>
 </ol>
+
 <p>KMD doesn't have to use a linear frame buffer mode. However, KMD should support write operations to this frame buffer from sources that have the <strong>D3DDDIFMT_A8R8G8B8</strong> format of the <strong><a href="d3dddiformat" title="typedef enum _D3DDDIFORMAT {&#10;  D3DDDIFMT_UNKNOWN,&#10;  D3DDDIFMT_R8G8B8,&#10;  D3DDDIFMT_A8R8G8B8,&#10;  D3DDDIFMT_X8R8G8B8,&#10;  D3DDDIFMT_R5G6B5,&#10;  D3DDDIFMT_X1R5G5B5,&#10;  D3DDDIFMT_A1R5G5B5,&#10;  D3DDDIFMT_A4R4G4B4,&#10;  D3DDDIFMT_R3G3B2,&#10;  D3DDDIFMT_A8,&#10;  D3DDDIFMT_A8R3G3B2,&#10;  D3DDDIFMT_X4R4G4B4,&#10;  D3DDDIFMT_A2B10G10R10,&#10;  D3DDDIFMT_A8B8G8R8,&#10;  D3DDDIFMT_X8B8G8R8,&#10;  D3DDDIFMT_G16R16,&#10;  D3DDDIFMT_A2R10G10B10,&#10;  D3DDDIFMT_A16B16G16R16,&#10;  D3DDDIFMT_A8P8,&#10;...">D3DDDIFORMAT</a></strong> enumeration.</p>
+
 <h3>Source image restrictions</h3>
-<p>After KMD gives the OS control over display functionality, the OS can call the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_system_display_write"><strong>DxgkDdiSystemDisplayWrite</strong></a> function to update the screen image and to write a block of images from specified sources to the screen that was reset by the <strong>DxgkDdiSystemDisplayEnable</strong> function.</p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_system_display_write"><strong>DxgkDdiSystemDisplayWrite</strong></a> provides the driver with the starting address of the source image as well as the stride, width, and height. The color format of the source image is always <strong>D3DDDIFMT_X8R8G8B8</strong>. The OS guarantees that the source image is in non-paged memory.</p>
-<p>KMD must write this source image to the current screen starting at the positions specified by the <strong>PositionX</strong> and <strong>PositionY</strong> parameters of the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_system_display_write"><strong>DxgkDdiSystemDisplayWrite</strong></a> function.</p>
-<p>It's recommended that the driver use the CPU to write the image from the source to the frame buffer because a system bugcheck might be caused by repeated <a href="https://learn.microsoft.com/windows-hardware/drivers/display/timeout-detection-and-recovery">Timeout Detection and Recovery (TDR)</a> instances that result in the GPU being in an unknown condition.</p>
+
+<p>After KMD gives the OS control over display functionality, the OS can call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_system_display_write"><strong>DxgkDdiSystemDisplayWrite</strong></a> function to update the screen image and to write a block of images from specified sources to the screen that was reset by the <strong>DxgkDdiSystemDisplayEnable</strong> function.</p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_system_display_write"><strong>DxgkDdiSystemDisplayWrite</strong></a> provides the driver with the starting address of the source image as well as the stride, width, and height. The color format of the source image is always <strong>D3DDDIFMT_X8R8G8B8</strong>. The OS guarantees that the source image is in non-paged memory.</p>
+
+<p>KMD must write this source image to the current screen starting at the positions specified by the <strong>PositionX</strong> and <strong>PositionY</strong> parameters of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_system_display_write"><strong>DxgkDdiSystemDisplayWrite</strong></a> function.</p>
+
+<p>It's recommended that the driver use the CPU to write the image from the source to the frame buffer because a system bugcheck might be caused by repeated <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/timeout-detection-and-recovery">Timeout Detection and Recovery (TDR)</a> instances that result in the GPU being in an unknown condition.</p>
+
 <h3>Use non-paged memory</h3>
+
 <p>Windows kernel-mode functions might not be available while this function is being called.</p>
+
 <p><strong>DxgkDdiSystemDisplayEnable</strong> can be called at any IRQL, so it must be in nonpageable memory. <strong>DxgkDdiSystemDisplayEnable</strong> must not call any code that is in pageable memory and must not manipulate any data that is in pageable memory.</p>
+
 <h3>Automatic display switching</h3>
-<p>An automatic display switch driver's <strong>DxgkDdiSystemDisplayEnable</strong> DDI must ensure that panel self refresh (PSR) is disabled at the end of the call to it. For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/display/automatic-display-switch">Automatic Display Switch</a>.</p>
+
+<p>An automatic display switch driver's <strong>DxgkDdiSystemDisplayEnable</strong> DDI must ensure that panel self refresh (PSR) is disabled at the end of the call to it. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/automatic-display-switch">Automatic Display Switch</a>.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="d3dddiformat" title="typedef enum _D3DDDIFORMAT {&#10;  D3DDDIFMT_UNKNOWN,&#10;  D3DDDIFMT_R8G8B8,&#10;  D3DDDIFMT_A8R8G8B8,&#10;  D3DDDIFMT_X8R8G8B8,&#10;  D3DDDIFMT_R5G6B5,&#10;  D3DDDIFMT_X1R5G5B5,&#10;  D3DDDIFMT_A1R5G5B5,&#10;  D3DDDIFMT_A4R4G4B4,&#10;  D3DDDIFMT_R3G3B2,&#10;  D3DDDIFMT_A8,&#10;  D3DDDIFMT_A8R3G3B2,&#10;  D3DDDIFMT_X4R4G4B4,&#10;  D3DDDIFMT_A2B10G10R10,&#10;  D3DDDIFMT_A8B8G8R8,&#10;  D3DDDIFMT_X8B8G8R8,&#10;  D3DDDIFMT_G16R16,&#10;  D3DDDIFMT_A2R10G10B10,&#10;  D3DDDIFMT_A16B16G16R16,&#10;  D3DDDIFMT_A8P8,&#10;...">D3DDDIFORMAT</a></strong></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkcb_acquire_post_display_ownership"><strong>DxgkCbAcquirePostDisplayOwnership</strong></a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_commitvidpn"><strong>DxgkDdiCommitVidPn</strong></a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_reset_device"><strong>DxgkDdiResetDevice</strong></a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_stop_device_and_release_post_display_ownership"><strong>DxgkDdiStopDeviceAndReleasePostDisplayOwnership</strong></a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_system_display_write"><strong>DxgkDdiSystemDisplayWrite</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkcb_acquire_post_display_ownership"><strong>DxgkCbAcquirePostDisplayOwnership</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_commitvidpn"><strong>DxgkDdiCommitVidPn</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_reset_device"><strong>DxgkDdiResetDevice</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_stop_device_and_release_post_display_ownership"><strong>DxgkDdiStopDeviceAndReleasePostDisplayOwnership</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_system_display_write"><strong>DxgkDdiSystemDisplayWrite</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

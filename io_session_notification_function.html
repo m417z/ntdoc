@@ -72,51 +72,87 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The IO_SESSION_NOTIFICATION_FUNCTION function type defines a callback routine through which a driver receives notifications of changes in the state of user sessions that the driver is interested in.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>SessionObject</code> [in]</h3>
+
 <p>Pointer to an opaque, system object that contains information about the user session. The driver can pass this pointer value to the <a href="iogetcontainerinformation" title="NTSTATUS IoGetContainerInformation(&#10;  [in]           IO_CONTAINER_INFORMATION_CLASS InformationClass,&#10;  [in, optional] PVOID                          ContainerObject,&#10;  [in, out]      PVOID                          Buffer,&#10;  [in]           ULONG                          BufferLength&#10;);">IoGetContainerInformation</a> routine as the <em>ContainerObject</em> parameter value.</p>
+
 <h3><code>IoObject</code> [in]</h3>
+
 <p>Pointer to an I/O object owned by the driver. This parameter is the I/O object pointer that the driver supplied to the <a href="ioregistercontainernotification" title="NTSTATUS&#10;IoRegisterContainerNotification(&#10;    _In_ IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,&#10;    _In_ PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,&#10;    _In_reads_bytes_opt_(NotificationInformationLength) PVOID NotificationInformation,&#10;    _In_ ULONG NotificationInformationLength,&#10;    _Out_ PVOID * CallbackRegistration&#10;    );">IoRegisterContainerNotification</a> routine when the driver previously registered to receive notifications of session events. The <strong><a href="ioregistercontainernotification" title="NTSTATUS&#10;IoRegisterContainerNotification(&#10;    _In_ IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,&#10;    _In_ PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,&#10;    _In_reads_bytes_opt_(NotificationInformationLength) PVOID NotificationInformation,&#10;    _In_ ULONG NotificationInformationLength,&#10;    _Out_ PVOID * CallbackRegistration&#10;    );">IoRegisterContainerNotification</a></strong> routine's <em>NotificationInformation</em> parameter points to an <strong><a href="io_session_state_notification" title="typedef struct _IO_SESSION_STATE_NOTIFICATION {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;  PVOID IoObject;&#10;  ULONG EventMask;&#10;  PVOID Context;&#10;} IO_SESSION_STATE_NOTIFICATION, *PIO_SESSION_STATE_NOTIFICATION;">IO_SESSION_STATE_NOTIFICATION</a></strong> structure whose <strong>IoObject</strong> member points to the I/O object.</p>
+
 <h3><code>Event</code> [in]</h3>
+
 <p>An <a href="io_session_event" title="typedef enum _IO_SESSION_EVENT&#10;{&#10;    IoSessionEventIgnore,&#10;    IoSessionEventCreated,&#10;    IoSessionEventTerminated,&#10;    IoSessionEventConnected,&#10;    IoSessionEventDisconnected,&#10;    IoSessionEventLogon,&#10;    IoSessionEventLogoff,&#10;    IoSessionEventMax&#10;} IO_SESSION_EVENT;">IO_SESSION_EVENT</a> enumeration constant that indicates which session event caused the notification callback.</p>
+
 <h3><code>Context</code> [in]</h3>
+
 <p>The context value that the driver previously supplied to the <strong><a href="ioregistercontainernotification" title="NTSTATUS&#10;IoRegisterContainerNotification(&#10;    _In_ IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,&#10;    _In_ PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,&#10;    _In_reads_bytes_opt_(NotificationInformationLength) PVOID NotificationInformation,&#10;    _In_ ULONG NotificationInformationLength,&#10;    _Out_ PVOID * CallbackRegistration&#10;    );">IoRegisterContainerNotification</a></strong> routine when the driver registered to receive notifications of session events. In the <strong><a href="ioregistercontainernotification" title="NTSTATUS&#10;IoRegisterContainerNotification(&#10;    _In_ IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,&#10;    _In_ PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,&#10;    _In_reads_bytes_opt_(NotificationInformationLength) PVOID NotificationInformation,&#10;    _In_ ULONG NotificationInformationLength,&#10;    _Out_ PVOID * CallbackRegistration&#10;    );">IoRegisterContainerNotification</a></strong> call, the driver supplied a pointer to an <strong><a href="io_session_state_notification" title="typedef struct _IO_SESSION_STATE_NOTIFICATION {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;  PVOID IoObject;&#10;  ULONG EventMask;&#10;  PVOID Context;&#10;} IO_SESSION_STATE_NOTIFICATION, *PIO_SESSION_STATE_NOTIFICATION;">IO_SESSION_STATE_NOTIFICATION</a></strong> structure whose <strong>Context</strong> member contains the context value.</p>
+
 <h3><code>NotificationPayload</code> [in]</h3>
+
 <p>Pointer to a payload buffer that contains an <strong><a href="io_session_connect_info" title="typedef struct _IO_SESSION_CONNECT_INFO {&#10;  ULONG   SessionId;&#10;  BOOLEAN LocalSession;&#10;} IO_SESSION_CONNECT_INFO, *PIO_SESSION_CONNECT_INFO;">IO_SESSION_CONNECT_INFO</a></strong> structure.</p>
+
 <h3><code>PayloadLength</code> [in]</h3>
+
 <p>The size, in bytes, of the buffer pointed to by <em>NotificationPayload</em>. The buffer size never needs exceeds the constant value IO_SESSION_MAX_PAYLOAD_SIZE, which is defined in the Wdm.h header file.</p>
+
 <h2>Return value</h2>
+
 <p>If the routine succeeds, it must return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. Otherwise, it must return one of the error status values defined in the Ntstatus.h header file.</p>
+
 <h2>Remarks</h2>
+
 <p>A kernel-mode driver implements this routine. The I/O manager calls this routine to notify the driver of session events.</p>
+
 <p>To receive notifications of session events, a driver calls the <strong><a href="ioregistercontainernotification" title="NTSTATUS&#10;IoRegisterContainerNotification(&#10;    _In_ IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,&#10;    _In_ PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,&#10;    _In_reads_bytes_opt_(NotificationInformationLength) PVOID NotificationInformation,&#10;    _In_ ULONG NotificationInformationLength,&#10;    _Out_ PVOID * CallbackRegistration&#10;    );">IoRegisterContainerNotification</a></strong> routine and sets this routine's <em>CallbackFunction</em> parameter to point to the driver's IO_SESSION_NOTIFICATION_FUNCTION routine. The I/O object that the driver passes to <strong><a href="ioregistercontainernotification" title="NTSTATUS&#10;IoRegisterContainerNotification(&#10;    _In_ IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,&#10;    _In_ PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,&#10;    _In_reads_bytes_opt_(NotificationInformationLength) PVOID NotificationInformation,&#10;    _In_ ULONG NotificationInformationLength,&#10;    _Out_ PVOID * CallbackRegistration&#10;    );">IoRegisterContainerNotification</a></strong> determines whether the driver will receive notifications of events in a particular user session or of events in all sessions. For more information, see <a href="io_session_state_notification" title="typedef struct _IO_SESSION_STATE_NOTIFICATION {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;  PVOID IoObject;&#10;  ULONG EventMask;&#10;  PVOID Context;&#10;} IO_SESSION_STATE_NOTIFICATION, *PIO_SESSION_STATE_NOTIFICATION;">IO_SESSION_STATE_NOTIFICATION</a>.</p>
+
 <h3>Examples</h3>
-<p>To define an I/O-session notification routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>To define an I/O-session notification routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
 <p>For example, to define an I/O-session notification routine that is named <code>MyIoSessionNotification</code>, use the IO_SESSION_NOTIFICATION_FUNCTION type as shown in this code example:</p>
-<pre lang="cpp"><code>IO_SESSION_NOTIFICATION_FUNCTION MyIoSessionNotification;
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">IO_SESSION_NOTIFICATION_FUNCTION</span><span class="w"> </span><span class="n">MyIoSessionNotification</span><span class="p">;</span>
 </code></pre>
+</div>
+
 <p>Then, implement your callback routine as follows:</p>
-<pre lang="cpp"><code>_Use_decl_annotations_
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-  MyIoSessionNotification(
-    PVOID  SessionObject,
-    PVOID  IoObject,
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  Event,
-    PVOID  Context,
-    PVOID  NotificationPayload,
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  PayloadLength
-    )
-  {
-      // Function body
-  }
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">_Use_decl_annotations_</span>
+<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="w">  </span><span class="n">MyIoSessionNotification</span><span class="p">(</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w">  </span><span class="n">SessionObject</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w">  </span><span class="n">IoObject</span><span class="p">,</span>
+<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">Event</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w">  </span><span class="n">Context</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w">  </span><span class="n">NotificationPayload</span><span class="p">,</span>
+<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">PayloadLength</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// Function body</span>
+<span class="w">  </span><span class="p">}</span>
 </code></pre>
-<p>The IO_SESSION_NOTIFICATION_FUNCTION function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <code>_Use_decl_annotations_</code> annotation to your function definition. The <code>_Use_decl_annotations_</code> annotation ensures that the annotations that are applied to the IO_SESSION_NOTIFICATION_FUNCTION function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+</div>
+
+<p>The IO_SESSION_NOTIFICATION_FUNCTION function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <code>_Use_decl_annotations_</code> annotation to your function definition. The <code>_Use_decl_annotations_</code> annotation ensures that the annotations that are applied to the IO_SESSION_NOTIFICATION_FUNCTION function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="io_session_connect_info" title="typedef struct _IO_SESSION_CONNECT_INFO {&#10;  ULONG   SessionId;&#10;  BOOLEAN LocalSession;&#10;} IO_SESSION_CONNECT_INFO, *PIO_SESSION_CONNECT_INFO;">IO_SESSION_CONNECT_INFO</a></strong></p>
+
 <p><a href="io_session_event" title="typedef enum _IO_SESSION_EVENT&#10;{&#10;    IoSessionEventIgnore,&#10;    IoSessionEventCreated,&#10;    IoSessionEventTerminated,&#10;    IoSessionEventConnected,&#10;    IoSessionEventDisconnected,&#10;    IoSessionEventLogon,&#10;    IoSessionEventLogoff,&#10;    IoSessionEventMax&#10;} IO_SESSION_EVENT;">IO_SESSION_EVENT</a></p>
+
 <p><strong><a href="io_session_state_notification" title="typedef struct _IO_SESSION_STATE_NOTIFICATION {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;  PVOID IoObject;&#10;  ULONG EventMask;&#10;  PVOID Context;&#10;} IO_SESSION_STATE_NOTIFICATION, *PIO_SESSION_STATE_NOTIFICATION;">IO_SESSION_STATE_NOTIFICATION</a></strong></p>
+
 <p><a href="iogetcontainerinformation" title="NTSTATUS IoGetContainerInformation(&#10;  [in]           IO_CONTAINER_INFORMATION_CLASS InformationClass,&#10;  [in, optional] PVOID                          ContainerObject,&#10;  [in, out]      PVOID                          Buffer,&#10;  [in]           ULONG                          BufferLength&#10;);">IoGetContainerInformation</a></p>
+
 <p><a href="ioregistercontainernotification" title="NTSTATUS&#10;IoRegisterContainerNotification(&#10;    _In_ IO_CONTAINER_NOTIFICATION_CLASS NotificationClass,&#10;    _In_ PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,&#10;    _In_reads_bytes_opt_(NotificationInformationLength) PVOID NotificationInformation,&#10;    _In_ ULONG NotificationInformationLength,&#10;    _Out_ PVOID * CallbackRegistration&#10;    );">IoRegisterContainerNotification</a></p>
 <hr>
 <div class="ntdoc-description-links">

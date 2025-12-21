@@ -65,54 +65,66 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The KSMUSICFORMAT structure is used to send and receive information about MIDI data that is input from and output to WDM audio devices.</p>
+
 <h2>Members</h2>
+
 <h3><code>TimeDeltaMs</code></h3>
+
 <p>Indicates when this series of MIDI data bytes should be played. If this is the first KSMUSICFORMAT structure in the buffer, this field represents the delta (time change, in milliseconds) from the <strong>PresentationTime</strong> in the <a href="ksstream_header" title="typedef struct {&#10;  ULONG    Size;&#10;  ULONG    TypeSpecificFlags;&#10;  KSTIME   PresentationTime;&#10;  LONGLONG Duration;&#10;  ULONG    FrameExtent;&#10;  ULONG    DataUsed;&#10;  PVOID    Data;&#10;  ULONG    OptionsFlags;&#10;  ULONG    Reserved;&#10;} KSSTREAM_HEADER, *PKSSTREAM_HEADER;">KSSTREAM_HEADER</a> structure. Otherwise, the field represents the delta offset (in milliseconds) from the previous message (KSMUSICFORMAT structure). If this time is in the past, then the message is played immediately.</p>
+
 <h3><code>ByteCount</code></h3>
+
 <p>Specifies the number of bytes of data that follow this structure. Because the subsequent structure or properties should be <a href="dword" title="typedef unsigned long DWORD;">DWORD</a> aligned and might allow for extra blanks or used bytes, <strong>ByteCount</strong> should be the actual number of bytes present and not include any padding separating the data structures.</p>
+
 <h2>Remarks</h2>
+
 <p>This structure is used to send and receive IRPs containing information about MIDI input and output streams. The <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> itself contains in its <strong>SystemBuffer</strong> field a pointer to a <a href="ksstream_header" title="typedef struct {&#10;  ULONG    Size;&#10;  ULONG    TypeSpecificFlags;&#10;  KSTIME   PresentationTime;&#10;  LONGLONG Duration;&#10;  ULONG    FrameExtent;&#10;  ULONG    DataUsed;&#10;  PVOID    Data;&#10;  ULONG    OptionsFlags;&#10;  ULONG    Reserved;&#10;} KSSTREAM_HEADER, *PKSSTREAM_HEADER;">KSSTREAM_HEADER</a> structure, which serves as a header for a packet of data that is to be read from or written to a streaming driver pin. The KS stream header contains in its <strong>Data</strong> field a pointer to the buffer that contains the data. The data in that buffer consists of a sequence of messages, each of which is a KSMUSICFORMAT structure that is immediately followed by some number of bytes of data.</p>
+
 <p>Time stamps in these IRPs always increase across successively issued IRPs. However, because each <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> in a sequence is fully serviced before servicing of the next <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> begins, time must also always increase across IRPs. This can lead to an anomalous situation, as described in the following example.</p>
+
 <table>
 <thead>
 <tr>
-<th>Action</th>
-<th>Description</th>
+  <th>Action</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> #1 PresentationTime = 123 milliseconds</td>
-<td></td>
+  <td><a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> #1 PresentationTime = 123 milliseconds</td>
+  <td></td>
 </tr>
 <tr>
-<td>Message #1 TimeDeltaMs: 0</td>
-<td>Will be played at 123 milliseconds.</td>
+  <td>Message #1 TimeDeltaMs: 0</td>
+  <td>Will be played at 123 milliseconds.</td>
 </tr>
 <tr>
-<td>Message #2 TimeDeltaMs: 1</td>
-<td>Will be played at 124 milliseconds.</td>
+  <td>Message #2 TimeDeltaMs: 1</td>
+  <td>Will be played at 124 milliseconds.</td>
 </tr>
 <tr>
-<td>Message #3 TimeDeltaMs: 7</td>
-<td>Will be played at 131 milliseconds.</td>
+  <td>Message #3 TimeDeltaMs: 7</td>
+  <td>Will be played at 131 milliseconds.</td>
 </tr>
 <tr>
-<td><a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> #2 PresentationTime = 120 milliseconds</td>
-<td></td>
+  <td><a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> #2 PresentationTime = 120 milliseconds</td>
+  <td></td>
 </tr>
 <tr>
-<td>Message #1 TimeDeltaMs: 5</td>
-<td>Supposed to be played at 125 milliseconds, but is actually played at 131 milliseconds. This <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is not processed until the previous <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> at 131 milliseconds finishes.</td>
+  <td>Message #1 TimeDeltaMs: 5</td>
+  <td>Supposed to be played at 125 milliseconds, but is actually played at 131 milliseconds. This <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is not processed until the previous <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> at 131 milliseconds finishes.</td>
 </tr>
 <tr>
-<td>Message #2 TimeDeltaMs: 15</td>
-<td>Will be played at 140 milliseconds.</td>
+  <td>Message #2 TimeDeltaMs: 15</td>
+  <td>Will be played at 140 milliseconds.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>See also</h2>
+
 <p><a href="ksstream_header" title="typedef struct {&#10;  ULONG    Size;&#10;  ULONG    TypeSpecificFlags;&#10;  KSTIME   PresentationTime;&#10;  LONGLONG Duration;&#10;  ULONG    FrameExtent;&#10;  ULONG    DataUsed;&#10;  PVOID    Data;&#10;  ULONG    OptionsFlags;&#10;  ULONG    Reserved;&#10;} KSSTREAM_HEADER, *PKSSTREAM_HEADER;">KSSTREAM_HEADER</a></p>
 <hr>
 <div class="ntdoc-description-links">

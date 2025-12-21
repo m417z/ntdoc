@@ -68,36 +68,63 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>KsAllocateObjectHeader function</h1>
-<h2>Description</h2>
-<p>The <strong>KsAllocateObjectHeader</strong> function initializes the required file context header.</p>
-<h2>Parameters</h2>
-<h3><code>Header</code> [out]</h3>
-<p>Points to the caller-allocated location in which to return a pointer to the initialized <strong>KSOBJECT_HEADER</strong> if successful.</p>
-<h3><code>ItemsCount</code> [in]</h3>
-<p>Specifies the number of object create items in the <em>ItemsList</em> to be added to the object header once the header is allocated. This value should be zero if <em>ItemsList</em> is <strong>NULL</strong>.</p>
-<h3><code>ItemsList</code> [in, optional]</h3>
-<p>Optionally specifies a pointer to a caller-allocated buffer containing a series of <a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">KSOBJECT_CREATE_ITEM</a> structures to be added to the object header. Must be set to <strong>NULL</strong> if there are no object create items.</p>
-<h3><code>Irp</code> [in]</h3>
-<p>Points to the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>, of major function <a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a>, that contains the necessary information to complete the creation of the object header.</p>
-<h3><code>Table</code> [in]</h3>
-<p>Points to an initialized dispatch table for this file object.</p>
-<h2>Return value</h2>
-<p>The <strong>KsAllocateObjectHeader</strong> function returns <strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong> if successful or <strong>STATUS_INSUFFICIENT_RESOURCES</strong> if not enough resources are available to fulfill the request.</p>
-<h2>Remarks</h2>
-<p>Before calling this routine the driver must allocate system-resident storage for a <a href="ksdispatch_table" title="typedef struct {&#10;  PDRIVER_DISPATCH        DeviceIoControl;&#10;  PDRIVER_DISPATCH        Read;&#10;  PDRIVER_DISPATCH        Write;&#10;  PDRIVER_DISPATCH        Flush;&#10;  PDRIVER_DISPATCH        Close;&#10;  PDRIVER_DISPATCH        QuerySecurity;&#10;  PDRIVER_DISPATCH        SetSecurity;&#10;  PFAST_IO_DEVICE_CONTROL FastDeviceIoControl;&#10;  PFAST_IO_READ           FastRead;&#10;  PFAST_IO_WRITE          FastWrite;&#10;} KSDISPATCH_TABLE, *PKSDISPATCH_TABLE;">KSDISPATCH_TABLE</a> and initialize the dispatch table. The memory for this dispatch table cannot be released until <strong><a href="ksfreeobjectheader" title="KSDDKAPI VOID KsFreeObjectHeader(&#10;  [in] KSOBJECT_HEADER Header&#10;);">KsFreeObjectHeader</a></strong> is called.</p>
-<p><strong>KsAllocateObjectHeader</strong> allocates the memory for the <strong>KSOBJECT_HEADER</strong> structure and returns a pointer to the header at <em>Header</em>. Drivers must not attempt to free the memory themselves, but rather call <strong><a href="ksfreeobjectheader" title="KSDDKAPI VOID KsFreeObjectHeader(&#10;  [in] KSOBJECT_HEADER Header&#10;);">KsFreeObjectHeader</a></strong> when all operations requiring this object header have been completed.</p>
-<p>If subobjects exist for a given device, the driver must, before calling <strong>KsAllocateObjectHeader</strong>, allocate a buffer of either paged or nonpaged memory of sufficient size to hold a <a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">KSOBJECT_CREATE_ITEM</a> structure for each subobject. For example:</p>
-<pre lang="cpp"><code>/* Allocate a buffer for 4 subobjects for a given streaming device */
-<a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">PKSOBJECT_CREATE_ITEM</a> createBuffer ;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> bufferSize  = (sizeof (<a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">KSOBJECT_CREATE_ITEM</a>)) * 4 ;
 
-createBuffer = (<a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">PKSOBJECT_CREATE_ITEM</a>)
-               <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a> (PagedPool, bufferSize) ;
+<h2>Description</h2>
+
+<p>The <strong>KsAllocateObjectHeader</strong> function initializes the required file context header.</p>
+
+<h2>Parameters</h2>
+
+<h3><code>Header</code> [out]</h3>
+
+<p>Points to the caller-allocated location in which to return a pointer to the initialized <strong>KSOBJECT_HEADER</strong> if successful.</p>
+
+<h3><code>ItemsCount</code> [in]</h3>
+
+<p>Specifies the number of object create items in the <em>ItemsList</em> to be added to the object header once the header is allocated. This value should be zero if <em>ItemsList</em> is <strong>NULL</strong>.</p>
+
+<h3><code>ItemsList</code> [in, optional]</h3>
+
+<p>Optionally specifies a pointer to a caller-allocated buffer containing a series of <a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">KSOBJECT_CREATE_ITEM</a> structures to be added to the object header. Must be set to <strong>NULL</strong> if there are no object create items.</p>
+
+<h3><code>Irp</code> [in]</h3>
+
+<p>Points to the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>, of major function <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a>, that contains the necessary information to complete the creation of the object header.</p>
+
+<h3><code>Table</code> [in]</h3>
+
+<p>Points to an initialized dispatch table for this file object.</p>
+
+<h2>Return value</h2>
+
+<p>The <strong>KsAllocateObjectHeader</strong> function returns <strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong> if successful or <strong>STATUS_INSUFFICIENT_RESOURCES</strong> if not enough resources are available to fulfill the request.</p>
+
+<h2>Remarks</h2>
+
+<p>Before calling this routine the driver must allocate system-resident storage for a <a href="ksdispatch_table" title="typedef struct {&#10;  PDRIVER_DISPATCH        DeviceIoControl;&#10;  PDRIVER_DISPATCH        Read;&#10;  PDRIVER_DISPATCH        Write;&#10;  PDRIVER_DISPATCH        Flush;&#10;  PDRIVER_DISPATCH        Close;&#10;  PDRIVER_DISPATCH        QuerySecurity;&#10;  PDRIVER_DISPATCH        SetSecurity;&#10;  PFAST_IO_DEVICE_CONTROL FastDeviceIoControl;&#10;  PFAST_IO_READ           FastRead;&#10;  PFAST_IO_WRITE          FastWrite;&#10;} KSDISPATCH_TABLE, *PKSDISPATCH_TABLE;">KSDISPATCH_TABLE</a> and initialize the dispatch table. The memory for this dispatch table cannot be released until <strong><a href="ksfreeobjectheader" title="KSDDKAPI VOID KsFreeObjectHeader(&#10;  [in] KSOBJECT_HEADER Header&#10;);">KsFreeObjectHeader</a></strong> is called.</p>
+
+<p><strong>KsAllocateObjectHeader</strong> allocates the memory for the <strong>KSOBJECT_HEADER</strong> structure and returns a pointer to the header at <em>Header</em>. Drivers must not attempt to free the memory themselves, but rather call <strong><a href="ksfreeobjectheader" title="KSDDKAPI VOID KsFreeObjectHeader(&#10;  [in] KSOBJECT_HEADER Header&#10;);">KsFreeObjectHeader</a></strong> when all operations requiring this object header have been completed.</p>
+
+<p>If subobjects exist for a given device, the driver must, before calling <strong>KsAllocateObjectHeader</strong>, allocate a buffer of either paged or nonpaged memory of sufficient size to hold a <a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">KSOBJECT_CREATE_ITEM</a> structure for each subobject. For example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cm">/* Allocate a buffer for 4 subobjects for a given streaming device */</span>
+<span class="n"><a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">PKSOBJECT_CREATE_ITEM</a></span><span class="w"> </span><span class="n">createBuffer</span><span class="w"> </span><span class="p">;</span>
+<span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">bufferSize</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="k">sizeof</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">KSOBJECT_CREATE_ITEM</a></span><span class="p">))</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">4</span><span class="w"> </span><span class="p">;</span>
+
+<span class="n">createBuffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">PKSOBJECT_CREATE_ITEM</a></span><span class="p">)</span>
+<span class="w">               </span><span class="n"><a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a></span><span class="w"> </span><span class="p">(</span><span class="n">PagedPool</span><span class="p">,</span><span class="w"> </span><span class="n">bufferSize</span><span class="p">)</span><span class="w"> </span><span class="p">;</span>
 </code></pre>
+</div>
+
 <p>Drivers must not free the memory allocated for the subobject <a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">KSOBJECT_CREATE_ITEM</a> list until after calling <strong><a href="ksfreedeviceheader" title="KSDDKAPI VOID KsFreeDeviceHeader(&#10;  [in] KSDEVICE_HEADER Header&#10;);">KsFreeDeviceHeader</a></strong>. Failure to do so can result in a bug check condition.</p>
+
 <h2>See also</h2>
+
 <p><a href="ksobject_create_item" title="typedef struct {&#10;  PDRIVER_DISPATCH     Create;&#10;  PVOID                Context;&#10;  UNICODE_STRING       ObjectClass;&#10;  PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;  ULONG                Flags;&#10;} KSOBJECT_CREATE_ITEM, *PKSOBJECT_CREATE_ITEM;">KSOBJECT_CREATE_ITEM</a></p>
+
 <p><a href="ksfreedeviceheader" title="KSDDKAPI VOID KsFreeDeviceHeader(&#10;  [in] KSDEVICE_HEADER Header&#10;);">KsFreeDeviceHeader</a></p>
+
 <p><a href="ksfreeobjectheader" title="KSDDKAPI VOID KsFreeObjectHeader(&#10;  [in] KSOBJECT_HEADER Header&#10;);">KsFreeObjectHeader</a></p>
 <hr>
 <div class="ntdoc-description-links">

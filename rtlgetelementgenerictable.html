@@ -67,7 +67,7 @@ RtlGetElementGenericTable(
 <h1>NtDoc</h1>
 </div>
 <div class="ntdoc-description">
-<p>This function is <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-rtlgetelementgenerictable">documented in Windows Driver Kit</a>.</p>
+<p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntddk/nf-ntddk-rtlgetelementgenerictable">documented in Windows Driver Kit</a>.</p>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/rtlgetelementgenerictable.md">Edit description on GitHub</a>
 </div>
@@ -77,29 +77,53 @@ RtlGetElementGenericTable(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>RtlGetElementGenericTable function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>RtlGetElementGenericTable</strong> routine returns a pointer to the caller-supplied data for a particular generic table element.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Table</code> [in]</h3>
+
 <p>Pointer to the generic table (<a href="rtl_generic_table" title="typedef struct _RTL_GENERIC_TABLE&#10;{&#10;    PRTL_SPLAY_LINKS TableRoot;&#10;    LIST_ENTRY InsertOrderList;&#10;    PLIST_ENTRY OrderedPointer;&#10;    ULONG WhichOrderedElement;&#10;    ULONG NumberGenericTableElements;&#10;    PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine;&#10;    PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine;&#10;    PRTL_GENERIC_FREE_ROUTINE FreeRoutine;&#10;    PVOID TableContext;&#10;} RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;">RTL_GENERIC_TABLE</a>) from which the <em>I</em>th element is to be retrieved. The table must have been initialized by calling <strong><a href="rtlinitializegenerictable" title="NTSYSAPI&#10;VOID&#10;NTAPI&#10;RtlInitializeGenericTable(&#10;    _Out_ PRTL_GENERIC_TABLE Table,&#10;    _In_ PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine,&#10;    _In_ PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine,&#10;    _In_ PRTL_GENERIC_FREE_ROUTINE FreeRoutine,&#10;    _In_opt_ PVOID TableContext&#10;    );">RtlInitializeGenericTable</a></strong>.</p>
+
 <h3><code>I</code> [in]</h3>
+
 <p>Index of the element selected. This value is zero-based, so the index of the last-inserted element currently in <em>Table</em> is always one less than the value returned by <strong><a href="rtlnumbergenerictableelements" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlNumberGenericTableElements(&#10;    _In_ PRTL_GENERIC_TABLE Table&#10;    );">RtlNumberGenericTableElements</a></strong>.</p>
+
 <h2>Return value</h2>
+
 <p><strong>RtlGetElementGenericTable</strong> returns a pointer to the caller-supplied data for the <em>I</em>th element in the generic table. It returns <strong>NULL</strong> if the given <em>I</em> is too large or if the generic table currently has no elements.</p>
+
 <h2>Remarks</h2>
+
 <p><strong>RtlGetElementGenericTable</strong> returns the <em>I</em>th element inserted in the generic table. To retrieve the first element, set <em>I</em> to zero. To retrieve the last element, set <em>I</em> to (<strong><a href="rtlnumbergenerictableelements" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlNumberGenericTableElements(&#10;    _In_ PRTL_GENERIC_TABLE Table&#10;    );">RtlNumberGenericTableElements</a></strong>(<em>Table</em>)-1). Note that if an element is deleted from the generic table, the indexes of all elements inserted after the deleted element are decremented. Thus an element's index might change over time.</p>
+
 <p><strong>RtlGetElementGenericTable</strong> is more efficient than <strong><a href="rtllookupelementgenerictable" title="_Check_return_&#10;NTSYSAPI&#10;PVOID&#10;NTAPI&#10;RtlLookupElementGenericTable(&#10;    _In_ PRTL_GENERIC_TABLE Table,&#10;    _In_ PVOID Buffer&#10;    );">RtlLookupElementGenericTable</a></strong> if the caller can supply the index of a particular element for which the caller needs access to the associated data. However, calling <strong>RtlGetElementGenericTable</strong> repeatedly to test for such an element is less efficient than calling <strong><a href="rtllookupelementgenerictable" title="_Check_return_&#10;NTSYSAPI&#10;PVOID&#10;NTAPI&#10;RtlLookupElementGenericTable(&#10;    _In_ PRTL_GENERIC_TABLE Table,&#10;    _In_ PVOID Buffer&#10;    );">RtlLookupElementGenericTable</a></strong> to locate it.</p>
+
 <p>Callers of the Rtl..GenericTable routines are responsible for exclusively synchronizing access to the generic table. An exclusive fast mutex is the most efficient synchronization mechanism to use for this purpose.</p>
+
 <p>By default, the operating system uses splay trees to implement generic tables. Under some circumstances, operations on a splay tree will make the tree deep and narrow and might even turn it into a straight line. Very deep trees degrade the performance of searches. You can ensure a more balanced, shallower tree implementation of generic tables by using Adelson-Velsky/Landis (AVL) trees. If you want to configure the generic table routines to use AVL trees instead of splay trees in your driver, insert the following define statement in a common header file before including <em>Ntddk.h</em>:</p>
+
 <p><code>#define RTL_USE_AVL_TABLES 0</code></p>
+
 <p>If RTL_USE_AVL_TABLES is not defined, you must use the AVL form of the generic table routines. For example, use the <strong><a href="rtlgetelementgenerictableavl" title="_Check_return_&#10;NTSYSAPI&#10;PVOID&#10;NTAPI&#10;RtlGetElementGenericTableAvl(&#10;    _In_ PRTL_AVL_TABLE Table,&#10;    _In_ ULONG I&#10;    );">RtlGetElementGenericTableAvl</a></strong> routine instead of <strong>RtlGetElementGenericTable</strong>. In the call to <strong><a href="rtlgetelementgenerictableavl" title="_Check_return_&#10;NTSYSAPI&#10;PVOID&#10;NTAPI&#10;RtlGetElementGenericTableAvl(&#10;    _In_ PRTL_AVL_TABLE Table,&#10;    _In_ ULONG I&#10;    );">RtlGetElementGenericTableAvl</a></strong>, the caller must pass a <a href="rtl_avl_table" title="typedef struct _RTL_AVL_TABLE&#10;{&#10;    RTL_BALANCED_LINKS BalancedRoot;&#10;    PVOID OrderedPointer;&#10;    ULONG WhichOrderedElement;&#10;    ULONG NumberGenericTableElements;&#10;    ULONG DepthOfTree;&#10;    PRTL_BALANCED_LINKS RestartKey;&#10;    ULONG DeleteCount;&#10;    PRTL_AVL_COMPARE_ROUTINE CompareRoutine;&#10;    PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine;&#10;    PRTL_AVL_FREE_ROUTINE FreeRoutine;&#10;    PVOID TableContext;&#10;} RTL_AVL_TABLE, *PRTL_AVL_TABLE;">RTL_AVL_TABLE</a> table structure rather than <a href="rtl_generic_table" title="typedef struct _RTL_GENERIC_TABLE&#10;{&#10;    PRTL_SPLAY_LINKS TableRoot;&#10;    LIST_ENTRY InsertOrderList;&#10;    PLIST_ENTRY OrderedPointer;&#10;    ULONG WhichOrderedElement;&#10;    ULONG NumberGenericTableElements;&#10;    PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine;&#10;    PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine;&#10;    PRTL_GENERIC_FREE_ROUTINE FreeRoutine;&#10;    PVOID TableContext;&#10;} RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;">RTL_GENERIC_TABLE</a>.</p>
+
 <p>Callers of <strong>RtlGetElementGenericTable</strong> must be running at IRQL &lt; DISPATCH_LEVEL if the caller-allocated memory for the generic table is pageable.</p>
+
 <h2>See also</h2>
+
 <p><a href="rtldeleteelementgenerictable" title="NTSYSAPI&#10;BOOLEAN&#10;NTAPI&#10;RtlDeleteElementGenericTable(&#10;    _In_ PRTL_GENERIC_TABLE Table,&#10;    _In_ PVOID Buffer&#10;    );">RtlDeleteElementGenericTable</a></p>
+
 <p><a href="rtlenumerategenerictablewithoutsplaying" title="_Check_return_&#10;NTSYSAPI&#10;PVOID&#10;NTAPI&#10;RtlEnumerateGenericTableWithoutSplaying(&#10;    _In_ PRTL_GENERIC_TABLE Table,&#10;    _Inout_ PVOID *RestartKey&#10;    );">RtlEnumerateGenericTableWithoutSplaying</a></p>
+
 <p><a href="rtlinitializegenerictable" title="NTSYSAPI&#10;VOID&#10;NTAPI&#10;RtlInitializeGenericTable(&#10;    _Out_ PRTL_GENERIC_TABLE Table,&#10;    _In_ PRTL_GENERIC_COMPARE_ROUTINE CompareRoutine,&#10;    _In_ PRTL_GENERIC_ALLOCATE_ROUTINE AllocateRoutine,&#10;    _In_ PRTL_GENERIC_FREE_ROUTINE FreeRoutine,&#10;    _In_opt_ PVOID TableContext&#10;    );">RtlInitializeGenericTable</a></p>
+
 <p><a href="rtlinsertelementgenerictable" title="NTSYSAPI&#10;PVOID&#10;NTAPI&#10;RtlInsertElementGenericTable(&#10;    _In_ PRTL_GENERIC_TABLE Table,&#10;    _In_reads_bytes_(BufferSize) PVOID Buffer,&#10;    _In_ CLONG BufferSize,&#10;    _Out_opt_ PBOOLEAN NewElement&#10;    );">RtlInsertElementGenericTable</a></p>
+
 <p><a href="rtllookupelementgenerictable" title="_Check_return_&#10;NTSYSAPI&#10;PVOID&#10;NTAPI&#10;RtlLookupElementGenericTable(&#10;    _In_ PRTL_GENERIC_TABLE Table,&#10;    _In_ PVOID Buffer&#10;    );">RtlLookupElementGenericTable</a></p>
+
 <p><a href="rtlnumbergenerictableelements" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlNumberGenericTableElements(&#10;    _In_ PRTL_GENERIC_TABLE Table&#10;    );">RtlNumberGenericTableElements</a></p>
 <hr>
 <div class="ntdoc-description-links">

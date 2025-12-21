@@ -64,22 +64,34 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>WdfPdoInitRemovePowerDependencyOnParent</strong> method removes the power dependency described in the <strong>Remarks</strong> section.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>DeviceInit</code></h3>
+
 <p>A pointer to a <a href="wdfdevice_init" title="struct WDFDEVICE_INIT {&#10;  ;      // Reserved.&#10;};">WDFDEVICE_INIT</a> structure.</p>
+
 <h2>Remarks</h2>
+
 <p>In general, the framework requires that a parent bus driver enter the D0 device power state before a child device enters D0, and similarly that a child device exit D0 before the parent leaves D0.</p>
+
 <p>However, this behavior may not be desired, in particular if the child device is a virtual device that doesn't represent any real hardware. At S0 idle power-down, the power state of the child device may not be relevant to the parent. In fact, the child device may have no reason to perform S0 idle detection. In this case, it would be better for the parent device to transition between D0 and Dx based on I/O activity, rather than being dependent on the power state of the child device.</p>
+
 <p>Removing the power dependency has the following effects on the bus driver:</p>
+
 <ul>
 <li>The PDO PnP/Power callbacks might execute while the parent device is in Dx.</li>
 <li>The PDO enable/disable-wake-at-bus callbacks might execute while the parent device is in Dx.</li>
 <li>A request forwarded from a power-managed queue on the PDO (assuming the PDO is the power policy owner) to a non power-managed queue on the FDO might be dispatched while the bus driver is in Dx.</li>
 <li>The child stack performs power state transitions independently of the parent stack. This includes scenarios such as fast-resume in which the child stack might receive its S-<a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> and even finish processing its D-<a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> before the parent stack finishes processing its own D-<a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>.</li>
 </ul>
+
 <p>To remove the power dependency, the bus driver can call <strong>WdfPdoInitRemovePowerDependencyOnParent</strong> when it creates the PDO for the child device.</p>
+
 <p>This function takes no action if the parent bus driver is not the power policy owner of the parent device stack.</p>
+
 <h2>See also</h2>
 <hr>
 <div class="ntdoc-description-links">

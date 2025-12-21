@@ -66,61 +66,104 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltAllocateCallbackData function</h1>
+
 <h2>Description</h2>
+
 <p><strong>FltAllocateCallbackData</strong> allocates a callback data structure that a minifilter driver can use to initiate an I/O request.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Instance</code> [in]</h3>
+
 <p>Opaque instance pointer for the minifilter driver instance that is initiating the I/O operation. This parameter is required and cannot be <strong>NULL</strong>.</p>
+
 <h3><code>FileObject</code> [in, optional]</h3>
+
 <p>File object pointer to be used in the I/O operation. This parameter is optional and can be <strong>NULL</strong>.</p>
+
 <h3><code>RetNewCallbackData</code> [out]</h3>
+
 <p>Pointer to a caller-allocated variable that receives the address of the newly allocated callback data (<a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a>) structure.</p>
+
 <h2>Return value</h2>
+
 <p><strong>FltAllocateCallbackData</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value such as the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-<td>FltAllocateCallbackData encountered a pool allocation failure when attempting to allocate the callback data structure. This is an error code.</td>
+  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+  <td>FltAllocateCallbackData encountered a pool allocation failure when attempting to allocate the callback data structure. This is an error code.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>A minifilter driver can call <strong>FltAllocateCallbackData</strong> to allocate a callback data (<a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a>) structure for an I/O operation initiated by the minifilter driver.</p>
+
 <p><strong>Note</strong> The <strong>FltAllocateCallbackData</strong> routine does not allocate all the memory that might be required by a subsequent I/O request. If an I/O request, such as <a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a> or <a href="fltperformasynchronousio" title="NTSTATUS FLTAPI FltPerformAsynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA               CallbackData,&#10;  [in]      PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in]      PVOID                            CallbackContext&#10;);">FltPerformAsynchronousIo</a>, requires additional memory for some structure, the request could encounter a memory allocation. The <a href="fltallocatecallbackdataex" title="NTSTATUS FLTAPI FltAllocateCallbackDataEx(&#10;  [in]          PFLT_INSTANCE                    Instance,&#10;  [in/optional] PFILE_OBJECT                     FileObject,&#10;  [in]          FLT_ALLOCATE_CALLBACK_DATA_FLAGS Flags,&#10;  [out]         PFLT_CALLBACK_DATA               *RetNewCallbackData&#10;);">FltAllocateCallbackDataEx</a> routine can be used to avoid this potential problem by preallocating memory for additional structures to be used in an I/O request. If there is a memory allocation problem for either the <em>RetNewCallbackData</em> structure or additional required structures, it can be dealt with at the point of callback data allocation.</p>
+
 <p>Callback data structures are allocated from nonpaged pool.</p>
+
 <p>After initializing the parameters of the callback data structure returned by <strong>FltAllocateCallbackData</strong>, the caller initiates the I/O operation by passing the structure to <a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a> or <a href="fltperformasynchronousio" title="NTSTATUS FLTAPI FltPerformAsynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA               CallbackData,&#10;  [in]      PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in]      PVOID                            CallbackContext&#10;);">FltPerformAsynchronousIo</a>. These routines send the I/O operation only to the minifilter driver instances attached below the initiating instance (specified in the <em>Instance</em> parameter) and to the file system. Minifilter drivers attached above the specified instance do not receive the I/O operation.</p>
+
 <p>Minifilter drivers can only initiate <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operations. They cannot initiate fast I/O or file system filter (FSFilter) callback operations.</p>
+
 <p>Minifilter drivers should use <strong>FltAllocateCallbackData</strong>, <a href="fltperformasynchronousio" title="NTSTATUS FLTAPI FltPerformAsynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA               CallbackData,&#10;  [in]      PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in]      PVOID                            CallbackContext&#10;);">FltPerformAsynchronousIo</a>, and <a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a> only for I/O operations for which routines such as the following cannot be used:</p>
+
 <p><a href="fltclose" title="NTSTATUS FLTAPI FltClose(&#10;  [in] HANDLE FileHandle&#10;);">FltClose</a></p>
+
 <p><a href="fltcreatefile" title="NTSTATUS FLTAPI FltCreateFile(&#10;  [in]           PFLT_FILTER        Filter,&#10;  [in, optional] PFLT_INSTANCE      Instance,&#10;  [out]          PHANDLE            FileHandle,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              CreateDisposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           ULONG              Flags&#10;);">FltCreateFile</a></p>
+
 <p><a href="fltqueryvolumeinformation" title="NTSTATUS FLTAPI FltQueryVolumeInformation(&#10;  [in]  PFLT_INSTANCE        Instance,&#10;  [out] PIO_STATUS_BLOCK     Iosb,&#10;  [out] PVOID                FsInformation,&#10;  [in]  ULONG                Length,&#10;  [in]  FS_INFORMATION_CLASS FsInformationClass&#10;);">FltQueryVolumeInformation</a></p>
+
 <p><a href="fltreadfile" title="NTSTATUS FLTAPI FltReadFile(&#10;  [in]            PFLT_INSTANCE                    InitiatingInstance,&#10;  [in]            PFILE_OBJECT                     FileObject,&#10;  [in, optional]  PLARGE_INTEGER                   ByteOffset,&#10;  [in]            ULONG                            Length,&#10;  [out]           PVOID                            Buffer,&#10;  [in]            FLT_IO_OPERATION_FLAGS           Flags,&#10;  [out, optional] PULONG                           BytesRead,&#10;  [in, optional]  PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in, optional]  PVOID                            CallbackContext&#10;);">FltReadFile</a></p>
+
 <p><a href="fltsetvolumeinformation" title="NTSTATUS FLTAPI FltSetVolumeInformation(&#10;  [in]  PFLT_INSTANCE        Instance,&#10;  [out] PIO_STATUS_BLOCK     Iosb,&#10;  [out] PVOID                FsInformation,&#10;  [in]  ULONG                Length,&#10;  [in]  FS_INFORMATION_CLASS FsInformationClass&#10;);">FltSetVolumeInformation</a></p>
+
 <p><a href="flttagfile" title="NTSTATUS FLTAPI FltTagFile(&#10;  [in]           PFLT_INSTANCE InitiatingInstance,&#10;  [in]           PFILE_OBJECT  FileObject,&#10;  [in]           ULONG         FileTag,&#10;  [in, optional] GUID          *Guid,&#10;  [in]           PVOID         DataBuffer,&#10;  [in]           USHORT        DataBufferLength&#10;);">FltTagFile</a></p>
+
 <p><a href="fltuntagfile" title="NTSTATUS FLTAPI FltUntagFile(&#10;  [in]           PFLT_INSTANCE InitiatingInstance,&#10;  [in]           PFILE_OBJECT  FileObject,&#10;  [in]           ULONG         FileTag,&#10;  [in, optional] GUID          *Guid&#10;);">FltUntagFile</a></p>
+
 <p><a href="fltwritefile" title="NTSTATUS FLTAPI FltWriteFile(&#10;  [in]            PFLT_INSTANCE                    InitiatingInstance,&#10;  [in]            PFILE_OBJECT                     FileObject,&#10;  [in, optional]  PLARGE_INTEGER                   ByteOffset,&#10;  [in]            ULONG                            Length,&#10;  [in]            PVOID                            Buffer,&#10;  [in]            FLT_IO_OPERATION_FLAGS           Flags,&#10;  [out, optional] PULONG                           BytesWritten,&#10;  [in, optional]  PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in, optional]  PVOID                            CallbackContext&#10;);">FltWriteFile</a></p>
+
 <p>When the callback data structure allocated by <strong>FltAllocateCallbackData</strong> is no longer needed, the caller is responsible for freeing it by calling <a href="fltfreecallbackdata" title="VOID FLTAPI FltFreeCallbackData(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltFreeCallbackData</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></p>
+
 <p><a href="fltclose" title="NTSTATUS FLTAPI FltClose(&#10;  [in] HANDLE FileHandle&#10;);">FltClose</a></p>
+
 <p><a href="fltcreatefile" title="NTSTATUS FLTAPI FltCreateFile(&#10;  [in]           PFLT_FILTER        Filter,&#10;  [in, optional] PFLT_INSTANCE      Instance,&#10;  [out]          PHANDLE            FileHandle,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              CreateDisposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           ULONG              Flags&#10;);">FltCreateFile</a></p>
+
 <p><a href="fltfreecallbackdata" title="VOID FLTAPI FltFreeCallbackData(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltFreeCallbackData</a></p>
+
 <p><a href="fltperformasynchronousio" title="NTSTATUS FLTAPI FltPerformAsynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA               CallbackData,&#10;  [in]      PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in]      PVOID                            CallbackContext&#10;);">FltPerformAsynchronousIo</a></p>
+
 <p><a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a></p>
+
 <p><a href="fltqueryvolumeinformation" title="NTSTATUS FLTAPI FltQueryVolumeInformation(&#10;  [in]  PFLT_INSTANCE        Instance,&#10;  [out] PIO_STATUS_BLOCK     Iosb,&#10;  [out] PVOID                FsInformation,&#10;  [in]  ULONG                Length,&#10;  [in]  FS_INFORMATION_CLASS FsInformationClass&#10;);">FltQueryVolumeInformation</a></p>
+
 <p><a href="fltreadfile" title="NTSTATUS FLTAPI FltReadFile(&#10;  [in]            PFLT_INSTANCE                    InitiatingInstance,&#10;  [in]            PFILE_OBJECT                     FileObject,&#10;  [in, optional]  PLARGE_INTEGER                   ByteOffset,&#10;  [in]            ULONG                            Length,&#10;  [out]           PVOID                            Buffer,&#10;  [in]            FLT_IO_OPERATION_FLAGS           Flags,&#10;  [out, optional] PULONG                           BytesRead,&#10;  [in, optional]  PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in, optional]  PVOID                            CallbackContext&#10;);">FltReadFile</a></p>
+
 <p><a href="fltreissuesynchronousio" title="VOID FLTAPI FltReissueSynchronousIo(&#10;  [in] PFLT_INSTANCE      InitiatingInstance,&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltReissueSynchronousIo</a></p>
+
 <p><a href="fltreusecallbackdata" title="VOID FLTAPI FltReuseCallbackData(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltReuseCallbackData</a></p>
+
 <p><a href="fltsetvolumeinformation" title="NTSTATUS FLTAPI FltSetVolumeInformation(&#10;  [in]  PFLT_INSTANCE        Instance,&#10;  [out] PIO_STATUS_BLOCK     Iosb,&#10;  [out] PVOID                FsInformation,&#10;  [in]  ULONG                Length,&#10;  [in]  FS_INFORMATION_CLASS FsInformationClass&#10;);">FltSetVolumeInformation</a></p>
+
 <p><a href="flttagfile" title="NTSTATUS FLTAPI FltTagFile(&#10;  [in]           PFLT_INSTANCE InitiatingInstance,&#10;  [in]           PFILE_OBJECT  FileObject,&#10;  [in]           ULONG         FileTag,&#10;  [in, optional] GUID          *Guid,&#10;  [in]           PVOID         DataBuffer,&#10;  [in]           USHORT        DataBufferLength&#10;);">FltTagFile</a></p>
+
 <p><a href="fltuntagfile" title="NTSTATUS FLTAPI FltUntagFile(&#10;  [in]           PFLT_INSTANCE InitiatingInstance,&#10;  [in]           PFILE_OBJECT  FileObject,&#10;  [in]           ULONG         FileTag,&#10;  [in, optional] GUID          *Guid&#10;);">FltUntagFile</a></p>
+
 <p><a href="fltwritefile" title="NTSTATUS FLTAPI FltWriteFile(&#10;  [in]            PFLT_INSTANCE                    InitiatingInstance,&#10;  [in]            PFILE_OBJECT                     FileObject,&#10;  [in, optional]  PLARGE_INTEGER                   ByteOffset,&#10;  [in]            ULONG                            Length,&#10;  [in]            PVOID                            Buffer,&#10;  [in]            FLT_IO_OPERATION_FLAGS           Flags,&#10;  [out, optional] PULONG                           BytesWritten,&#10;  [in, optional]  PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in, optional]  PVOID                            CallbackContext&#10;);">FltWriteFile</a></p>
 <hr>
 <div class="ntdoc-description-links">

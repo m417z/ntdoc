@@ -68,37 +68,62 @@ BOOLEAN KserviceRoutine(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <em>InterruptService</em> routine (ISR) quickly services a device interrupt and schedules post-interrupt processing of received data, if necessary.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Interrupt</code> [in]</h3>
-<p>Caller-supplied pointer to the <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess#kinterrupt">KINTERRUPT</a> structure for the interrupt.</p>
+
+<p>Caller-supplied pointer to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess#kinterrupt">KINTERRUPT</a> structure for the interrupt.</p>
+
 <h3><code>ServiceContext</code> [in]</h3>
+
 <p>Caller-supplied pointer to context information, specified in a previous call to <a href="ioconnectinterrupt" title="NTSTATUS IoConnectInterrupt(&#10;  [out]          PKINTERRUPT       *InterruptObject,&#10;  [in]           PKSERVICE_ROUTINE ServiceRoutine,&#10;  [in, optional] PVOID             ServiceContext,&#10;  [in, optional] PKSPIN_LOCK       SpinLock,&#10;  [in]           ULONG             Vector,&#10;  [in]           KIRQL             Irql,&#10;  [in]           KIRQL             SynchronizeIrql,&#10;  [in]           KINTERRUPT_MODE   InterruptMode,&#10;  [in]           BOOLEAN           ShareVector,&#10;  [in]           KAFFINITY         ProcessorEnableMask,&#10;  [in]           BOOLEAN           FloatingSave&#10;);">IoConnectInterrupt</a> or <a href="ioconnectinterruptex" title="NTSTATUS IoConnectInterruptEx(&#10;  [in, out] PIO_CONNECT_INTERRUPT_PARAMETERS Parameters&#10;);">IoConnectInterruptEx</a>.</p>
+
 <h2>Return value</h2>
+
 <p>If the routine determines that the interrupt did not come from one of the driver's devices, it must return <strong>FALSE</strong>. Otherwise, the routine must service the interrupt and return <strong>TRUE</strong>.</p>
+
 <h2>Remarks</h2>
+
 <p>To register an ISR for a specific interrupt vector and processor affinity, a driver must call <a href="ioconnectinterrupt" title="NTSTATUS IoConnectInterrupt(&#10;  [out]          PKINTERRUPT       *InterruptObject,&#10;  [in]           PKSERVICE_ROUTINE ServiceRoutine,&#10;  [in, optional] PVOID             ServiceContext,&#10;  [in, optional] PKSPIN_LOCK       SpinLock,&#10;  [in]           ULONG             Vector,&#10;  [in]           KIRQL             Irql,&#10;  [in]           KIRQL             SynchronizeIrql,&#10;  [in]           KINTERRUPT_MODE   InterruptMode,&#10;  [in]           BOOLEAN           ShareVector,&#10;  [in]           KAFFINITY         ProcessorEnableMask,&#10;  [in]           BOOLEAN           FloatingSave&#10;);">IoConnectInterrupt</a> or <a href="ioconnectinterruptex" title="NTSTATUS IoConnectInterruptEx(&#10;  [in, out] PIO_CONNECT_INTERRUPT_PARAMETERS Parameters&#10;);">IoConnectInterruptEx</a>.</p>
+
 <p>A driver's <em>InterruptService</em> routine (ISR) executes in an interrupt context, at some system-assigned DIRQL, as specified by the <em>SynchronizeIrql</em> parameter to <strong><a href="ioconnectinterrupt" title="NTSTATUS IoConnectInterrupt(&#10;  [out]          PKINTERRUPT       *InterruptObject,&#10;  [in]           PKSERVICE_ROUTINE ServiceRoutine,&#10;  [in, optional] PVOID             ServiceContext,&#10;  [in, optional] PKSPIN_LOCK       SpinLock,&#10;  [in]           ULONG             Vector,&#10;  [in]           KIRQL             Irql,&#10;  [in]           KIRQL             SynchronizeIrql,&#10;  [in]           KINTERRUPT_MODE   InterruptMode,&#10;  [in]           BOOLEAN           ShareVector,&#10;  [in]           KAFFINITY         ProcessorEnableMask,&#10;  [in]           BOOLEAN           FloatingSave&#10;);">IoConnectInterrupt</a></strong>. (Other devices, with higher DIRQL values, can interrupt the ISR.)</p>
+
 <p>Before the system calls an ISR, it acquires the interrupt's spin lock (the <em>SpinLock</em> parameter to <strong><a href="ioconnectinterrupt" title="NTSTATUS IoConnectInterrupt(&#10;  [out]          PKINTERRUPT       *InterruptObject,&#10;  [in]           PKSERVICE_ROUTINE ServiceRoutine,&#10;  [in, optional] PVOID             ServiceContext,&#10;  [in, optional] PKSPIN_LOCK       SpinLock,&#10;  [in]           ULONG             Vector,&#10;  [in]           KIRQL             Irql,&#10;  [in]           KIRQL             SynchronizeIrql,&#10;  [in]           KINTERRUPT_MODE   InterruptMode,&#10;  [in]           BOOLEAN           ShareVector,&#10;  [in]           KAFFINITY         ProcessorEnableMask,&#10;  [in]           BOOLEAN           FloatingSave&#10;);">IoConnectInterrupt</a></strong>), so the ISR cannot simultaneously execute on another processor. After the ISR returns, the system releases the spin lock.</p>
+
 <p>An ISR must first determine if the interrupt came from one of the driver's devices, by examining context information supplied by <em>Context</em>. If the interrupt is not from one of the driver's devices, the routine must immediately return <strong>FALSE</strong> so the I/O manager can call other drivers that have registered ISRs for the same processor and interrupt vector.</p>
-<p>For more information about implementing ISRs, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/interrupt-service-routines">Interrupt Service Routines</a>.</p>
+
+<p>For more information about implementing ISRs, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/interrupt-service-routines">Interrupt Service Routines</a>.</p>
+
 <h3>Examples</h3>
-<p>To define an <em>InterruptService</em> callback routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>To define an <em>InterruptService</em> callback routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
 <p>For example, to define an <em>InterruptService</em> callback routine that is named <code>MyInterruptService</code>, use the KSERVICE_ROUTINE type as shown in this code example:</p>
-<pre lang="cpp"><code>KSERVICE_ROUTINE MyInterruptService;
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">KSERVICE_ROUTINE</span><span class="w"> </span><span class="n">MyInterruptService</span><span class="p">;</span>
 </code></pre>
+</div>
+
 <p>Then, implement your callback routine as follows:</p>
-<pre lang="cpp"><code>_Use_decl_annotations_
-BOOLEAN
-  MyInterruptService(
-    struct _KINTERRUPT  *Interrupt,
-    PVOID  ServiceContext
-    )
-  {
-      // Function body
-  }
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">_Use_decl_annotations_</span>
+<span class="n">BOOLEAN</span>
+<span class="w">  </span><span class="n">MyInterruptService</span><span class="p">(</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">_KINTERRUPT</span><span class="w">  </span><span class="o">*</span><span class="n">Interrupt</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w">  </span><span class="n">ServiceContext</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// Function body</span>
+<span class="w">  </span><span class="p">}</span>
 </code></pre>
-<p>The KSERVICE_ROUTINE function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <code>_Use_decl_annotations_</code> annotation to your function definition. The <code>_Use_decl_annotations_</code> annotation ensures that the annotations that are applied to the KSERVICE_ROUTINE function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+</div>
+
+<p>The KSERVICE_ROUTINE function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <code>_Use_decl_annotations_</code> annotation to your function definition. The <code>_Use_decl_annotations_</code> annotation ensures that the annotations that are applied to the KSERVICE_ROUTINE function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

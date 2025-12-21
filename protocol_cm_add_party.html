@@ -70,81 +70,107 @@ NDIS_STATUS ProtocolCmAddParty(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PROTOCOL_CM_ADD_PARTY callback function</h1>
+
 <h2>Description</h2>
+
 <p>The
 <em>ProtocolCmAddParty</em> function is a required function.
 <em>ProtocolCmAddParty</em> sets up the media-specific parameters to add a party to an existing multipoint
 call, stores state data for the new party, and causes the party to be added to the call.</p>
+
 <p><strong>Note</strong> You must declare the function by using the <strong>PROTOCOL_CM_ADD_PARTY</strong> type.
 For more information, see the following Examples section.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>CallMgrVcContext</code> [in]</h3>
+
 <p>Specifies the handle to a call manager-allocated context area in which the call manager maintains
 its per-VC state. The call manager supplied this handle to NDIS from its
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_co_create_vc">ProtocolCoCreateVc</a> function.</p>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_co_create_vc">ProtocolCoCreateVc</a> function.</p>
+
 <h3><code>CallParameters</code> [in, out]</h3>
+
 <p>Pointer to a
-<a href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff545384(v=vs.85)">CO_CALL_PARAMETERS</a> structure that contains
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff545384(v=vs.85)">CO_CALL_PARAMETERS</a> structure that contains
 the parameters, specified by a connection-oriented client, for the party that is being added to an
 existing call.</p>
+
 <h3><code>NdisPartyHandle</code> [in]</h3>
+
 <p>Specifies a handle, supplied by NDIS, that uniquely identifies a multipoint party that is to be
 added to an existing virtual connection. This handle is opaque to the call manager and reserved for NDIS
 library use.</p>
+
 <h3><code>CallMgrPartyContext</code> [out]</h3>
+
 <p>Specifies, on return, a handle to a call manager-supplied context area in which the call manager
 maintains state about this party for the multipoint call.</p>
+
 <h2>Return value</h2>
+
 <p><em>ProtocolCmAddParty</em> returns the status of its operation(s) as one of the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>NDIS_STATUS_SUCCESS</strong></td>
-<td>Indicates that the call manager successfully allocated the necessary resources to maintain state about the party and successfully added the party to the call.</td>
+  <td><strong>NDIS_STATUS_SUCCESS</strong></td>
+  <td>Indicates that the call manager successfully allocated the necessary resources to maintain state about the party and successfully added the party to the call.</td>
 </tr>
 <tr>
-<td><strong>NDIS_STATUS_PENDING</strong></td>
-<td>Indicates that the call manager will complete the request to add a party asynchronously. When the call manager has completed all operations for adding the party, it must call <a href="ndiscmaddpartycomplete" title="VOID NdisCmAddPartyComplete(&#10;  [in]           NDIS_STATUS         Status,&#10;  [in]           NDIS_HANDLE         NdisPartyHandle,&#10;  [in, optional] NDIS_HANDLE         CallMgrPartyContext,&#10;  [in]           PCO_CALL_PARAMETERS CallParameters&#10;);">NdisCmAddPartyComplete</a> to signal NDIS that this operation has been completed.</td>
+  <td><strong>NDIS_STATUS_PENDING</strong></td>
+  <td>Indicates that the call manager will complete the request to add a party asynchronously. When the call manager has completed all operations for adding the party, it must call <a href="ndiscmaddpartycomplete" title="VOID NdisCmAddPartyComplete(&#10;  [in]           NDIS_STATUS         Status,&#10;  [in]           NDIS_HANDLE         NdisPartyHandle,&#10;  [in, optional] NDIS_HANDLE         CallMgrPartyContext,&#10;  [in]           PCO_CALL_PARAMETERS CallParameters&#10;);">NdisCmAddPartyComplete</a> to signal NDIS that this operation has been completed.</td>
 </tr>
 <tr>
-<td><strong>NDIS_STATUS_RESOURCES</strong></td>
-<td>Indicates that the call manager was unable to allocate and/or initialize its resources for adding a party to the connection.</td>
+  <td><strong>NDIS_STATUS_RESOURCES</strong></td>
+  <td>Indicates that the call manager was unable to allocate and/or initialize its resources for adding a party to the connection.</td>
 </tr>
 <tr>
-<td><strong>NDIS_STATUS_NOT_SUPPORTED</strong></td>
-<td>Indicates that the call manager was unable to add the party to the multipoint call because the caller requested invalid or unavailable features in the call parameters at <em>CallParameters</em> or else that the media type supported by this call manager does not support multipoint calls.</td>
+  <td><strong>NDIS_STATUS_NOT_SUPPORTED</strong></td>
+  <td>Indicates that the call manager was unable to add the party to the multipoint call because the caller requested invalid or unavailable features in the call parameters at <em>CallParameters</em> or else that the media type supported by this call manager does not support multipoint calls.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p><em>ProtocolCmAddParty</em> performs any necessary allocations of dynamic resources and structures that the
 call manager requires to maintain state information about the party, specified by
 <em>NdisPartyHandle</em>, to be added to a multipoint call. Such resources could include, but are not
 limited to, memory buffers, data structures, events, and other similar resources. Call managers should
 also initialize relevant per-party structures in this function.</p>
+
 <p>In the per-party state area that the call manager allocates, the call manager
 must store the handle specified by
 <em>NdisPartyHandle</em> for reference in future calls. After the call manager has allocated and finish
 initializing its per-party state area, the address of the state buffer should be set as the
 <em>CallMgrPartyContext</em> handle before returning control to NDIS. To do this, dereference the handle and
 store a pointer to the state buffer as the value of the handle. For example:</p>
+
 <pre><code>*CallMgrPartyContext = SomeBuffer;
 </code></pre>
+
 <p>Call managers perform any necessary communication with their network hardware or other media-specific
 actors, as necessary, to add the party specified by the call parameters at
 <em>CallParameters</em> to an existing multipoint call.</p>
+
 <h3>Examples</h3>
-<p>To define a <em>ProtocolCmAddParty</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-<p>For example, to define a <em>ProtocolCmAddParty</em> function that is named &quot;MyCmAddParty&quot;, use the <strong>PROTOCOL_CM_ADD_PARTY</strong> type as shown in this code example:</p>
+
+<p>To define a <em>ProtocolCmAddParty</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>For example, to define a <em>ProtocolCmAddParty</em> function that is named "MyCmAddParty", use the <strong>PROTOCOL_CM_ADD_PARTY</strong> type as shown in this code example:</p>
+
 <pre><code><a href="miniport_add_device" title="MINIPORT_ADD_DEVICE MiniportAddDevice;&#10;&#10;NDIS_STATUS MiniportAddDevice(&#10;  [in] NDIS_HANDLE NdisMiniportHandle,&#10;  [in] NDIS_HANDLE MiniportDriverContext&#10;)&#10;{...}">MINIPORT_ADD_DEVICE</a> MyCmAddParty;
 </code></pre>
+
 <p>Then, implement your function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 NDIS_STATUS
  MyCmAddParty(
@@ -155,11 +181,16 @@ NDIS_STATUS
     )
   {...}
 </code></pre>
-<p>The <strong>PROTOCOL_CM_ADD_PARTY</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>PROTOCOL_CM_ADD_PARTY</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
-<p>For information about <em>Use_decl_annotations</em>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<p>The <strong>PROTOCOL_CM_ADD_PARTY</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>PROTOCOL_CM_ADD_PARTY</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
+
+<p>For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="ndiscladdparty" title="NDIS_STATUS NdisClAddParty(&#10;  [in]      NDIS_HANDLE         NdisVcHandle,&#10;  [in]      NDIS_HANDLE         ProtocolPartyContext,&#10;  [in, out] PCO_CALL_PARAMETERS CallParameters,&#10;  [out]     PNDIS_HANDLE        NdisPartyHandle&#10;);">NdisClAddParty</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cl_add_party_complete">ProtocolClAddPartyComplete</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cl_add_party_complete">ProtocolClAddPartyComplete</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

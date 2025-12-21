@@ -67,51 +67,81 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>IoReportTargetDeviceChangeAsynchronous</strong> routine notifies the PnP manager that a custom event has occurred on a device.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>PhysicalDeviceObject</code> [in]</h3>
+
 <p>Pointer to the PDO of the device being reported.</p>
+
 <h3><code>NotificationStructure</code> [in]</h3>
+
 <p>Pointer to a caller-supplied <strong><a href="target_device_custom_notification" title="typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {&#10;  USHORT       Version;&#10;  USHORT       Size;&#10;  GUID         Event;&#10;  PFILE_OBJECT FileObject;&#10;  LONG         NameBufferOffset;&#10;  UCHAR        CustomDataBuffer[1];&#10;} TARGET_DEVICE_CUSTOM_NOTIFICATION, *PTARGET_DEVICE_CUSTOM_NOTIFICATION;">TARGET_DEVICE_CUSTOM_NOTIFICATION</a></strong> structure describing the custom event. The PnP manager sends this structure to drivers that registered for notification of the event.</p>
+
 <p>This caller-supplied structure can be freed once the routine returns, as the PnP manager makes a shallow copy and uses the copy to notify drivers. The copy is automatically freed by the PnP manager once it is no longer needed. See Remarks section about allocation pool requirements.</p>
+
 <p><em>NotificationStructure</em>.<strong>FileObject</strong> must be <strong>NULL</strong>. <em>NotificationStructure</em>.<strong>Event</strong> must contain the custom GUID for the event. The other fields of the <em>NotificationStructure</em> must be filled in as appropriate for the custom event.</p>
+
 <p>The PnP manager fills in the <em>NotificationStructure</em>.<strong>FileObject</strong> field when it sends notifications to registrants.</p>
+
 <h3><code>Callback</code> [in, optional]</h3>
+
 <p>Optionally points to a caller-supplied routine that the PnP manager calls after it finishes notifying drivers that registered for this custom event.</p>
+
 <p>The callback routine has the following type:</p>
-<pre lang="cpp"><code>typedef
-VOID
-(*PDEVICE_CHANGE_COMPLETE_CALLBACK)(
-    IN PVOID Context
-    );
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">typedef</span>
+<span class="n">VOID</span>
+<span class="p">(</span><span class="o">*</span><span class="n">PDEVICE_CHANGE_COMPLETE_CALLBACK</span><span class="p">)(</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span>
+<span class="w">    </span><span class="p">);</span>
 </code></pre>
+</div>
+
 <p>A device-change-complete callback routine should not block and must not call synchronous routines that generate PnP events.</p>
+
 <p>The PnP manager calls device-change-complete callback routines at IRQL = PASSIVE_LEVEL.</p>
+
 <h3><code>Context</code> [in, out]</h3>
+
 <p>Optionally points to a caller-supplied context structure that the PnP manager passes to the <em>Callback</em> routine. The caller must allocate this structure from nonpaged memory.</p>
+
 <h2>Return value</h2>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
-<td>The caller specified a system PnP event, such as GUID_TARGET_DEVICE_QUERY_REMOVE. This routine is only for custom events.</td>
+  <td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
+  <td>The caller specified a system PnP event, such as GUID_TARGET_DEVICE_QUERY_REMOVE. This routine is only for custom events.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>After the <strong>IoReportTargetDeviceChangeAsynchronous</strong> routine notifies the PnP manager that a custom event has occurred on a device, the routine returns immediately; it does not wait while the PnP manager sends notification of the event to drivers that registered for notification on the device. Do not use this routine to report system PnP events, such as GUID_TARGET_DEVICE_REMOVE_COMPLETE.</p>
+
 <p>A driver that defines a custom device event calls <strong>IoReportTargetDeviceChangeAsynchronous</strong> to inform the PnP manager that the custom event has occurred. Custom notification can be used for events like a volume label change.</p>
+
 <p>The custom notification structure contains a driver-defined event with its own GUID. Driver writers can generate GUIDs with Uuidgen.exe or Guidgen.exe (which are included in the Microsoft Windows SDK).</p>
-<p>When a driver calls this routine while handling an event, an <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-remove-device">IRP_MN_REMOVE_DEVICE</a>, or an <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-surprise-removal">IRP_MN_SURPRISE_REMOVAL</a>, the PnP manager calls the driver's <em>Callback</em> routine after the driver returns and the stack unwinds.</p>
+
+<p>When a driver calls this routine while handling an event, an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-remove-device">IRP_MN_REMOVE_DEVICE</a>, or an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-surprise-removal">IRP_MN_SURPRISE_REMOVAL</a>, the PnP manager calls the driver's <em>Callback</em> routine after the driver returns and the stack unwinds.</p>
+
 <p>Callers of <strong>IoReportTargetDeviceChangeAsynchronous</strong> must be running at IRQL &lt;= DISPATCH_LEVEL. If a driver writer calls this routine at IRQL = DISPATCH_LEVEL, the <em>NotificationStructure</em> must be allocated from nonpaged memory.</p>
+
 <h2>See also</h2>
+
 <p><a href="ioreporttargetdevicechange" title="NTSTATUS IoReportTargetDeviceChange(&#10;  [in] PDEVICE_OBJECT PhysicalDeviceObject,&#10;  [in] PVOID          NotificationStructure&#10;);">IoReportTargetDeviceChange</a></p>
+
 <p><strong><a href="target_device_custom_notification" title="typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {&#10;  USHORT       Version;&#10;  USHORT       Size;&#10;  GUID         Event;&#10;  PFILE_OBJECT FileObject;&#10;  LONG         NameBufferOffset;&#10;  UCHAR        CustomDataBuffer[1];&#10;} TARGET_DEVICE_CUSTOM_NOTIFICATION, *PTARGET_DEVICE_CUSTOM_NOTIFICATION;">TARGET_DEVICE_CUSTOM_NOTIFICATION</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

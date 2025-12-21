@@ -70,47 +70,80 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>This routine starts a DMA data-transfer or a data transfer operation.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>DeviceObject</code> [in]</h3>
+
 <p>Caller-supplied pointer to a <strong><a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">DEVICE_OBJECT</a></strong> structure. This is the device object for the target device, previously created by the driver's <em>AddDevice</em> routine.</p>
+
 <h3><code>Irp</code> [in, out]</h3>
+
 <p>Caller-supplied pointer to an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> structure. <em>Irp</em> is equal to the value of the <strong>CurrentIrp</strong> member of <em>DeviceObject</em> when the callback routine was registered.</p>
+
 <h3><code>MapRegisterBase</code> [in]</h3>
-<p>In the case of <em>AdapterControl</em>, this is a caller-supplied opaque value that represents the map registers that the system has assigned for this transfer operation. The driver passes this value to <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pflush_adapter_buffers">FlushAdapterBuffers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pfree_map_registers">FreeMapRegisters</a>, and <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pmap_transfer">MapTransfer</a>.</p>
+
+<p>In the case of <em>AdapterControl</em>, this is a caller-supplied opaque value that represents the map registers that the system has assigned for this transfer operation. The driver passes this value to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pflush_adapter_buffers">FlushAdapterBuffers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pfree_map_registers">FreeMapRegisters</a>, and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pmap_transfer">MapTransfer</a>.</p>
+
 <p>In the case of <em>ControllerControl</em>, this is not used.</p>
+
 <h3><code>Context</code> [in]</h3>
-<p>Caller-supplied pointer to driver-defined context information, specified in a previous call to <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pallocate_adapter_channel">AllocateAdapterChannel</a>.</p>
+
+<p>Caller-supplied pointer to driver-defined context information, specified in a previous call to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pallocate_adapter_channel">AllocateAdapterChannel</a>.</p>
+
 <h2>Return value</h2>
+
 <p>The routine must return one of the values defined by the <a href="io_allocation_action" title="typedef enum _IO_ALLOCATION_ACTION {&#10;  KeepObject,&#10;  DeallocateObject,&#10;  DeallocateObjectKeepRegisters&#10;} IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;">IO_ALLOCATION_ACTION</a> enumeration. Drivers of bus-master devices return either <strong>DeallocateObject</strong> or <strong>DeallocateObjectKeepRegisters</strong>; drivers that use system DMA return <strong>KeepObject</strong>.</p>
+
 <h2>Remarks</h2>
-<p>To register an <em>AdapterControl</em> routine for a specific device object, a driver must call <a href="iogetdmaadapter" title="_DMA_ADAPTER * IoGetDmaAdapter(&#10;  [in, optional] PDEVICE_OBJECT      PhysicalDeviceObject,&#10;  [in]           _DEVICE_DESCRIPTION *DeviceDescription,&#10;  [out]          PULONG              NumberOfMapRegisters&#10;);">IoGetDmaAdapter</a> to obtain an adapter object, then call <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pallocate_adapter_channel">AllocateAdapterChannel</a> to request use of the adapter and to supply the <em>AdapterControl</em> routine's address. When the adapter is free, the system calls the <em>AdapterControl</em> routine.</p>
-<p>If <em>AdapterControl</em> has been registered by a <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_startio">StartIo</a> routine, then the <em>Irp</em> parameter is guaranteed to point to the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> currently being processed by the <em>StartIo</em> routine. Otherwise, drivers must set the <strong>CurrentIrp</strong> member of the device object structure before calling <strong>AllocateAdapterChannel</strong>.</p>
-<p>For detailed information about implementing an <em>AdapterControl</em> routine, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/writing-adaptercontrol-routines">Writing AdapterControl Routines</a>.</p>
+
+<p>To register an <em>AdapterControl</em> routine for a specific device object, a driver must call <a href="iogetdmaadapter" title="_DMA_ADAPTER * IoGetDmaAdapter(&#10;  [in, optional] PDEVICE_OBJECT      PhysicalDeviceObject,&#10;  [in]           _DEVICE_DESCRIPTION *DeviceDescription,&#10;  [out]          PULONG              NumberOfMapRegisters&#10;);">IoGetDmaAdapter</a> to obtain an adapter object, then call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pallocate_adapter_channel">AllocateAdapterChannel</a> to request use of the adapter and to supply the <em>AdapterControl</em> routine's address. When the adapter is free, the system calls the <em>AdapterControl</em> routine.</p>
+
+<p>If <em>AdapterControl</em> has been registered by a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_startio">StartIo</a> routine, then the <em>Irp</em> parameter is guaranteed to point to the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> currently being processed by the <em>StartIo</em> routine. Otherwise, drivers must set the <strong>CurrentIrp</strong> member of the device object structure before calling <strong>AllocateAdapterChannel</strong>.</p>
+
+<p>For detailed information about implementing an <em>AdapterControl</em> routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/writing-adaptercontrol-routines">Writing AdapterControl Routines</a>.</p>
+
 <p>A driver's <em>ControllerControl</em> routine executes in an arbitrary thread context at IRQL = DISPATCH_LEVEL.</p>
+
 <p>To register a <em>ControllerControl</em> routine for a specific device object, a driver must call <a href="iocreatecontroller" title="PCONTROLLER_OBJECT IoCreateController(&#10;  [in] ULONG Size&#10;);">IoCreateController</a> to obtain a controller object, then call <a href="ioallocatecontroller" title="VOID IoAllocateController(&#10;  [in]           PCONTROLLER_OBJECT ControllerObject,&#10;  [in]           PDEVICE_OBJECT     DeviceObject,&#10;  [in]           PDRIVER_CONTROL    ExecutionRoutine,&#10;  [in, optional] PVOID              Context&#10;);">IoAllocateController</a> to request use of the controller and to supply the <em>ControllerControl</em> routine's address. When the controller is free, the system calls the <em>ControllerControl</em> routine.</p>
-<p>For detailed information about implementing a <em>ControllerControl</em> routine, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/writing-controllercontrolroutines">Writing ControllerControl Routines</a>. Also see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-controller-objects">Controller Objects</a>.</p>
-<p>The DRIVER_CONTROL function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <code>_Use_decl_annotations_</code> annotation to your function definition. The <code>_Use_decl_annotations_</code> annotation ensures that the annotations that are applied to the DRIVER_CONTROL function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<p>For detailed information about implementing a <em>ControllerControl</em> routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/writing-controllercontrolroutines">Writing ControllerControl Routines</a>. Also see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-controller-objects">Controller Objects</a>.</p>
+
+<p>The DRIVER_CONTROL function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <code>_Use_decl_annotations_</code> annotation to your function definition. The <code>_Use_decl_annotations_</code> annotation ensures that the annotations that are applied to the DRIVER_CONTROL function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <h3>Examples</h3>
-<p>To define a callback routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>To define a callback routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
 <p>For example, to define an <em>AdapterControl</em> callback routine that is named <code>MyAdapterControl</code>, use the DRIVER_CONTROL type as shown in this code example:</p>
-<pre lang="cpp"><code>DRIVER_CONTROL MyAdapterControl;
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">DRIVER_CONTROL</span><span class="w"> </span><span class="n">MyAdapterControl</span><span class="p">;</span>
 </code></pre>
+</div>
+
 <p>Then, implement your callback routine as follows:</p>
-<pre lang="cpp"><code>_Use_decl_annotations_
-<a href="io_allocation_action" title="typedef enum _IO_ALLOCATION_ACTION {&#10;  KeepObject,&#10;  DeallocateObject,&#10;  DeallocateObjectKeepRegisters&#10;} IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;">IO_ALLOCATION_ACTION</a>
- MyAdapterControl(
-    <a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">struct _DEVICE_OBJECT</a>  *DeviceObject,
-    <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">struct _IRP</a>  *Irp,
-    PVOID  MapRegisterBase,
-    PVOID  Context
-    )
-  {
-      // Function body
-  }
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">_Use_decl_annotations_</span>
+<span class="n"><a href="io_allocation_action" title="typedef enum _IO_ALLOCATION_ACTION {&#10;  KeepObject,&#10;  DeallocateObject,&#10;  DeallocateObjectKeepRegisters&#10;} IO_ALLOCATION_ACTION, *PIO_ALLOCATION_ACTION;">IO_ALLOCATION_ACTION</a></span>
+<span class="w"> </span><span class="n">MyAdapterControl</span><span class="p">(</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">_DEVICE_OBJECT</span><span class="w">  </span><span class="o">*</span><span class="n">DeviceObject</span><span class="p">,</span>
+<span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">_IRP</span><span class="w">  </span><span class="o">*</span><span class="n">Irp</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w">  </span><span class="n">MapRegisterBase</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w">  </span><span class="n">Context</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">  </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// Function body</span>
+<span class="w">  </span><span class="p">}</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pallocate_adapter_channel">AllocateAdapterChannel</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pallocate_adapter_channel">AllocateAdapterChannel</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

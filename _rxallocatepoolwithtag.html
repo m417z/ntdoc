@@ -68,57 +68,81 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>_RxAllocatePoolWithTag function</h1>
+
 <p><strong>_RxAllocatePoolWithTag</strong> allocates memory from a pool with a four-byte tag at the beginning of the block that can be used to help catch instances of memory trashing.</p>
+
 <h2>Parameters</h2>
+
 <p><em>Type</em>
 The type of the pool to be allocated. This parameter can be one of the following enumeration values for <a href="pool_type" title="typedef enum _POOL_TYPE {&#10;    NonPagedPool,&#10;    NonPagedPoolExecute = NonPagedPool,&#10;    PagedPool,&#10;    NonPagedPoolMustSucceed = NonPagedPool + 2,&#10;    DontUseThisType,&#10;    NonPagedPoolCacheAligned = NonPagedPool + 4,&#10;    PagedPoolCacheAligned,&#10;    NonPagedPoolCacheAlignedMustS = NonPagedPool + 6,&#10;    MaxPoolType,&#10;    NonPagedPoolBase = 0,&#10;    NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,&#10;    NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,&#10;    NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,&#10;    NonPagedPoolSession = 32,&#10;    PagedPoolSession = NonPagedPoolSession + 1,&#10;    NonPagedPoolMustSucceedSession = PagedPoolSession + 1,&#10;    DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,&#10;    NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,&#10;    PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,&#10;...">POOL_TYPE</a>:</p>
+
 <p><strong>NonPagedPool</strong>
 Nonpageable system memory that can be accessed from any IRQL. <strong>NonPagedPool</strong> memory is a scarce resource and drivers should allocate it only when necessary. The system can only allocate buffers larger than <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> from <strong>NonPagedPool</strong> in multiples of <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a>. Requests for buffers larger than <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a>, but not a <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> multiple, waste nonpageable memory.</p>
+
 <p><strong>PagedPool</strong>
 Pageable system memory that can only be allocated and accessed at IRQL &lt; DISPATCH_LEVEL.</p>
+
 <p><em>Size</em>
 The size of the memory block, in bytes, to be allocated.</p>
+
 <p><em>Tag</em>
 The four-byte tag to be used to mark the allocated buffer. For a description of how to use tags, see <strong><a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a></strong>. The ASCII value of each character in the tag must be between 0 and 127.</p>
+
 <p><em>FileName</em>
 A pointer to the source file name where the memory allocation occurred. This parameter is not currently used.</p>
+
 <p><em>LineNumber</em>
 The line number in the source file where the memory allocation occurred. This parameter is not currently used.</p>
+
 <h2>Return value</h2>
+
 <p><strong>RxAllocatePoolWithTag</strong> returns <strong>NULL</strong> if there is insufficient memory in the free pool to satisfy the request. Otherwise, the routine returns a pointer to the allocated memory.</p>
+
 <h2>Remarks</h2>
+
 <p>It is recommended that the <strong>RxAllocatePoolWithTag</strong> macro be called instead of using this routine directly. On retail builds, this macro is defined to call <strong><a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a></strong>. On checked builds, this macro is defined to call <strong>_RxAllocatePoolWithTag</strong>.</p>
+
 <p>The <strong>_RxAllocatePoolWithTag</strong> routine calls <strong><a href="exallocatepoolwithtagpriority" title="PVOID ExAllocatePoolWithTagPriority(&#10;  [in] __drv_strictTypeMatch(__drv_typeCond)POOL_TYPE        PoolType,&#10;  [in] SIZE_T                                                NumberOfBytes,&#10;  [in] ULONG                                                 Tag,&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)EX_POOL_PRIORITY Priority&#10;);">ExAllocatePoolWithTagPriority</a></strong> with the priority (importance of the request) set to LowPoolPriority. The system may fail the request for LowPoolPriority when it runs low on resources. A driver should be prepared to recover from an allocation failure when using this routine.</p>
+
 <p>When the system allocates a buffer from pool memory of <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> or greater, it aligns the buffer on a page boundary. Memory requests smaller than <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> are not necessarily aligned on page boundaries, but always fit within a single page, and are aligned on an 8-byte boundary. Any successful allocation that requests a block larger than <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> that is not a multiple of <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> wastes all unused bytes on the last-allocated page.</p>
+
 <p>The system associates the pool tag with the allocated memory. Programming tools, such as WinDbg, can display the pool tag associated with each allocated buffer. The value of <em>Tag</em> is normally displayed in reverse order. For example, if a caller passes 'Fred' as a <em>Tag</em>, it would appear as 'derF' if memory is dumped or when tracking memory usage in the debugger.</p>
+
 <p>Memory allocated with <strong>_RxAllocatePoolWithTag</strong> should be released by calling <strong><a href="_rxfreepool" title="VOID _RxFreePool(&#10;   PVOID Buffer,&#10;   PSZ   FileName,&#10;   ULONG LineNumber&#10;);">_RxFreePool</a></strong>.</p>
+
 <p>Callers of <strong>_RxAllocatePoolWithTag</strong> must be executing at IRQL &lt;= DISPATCH_LEVEL. A caller executing at DISPATCH_LEVEL must specify a <strong>NonPagedPool</strong> value for the <em>Type</em> parameter. A caller executing at IRQL &lt;= APC_LEVEL can specify any <a href="pool_type" title="typedef enum _POOL_TYPE {&#10;    NonPagedPool,&#10;    NonPagedPoolExecute = NonPagedPool,&#10;    PagedPool,&#10;    NonPagedPoolMustSucceed = NonPagedPool + 2,&#10;    DontUseThisType,&#10;    NonPagedPoolCacheAligned = NonPagedPool + 4,&#10;    PagedPoolCacheAligned,&#10;    NonPagedPoolCacheAlignedMustS = NonPagedPool + 6,&#10;    MaxPoolType,&#10;    NonPagedPoolBase = 0,&#10;    NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,&#10;    NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,&#10;    NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,&#10;    NonPagedPoolSession = 32,&#10;    PagedPoolSession = NonPagedPoolSession + 1,&#10;    NonPagedPoolMustSucceedSession = PagedPoolSession + 1,&#10;    DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,&#10;    NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,&#10;    PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,&#10;...">POOL_TYPE</a> value for the <em>Type</em> parameter.</p>
+
 <h2>Requirements</h2>
+
 <table>
 <thead>
 <tr>
-<th></th>
-<th></th>
+  <th></th>
+  <th></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Target platform</td>
-<td>Desktop</td>
+  <td>Target platform</td>
+  <td>Desktop</td>
 </tr>
 <tr>
-<td>Header</td>
-<td>Ntrxdef.h (include Ntrxdef.h)</td>
+  <td>Header</td>
+  <td>Ntrxdef.h (include Ntrxdef.h)</td>
 </tr>
 <tr>
-<td>IRQL</td>
-<td>See Remarks section.</td>
+  <td>IRQL</td>
+  <td>See Remarks section.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>See also</h2>
+
 <p><strong><a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a></strong></p>
+
 <p><strong><a href="_rxcheckmemoryblock" title="BOOLEAN _RxCheckMemoryBlock(&#10;   PVOID Buffer,&#10;   PSZ   FileName,&#10;   ULONG LineNumber&#10;);">_RxCheckMemoryBlock</a></strong></p>
+
 <p><strong><a href="_rxfreepool" title="VOID _RxFreePool(&#10;   PVOID Buffer,&#10;   PSZ   FileName,&#10;   ULONG LineNumber&#10;);">_RxFreePool</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

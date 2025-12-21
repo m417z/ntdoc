@@ -110,7 +110,7 @@ ZwSetInformationVirtualMemory(
 <h1>NtDoc</h1>
 </div>
 <div class="ntdoc-description">
-<p>This function is <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwsetinformationvirtualmemory">documented in Windows Driver Kit</a>.</p>
+<p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwsetinformationvirtualmemory">documented in Windows Driver Kit</a>.</p>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/ntsetinformationvirtualmemory.md">Edit description on GitHub</a>
 </div>
@@ -120,31 +120,55 @@ ZwSetInformationVirtualMemory(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>ZwSetInformationVirtualMemory function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>ZwSetInformationVirtualMemory</strong> routine performs an operation on a specified list of address ranges in the user address space of a process.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>ProcessHandle</code> [in]</h3>
-<p>Specifies an open handle for the process in the context of which the operation is to be performed. This handle cannot be invalid. Use the <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/zwcurrentprocess">NtCurrentProcess</a> macro, defined in Ntddk.h, to specify the current process.</p>
+
+<p>Specifies an open handle for the process in the context of which the operation is to be performed. This handle cannot be invalid. Use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/zwcurrentprocess">NtCurrentProcess</a> macro, defined in Ntddk.h, to specify the current process.</p>
+
 <h3><code>VmInformationClass</code> [in]</h3>
+
 <p>Specifies the type of operation to perform. Set to <strong><a href="vmprefetchinformation" title="#define VmPrefetchInformation 0x0">VmPrefetchInformation</a></strong> defined in the <strong><a href="virtual_memory_information_class" title="typedef enum _VIRTUAL_MEMORY_INFORMATION_CLASS&#10;{&#10;    VmPrefetchInformation,                      // s: MEMORY_PREFETCH_INFORMATION&#10;    VmPagePriorityInformation,                  // s: MEMORY_PAGE_PRIORITY_INFORMATION&#10;    VmCfgCallTargetInformation,                 // s: CFG_CALL_TARGET_LIST_INFORMATION // REDSTONE2&#10;    VmPageDirtyStateInformation,                // s: MEMORY_PAGE_DIRTY_STATE_INFORMATION // REDSTONE3&#10;    VmImageHotPatchInformation,                 // s: 19H1&#10;    VmPhysicalContiguityInformation,            // s: MEMORY_PHYSICAL_CONTIGUITY_INFORMATION // 20H1 // (requires SeLockMemoryPrivilege)&#10;    VmVirtualMachinePrepopulateInformation,&#10;    VmRemoveFromWorkingSetInformation,          // s: MEMORY_REMOVE_WORKING_SET_INFORMATION&#10;    MaxVmInfoClass&#10;} VIRTUAL_MEMORY_INFORMATION_CLASS;">VIRTUAL_MEMORY_INFORMATION_CLASS</a></strong> enumeration, see ntddk.h.</p>
+
 <h3><code>NumberOfEntries</code> [in]</h3>
+
 <p>Number of entries in the array pointed to by the <em>VirtualAddresses</em> parameter. This parameter cannot be 0.</p>
+
 <h3><code>VirtualAddresses</code> [in]</h3>
+
 <p>Pointer to an array of <a href="memory_range_entry" title="typedef struct _MEMORY_RANGE_ENTRY&#10;{&#10;    PVOID VirtualAddress;        // A pointer to the starting virtual address of the region.&#10;    SIZE_T NumberOfBytes;        // The size, in bytes, of the region.&#10;} MEMORY_RANGE_ENTRY, *PMEMORY_RANGE_ENTRY;">MEMORY_RANGE_ENTRY</a> structures in which each entry specifies a virtual address range to be processed. The virtual address ranges may cover any part of the process address space accessible by the target process.</p>
+
 <h3><code>VmInformation</code> [in]</h3>
+
 <p>A pointer to a buffer that contains memory information.
 The format and content of the buffer depend on the
 specified information class.</p>
+
 <p>If <em>VmInformationClass</em> is <strong><a href="vmprefetchinformation" title="#define VmPrefetchInformation 0x0">VmPrefetchInformation</a></strong>, this parameter cannot be this parameter cannot be NULL and must point to a <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> variable that is set to 0.</p>
+
 <h3><code>VmInformationLength</code> [in]</h3>
+
 <p>The size of the buffer pointed to by <em>VmInformation</em>.</p>
+
 <p>If <em>VmInformationClass</em> is <strong><a href="vmprefetchinformation" title="#define VmPrefetchInformation 0x0">VmPrefetchInformation</a></strong>, this must be <code>sizeof (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)</code>.</p>
+
 <h2>Return value</h2>
+
 <p><strong>ZwSetInformationVirtualMemory</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success, or the appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code on failure.</p>
+
 <h2>Remarks</h2>
+
 <p>The <strong>ZwSetInformationVirtualMemory</strong> routine is called by drivers that know the set of addresses they will be accessing. If it's likely that these addresses are no longer resident in memory (i.e. they have been paged out to disk), calling this routine on those address ranges before access reduces the overall latency because it efficiently brings in those address ranges from disk using large, concurrent I/O requests where possible.</p>
+
 <p><strong>ZwSetInformationVirtualMemory</strong> allows drivers to make efficient use of disk hardware by issuing large, concurrent I/Os where possible when the driver provides a list of process address ranges that are going to be accessed. Even for a single address range (e.g. a file mapping), the routine can provide performance improvements by issuing a single large I/O rather than the many smaller I/Os that would be issued via page faulting.</p>
+
 <p>Drivers call this routine purely for performance optimization: prefetching is not necessary for accessing the target address ranges. The prefetched memory is not added to the target process' working set; it is cached in physical memory. When the prefetched address ranges are accessed by the target process, they are added to the working set.</p>
+
 <p>Because this call is not necessary for correct operation of the driver, it is treated as a strong hint by the system and is subject to usual physical memory constraints where it can completely or partially fail under low-memory conditions. It can also create memory pressure if called with large address ranges, so applications should only prefetch address ranges they will actually use.</p>
 <hr>
 <div class="ntdoc-description-links">

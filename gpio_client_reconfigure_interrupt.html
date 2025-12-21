@@ -68,25 +68,44 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>GPIO_CLIENT_RECONFIGURE_INTERRUPT callback function</h1>
+
 <h2>Description</h2>
+
 <p>The <em>CLIENT_ReconfigureInterrupt</em> event callback function reconfigures a general-purpose I/O (GPIO) pin that is used as an interrupt input.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Context</code> [in]</h3>
-<p>A pointer to the GPIO controller driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/gpio/gpio-device-contexts">device context</a>.</p>
+
+<p>A pointer to the GPIO controller driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/gpio/gpio-device-contexts">device context</a>.</p>
+
 <h3><code>ReconfigureParameters</code> [in]</h3>
+
 <p>A pointer to a <a href="gpio_reconfigure_interrupts_parameters" title="typedef struct _GPIO_RECONFIGURE_INTERRUPTS_PARAMETERS {&#10;  BANK_ID                          BankId;&#10;  PIN_NUMBER                       PinNumber;&#10;  KINTERRUPT_MODE                  InterruptMode;&#10;  KINTERRUPT_POLARITY              Polarity;&#10;  GPIO_RECONFIGURE_INTERRUPT_FLAGS Flags;&#10;} GPIO_RECONFIGURE_INTERRUPTS_PARAMETERS, *PGPIO_RECONFIGURE_INTERRUPTS_PARAMETERS;">GPIO_RECONFIGURE_INTERRUPTS_PARAMETERS</a> structure that specifies how to reconfigure the GPIO interrupt pin.</p>
+
 <h2>Return value</h2>
+
 <p>The <em>CLIENT_ReconfigureInterrupt</em> function returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call is successful. Otherwise, it returns an appropriate error code.</p>
+
 <h2>Remarks</h2>
+
 <p>The GPIO framework extension (GpioClx) might call the <em>CLIENT_ReconfigureInterrupt</em> function to change the interrupt mode or interrupt polarity of a GPIO pin that is used as an interrupt input.</p>
+
 <p>For example, if the GPIO controller hardware does not directly support active-both interrupts, but can be configured to support active-high and active-low level-mode interrupts, GpioClx can emulate an active-both interrupt pin by calling the <em>CLIENT_ReconfigureInterrupt</em> function to alternately configure a GPIO pin for active-high and active-low level-mode interrupts. For more information about active-both interrupts, see the description of the <strong>EmulateActiveBoth</strong> flag in <a href="controller_attribute_flags" title="typedef union _CONTROLLER_ATTRIBUTE_FLAGS {&#10;  struct {&#10;    ULONG MemoryMappedController : 1;&#10;    ULONG ActiveInterruptsAutoClearOnRead : 1;&#10;    ULONG FormatIoRequestsAsMasks : 1;&#10;    ULONG DeviceIdlePowerMgmtSupported : 1;&#10;    ULONG BankIdlePowerMgmtSupported : 1;&#10;    ULONG EmulateDebouncing : 1;&#10;    ULONG EmulateActiveBoth : 1;&#10;    ULONG IndependentIoHwSupported : 1;&#10;    ULONG Reserved : 24;&#10;  };&#10;  ULONG  AsULONG;&#10;} CONTROLLER_ATTRIBUTE_FLAGS, *PCONTROLLER_ATTRIBUTE_FLAGS;">CONTROLLER_ATTRIBUTE_FLAGS</a>.</p>
-<p>GpioClx calls the <em>CLIENT_ReconfigureInterrupt</em> callback function either at PASSIVE_LEVEL or DIRQL, depending on the device information that the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/gpioclx/nc-gpioclx-gpio_client_query_controller_basic_information">CLIENT_QueryControllerBasicInformation</a> callback function supplies to GpioClx. The <em>CLIENT_QueryControllerBasicInformation</em> function provides device information in the form of a <a href="client_controller_basic_information" title="typedef struct _CLIENT_CONTROLLER_BASIC_INFORMATION {&#10;  USHORT                     Version;&#10;  USHORT                     Size;&#10;  USHORT                     TotalPins;&#10;  UCHAR                      NumberOfPinsPerBank;&#10;  ULONG                      DeviceIdleTimeout;&#10;  CONTROLLER_ATTRIBUTE_FLAGS Flags;&#10;} CLIENT_CONTROLLER_BASIC_INFORMATION, *PCLIENT_CONTROLLER_BASIC_INFORMATION;">CLIENT_CONTROLLER_BASIC_INFORMATION</a> structure. If the <strong>MemoryMappedController</strong> flag bit is set in the <strong>Flags</strong> member of this structure, GpioClx calls the <em>CLIENT_ReconfigureInterrupt</em> function at DIRQL, which is the IRQL at which the ISR in GpioClx runs. Otherwise, this function is called at PASSIVE_LEVEL. For more information about this flag bit, see <a href="https://learn.microsoft.com/windows-hardware/drivers/gpio/optional-and-required-gpio-callback-functions">Optional and Required GPIO Callback Functions</a>.</p>
+
+<p>GpioClx calls the <em>CLIENT_ReconfigureInterrupt</em> callback function either at PASSIVE_LEVEL or DIRQL, depending on the device information that the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/gpioclx/nc-gpioclx-gpio_client_query_controller_basic_information">CLIENT_QueryControllerBasicInformation</a> callback function supplies to GpioClx. The <em>CLIENT_QueryControllerBasicInformation</em> function provides device information in the form of a <a href="client_controller_basic_information" title="typedef struct _CLIENT_CONTROLLER_BASIC_INFORMATION {&#10;  USHORT                     Version;&#10;  USHORT                     Size;&#10;  USHORT                     TotalPins;&#10;  UCHAR                      NumberOfPinsPerBank;&#10;  ULONG                      DeviceIdleTimeout;&#10;  CONTROLLER_ATTRIBUTE_FLAGS Flags;&#10;} CLIENT_CONTROLLER_BASIC_INFORMATION, *PCLIENT_CONTROLLER_BASIC_INFORMATION;">CLIENT_CONTROLLER_BASIC_INFORMATION</a> structure. If the <strong>MemoryMappedController</strong> flag bit is set in the <strong>Flags</strong> member of this structure, GpioClx calls the <em>CLIENT_ReconfigureInterrupt</em> function at DIRQL, which is the IRQL at which the ISR in GpioClx runs. Otherwise, this function is called at PASSIVE_LEVEL. For more information about this flag bit, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/gpio/optional-and-required-gpio-callback-functions">Optional and Required GPIO Callback Functions</a>.</p>
+
 <h4>Examples</h4>
-<p>To define a <em>CLIENT_ReconfigureInterrupt</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>To define a <em>CLIENT_ReconfigureInterrupt</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
 <p>For example, to define a <em>CLIENT_ReconfigureInterrupt</em> callback function that is named <code>MyEvtGpioReconfigureInterrupt</code>, use the GPIO_CLIENT_RECONFIGURE_INTERRUPT function type, as shown in this code example:</p>
+
 <pre><code>GPIO_CLIENT_RECONFIGURE_INTERRUPT MyEvtGpioReconfigureInterrupt;
 </code></pre>
+
 <p>Then, implement your callback function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
   MyEvtGpioReconfigureInterrupt(
@@ -95,11 +114,17 @@
     )
 { ... }
 </code></pre>
-<p>The GPIO_CLIENT_RECONFIGURE_INTERRUPT function type is defined in the Gpioclx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the GPIO_CLIENT_RECONFIGURE_INTERRUPT function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about <em>Use_decl_annotations</em>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<p>The GPIO_CLIENT_RECONFIGURE_INTERRUPT function type is defined in the Gpioclx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the GPIO_CLIENT_RECONFIGURE_INTERRUPT function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="client_controller_basic_information" title="typedef struct _CLIENT_CONTROLLER_BASIC_INFORMATION {&#10;  USHORT                     Version;&#10;  USHORT                     Size;&#10;  USHORT                     TotalPins;&#10;  UCHAR                      NumberOfPinsPerBank;&#10;  ULONG                      DeviceIdleTimeout;&#10;  CONTROLLER_ATTRIBUTE_FLAGS Flags;&#10;} CLIENT_CONTROLLER_BASIC_INFORMATION, *PCLIENT_CONTROLLER_BASIC_INFORMATION;">CLIENT_CONTROLLER_BASIC_INFORMATION</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/gpioclx/nc-gpioclx-gpio_client_query_controller_basic_information">CLIENT_QueryControllerBasicInformation</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/gpioclx/nc-gpioclx-gpio_client_query_controller_basic_information">CLIENT_QueryControllerBasicInformation</a></p>
+
 <p><a href="controller_attribute_flags" title="typedef union _CONTROLLER_ATTRIBUTE_FLAGS {&#10;  struct {&#10;    ULONG MemoryMappedController : 1;&#10;    ULONG ActiveInterruptsAutoClearOnRead : 1;&#10;    ULONG FormatIoRequestsAsMasks : 1;&#10;    ULONG DeviceIdlePowerMgmtSupported : 1;&#10;    ULONG BankIdlePowerMgmtSupported : 1;&#10;    ULONG EmulateDebouncing : 1;&#10;    ULONG EmulateActiveBoth : 1;&#10;    ULONG IndependentIoHwSupported : 1;&#10;    ULONG Reserved : 24;&#10;  };&#10;  ULONG  AsULONG;&#10;} CONTROLLER_ATTRIBUTE_FLAGS, *PCONTROLLER_ATTRIBUTE_FLAGS;">CONTROLLER_ATTRIBUTE_FLAGS</a></p>
+
 <p><a href="gpio_reconfigure_interrupts_parameters" title="typedef struct _GPIO_RECONFIGURE_INTERRUPTS_PARAMETERS {&#10;  BANK_ID                          BankId;&#10;  PIN_NUMBER                       PinNumber;&#10;  KINTERRUPT_MODE                  InterruptMode;&#10;  KINTERRUPT_POLARITY              Polarity;&#10;  GPIO_RECONFIGURE_INTERRUPT_FLAGS Flags;&#10;} GPIO_RECONFIGURE_INTERRUPTS_PARAMETERS, *PGPIO_RECONFIGURE_INTERRUPTS_PARAMETERS;">GPIO_RECONFIGURE_INTERRUPTS_PARAMETERS</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -67,49 +67,80 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>IoRegisterDeviceInterface function</h1>
+
 <h2>Description</h2>
-<p>The <strong>IoRegisterDeviceInterface</strong> routine registers a <a href="https://learn.microsoft.com/windows-hardware/drivers/install/device-interface-classes">device interface class</a>, if it has not been previously registered, and creates a new instance of the interface class, which a driver can subsequently enable for use by applications or other system components.</p>
+
+<p>The <strong>IoRegisterDeviceInterface</strong> routine registers a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/install/device-interface-classes">device interface class</a>, if it has not been previously registered, and creates a new instance of the interface class, which a driver can subsequently enable for use by applications or other system components.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>PhysicalDeviceObject</code> [in]</h3>
+
 <p>A pointer to the PDO for the device.</p>
+
 <h3><code>InterfaceClassGuid</code> [in]</h3>
+
 <p>A pointer to the class GUID that identifies the functionality (the device interface class) being registered.</p>
+
 <h3><code>ReferenceString</code> [in, optional]</h3>
-<p>Optionally points to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a>. The string must not contain any path separator characters (&quot;/&quot; or &quot;\&quot;). Function drivers typically specify <strong>NULL</strong> for this parameter. Filter drivers must specify <strong>NULL</strong>.</p>
+
+<p>Optionally points to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a>. The string must not contain any path separator characters ("/" or "\"). Function drivers typically specify <strong>NULL</strong> for this parameter. Filter drivers must specify <strong>NULL</strong>.</p>
+
 <p>Reference strings are only used by a few bus drivers, such as <em>swenum</em>, which is a bus driver that uses device interface instances as placeholders for software devices created on demand. When an instance of an interface is opened, the I/O manager passes the instance's reference string to the driver. The string becomes part of the interface instance's name (as an appended path component). The driver can then use the reference string to differentiate between two interface instances of the same class for a single device.</p>
+
 <p>On Microsoft Windows 98/Me systems, the <em>ReferenceString</em> value can be no longer than MAX_PATH characters. There is no length limit on Windows 2000 and later versions of Windows.</p>
+
 <h3><code>SymbolicLinkName</code> [out]</h3>
+
 <p>A pointer to a Unicode string structure allocated by the caller. If this routine is successful, it initializes the Unicode string and allocates the string buffer containing the kernel-mode path to the symbolic link for an instance of the specified device interface class.</p>
+
 <p>The caller must treat <em>SymbolicLinkName</em> as opaque and must not disassemble it.</p>
+
 <p>The caller is responsible for freeing <em>SymbolicLinkName</em> with <a href="rtlfreeunicodestring" title="NTSYSAPI&#10;VOID&#10;NTAPI&#10;RtlFreeUnicodeString(&#10;    _Inout_ _At_(UnicodeString-&gt;Buffer, _Frees_ptr_opt_) PUNICODE_STRING UnicodeString&#10;    );">RtlFreeUnicodeString</a> when it is no longer needed.</p>
+
 <h2>Return value</h2>
+
 <p><strong>IoRegisterDeviceInterface</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call was successful. Possible error return values include the following.</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
-<td>The parameters are invalid. Possibilities include that <em>PhysicalDeviceObject</em> does not point to a valid PDO, or that the <em>ReferenceString</em> string contains an invalid character.</td>
+  <td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
+  <td>The parameters are invalid. Possibilities include that <em>PhysicalDeviceObject</em> does not point to a valid PDO, or that the <em>ReferenceString</em> string contains an invalid character.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
-<p><strong>IoRegisterDeviceInterface</strong> registers a device interface class, if it has not been previously registered, and creates a new instance of the interface class. A driver can call this routine several times for a given device to register several interface classes and create instances of the classes. A function or filter driver typically registers device interfaces in its <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_add_device">AddDevice</a> routine. For example, a fault-tolerant volume driver might register an instance of a fault-tolerant-volume interface and an instance of a volume interface for a particular volume.</p>
+
+<p><strong>IoRegisterDeviceInterface</strong> registers a device interface class, if it has not been previously registered, and creates a new instance of the interface class. A driver can call this routine several times for a given device to register several interface classes and create instances of the classes. A function or filter driver typically registers device interfaces in its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_add_device">AddDevice</a> routine. For example, a fault-tolerant volume driver might register an instance of a fault-tolerant-volume interface and an instance of a volume interface for a particular volume.</p>
+
 <p>If the device interface class has not been registered previously, the I/O manager creates a registry key for it, along with instance-specific persistent storage under the key. Drivers can access this persistent storage using <a href="ioopendeviceinterfaceregistrykey" title="NTSTATUS IoOpenDeviceInterfaceRegistryKey(&#10;  [in]  PUNICODE_STRING SymbolicLinkName,&#10;  [in]  ACCESS_MASK     DesiredAccess,&#10;  [out] PHANDLE         DeviceInterfaceRegKey&#10;);">IoOpenDeviceInterfaceRegistryKey</a>.</p>
+
 <p>A driver registers an interface instance once and then calls <a href="iosetdeviceinterfacestate" title="NTSTATUS IoSetDeviceInterfaceState(&#10;  [in] PUNICODE_STRING SymbolicLinkName,&#10;  [in] BOOLEAN         Enable&#10;);">IoSetDeviceInterfaceState</a> to enable and disable the interface.</p>
+
 <p>Registered interfaces persist across operating system reboots. If the specified interface is already registered, the I/O manager passes its name in <em>SymbolicLinkName</em> and returns the informational success status STATUS_OBJECT_NAME_EXISTS.</p>
+
 <p>Most drivers use a <strong>NULL</strong> reference string for a device interface instance. If a driver uses a non-<strong>NULL</strong> reference string, it must do additional work, including possibly managing its own namespace and security. A filter driver that exposes a device interface must use a <strong>NULL</strong> <em>ReferenceString</em> to avoid conflicts with other drivers in the device stack.</p>
+
 <p>Callers of this routine are not required to remove the registration for a device interface when it is no longer needed. Device interface registrations can be removed from user mode, if necessary.</p>
+
 <p>Callers of <strong>IoRegisterDeviceInterface</strong> must be running at IRQL = PASSIVE_LEVEL in the context of a system thread.</p>
+
 <h2>See also</h2>
+
 <p><a href="iogetdeviceinterfaces" title="NTSTATUS IoGetDeviceInterfaces(&#10;  [in]           const GUID     *InterfaceClassGuid,&#10;  [in, optional] PDEVICE_OBJECT PhysicalDeviceObject,&#10;  [in]           ULONG          Flags,&#10;  [out]          PZZWSTR        *SymbolicLinkList&#10;);">IoGetDeviceInterfaces</a></p>
+
 <p><a href="ioopendeviceinterfaceregistrykey" title="NTSTATUS IoOpenDeviceInterfaceRegistryKey(&#10;  [in]  PUNICODE_STRING SymbolicLinkName,&#10;  [in]  ACCESS_MASK     DesiredAccess,&#10;  [out] PHANDLE         DeviceInterfaceRegKey&#10;);">IoOpenDeviceInterfaceRegistryKey</a></p>
+
 <p><a href="iosetdeviceinterfacestate" title="NTSTATUS IoSetDeviceInterfaceState(&#10;  [in] PUNICODE_STRING SymbolicLinkName,&#10;  [in] BOOLEAN         Enable&#10;);">IoSetDeviceInterfaceState</a></p>
+
 <p><a href="rtlfreeunicodestring" title="NTSYSAPI&#10;VOID&#10;NTAPI&#10;RtlFreeUnicodeString(&#10;    _Inout_ _At_(UnicodeString-&gt;Buffer, _Frees_ptr_opt_) PUNICODE_STRING UnicodeString&#10;    );">RtlFreeUnicodeString</a></p>
 <hr>
 <div class="ntdoc-description-links">

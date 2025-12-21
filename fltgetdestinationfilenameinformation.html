@@ -70,155 +70,213 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltGetDestinationFileNameInformation function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>FltGetDestinationFileNameInformation</strong> routine queries the file name for the destination's parent directory, then constructs a full destination path name for a file or directory that is being renamed or for which an NTFS hard link is being created.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Instance</code> [in]</h3>
+
 <p>Opaque instance pointer for a minifilter driver instance that is attached to the volume where the file resides.</p>
+
 <h3><code>FileObject</code> [in]</h3>
+
 <p>Pointer to the file object for the file. This parameter is required and can't be NULL.</p>
+
 <h3><code>RootDirectory</code> [in, optional]</h3>
+
 <p><em>For link operations:</em> If the link is to be created in the same directory as the file that is being linked to or if <strong>FileName</strong> contains the full pathname for the link to be created, this parameter is NULL. Otherwise it's a handle for the directory where the link is to be created.</p>
+
 <p><em>For rename operations:</em> If the file isn't being moved to a different directory or if <strong>FileName</strong> contains the full pathname, this parameter is NULL. Otherwise it's a handle for the directory where the file resides after it's renamed.</p>
+
 <h3><code>FileName</code> [in]</h3>
+
 <p><em>For link operations:</em> Pointer to a wide-character string containing the name to be assigned to the newly created link.</p>
+
 <p><em>For rename operations:</em> Pointer to a wide-character string containing the new name for the file.</p>
+
 <h3><code>FileNameLength</code> [in]</h3>
+
 <p>Length, in bytes, of the wide-character string that <strong>FileName</strong> points to.</p>
+
 <h3><code>NameOptions</code> [in]</h3>
-<p>A <a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-file-name-options"><strong>FLT_FILE_NAME_OPTIONS</strong></a> value containing flags that specify the format of the name information to be returned, the query method that the Filter Manager is to use, and additional file name flags. This parameter is required and can't be NULL.</p>
+
+<p>A <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-file-name-options"><strong>FLT_FILE_NAME_OPTIONS</strong></a> value containing flags that specify the format of the name information to be returned, the query method that the Filter Manager is to use, and additional file name flags. This parameter is required and can't be NULL.</p>
+
 <p>The following are the name format flag values. Only one name format flag can be specified. (Note that FLT_FILE_NAME_SHORT isn't a valid flag value for this parameter.)</p>
+
 <table>
 <thead>
 <tr>
-<th>Name Format Flag Value</th>
-<th>Meaning</th>
+  <th>Name Format Flag Value</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>FLT_FILE_NAME_NORMALIZED</td>
-<td>The <strong>FileName</strong> parameter receives the normalized destination name for the file.</td>
+  <td>FLT_FILE_NAME_NORMALIZED</td>
+  <td>The <strong>FileName</strong> parameter receives the normalized destination name for the file.</td>
 </tr>
 <tr>
-<td>FLT_FILE_NAME_OPENED</td>
-<td>The <strong>FileName</strong> parameter receives the destination name for the file, based on the name that was used when the file was opened. This file name isn't normalized.</td>
+  <td>FLT_FILE_NAME_OPENED</td>
+  <td>The <strong>FileName</strong> parameter receives the destination name for the file, based on the name that was used when the file was opened. This file name isn't normalized.</td>
 </tr>
 </tbody>
 </table>
+
 <p>The following are the query method flag values. Only one query method flag can be specified.</p>
+
 <table>
 <thead>
 <tr>
-<th>Query Method Flag Value</th>
-<th>Meaning</th>
+  <th>Query Method Flag Value</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>FLT_FILE_NAME_QUERY_DEFAULT</td>
-<td>If it isn't currently safe to query the file system for the destination file name, <strong>FltGetDestinationFileNameInformation</strong> does nothing. Otherwise, <strong>FltGetDestinationFileNameInformation</strong> queries the Filter Manager's name cache for the file name information for the destination's parent directory then appends the destination name. If the resultant name isn't found in the cache, <strong>FltGetDestinationFileNameInformation</strong> queries the file system and caches the result.</td>
+  <td>FLT_FILE_NAME_QUERY_DEFAULT</td>
+  <td>If it isn't currently safe to query the file system for the destination file name, <strong>FltGetDestinationFileNameInformation</strong> does nothing. Otherwise, <strong>FltGetDestinationFileNameInformation</strong> queries the Filter Manager's name cache for the file name information for the destination's parent directory then appends the destination name. If the resultant name isn't found in the cache, <strong>FltGetDestinationFileNameInformation</strong> queries the file system and caches the result.</td>
 </tr>
 <tr>
-<td>FLT_FILE_NAME_QUERY_CACHE_ONLY</td>
-<td><strong>FltGetDestinationFileNameInformation</strong> queries the Filter Manager's name cache for the file name information for the destination's parent directory then appends the destination name. It doesn't query the file system.</td>
+  <td>FLT_FILE_NAME_QUERY_CACHE_ONLY</td>
+  <td><strong>FltGetDestinationFileNameInformation</strong> queries the Filter Manager's name cache for the file name information for the destination's parent directory then appends the destination name. It doesn't query the file system.</td>
 </tr>
 <tr>
-<td>FLT_FILE_NAME_QUERY_FILESYSTEM_ONLY</td>
-<td><strong>FltGetDestinationFileNameInformation</strong> queries the file system for the file name information for the destination's parent directory then appends the destination name. It doesn't query the Filter Manager's name cache and doesn't cache the result of the file system query.</td>
+  <td>FLT_FILE_NAME_QUERY_FILESYSTEM_ONLY</td>
+  <td><strong>FltGetDestinationFileNameInformation</strong> queries the file system for the file name information for the destination's parent directory then appends the destination name. It doesn't query the Filter Manager's name cache and doesn't cache the result of the file system query.</td>
 </tr>
 <tr>
-<td>FLT_FILE_NAME_QUERY_ALWAYS_ALLOW_CACHE_LOOKUP</td>
-<td><strong>FltGetDestinationFileNameInformation</strong> queries the Filter Manager's name cache for the file name information for the destination's parent directory then appends the destination name. If the name isn't found in the cache, and it's currently safe to do so, <strong>FltGetDestinationFileNameInformation</strong> queries the file system for the file name information and caches the result.</td>
+  <td>FLT_FILE_NAME_QUERY_ALWAYS_ALLOW_CACHE_LOOKUP</td>
+  <td><strong>FltGetDestinationFileNameInformation</strong> queries the Filter Manager's name cache for the file name information for the destination's parent directory then appends the destination name. If the name isn't found in the cache, and it's currently safe to do so, <strong>FltGetDestinationFileNameInformation</strong> queries the file system for the file name information and caches the result.</td>
 </tr>
 </tbody>
 </table>
+
 <p>The following are the file name flag values. Any combination of these flags can be specified. (Note that FLT_FILE_NAME_ALLOW_QUERY_ON_REPARSE isn't a relevant flag for this parameter since <strong>FltGetDestinationFileNameInformation</strong> isn't used in a post-create callback.)</p>
+
 <table>
 <thead>
 <tr>
-<th>File Name Flag Value</th>
-<th>Meaning</th>
+  <th>File Name Flag Value</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>FLT_FILE_NAME_REQUEST_FROM_CURRENT_PROVIDER</td>
-<td><strong>FltGetDestinationFileNameInformation</strong> directs the name request to the calling filter instance to complete.</td>
+  <td>FLT_FILE_NAME_REQUEST_FROM_CURRENT_PROVIDER</td>
+  <td><strong>FltGetDestinationFileNameInformation</strong> directs the name request to the calling filter instance to complete.</td>
 </tr>
 <tr>
-<td>FLT_FILE_NAME_DO_NOT_CACHE</td>
-<td><strong>FltGetDestinationFileNameInformation</strong> doesn't cache the retrieved file name. Name provider minifilters use this flag as they perform intermediate queries to generate a name.</td>
+  <td>FLT_FILE_NAME_DO_NOT_CACHE</td>
+  <td><strong>FltGetDestinationFileNameInformation</strong> doesn't cache the retrieved file name. Name provider minifilters use this flag as they perform intermediate queries to generate a name.</td>
 </tr>
 </tbody>
 </table>
+
 <h3><code>RetFileNameInformation</code> [out]</h3>
+
 <p>Pointer to a caller-allocated variable that receives the address of a system-allocated <a href="flt_file_name_information" title="typedef struct _FLT_FILE_NAME_INFORMATION {&#10;  USHORT                     Size;&#10;  FLT_FILE_NAME_PARSED_FLAGS NamesParsed;&#10;  FLT_FILE_NAME_OPTIONS      Format;&#10;  UNICODE_STRING             Name;&#10;  UNICODE_STRING             Volume;&#10;  UNICODE_STRING             Share;&#10;  UNICODE_STRING             Extension;&#10;  UNICODE_STRING             Stream;&#10;  UNICODE_STRING             FinalComponent;&#10;  UNICODE_STRING             ParentDir;&#10;} FLT_FILE_NAME_INFORMATION, *PFLT_FILE_NAME_INFORMATION;">FLT_FILE_NAME_INFORMATION</a> structure containing the file name information. <strong>FltGetDestinationFileNameInformation</strong> allocates this structure from paged pool. This parameter is required and can't be NULL.</p>
+
 <h2>Return value</h2>
+
 <p><strong>FltGetDestinationFileNameInformation</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value such as one of the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>STATUS_FLT_INVALID_NAME_REQUEST</td>
-<td>This value is returned for either of the following reasons: (1) <strong>FltGetDestinationFileNameInformation</strong> can't get file name information if the <strong>TopLevelIrp</strong> field of the current thread isn't NULL, because the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-iogettoplevelirp">resulting file system recursion could cause deadlocks or stack overflows</a>. (2) <strong>FLT_FILE_NAME_SHORT</strong> was specified for the name format flag in the <strong>NameOptions</strong> parameter.</td>
+  <td>STATUS_FLT_INVALID_NAME_REQUEST</td>
+  <td>This value is returned for either of the following reasons: (1) <strong>FltGetDestinationFileNameInformation</strong> can't get file name information if the <strong>TopLevelIrp</strong> field of the current thread isn't NULL, because the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/nf-ntifs-iogettoplevelirp">resulting file system recursion could cause deadlocks or stack overflows</a>. (2) <strong>FLT_FILE_NAME_SHORT</strong> was specified for the name format flag in the <strong>NameOptions</strong> parameter.</td>
 </tr>
 <tr>
-<td>STATUS_INSUFFICIENT_RESOURCES</td>
-<td><strong>FltGetDestinationFileNameInformation</strong> encountered a pool allocation failure. This is an error code.</td>
+  <td>STATUS_INSUFFICIENT_RESOURCES</td>
+  <td><strong>FltGetDestinationFileNameInformation</strong> encountered a pool allocation failure. This is an error code.</td>
 </tr>
 <tr>
-<td>STATUS_INVALID_PARAMETER</td>
-<td>An invalid value was specified for the <strong>NameOptions</strong> parameter. This is an error code.</td>
+  <td>STATUS_INVALID_PARAMETER</td>
+  <td>An invalid value was specified for the <strong>NameOptions</strong> parameter. This is an error code.</td>
 </tr>
 <tr>
-<td>STATUS_MOUNT_POINT_NOT_RESOLVED</td>
-<td>The destination path name contains a mount point that resolves to a volume other than the one where the file resides. (Because a rename or hard-link-creation operation can only be performed within a volume and not across volumes, the operation fails.) This is an error code.</td>
+  <td>STATUS_MOUNT_POINT_NOT_RESOLVED</td>
+  <td>The destination path name contains a mount point that resolves to a volume other than the one where the file resides. (Because a rename or hard-link-creation operation can only be performed within a volume and not across volumes, the operation fails.) This is an error code.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
-<p>Minifilters typically call <strong>FltGetDestinationFileNameInformation</strong> in a <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nc-fltkernel-pflt_pre_operation_callback">preoperation callback routine</a> for a rename or hard-link-creation operation, which means that the destination file name most likely doesn't exist. The &quot;destination&quot; name is:</p>
+
+<p>Minifilters typically call <strong>FltGetDestinationFileNameInformation</strong> in a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nc-fltkernel-pflt_pre_operation_callback">preoperation callback routine</a> for a rename or hard-link-creation operation, which means that the destination file name most likely doesn't exist. The "destination" name is:</p>
+
 <ul>
 <li>For a file rename, the name the file will have if the rename succeeds. For example, when renaming <em>name1</em> to <em>name2</em>, <em>name2</em> is the destination name.</li>
 <li>For a hard-link-creation operation, the name being added to the file system. For example, when adding the hard link <em>name2</em> to the existing file named <em>name1</em>, <em>name2</em> is the destination name.</li>
 </ul>
-<p><strong>FltGetDestinationFileNameInformation</strong> returns the destination file name information in either normalized or &quot;opened file&quot; format. For more information on these formats, see the <strong><a href="flt_file_name_information" title="typedef struct _FLT_FILE_NAME_INFORMATION {&#10;  USHORT                     Size;&#10;  FLT_FILE_NAME_PARSED_FLAGS NamesParsed;&#10;  FLT_FILE_NAME_OPTIONS      Format;&#10;  UNICODE_STRING             Name;&#10;  UNICODE_STRING             Volume;&#10;  UNICODE_STRING             Share;&#10;  UNICODE_STRING             Extension;&#10;  UNICODE_STRING             Stream;&#10;  UNICODE_STRING             FinalComponent;&#10;  UNICODE_STRING             ParentDir;&#10;} FLT_FILE_NAME_INFORMATION, *PFLT_FILE_NAME_INFORMATION;">FLT_FILE_NAME_INFORMATION</a></strong> structure.</p>
-<p>The file object pointer that is passed for the <strong>FileObject</strong> parameter must be either the <strong>FileObject</strong> member of the <strong><a href="flt_related_objects" title="typedef struct _FLT_RELATED_OBJECTS {&#10;  USHORT        Size;&#10;  USHORT        TransactionContext;&#10;  PFLT_FILTER   Filter;&#10;  PFLT_VOLUME   Volume;&#10;  PFLT_INSTANCE Instance;&#10;  PFILE_OBJECT  FileObject;&#10;  PKTRANSACTION Transaction;&#10;} FLT_RELATED_OBJECTS, *PFLT_RELATED_OBJECTS;">FLT_RELATED_OBJECTS</a></strong> structure for the operation or the <strong>Data-&gt;Iopb-&gt;TargetFileObject</strong> pointer for the operation, where <strong>Data</strong> is the callback data structure for the operation (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>). The file object pointer can't be the <strong>Data-&gt;Iopb-&gt;Parameters.SetFileInformation.FileObject</strong> member, because this field isn't used uniformly across file systems.</p>
+
+<p><strong>FltGetDestinationFileNameInformation</strong> returns the destination file name information in either normalized or "opened file" format. For more information on these formats, see the <strong><a href="flt_file_name_information" title="typedef struct _FLT_FILE_NAME_INFORMATION {&#10;  USHORT                     Size;&#10;  FLT_FILE_NAME_PARSED_FLAGS NamesParsed;&#10;  FLT_FILE_NAME_OPTIONS      Format;&#10;  UNICODE_STRING             Name;&#10;  UNICODE_STRING             Volume;&#10;  UNICODE_STRING             Share;&#10;  UNICODE_STRING             Extension;&#10;  UNICODE_STRING             Stream;&#10;  UNICODE_STRING             FinalComponent;&#10;  UNICODE_STRING             ParentDir;&#10;} FLT_FILE_NAME_INFORMATION, *PFLT_FILE_NAME_INFORMATION;">FLT_FILE_NAME_INFORMATION</a></strong> structure.</p>
+
+<p>The file object pointer that is passed for the <strong>FileObject</strong> parameter must be either the <strong>FileObject</strong> member of the <strong><a href="flt_related_objects" title="typedef struct _FLT_RELATED_OBJECTS {&#10;  USHORT        Size;&#10;  USHORT        TransactionContext;&#10;  PFLT_FILTER   Filter;&#10;  PFLT_VOLUME   Volume;&#10;  PFLT_INSTANCE Instance;&#10;  PFILE_OBJECT  FileObject;&#10;  PKTRANSACTION Transaction;&#10;} FLT_RELATED_OBJECTS, *PFLT_RELATED_OBJECTS;">FLT_RELATED_OBJECTS</a></strong> structure for the operation or the <strong>Data->Iopb->TargetFileObject</strong> pointer for the operation, where <strong>Data</strong> is the callback data structure for the operation (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>). The file object pointer can't be the <strong>Data->Iopb->Parameters.SetFileInformation.FileObject</strong> member, because this field isn't used uniformly across file systems.</p>
+
 <p>If the user opened the file by using the file ID but doesn't have traverse privilege for the entire path, <strong>FltGetDestinationFileNameInformation</strong> returns only the portion of the path that the user has privilege for.</p>
+
 <p>A rename or hard-link-creation operation can only be performed within a volume and not across volumes. Therefore, such an operation fails if the destination path name contains a mount point that resolves to a volume other than the one where the file resides. For more information about rename operations, see the <a href="file_rename_information" title="typedef struct _FILE_RENAME_INFORMATION&#10;{&#10;    BOOLEAN ReplaceIfExists;&#10;    HANDLE RootDirectory;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;">FILE_RENAME_INFORMATION</a> structure. For more information about hard-link creation operations, see the <strong><a href="file_link_information" title="typedef struct _FILE_LINK_INFORMATION&#10;{&#10;    BOOLEAN ReplaceIfExists;&#10;    HANDLE RootDirectory;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;">FILE_LINK_INFORMATION</a></strong> structures.</p>
+
 <p>After a successful call to <strong>FltGetDestinationFileNameInformation</strong>, the caller is responsible for releasing the pointer returned in the <strong>RetFileNameInformation</strong> parameter when it's no longer needed by calling <strong><a href="fltreleasefilenameinformation" title="VOID FLTAPI FltReleaseFileNameInformation(&#10;  [in] PFLT_FILE_NAME_INFORMATION FileNameInformation&#10;);">FltReleaseFileNameInformation</a></strong>.</p>
+
 <p>The caller must not modify the contents of the structure returned in the <strong>RetFileNameInformation</strong> parameter, because this structure is cached by the Filter Manager so that all minifilter drivers can use it.</p>
-<p>In create, hard-link, and rename operations, file name tunneling can cause the final component in normalized file name information that a minifilter driver retrieves in a preoperation callback routine to be invalidated. If a minifilter driver retrieves normalized file name information in a preoperation callback (<a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a>) routine by calling a routine such as <strong>FltGetDestinationFileNameInformation</strong>, it must call <strong><a href="fltgettunneledname" title="NTSTATUS FLTAPI FltGetTunneledName(&#10;  [in]  PFLT_CALLBACK_DATA         CallbackData,&#10;  [in]  PFLT_FILE_NAME_INFORMATION FileNameInformation,&#10;  [out] PFLT_FILE_NAME_INFORMATION *RetTunneledFileNameInformation&#10;);">FltGetTunneledName</a></strong> from its <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nc-fltkernel-pflt_post_operation_callback">postoperation callback</a> routine to retrieve the correct file name information for the file.</p>
+
+<p>In create, hard-link, and rename operations, file name tunneling can cause the final component in normalized file name information that a minifilter driver retrieves in a preoperation callback routine to be invalidated. If a minifilter driver retrieves normalized file name information in a preoperation callback (<a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a>) routine by calling a routine such as <strong>FltGetDestinationFileNameInformation</strong>, it must call <strong><a href="fltgettunneledname" title="NTSTATUS FLTAPI FltGetTunneledName(&#10;  [in]  PFLT_CALLBACK_DATA         CallbackData,&#10;  [in]  PFLT_FILE_NAME_INFORMATION FileNameInformation,&#10;  [out] PFLT_FILE_NAME_INFORMATION *RetTunneledFileNameInformation&#10;);">FltGetTunneledName</a></strong> from its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nc-fltkernel-pflt_post_operation_callback">postoperation callback</a> routine to retrieve the correct file name information for the file.</p>
+
 <p>For more information about normalized file name information, see <strong><a href="flt_file_name_information" title="typedef struct _FLT_FILE_NAME_INFORMATION {&#10;  USHORT                     Size;&#10;  FLT_FILE_NAME_PARSED_FLAGS NamesParsed;&#10;  FLT_FILE_NAME_OPTIONS      Format;&#10;  UNICODE_STRING             Name;&#10;  UNICODE_STRING             Volume;&#10;  UNICODE_STRING             Share;&#10;  UNICODE_STRING             Extension;&#10;  UNICODE_STRING             Stream;&#10;  UNICODE_STRING             FinalComponent;&#10;  UNICODE_STRING             ParentDir;&#10;} FLT_FILE_NAME_INFORMATION, *PFLT_FILE_NAME_INFORMATION;">FLT_FILE_NAME_INFORMATION</a></strong>.</p>
+
 <p>File name tunneling affects only create, hard-link, and rename operations in this way. It doesn't affect other I/O operations, such as read and write.</p>
+
 <p>The following paired operations can cause the file name <em>name</em> to be tunneled:</p>
+
 <ul>
 <li>delete(<em>name</em>)/create(<em>name</em>)</li>
 <li>delete(<em>name</em>)/rename(<em>source</em>, <em>name</em>)</li>
 <li>rename(<em>name</em>, <em>newname</em>)/create(<em>name</em>)</li>
 <li>rename(<em>name</em>, <em>newname</em>)/rename(<em>source</em>, <em>name</em>)</li>
 </ul>
+
 <h2>See also</h2>
+
 <p><a href="file_rename_information" title="typedef struct _FILE_RENAME_INFORMATION&#10;{&#10;    BOOLEAN ReplaceIfExists;&#10;    HANDLE RootDirectory;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;">FILE_RENAME_INFORMATION</a></p>
+
 <p><a href="file_link_information" title="typedef struct _FILE_LINK_INFORMATION&#10;{&#10;    BOOLEAN ReplaceIfExists;&#10;    HANDLE RootDirectory;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;">FILE_LINK_INFORMATION</a></p>
+
 <p><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></p>
+
 <p><a href="flt_file_name_information" title="typedef struct _FLT_FILE_NAME_INFORMATION {&#10;  USHORT                     Size;&#10;  FLT_FILE_NAME_PARSED_FLAGS NamesParsed;&#10;  FLT_FILE_NAME_OPTIONS      Format;&#10;  UNICODE_STRING             Name;&#10;  UNICODE_STRING             Volume;&#10;  UNICODE_STRING             Share;&#10;  UNICODE_STRING             Extension;&#10;  UNICODE_STRING             Stream;&#10;  UNICODE_STRING             FinalComponent;&#10;  UNICODE_STRING             ParentDir;&#10;} FLT_FILE_NAME_INFORMATION, *PFLT_FILE_NAME_INFORMATION;">FLT_FILE_NAME_INFORMATION</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-file-name-options">FLT_FILE_NAME_OPTIONS</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-file-name-options">FLT_FILE_NAME_OPTIONS</a></p>
+
 <p><a href="flt_related_objects" title="typedef struct _FLT_RELATED_OBJECTS {&#10;  USHORT        Size;&#10;  USHORT        TransactionContext;&#10;  PFLT_FILTER   Filter;&#10;  PFLT_VOLUME   Volume;&#10;  PFLT_INSTANCE Instance;&#10;  PFILE_OBJECT  FileObject;&#10;  PKTRANSACTION Transaction;&#10;} FLT_RELATED_OBJECTS, *PFLT_RELATED_OBJECTS;">FLT_RELATED_OBJECTS</a></p>
+
 <p><a href="fltgetfilenameinformation" title="NTSTATUS FLTAPI FltGetFileNameInformation(&#10;  [in]  PFLT_CALLBACK_DATA         CallbackData,&#10;  [in]  FLT_FILE_NAME_OPTIONS      NameOptions,&#10;  [out] PFLT_FILE_NAME_INFORMATION *FileNameInformation&#10;);">FltGetFileNameInformation</a></p>
+
 <p><a href="fltgetfilenameinformationunsafe" title="NTSTATUS FLTAPI FltGetFileNameInformationUnsafe(&#10;  [in]           PFILE_OBJECT               FileObject,&#10;  [in, optional] PFLT_INSTANCE              Instance,&#10;  [in]           FLT_FILE_NAME_OPTIONS      NameOptions,&#10;  [out]          PFLT_FILE_NAME_INFORMATION *FileNameInformation&#10;);">FltGetFileNameInformationUnsafe</a></p>
+
 <p><a href="fltgettunneledname" title="NTSTATUS FLTAPI FltGetTunneledName(&#10;  [in]  PFLT_CALLBACK_DATA         CallbackData,&#10;  [in]  PFLT_FILE_NAME_INFORMATION FileNameInformation,&#10;  [out] PFLT_FILE_NAME_INFORMATION *RetTunneledFileNameInformation&#10;);">FltGetTunneledName</a></p>
+
 <p><a href="fltparsefilenameinformation" title="NTSTATUS FLTAPI FltParseFileNameInformation(&#10;  [in, out] PFLT_FILE_NAME_INFORMATION FileNameInformation&#10;);">FltParseFileNameInformation</a></p>
+
 <p><a href="fltreferencefilenameinformation" title="VOID FLTAPI FltReferenceFileNameInformation(&#10;  [in] PFLT_FILE_NAME_INFORMATION FileNameInformation&#10;);">FltReferenceFileNameInformation</a></p>
+
 <p><a href="fltreleasefilenameinformation" title="VOID FLTAPI FltReleaseFileNameInformation(&#10;  [in] PFLT_FILE_NAME_INFORMATION FileNameInformation&#10;);">FltReleaseFileNameInformation</a></p>
+
 <p><a href="iogettoplevelirp" title="PIRP IoGetTopLevelIrp();">IoGetTopLevelIrp</a></p>
+
 <p><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></p>
+
 <p><a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a></p>
 <hr>
 <div class="ntdoc-description-links">

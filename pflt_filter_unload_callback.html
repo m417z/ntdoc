@@ -67,59 +67,71 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PFLT_FILTER_UNLOAD_CALLBACK callback function</h1>
+
 <h2>Description</h2>
+
 <p>A minifilter driver can register a routine of type PFLT_FILTER_UNLOAD_CALLBACK as the minifilter driver's <em>FilterUnloadCallback</em> routine.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Flags</code></h3>
+
 <p>Bitmask of flags describing the unload request. This parameter can be <strong>NULL</strong> or the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Flag</th>
-<th>Meaning</th>
+  <th>Flag</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>FLTFL_FILTER_UNLOAD_MANDATORY</td>
-<td>The filter manager sets this flag to indicate that the unload operation is mandatory.</td>
+  <td>FLTFL_FILTER_UNLOAD_MANDATORY</td>
+  <td>The filter manager sets this flag to indicate that the unload operation is mandatory.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Return value</h2>
+
 <p>This callback routine returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value such as the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return Code</th>
-<th>Description</th>
+  <th>Return Code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>STATUS_FLT_DO_NOT_DETACH</td>
-<td>If the unload operation is not mandatory, returning this status value prevents the minifilter driver from being unloaded. This is an error code.</td>
+  <td>STATUS_FLT_DO_NOT_DETACH</td>
+  <td>If the unload operation is not mandatory, returning this status value prevents the minifilter driver from being unloaded. This is an error code.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>When a minifilter driver registers itself by calling <a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a>, it can register a <em>FilterUnloadCallback</em> routine. To register this callback routine, the minifilter driver stores the address of a routine of type PFLT_FILTER_UNLOAD_CALLBACK in the <strong>FilterUnloadCallback</strong> field of the <a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a> structure that the minifilter driver passes as a parameter to <strong><a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a></strong>.</p>
+
 <p>Minifilter drivers are not required to register a <em>FilterUnloadCallback</em> routine. However, registering an unload routine is strongly recommended. If a minifilter driver does not register a <em>FilterUnloadCallback</em> routine, it cannot be unloaded.</p>
+
 <p>When a minifilter driver does register a <em>FilterUnloadCallback</em> routine:</p>
+
 <ul>
-<li>
-<p>The filter manager calls the <em>FilterUnloadCallback</em> routine to notify the minifilter driver that the filter manager is about to unload the minifilter driver.</p>
-</li>
-<li>
-<p>If the unload operation is not mandatory, and the <em>FilterUnloadCallback</em> routine returns an error or warning <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code, such as STATUS_FLT_DO_NOT_DETACH, the minifilter driver is not unloaded. Otherwise, the minifilter driver is unloaded.</p>
-</li>
-<li>
-<p>If the FLTFL_FILTER_UNLOAD_MANDATORY flag is set in the <em>Flags</em> parameter, the unload operation is mandatory, and the minifilter driver cannot prevent itself from being unloaded.</p>
-</li>
+<li><p>The filter manager calls the <em>FilterUnloadCallback</em> routine to notify the minifilter driver that the filter manager is about to unload the minifilter driver.</p></li>
+<li><p>If the unload operation is not mandatory, and the <em>FilterUnloadCallback</em> routine returns an error or warning <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code, such as STATUS_FLT_DO_NOT_DETACH, the minifilter driver is not unloaded. Otherwise, the minifilter driver is unloaded.</p></li>
+<li><p>If the FLTFL_FILTER_UNLOAD_MANDATORY flag is set in the <em>Flags</em> parameter, the unload operation is mandatory, and the minifilter driver cannot prevent itself from being unloaded.</p></li>
 </ul>
-<p>See <a href="https://learn.microsoft.com/windows-hardware/drivers/ifs/when-the-filterunloadcallback-routine-is-called">When the FilterUnloadCallback Routine Is Called</a> for more information about possible unload causes and the minifilter driver unload process.</p>
+
+<p>See <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/when-the-filterunloadcallback-routine-is-called">When the FilterUnloadCallback Routine Is Called</a> for more information about possible unload causes and the minifilter driver unload process.</p>
+
 <h2>See also</h2>
+
 <p><a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a></p>
+
 <p><a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a></p>
 <hr>
 <div class="ntdoc-description-links">

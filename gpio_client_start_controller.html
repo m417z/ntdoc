@@ -69,29 +69,51 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>GPIO_CLIENT_START_CONTROLLER callback function</h1>
+
 <h2>Description</h2>
+
 <p>The <em>CLIENT_StartController</em> event callback function performs operations that are needed when the general-purpose I/O (GPIO) controller device enters the D0 power state.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Context</code> [in]</h3>
-<p>A pointer to the GPIO controller driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/gpio/gpio-device-contexts">device context</a>.</p>
+
+<p>A pointer to the GPIO controller driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/gpio/gpio-device-contexts">device context</a>.</p>
+
 <h3><code>RestoreContext</code> [in]</h3>
+
 <p>Whether the client driver should restore the GPIO controller to a previously saved hardware context. If TRUE, the hardware context should be restored. If FALSE, the hardware context should not be restored. For more information, see Remarks.</p>
+
 <h3><code>PreviousPowerState</code> [in]</h3>
+
 <p>The previous device power state. This parameter is a <a href="wdf_power_device_state" title="typedef enum _WDF_POWER_DEVICE_STATE {&#10;  WdfPowerDeviceInvalid = 0,&#10;  WdfPowerDeviceD0,&#10;  WdfPowerDeviceD1,&#10;  WdfPowerDeviceD2,&#10;  WdfPowerDeviceD3,&#10;  WdfPowerDeviceD3Final,&#10;  WdfPowerDevicePrepareForHibernation,&#10;  WdfPowerDeviceMaximum&#10;} WDF_POWER_DEVICE_STATE, *PWDF_POWER_DEVICE_STATE;">WDF_POWER_DEVICE_STATE</a> enumeration value that specifies the low-power state from which the device entered the D0 power state. The GPIO controller driver can use this information to determine how to configure the controller device so that it is ready to use.</p>
+
 <h2>Return value</h2>
+
 <p>The <em>CLIENT_StartController</em> function returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call is successful. Otherwise, it returns an appropriate error code.</p>
+
 <h2>Remarks</h2>
+
 <p>This callback function is implemented by the GPIO controller driver. The GPIO framework extension (GpioClx) calls this function to place the GPIO controller device in a known, initial state at system startup or when the device transitions from a low-power state to a working state. This callback function must perform any operations that are necessary after the device wakes from a low-power state, such as restoring any information that the driver needs after the device enters the D0 power state.</p>
+
 <p>Typically, a <em>CLIENT_StartController</em> callback function sets all the GPIO pins to their default state.</p>
+
 <p>To register your driver's <em>CLIENT_StartController</em> callback function, call the <a href="gpio_clx_registerclient" title="NTSTATUS GPIO_CLX_RegisterClient(&#10;  [in]      WDFDRIVER                        Driver,&#10;  [in, out] PGPIO_CLIENT_REGISTRATION_PACKET RegistrationPacket,&#10;  [in]      PUNICODE_STRING                  RegistryPath&#10;);">GPIO_CLX_RegisterClient</a> method. This method accepts, as an input parameter, a pointer to a <a href="gpio_client_registration_packet" title="typedef struct _GPIO_CLIENT_REGISTRATION_PACKET {&#10;  USHORT                                          Version;&#10;  USHORT                                          Size;&#10;  ULONG                                           Flags;&#10;  ULONG                                           ControllerContextSize;&#10;  ULONG64                                         Reserved;&#10;  PGPIO_CLIENT_PREPARE_CONTROLLER                 CLIENT_PrepareController;&#10;  PGPIO_CLIENT_RELEASE_CONTROLLER                 CLIENT_ReleaseController;&#10;  PGPIO_CLIENT_START_CONTROLLER                   CLIENT_StartController;&#10;  PGPIO_CLIENT_STOP_CONTROLLER                    CLIENT_StopController;&#10;  PGPIO_CLIENT_QUERY_CONTROLLER_BASIC_INFORMATION CLIENT_QueryControllerBasicInformation;&#10;  PGPIO_CLIENT_QUERY_SET_CONTROLLER_INFORMATION   CLIENT_QuerySetControllerInformation;&#10;  PGPIO_CLIENT_ENABLE_INTERRUPT                   CLIENT_EnableInterrupt;&#10;  PGPIO_CLIENT_DISABLE_INTERRUPT                  CLIENT_DisableInterrupt;&#10;  PGPIO_CLIENT_UNMASK_INTERRUPT                   CLIENT_UnmaskInterrupt;&#10;  PGPIO_CLIENT_MASK_INTERRUPTS                    CLIENT_MaskInterrupts;&#10;  PGPIO_CLIENT_QUERY_ACTIVE_INTERRUPTS            CLIENT_QueryActiveInterrupts;&#10;  PGPIO_CLIENT_CLEAR_ACTIVE_INTERRUPTS            CLIENT_ClearActiveInterrupts;&#10;  PGPIO_CLIENT_CONNECT_IO_PINS                    CLIENT_ConnectIoPins;&#10;  PGPIO_CLIENT_DISCONNECT_IO_PINS                 CLIENT_DisconnectIoPins;&#10;...">GPIO_CLIENT_REGISTRATION_PACKET</a> structure that contains a <em>CLIENT_StartController</em> function pointer.</p>
-<p>Although the <em>CLIENT_StartController</em> callback function is called at IRQL = PASSIVE_LEVEL, you should not make this function <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/creating-pageable-code-in-a-kmdf-driver">pageable</a>. The <em>CLIENT_StartController</em> callback is in the critical timing path for restoring power to the devices in the hardware platform and, for performance reasons, it should not be delayed by page faults.</p>
+
+<p>Although the <em>CLIENT_StartController</em> callback function is called at IRQL = PASSIVE_LEVEL, you should not make this function <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/creating-pageable-code-in-a-kmdf-driver">pageable</a>. The <em>CLIENT_StartController</em> callback is in the critical timing path for restoring power to the devices in the hardware platform and, for performance reasons, it should not be delayed by page faults.</p>
+
 <h4>Examples</h4>
-<p>To define a <em>CLIENT_StartController</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>To define a <em>CLIENT_StartController</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
 <p>For example, to define a <em>CLIENT_StartController</em> callback function that is named <code>MyEvtGpioStartController</code>, use the GPIO_CLIENT_START_CONTROLLER function type, as shown in this code example:</p>
+
 <pre><code>GPIO_CLIENT_START_CONTROLLER MyEvtGpioStartController;
 
 </code></pre>
+
 <p>Then, implement your callback function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 VOID
   MyEvtGpioStartController(
@@ -101,9 +123,13 @@ VOID
     )
 { ... }
 </code></pre>
-<p>The GPIO_CLIENT_START_CONTROLLER function type is defined in the Gpioclx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the GPIO_CLIENT_START_CONTROLLER function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about <em>Use_decl_annotations</em>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<p>The GPIO_CLIENT_START_CONTROLLER function type is defined in the Gpioclx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the GPIO_CLIENT_START_CONTROLLER function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="gpio_client_registration_packet" title="typedef struct _GPIO_CLIENT_REGISTRATION_PACKET {&#10;  USHORT                                          Version;&#10;  USHORT                                          Size;&#10;  ULONG                                           Flags;&#10;  ULONG                                           ControllerContextSize;&#10;  ULONG64                                         Reserved;&#10;  PGPIO_CLIENT_PREPARE_CONTROLLER                 CLIENT_PrepareController;&#10;  PGPIO_CLIENT_RELEASE_CONTROLLER                 CLIENT_ReleaseController;&#10;  PGPIO_CLIENT_START_CONTROLLER                   CLIENT_StartController;&#10;  PGPIO_CLIENT_STOP_CONTROLLER                    CLIENT_StopController;&#10;  PGPIO_CLIENT_QUERY_CONTROLLER_BASIC_INFORMATION CLIENT_QueryControllerBasicInformation;&#10;  PGPIO_CLIENT_QUERY_SET_CONTROLLER_INFORMATION   CLIENT_QuerySetControllerInformation;&#10;  PGPIO_CLIENT_ENABLE_INTERRUPT                   CLIENT_EnableInterrupt;&#10;  PGPIO_CLIENT_DISABLE_INTERRUPT                  CLIENT_DisableInterrupt;&#10;  PGPIO_CLIENT_UNMASK_INTERRUPT                   CLIENT_UnmaskInterrupt;&#10;  PGPIO_CLIENT_MASK_INTERRUPTS                    CLIENT_MaskInterrupts;&#10;  PGPIO_CLIENT_QUERY_ACTIVE_INTERRUPTS            CLIENT_QueryActiveInterrupts;&#10;  PGPIO_CLIENT_CLEAR_ACTIVE_INTERRUPTS            CLIENT_ClearActiveInterrupts;&#10;  PGPIO_CLIENT_CONNECT_IO_PINS                    CLIENT_ConnectIoPins;&#10;  PGPIO_CLIENT_DISCONNECT_IO_PINS                 CLIENT_DisconnectIoPins;&#10;...">GPIO_CLIENT_REGISTRATION_PACKET</a></p>
+
 <p><a href="gpio_clx_registerclient" title="NTSTATUS GPIO_CLX_RegisterClient(&#10;  [in]      WDFDRIVER                        Driver,&#10;  [in, out] PGPIO_CLIENT_REGISTRATION_PACKET RegistrationPacket,&#10;  [in]      PUNICODE_STRING                  RegistryPath&#10;);">GPIO_CLX_RegisterClient</a></p>
 <hr>
 <div class="ntdoc-description-links">

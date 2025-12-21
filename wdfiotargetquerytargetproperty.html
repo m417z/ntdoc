@@ -68,69 +68,104 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfIoTargetQueryTargetProperty function</h1>
+
 <h2>Description</h2>
+
 <p>[Applies to KMDF only]</p>
+
 <p>The <strong>WdfIoTargetQueryTargetProperty</strong> method retrieves a specified device property for a specified I/O target.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>IoTarget</code> [in]</h3>
+
 <p>A handle to a local or remote I/O target object that was obtained from a previous call to <a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a> or <a href="wdfiotargetcreate" title="NTSTATUS WdfIoTargetCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES IoTargetAttributes,&#10;  [out]          WDFIOTARGET            *IoTarget&#10;);">WdfIoTargetCreate</a>, or from a method that a specialized I/O target supplies.</p>
+
 <h3><code>DeviceProperty</code> [in]</h3>
+
 <p>A <a href="device_registry_property" title="typedef enum {&#10;  DevicePropertyDeviceDescription,&#10;  DevicePropertyHardwareID,&#10;  DevicePropertyCompatibleIDs,&#10;  DevicePropertyBootConfiguration,&#10;  DevicePropertyBootConfigurationTranslated,&#10;  DevicePropertyClassName,&#10;  DevicePropertyClassGuid,&#10;  DevicePropertyDriverKeyName,&#10;  DevicePropertyManufacturer,&#10;  DevicePropertyFriendlyName,&#10;  DevicePropertyLocationInformation,&#10;  DevicePropertyPhysicalDeviceObjectName,&#10;  DevicePropertyBusTypeGuid,&#10;  DevicePropertyLegacyBusType,&#10;  DevicePropertyBusNumber,&#10;  DevicePropertyEnumeratorName,&#10;  DevicePropertyAddress,&#10;  DevicePropertyUINumber,&#10;  DevicePropertyInstallState,&#10;...">DEVICE_REGISTRY_PROPERTY</a>-typed value that identifies the device property to be retrieved.</p>
+
 <h3><code>BufferLength</code> [in]</h3>
+
 <p>The size, in bytes, of the buffer that <em>PropertyBuffer</em> points to.</p>
+
 <h3><code>PropertyBuffer</code> [out, optional]</h3>
+
 <p>A pointer to a caller-allocated buffer that receives the requested device property information. This pointer can be <strong>NULL</strong> if <em>BufferLength</em> is zero.</p>
+
 <h3><code>ResultLength</code> [out]</h3>
+
 <p>A pointer to a location that, on return, contains the size, in bytes, of the information that <strong>WdfIoTargetQueryTargetProperty</strong> stored in the buffer that <em>PropertyBuffer</em> points to. If <strong>WdfIoTargetQueryTargetProperty</strong> returns STATUS_BUFFER_TOO_SMALL, this location receives the required buffer size.</p>
+
 <h2>Return value</h2>
+
 <p><strong>WdfIoTargetQueryTargetProperty</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, this method might return one of the following values:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_BUFFER_TOO_SMALL</strong></td>
-<td>The buffer that the <em>PropertyBuffer</em> parameter pointed to was too small to receive the requested information.</td>
+  <td><strong>STATUS_BUFFER_TOO_SMALL</strong></td>
+  <td>The buffer that the <em>PropertyBuffer</em> parameter pointed to was too small to receive the requested information.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INVALID_PARAMETER_2</strong></td>
-<td>The value that the <em>DeviceProperty</em> parameter specified was invalid.</td>
+  <td><strong>STATUS_INVALID_PARAMETER_2</strong></td>
+  <td>The value that the <em>DeviceProperty</em> parameter specified was invalid.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
-<td>The device's drivers have not yet reported the device's properties.</td>
+  <td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
+  <td>The device's drivers have not yet reported the device's properties.</td>
 </tr>
 </tbody>
 </table>
-<p>This method also might return other <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
-<p>A bug check occurs if the driver supplies an invalid object handle.</p>
-<h2>Remarks</h2>
-<p>Before drivers receive device property data, they typically call the <strong>WdfIoTargetQueryTargetProperty</strong> method to obtain the required buffer size. For some properties, the data size can change between when the required size is returned and when the driver calls <strong>WdfIoTargetQueryTargetProperty</strong> again. Therefore, drivers should call <strong>WdfIoTargetQueryTargetProperty</strong> inside a loop that executes until the return status is not STATUS_BUFFER_TOO_SMALL.</p>
-<p>Instead of calling <strong>WdfIoTargetQueryTargetProperty</strong>, your driver can call <a href="wdfiotargetallocandquerytargetproperty" title="NTSTATUS WdfIoTargetAllocAndQueryTargetProperty(&#10;  [in]           WDFIOTARGET              IoTarget,&#10;  [in]           DEVICE_REGISTRY_PROPERTY DeviceProperty,&#10;  [in]           POOL_TYPE                PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES   PropertyMemoryAttributes,&#10;  [out]          WDFMEMORY                *PropertyMemory&#10;);">WdfIoTargetAllocAndQueryTargetProperty</a>, which allocates a buffer and places the property information in the buffer.</p>
-<p>For more information about <strong>WdfIoTargetQueryTargetProperty</strong>, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/obtaining-information-about-a-general-i-o-target">Obtaining Information About a General I/O Target</a>.</p>
-<p>For more information about I/O targets, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-i-o-targets">Using I/O Targets</a>.</p>
-<h4>Examples</h4>
-<p>The following code example obtains a device's <strong>DevicePropertyUINumber</strong> property. The example calls <strong>WdfIoTargetQueryTargetProperty</strong> instead of <a href="wdfiotargetallocandquerytargetproperty" title="NTSTATUS WdfIoTargetAllocAndQueryTargetProperty(&#10;  [in]           WDFIOTARGET              IoTarget,&#10;  [in]           DEVICE_REGISTRY_PROPERTY DeviceProperty,&#10;  [in]           POOL_TYPE                PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES   PropertyMemoryAttributes,&#10;  [out]          WDFMEMORY                *PropertyMemory&#10;);">WdfIoTargetAllocAndQueryTargetProperty</a> because the length of a UI number is known.</p>
-<pre lang="cpp"><code><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> targetUINumber, resultLength;
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
 
-status = WdfIoTargetQueryTargetProperty(
-                                        target,
-                                        DevicePropertyUINumber,
-                                        sizeof(targetNumber),
-                                        &amp;targetUINumber,
-                                        &amp;resultLength
-                                        );
+<p>This method also might return other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
+
+<p>A bug check occurs if the driver supplies an invalid object handle.</p>
+
+<h2>Remarks</h2>
+
+<p>Before drivers receive device property data, they typically call the <strong>WdfIoTargetQueryTargetProperty</strong> method to obtain the required buffer size. For some properties, the data size can change between when the required size is returned and when the driver calls <strong>WdfIoTargetQueryTargetProperty</strong> again. Therefore, drivers should call <strong>WdfIoTargetQueryTargetProperty</strong> inside a loop that executes until the return status is not STATUS_BUFFER_TOO_SMALL.</p>
+
+<p>Instead of calling <strong>WdfIoTargetQueryTargetProperty</strong>, your driver can call <a href="wdfiotargetallocandquerytargetproperty" title="NTSTATUS WdfIoTargetAllocAndQueryTargetProperty(&#10;  [in]           WDFIOTARGET              IoTarget,&#10;  [in]           DEVICE_REGISTRY_PROPERTY DeviceProperty,&#10;  [in]           POOL_TYPE                PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES   PropertyMemoryAttributes,&#10;  [out]          WDFMEMORY                *PropertyMemory&#10;);">WdfIoTargetAllocAndQueryTargetProperty</a>, which allocates a buffer and places the property information in the buffer.</p>
+
+<p>For more information about <strong>WdfIoTargetQueryTargetProperty</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/obtaining-information-about-a-general-i-o-target">Obtaining Information About a General I/O Target</a>.</p>
+
+<p>For more information about I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-i-o-targets">Using I/O Targets</a>.</p>
+
+<h4>Examples</h4>
+
+<p>The following code example obtains a device's <strong>DevicePropertyUINumber</strong> property. The example calls <strong>WdfIoTargetQueryTargetProperty</strong> instead of <a href="wdfiotargetallocandquerytargetproperty" title="NTSTATUS WdfIoTargetAllocAndQueryTargetProperty(&#10;  [in]           WDFIOTARGET              IoTarget,&#10;  [in]           DEVICE_REGISTRY_PROPERTY DeviceProperty,&#10;  [in]           POOL_TYPE                PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES   PropertyMemoryAttributes,&#10;  [out]          WDFMEMORY                *PropertyMemory&#10;);">WdfIoTargetAllocAndQueryTargetProperty</a> because the length of a UI number is known.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">targetUINumber</span><span class="p">,</span><span class="w"> </span><span class="n">resultLength</span><span class="p">;</span>
+<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
+
+<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfIoTargetQueryTargetProperty</span><span class="p">(</span>
+<span class="w">                                        </span><span class="n">target</span><span class="p">,</span>
+<span class="w">                                        </span><span class="n">DevicePropertyUINumber</span><span class="p">,</span>
+<span class="w">                                        </span><span class="k">sizeof</span><span class="p">(</span><span class="n">targetNumber</span><span class="p">),</span>
+<span class="w">                                        </span><span class="o">&amp;</span><span class="n">targetUINumber</span><span class="p">,</span>
+<span class="w">                                        </span><span class="o">&amp;</span><span class="n">resultLength</span>
+<span class="w">                                        </span><span class="p">);</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
+
 <p><a href="device_registry_property" title="typedef enum {&#10;  DevicePropertyDeviceDescription,&#10;  DevicePropertyHardwareID,&#10;  DevicePropertyCompatibleIDs,&#10;  DevicePropertyBootConfiguration,&#10;  DevicePropertyBootConfigurationTranslated,&#10;  DevicePropertyClassName,&#10;  DevicePropertyClassGuid,&#10;  DevicePropertyDriverKeyName,&#10;  DevicePropertyManufacturer,&#10;  DevicePropertyFriendlyName,&#10;  DevicePropertyLocationInformation,&#10;  DevicePropertyPhysicalDeviceObjectName,&#10;  DevicePropertyBusTypeGuid,&#10;  DevicePropertyLegacyBusType,&#10;  DevicePropertyBusNumber,&#10;  DevicePropertyEnumeratorName,&#10;  DevicePropertyAddress,&#10;  DevicePropertyUINumber,&#10;  DevicePropertyInstallState,&#10;...">DEVICE_REGISTRY_PROPERTY</a></p>
+
 <p><a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a></p>
+
 <p><a href="wdfdevicequeryproperty" title="NTSTATUS WdfDeviceQueryProperty(&#10;  [in]  WDFDEVICE                Device,&#10;  [in]  DEVICE_REGISTRY_PROPERTY DeviceProperty,&#10;  [in]  ULONG                    BufferLength,&#10;  [out] PVOID                    PropertyBuffer,&#10;  [out] PULONG                   ResultLength&#10;);">WdfDeviceQueryProperty</a></p>
+
 <p><a href="wdfiotargetallocandquerytargetproperty" title="NTSTATUS WdfIoTargetAllocAndQueryTargetProperty(&#10;  [in]           WDFIOTARGET              IoTarget,&#10;  [in]           DEVICE_REGISTRY_PROPERTY DeviceProperty,&#10;  [in]           POOL_TYPE                PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES   PropertyMemoryAttributes,&#10;  [out]          WDFMEMORY                *PropertyMemory&#10;);">WdfIoTargetAllocAndQueryTargetProperty</a></p>
+
 <p><a href="wdfiotargetcreate" title="NTSTATUS WdfIoTargetCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES IoTargetAttributes,&#10;  [out]          WDFIOTARGET            *IoTarget&#10;);">WdfIoTargetCreate</a></p>
 <hr>
 <div class="ntdoc-description-links">

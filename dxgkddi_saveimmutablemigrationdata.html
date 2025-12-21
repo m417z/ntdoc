@@ -68,28 +68,47 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>KMD's <strong>DxgkDdiSaveImmutableMigrationData</strong> function saves immutable data for a live migration that is about to start.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>hAdapter</code></h3>
+
 <p>[in] A handle to a context block associated with a display adapter. The display miniport driver previously provided this handle to <em>Dxgkrnl</em> in the <strong>MiniportDeviceContext</strong> output parameter of the <strong><a href="dxgkddi_add_device" title="DXGKDDI_ADD_DEVICE DxgkddiAddDevice;&#10;&#10;NTSTATUS DxgkddiAddDevice(&#10;  [in]  IN_CONST_PDEVICE_OBJECT PhysicalDeviceObject,&#10;  [out] OUT_PPVOID MiniportDeviceContext&#10;)&#10;{...}">DXGKDDI_ADD_DEVICE</a></strong> function.</p>
+
 <h3><code>pArgs</code></h3>
+
 <p>[in/out] Pointer to a <strong><a href="dxgkarg_gpup_save_immutable_migration_data" title="typedef struct _DXGKARG_GPUP_SAVE_IMMUTABLE_MIGRATION_DATA {&#10;  UINT   vfIndex;&#10;  UINT64 *DataSize;&#10;  BYTE   *Data;&#10;} DXGKARG_GPUP_SAVE_IMMUTABLE_MIGRATION_DATA;">DXGKARG_GPUP_SAVE_IMMUTABLE_MIGRATION_DATA</a></strong> structure for information related to the call.</p>
+
 <h2>Return value</h2>
+
 <p><strong>DxgkDdiSaveImmutableMigrationData</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call is successful. Otherwise, it returns an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code.</p>
+
 <h2>Remarks</h2>
-<p>After calling KMD's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_preparelivemigration"><strong>DxgkDdiPrepareLiveMigration</strong></a> function, <em>Dxgkrnl</em> then calls<strong>DxgkDdiSaveImmutableMigrationData</strong> to gather information about the device to restore on the target side. This point is also an opportunity for the system to validate the configuration of the remote, so <strong>DxgkDdiSaveImmutableMigrationData</strong> should package up enough information to validate any hardware, firmware, or driver validation data that can detect the capability to move the VF over to the target configuration.</p>
+
+<p>After calling KMD's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_preparelivemigration"><strong>DxgkDdiPrepareLiveMigration</strong></a> function, <em>Dxgkrnl</em> then calls<strong>DxgkDdiSaveImmutableMigrationData</strong> to gather information about the device to restore on the target side. This point is also an opportunity for the system to validate the configuration of the remote, so <strong>DxgkDdiSaveImmutableMigrationData</strong> should package up enough information to validate any hardware, firmware, or driver validation data that can detect the capability to move the VF over to the target configuration.</p>
+
 <p>The driver should store data about the VF that won't change while it is alive that the target's KMD can use to help initialize the new VF. This data doesn't need to include the vGPU creation parameters, as those will be transferred in lower levels and used to create the vGPU using the normal DDI. This can include all data that is immutably tied to the VF, and doesn't all need to be restored on the target side. Data can be sent purely for validation purposes, which is a critical part of this interface.</p>
+
 <p><strong>DxgkDdiSaveImmutableMigrationData</strong> is called in the classic dynamic buffer pattern:</p>
+
 <ul>
 <li>On the first call, <strong>DataSize</strong> is set to 0 and <strong>Data</strong> to NULL. KMD should change <strong>DataSize</strong> to the total number of bytes it needs to store the immutable data.</li>
 <li><em>Dxgkrnl</em> creates a buffer of <strong>DataSize</strong> bytes and makes a second call with <strong>DataSize</strong> set to the value returned by KMD and <strong>Data</strong> pointing to the allocated buffer. <em>Dxgkrnl</em> controls the lifetime of this allocated memory after the call.</li>
 </ul>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_savemutablemigrationdata"><strong>DxgkDdiSaveMutableMigrationData</strong></a> is called at the end of a live migration to collect mutable data.</p>
-<p>For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/display/live-migration-on-gpup-devices">Live migration on GPU-P devices</a>.</p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_savemutablemigrationdata"><strong>DxgkDdiSaveMutableMigrationData</strong></a> is called at the end of a live migration to collect mutable data.</p>
+
+<p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/live-migration-on-gpup-devices">Live migration on GPU-P devices</a>.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="dxgkarg_gpup_save_immutable_migration_data" title="typedef struct _DXGKARG_GPUP_SAVE_IMMUTABLE_MIGRATION_DATA {&#10;  UINT   vfIndex;&#10;  UINT64 *DataSize;&#10;  BYTE   *Data;&#10;} DXGKARG_GPUP_SAVE_IMMUTABLE_MIGRATION_DATA;">DXGKARG_GPUP_SAVE_IMMUTABLE_MIGRATION_DATA</a></strong></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_preparelivemigration"><strong>DxgkDdiPrepareLiveMigration</strong></a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_savemutablemigrationdata"><strong>DxgkDdiSaveMutableMigrationData</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_preparelivemigration"><strong>DxgkDdiPrepareLiveMigration</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_savemutablemigrationdata"><strong>DxgkDdiSaveMutableMigrationData</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

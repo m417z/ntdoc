@@ -70,18 +70,26 @@ BOOLEAN MiniportMessageInterrupt(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>MINIPORT_MESSAGE_INTERRUPT callback function</h1>
+
 <h2>Description</h2>
+
 <p>NDIS calls the
 <em>MiniportMessageInterrupt</em> function when a NIC generates a message-based interrupt.</p>
+
 <p><strong>Note</strong> You must declare the function by using the <strong>MINIPORT_MESSAGE_INTERRUPT</strong> type. For more
 information, see the following Examples section.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>MiniportInterruptContext</code> [in]</h3>
+
 <p>A handle to a block of interrupt context information. The miniport driver supplied this handle in
 the
 <em>MiniportInterruptContext</em> parameter that the miniport driver passed to the
 <a href="ndismregisterinterruptex" title="NDIS_STATUS NdisMRegisterInterruptEx(&#10;  [in]  NDIS_HANDLE                              MiniportAdapterHandle,&#10;  [in]  NDIS_HANDLE                              MiniportInterruptContext,&#10;  [in]  PNDIS_MINIPORT_INTERRUPT_CHARACTERISTICS MiniportInterruptCharacteristics,&#10;  [out] PNDIS_HANDLE                             NdisInterruptHandle&#10;);">NdisMRegisterInterruptEx</a> function.</p>
+
 <h3><code>MessageId</code> [in]</h3>
+
 <p>A message-signaled interrupt (MSI) message identifier.
 <em>MessageId</em> is an index to an
 <a href="io_interrupt_message_info_entry" title="typedef struct _IO_INTERRUPT_MESSAGE_INFO_ENTRY {&#10;  PHYSICAL_ADDRESS    MessageAddress;&#10;  KAFFINITY           TargetProcessorSet;&#10;  PKINTERRUPT         InterruptObject;&#10;  ULONG               MessageData;&#10;  ULONG               Vector;&#10;  KIRQL               Irql;&#10;  KINTERRUPT_MODE     Mode;&#10;  KINTERRUPT_POLARITY Polarity;&#10;} IO_INTERRUPT_MESSAGE_INFO_ENTRY, *PIO_INTERRUPT_MESSAGE_INFO_ENTRY;">IO_INTERRUPT_MESSAGE_INFO_ENTRY</a> structure inside a
@@ -89,87 +97,112 @@ the
 <strong><a href="io_interrupt_message_info" title="typedef struct _IO_INTERRUPT_MESSAGE_INFO {&#10;  KIRQL                           UnifiedIrql;&#10;  ULONG                           MessageCount;&#10;  IO_INTERRUPT_MESSAGE_INFO_ENTRY MessageInfo[1];&#10;} IO_INTERRUPT_MESSAGE_INFO, *PIO_INTERRUPT_MESSAGE_INFO;">IO_INTERRUPT_MESSAGE_INFO</a></strong> structure at the
 <strong>MessageInfoTable</strong> member when the driver successfully registers for MSI with the
 <a href="ndismregisterinterruptex" title="NDIS_STATUS NdisMRegisterInterruptEx(&#10;  [in]  NDIS_HANDLE                              MiniportAdapterHandle,&#10;  [in]  NDIS_HANDLE                              MiniportInterruptContext,&#10;  [in]  PNDIS_MINIPORT_INTERRUPT_CHARACTERISTICS MiniportInterruptCharacteristics,&#10;  [out] PNDIS_HANDLE                             NdisInterruptHandle&#10;);">NdisMRegisterInterruptEx</a> function.</p>
+
 <h3><code>QueueDefaultInterruptDpc</code> [out]</h3>
+
 <p>A pointer to a Boolean variable that the miniport driver sets before returning from this call. A
 miniport driver sets this value to <strong>TRUE</strong> to indicate that the driver requires a DPC on the default
 (current) CPU. If set to <strong>TRUE</strong>, NDIS ignores the value of the
 <em>TargetProcessors</em> parameter. If set to <strong>FALSE</strong>, NDIS uses the value of the
 <em>TargetProcessors</em> parameter to schedule DPCs.</p>
+
 <h3><code>TargetProcessors</code> [out]</h3>
+
 <p>A bitmask that indicates the target processors for which NDIS should schedule a DPC. This bitmask represents the first 32 processors in processor group 0. Each bit in
 the bitmask identifies a CPU. If the caller sets bit 0, NDIS schedules a DPC for CPU 0. If the caller sets bit 1, NDIS
 schedules a DPC for CPU 1, and so on.</p>
+
 <p><strong>Note</strong> NDIS
 6.20 and later drivers should not use this parameter to schedule DPCs. Instead, they should set this parameter to zero and use the
 <a href="ndismqueuedpcex" title="KAFFINITY NdisMQueueDpcEx(&#10;  [in] IN NDIS_HANDLE     NdisInterruptHandle,&#10;  [in] IN ULONG           MessageId,&#10;  [in] IN PGROUP_AFFINITY TargetProcessors,&#10;  [in] IN PVOID           MiniportDpcContext&#10;);">NdisMQueueDpcEx</a> function to schedule DPCs.</p>
+
 <h2>Return value</h2>
+
 <p><em>MiniportMessageInterrupt</em> returns <strong>TRUE</strong> if the underlying NIC generated the interrupt; otherwise, it
 returns <strong>FALSE</strong>.</p>
+
 <h2>Remarks</h2>
+
 <p>Miniport drivers that register for message-signaled interrupts (MSI) support with the
 <a href="ndismregisterinterruptex" title="NDIS_STATUS NdisMRegisterInterruptEx(&#10;  [in]  NDIS_HANDLE                              MiniportAdapterHandle,&#10;  [in]  NDIS_HANDLE                              MiniportInterruptContext,&#10;  [in]  PNDIS_MINIPORT_INTERRUPT_CHARACTERISTICS MiniportInterruptCharacteristics,&#10;  [out] PNDIS_HANDLE                             NdisInterruptHandle&#10;);">NdisMRegisterInterruptEx</a> function
 must provide a
 <em>MiniportMessageInterrupt</em> function.</p>
+
 <p>A miniport driver should do as little work as possible in its
 <em>MiniportMessageInterrupt</em> function. It should defer I/O operations for the interrupts that the NIC
 generates to the
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_message_interrupt_dpc">MiniportMessageInterruptDPC</a> function.</p>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_message_interrupt_dpc">MiniportMessageInterruptDPC</a> function.</p>
+
 <p>When a NIC generates an MSI, NDIS calls the miniport driver's
 <em>MiniportMessageInterrupt</em> function.</p>
+
 <p><em>MiniportMessageInterrupt</em> saves required state information about the interrupt and defers as much of
 the I/O processing as possible to the
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_message_interrupt_dpc">MiniportMessageInterruptDPC</a> function.</p>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_message_interrupt_dpc">MiniportMessageInterruptDPC</a> function.</p>
+
 <p>If the miniport driver requests deferred procedure calls (DPCs) for a specified message, the miniport
 driver should disable all further interrupts for that message and reenable the interrupts after all the
 DPCs are finished.</p>
+
 <p>The miniport driver should set
 <em>QueueDefaultInterruptDpc</em> to <strong>TRUE</strong> to schedule a DPC for the default CPU only. The driver can do
 this, for example, if:</p>
+
 <ul>
 <li>The NIC generated the interrupt to signal the completion of a send operation or any other request
 that doesn't run on other CPUs.</li>
 <li>The NIC generated the interrupt to signal received data and the miniport driver cannot process
 received packets in separate DPCs.</li>
 <li>The interrupt indicates received packets and the miniport driver can process received packets in
-separate DPCs, but <a href="https://learn.microsoft.com/windows-hardware/drivers/network/ndis-receive-side-scaling2">receive side scaling (RSS)</a> is not enabled for the miniport driver. For more information, see
-<a href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-gen-receive-scale-capabilities">OID_GEN_RECEIVE_SCALE_CAPABILITIES</a> and
-<a href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-gen-receive-scale-parameters">OID_GEN_RECEIVE_SCALE_PARAMETERS</a>.</li>
+separate DPCs, but <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/ndis-receive-side-scaling2">receive side scaling (RSS)</a> is not enabled for the miniport driver. For more information, see
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-gen-receive-scale-capabilities">OID_GEN_RECEIVE_SCALE_CAPABILITIES</a> and
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-gen-receive-scale-parameters">OID_GEN_RECEIVE_SCALE_PARAMETERS</a>.</li>
 <li>Receive side scaling is enabled for the miniport driver, and the miniport driver can generate
 different messages on every receive queue.</li>
 </ul>
+
 <p>If a miniport driver processes received packets in separate DPCs, the miniport driver sets the
 <em>QueueDefaultInterruptDpc</em> parameter to <strong>FALSE</strong>. The miniport driver should set the
 <em>TargetProcessors</em> bit for the CPU that is associated with each nonempty receive queue. NDIS will
 schedule a DPC on each of the indicated CPUs in processor group 0.</p>
+
 <p>If
 <em>MiniportMessageInterrupt</em> shares resources for a specified message, such as NIC registers or state
 variables, with another
 <em>MiniportXxx</em> function that runs at a lower IRQL, that
 <em>MiniportXxx</em> function must call the
 <a href="ndismsynchronizewithinterruptex" title="BOOLEAN NdisMSynchronizeWithInterruptEx(&#10;  [in] NDIS_HANDLE                            NdisInterruptHandle,&#10;  [in] ULONG                                  MessageId,&#10;  [in] MINIPORT_SYNCHRONIZE_INTERRUPT_HANDLER SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeContext&#10;);">NdisMSynchronizeWithInterruptEx</a> function. This ensures that the driver's
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_synchronize_interrupt">MiniportSynchronizeMessageInterrupt</a> function accesses the shared resources in a synchronized and
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_synchronize_interrupt">MiniportSynchronizeMessageInterrupt</a> function accesses the shared resources in a synchronized and
 multiprocessor-safe manner.</p>
+
 <p>A miniport driver can call the
 <a href="ndismderegisterinterruptex" title="VOID NdisMDeregisterInterruptEx(&#10;  [in] NDIS_HANDLE NdisInterruptHandle&#10;);">NdisMDeregisterInterruptEx</a> function from its
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> or
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> function to release resources that it allocated with
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> or
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> function to release resources that it allocated with
 <a href="ndismregisterinterruptex" title="NDIS_STATUS NdisMRegisterInterruptEx(&#10;  [in]  NDIS_HANDLE                              MiniportAdapterHandle,&#10;  [in]  NDIS_HANDLE                              MiniportInterruptContext,&#10;  [in]  PNDIS_MINIPORT_INTERRUPT_CHARACTERISTICS MiniportInterruptCharacteristics,&#10;  [out] PNDIS_HANDLE                             NdisInterruptHandle&#10;);">NdisMRegisterInterruptEx</a>. After
 <strong><a href="ndismderegisterinterruptex" title="VOID NdisMDeregisterInterruptEx(&#10;  [in] NDIS_HANDLE NdisInterruptHandle&#10;);">NdisMDeregisterInterruptEx</a></strong> returns, NDIS does not call a miniport driver's
 <em>MiniportMessageInterrupt</em> or
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_message_interrupt_dpc">MiniportMessageInterruptDPC</a> function.</p>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_message_interrupt_dpc">MiniportMessageInterruptDPC</a> function.</p>
+
 <p>NDIS calls
 <em>MiniportMessageInterrupt</em> at the DIRQL of the MSI that the miniport driver registered in a previous
 call to
 <a href="ndismregisterinterruptex" title="NDIS_STATUS NdisMRegisterInterruptEx(&#10;  [in]  NDIS_HANDLE                              MiniportAdapterHandle,&#10;  [in]  NDIS_HANDLE                              MiniportInterruptContext,&#10;  [in]  PNDIS_MINIPORT_INTERRUPT_CHARACTERISTICS MiniportInterruptCharacteristics,&#10;  [out] PNDIS_HANDLE                             NdisInterruptHandle&#10;);">NdisMRegisterInterruptEx</a>. Therefore,
 <em>MiniportMessageInterrupt</em> must call the subset of the NDIS functions, such as the
-<strong>NdisRaw<em>Xxx</em></strong> or
-<strong>NdisRead/WriteRegister<em>Xxx</em></strong> functions, that are safe to call at any IRQL.</p>
+<strong>NdisRaw*Xxx</strong>* or
+<strong>NdisRead/WriteRegister*Xxx</strong>* functions, that are safe to call at any IRQL.</p>
+
 <h3>Examples</h3>
-<p>To define a <em>MiniportMessageInterrupt</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-<p>For example, to define a <em>MiniportMessageInterrupt</em> function that is named &quot;MyMessageInterrupt&quot;, use the <strong>MINIPORT_MESSAGE_INTERRUPT</strong> type as shown in this code example:</p>
+
+<p>To define a <em>MiniportMessageInterrupt</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>For example, to define a <em>MiniportMessageInterrupt</em> function that is named "MyMessageInterrupt", use the <strong>MINIPORT_MESSAGE_INTERRUPT</strong> type as shown in this code example:</p>
+
 <pre><code>MINIPORT_MESSAGE_INTERRUPT MyMessageInterrupt;
 </code></pre>
+
 <p>Then, implement your function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 BOOLEAN
  MyMessageInterrupt(
@@ -180,23 +213,40 @@ BOOLEAN
     )
   {...}
 </code></pre>
-<p>The <strong>MINIPORT_MESSAGE_INTERRUPT</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>MINIPORT_MESSAGE_INTERRUPT</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
-<p>For information about <em>Use_decl_annotations</em>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<p>The <strong>MINIPORT_MESSAGE_INTERRUPT</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>MINIPORT_MESSAGE_INTERRUPT</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
+
+<p>For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="io_interrupt_message_info" title="typedef struct _IO_INTERRUPT_MESSAGE_INFO {&#10;  KIRQL                           UnifiedIrql;&#10;  ULONG                           MessageCount;&#10;  IO_INTERRUPT_MESSAGE_INFO_ENTRY MessageInfo[1];&#10;} IO_INTERRUPT_MESSAGE_INFO, *PIO_INTERRUPT_MESSAGE_INFO;">IO_INTERRUPT_MESSAGE_INFO</a></p>
+
 <p><a href="io_interrupt_message_info_entry" title="typedef struct _IO_INTERRUPT_MESSAGE_INFO_ENTRY {&#10;  PHYSICAL_ADDRESS    MessageAddress;&#10;  KAFFINITY           TargetProcessorSet;&#10;  PKINTERRUPT         InterruptObject;&#10;  ULONG               MessageData;&#10;  ULONG               Vector;&#10;  KIRQL               Irql;&#10;  KINTERRUPT_MODE     Mode;&#10;  KINTERRUPT_POLARITY Polarity;&#10;} IO_INTERRUPT_MESSAGE_INFO_ENTRY, *PIO_INTERRUPT_MESSAGE_INFO_ENTRY;">IO_INTERRUPT_MESSAGE_INFO_ENTRY</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_message_interrupt_dpc">MiniportMessageInterruptDPC</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_synchronize_interrupt">MiniportSynchronizeMessageInterrupt</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_message_interrupt_dpc">MiniportMessageInterruptDPC</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_synchronize_interrupt">MiniportSynchronizeMessageInterrupt</a></p>
+
 <p><a href="ndis_miniport_interrupt_characteristics" title="typedef struct _NDIS_MINIPORT_INTERRUPT_CHARACTERISTICS {&#10;  NDIS_OBJECT_HEADER                     Header;&#10;  MINIPORT_ISR_HANDLER                   InterruptHandler;&#10;  MINIPORT_INTERRUPT_DPC_HANDLER         InterruptDpcHandler;&#10;  MINIPORT_DISABLE_INTERRUPT_HANDLER     DisableInterruptHandler;&#10;  MINIPORT_ENABLE_INTERRUPT_HANDLER      EnableInterruptHandler;&#10;  BOOLEAN                                MsiSupported;&#10;  BOOLEAN                                MsiSyncWithAllMessages;&#10;  MINIPORT_MSI_ISR_HANDLER               MessageInterruptHandler;&#10;  MINIPORT_MSI_INTERRUPT_DPC_HANDLER     MessageInterruptDpcHandler;&#10;  MINIPORT_DISABLE_MSI_INTERRUPT_HANDLER DisableMessageInterruptHandler;&#10;  MINIPORT_ENABLE_MSI_INTERRUPT_HANDLER  EnableMessageInterruptHandler;&#10;  NDIS_INTERRUPT_TYPE                    InterruptType;&#10;  PIO_INTERRUPT_MESSAGE_INFO             MessageInfoTable;&#10;} NDIS_MINIPORT_INTERRUPT_CHARACTERISTICS, *PNDIS_MINIPORT_INTERRUPT_CHARACTERISTICS;">NDIS_MINIPORT_INTERRUPT_CHARACTERISTICS</a></p>
+
 <p><a href="ndismderegisterinterruptex" title="VOID NdisMDeregisterInterruptEx(&#10;  [in] NDIS_HANDLE NdisInterruptHandle&#10;);">NdisMDeregisterInterruptEx</a></p>
+
 <p><a href="ndismqueuedpcex" title="KAFFINITY NdisMQueueDpcEx(&#10;  [in] IN NDIS_HANDLE     NdisInterruptHandle,&#10;  [in] IN ULONG           MessageId,&#10;  [in] IN PGROUP_AFFINITY TargetProcessors,&#10;  [in] IN PVOID           MiniportDpcContext&#10;);">NdisMQueueDpcEx</a></p>
+
 <p><a href="ndismregisterinterruptex" title="NDIS_STATUS NdisMRegisterInterruptEx(&#10;  [in]  NDIS_HANDLE                              MiniportAdapterHandle,&#10;  [in]  NDIS_HANDLE                              MiniportInterruptContext,&#10;  [in]  PNDIS_MINIPORT_INTERRUPT_CHARACTERISTICS MiniportInterruptCharacteristics,&#10;  [out] PNDIS_HANDLE                             NdisInterruptHandle&#10;);">NdisMRegisterInterruptEx</a></p>
+
 <p><a href="ndismsynchronizewithinterruptex" title="BOOLEAN NdisMSynchronizeWithInterruptEx(&#10;  [in] NDIS_HANDLE                            NdisInterruptHandle,&#10;  [in] ULONG                                  MessageId,&#10;  [in] MINIPORT_SYNCHRONIZE_INTERRUPT_HANDLER SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeContext&#10;);">NdisMSynchronizeWithInterruptEx</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-gen-receive-scale-capabilities">OID_GEN_RECEIVE_SCALE_CAPABILITIES</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-gen-receive-scale-parameters">OID_GEN_RECEIVE_SCALE_PARAMETERS</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/network/ndis-receive-side-scaling2">Receive Side Scaling (RSS)</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-gen-receive-scale-capabilities">OID_GEN_RECEIVE_SCALE_CAPABILITIES</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-gen-receive-scale-parameters">OID_GEN_RECEIVE_SCALE_PARAMETERS</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/ndis-receive-side-scaling2">Receive Side Scaling (RSS)</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

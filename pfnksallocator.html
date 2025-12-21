@@ -69,19 +69,33 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>PFNKSALLOCATOR callback function</h1>
+
 <h2>Description</h2>
+
 <p>Minidrivers can optionally supply a callback function of type <strong>PFNKSALLOCATOR</strong> as a parameter in calls to <a href="ksenableeventwithallocator" title="KSDDKAPI NTSTATUS KsEnableEventWithAllocator(&#10;  [in]           PIRP              Irp,&#10;  [in]           ULONG             EventSetsCount,&#10;  [in]           const KSEVENT_SET *EventSet,&#10;  [in, out]      PLIST_ENTRY       EventsList,&#10;  [in, optional] KSEVENTS_LOCKTYPE EventsFlags,&#10;  [in, optional] PVOID             EventsLock,&#10;  [in, optional] PFNKSALLOCATOR    Allocator,&#10;  [in, optional] ULONG             EventItemSize&#10;);">KsEnableEventWithAllocator</a>, <a href="kspropertyhandlerwithallocator" title="KSDDKAPI NTSTATUS KsPropertyHandlerWithAllocator(&#10;  [in]           PIRP                 Irp,&#10;  [in]           ULONG                PropertySetsCount,&#10;  [in]           const KSPROPERTY_SET *PropertySet,&#10;  [in, optional] PFNKSALLOCATOR       Allocator,&#10;  [in, optional] ULONG                PropertyItemSize&#10;);">KsPropertyHandlerWithAllocator</a>, and <a href="ksmethodhandlerwithallocator" title="KSDDKAPI NTSTATUS KsMethodHandlerWithAllocator(&#10;  [in]           PIRP               Irp,&#10;  [in]           ULONG              MethodSetsCount,&#10;  [in]           const KSMETHOD_SET *MethodSet,&#10;  [in, optional] PFNKSALLOCATOR     Allocator,&#10;  [in, optional] ULONG              MethodItemSize&#10;);">KsMethodHandlerWithAllocator</a>.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Irp</code> [in]</h3>
+
 <p>Specifies the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> for which the buffer allocation request is being made.</p>
+
 <h3><code>BufferSize</code> [in]</h3>
+
 <p>Specifies the size of buffer needed. This size covers all parameters in the request.</p>
+
 <h3><code>InputOperation</code> [in]</h3>
-<p>Set to <strong>TRUE</strong> if this is an input operation, meaning that on successful return, the Irp-&gt;IoStatus.Information field will contain the number of bytes to copy back to the original input buffer.</p>
+
+<p>Set to <strong>TRUE</strong> if this is an input operation, meaning that on successful return, the Irp->IoStatus.Information field will contain the number of bytes to copy back to the original input buffer.</p>
+
 <h2>Return value</h2>
+
 <p>Returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is handled. Otherwise returns an appropriate error code.</p>
+
 <h2>Remarks</h2>
+
 <p>Typically, pool memory is used for buffer allocations. This enables filters that pass event, property, and method queries directly to hardware to avoid extra data copies by allowing them to provide the buffer into which such data is placed by the standard handling functions. So, a filter may have memory blocks that have already been mapped to an adapter from which buffer allocations can occur.</p>
+
 <p>Since this memory presumably is not typical pool-allocated memory, the filter must perform buffer cleanup on completion of the Irp. This means that for input operations from usermode that are not synchronous, the allocator must allocate an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> for the destination buffer, probe and lock it, and retrieve a system address. This must be done in order to enable copying of the return data to the original buffer.</p>
 <hr>
 <div class="ntdoc-description-links">

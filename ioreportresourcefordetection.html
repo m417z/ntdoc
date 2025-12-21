@@ -70,59 +70,96 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>IoReportResourceForDetection</strong> routine claims hardware resources in the configuration registry for a legacy device.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>DriverObject</code> [in]</h3>
-<p>Pointer to the driver object that was input to the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a> routine.</p>
+
+<p>Pointer to the driver object that was input to the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a> routine.</p>
+
 <h3><code>DriverList</code> [in, optional]</h3>
+
 <p>Optionally points to a caller-supplied buffer that contains the driver's resource list, if the driver claims the same resources for all its devices. If the caller specifies a <em>DeviceList</em>, this parameter is ignored.</p>
+
 <h3><code>DriverListSize</code> [in, optional]</h3>
+
 <p>Specifies the size in bytes of an optional <em>DriverList</em>. If <em>DriverList</em> is <strong>NULL</strong>, this parameter should be zero.</p>
+
 <h3><code>DeviceObject</code> [in, optional]</h3>
+
 <p>Optionally points to the device object representing device for which the driver is attempting to claim resources.</p>
+
 <h3><code>DeviceList</code> [in, optional]</h3>
+
 <p>Optionally points to a caller-supplied buffer containing the device's resource list. If the driver claims the same resources for all its devices, the caller can specify a <em>DriverList</em> instead.</p>
+
 <h3><code>DeviceListSize</code> [in, optional]</h3>
+
 <p>Specifies the size in bytes of an optional <em>DeviceList</em>. If <em>DeviceList</em> is <strong>NULL</strong>, this parameter should be zero.</p>
+
 <h3><code>ConflictDetected</code> [out]</h3>
+
 <p>Pointer to a caller-supplied Boolean value that is set to <strong>TRUE</strong> on return if the resources are not available.</p>
+
 <h2>Return value</h2>
+
 <p><strong>IoReportResourceForDetection</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the resources are claimed. Possible error return values include the following.</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_CONFLICTING_ADDRESSES</strong></td>
-<td>The resources could not be claimed because they are already in use or are needed for a PnP-enumerable device.</td>
+  <td><strong>STATUS_CONFLICTING_ADDRESSES</strong></td>
+  <td>The resources could not be claimed because they are already in use or are needed for a PnP-enumerable device.</td>
 </tr>
 <tr>
-<td><strong>STATUS_UNSUCCESSFUL</strong></td>
-<td>The <em>DeviceList</em> or <em>DriverList</em> is invalid.</td>
+  <td><strong>STATUS_UNSUCCESSFUL</strong></td>
+  <td>The <em>DeviceList</em> or <em>DriverList</em> is invalid.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>This routine is for drivers that detect earlier hardware which cannot be enumerated by Plug and Play (PnP).</p>
-<p>If a driver supports only PnP hardware, it does no detection and therefore does not call <strong>IoReportResourceForDetection</strong>. The PnP system enumerates each PnP device, assigns resources to the device, and passes those resources to the device's drivers in an <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-start-device">IRP_MN_START_DEVICE</a> request.</p>
+
+<p>If a driver supports only PnP hardware, it does no detection and therefore does not call <strong>IoReportResourceForDetection</strong>. The PnP system enumerates each PnP device, assigns resources to the device, and passes those resources to the device's drivers in an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-start-device">IRP_MN_START_DEVICE</a> request.</p>
+
 <p>If a PnP driver supports legacy hardware, however, it must call <strong>IoReportResourceForDetection</strong> to claim hardware resources before it attempts to detect the device.</p>
+
 <p>Callers of this routine specify a <strong><a href="cm_resource_list" title="typedef struct _CM_RESOURCE_LIST {&#10;  ULONG                       Count;&#10;  CM_FULL_RESOURCE_DESCRIPTOR List[1];&#10;} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;">CM_RESOURCE_LIST</a></strong> in either a <em>DeviceList</em> or a <em>DriverList</em> that is allocated from paged memory and that consists of raw, untranslated resources. The caller is responsible for freeing the memory.</p>
+
 <p>A driver that can control more than one legacy card at the same time should claim the resources for each device against the device object for the respective device (using the <em>DeviceObject</em>, <em>DeviceList</em>, and <em>DeviceListSize</em> parameters). Such a driver must not claim these resources against their driver object.</p>
+
 <p>A <strong><a href="cm_resource_list" title="typedef struct _CM_RESOURCE_LIST {&#10;  ULONG                       Count;&#10;  CM_FULL_RESOURCE_DESCRIPTOR List[1];&#10;} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;">CM_RESOURCE_LIST</a></strong> contains two variable-sized arrays. Each array has a default size of one. If either array has more than one element, the caller must allocate memory dynamically to contain the additional elements. Only one <strong><a href="cm_partial_resource_descriptor" title="typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  USHORT Flags;&#10;  union {&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Generic;&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Port;&#10;    struct {&#10;#if ...&#10;      USHORT    Level;&#10;      USHORT    Group;&#10;#else&#10;      ULONG     Level;&#10;#endif&#10;...">CM_PARTIAL_RESOURCE_DESCRIPTOR</a></strong> can be part of each <strong><a href="cm_full_resource_descriptor" title="typedef struct _CM_FULL_RESOURCE_DESCRIPTOR {&#10;  INTERFACE_TYPE           InterfaceType;&#10;  ULONG                    BusNumber;&#10;  CM_PARTIAL_RESOURCE_LIST PartialResourceList;&#10;} CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;">CM_FULL_RESOURCE_DESCRIPTOR</a></strong> in the list, except for the last full resource descriptor in the <strong><a href="cm_resource_list" title="typedef struct _CM_RESOURCE_LIST {&#10;  ULONG                       Count;&#10;  CM_FULL_RESOURCE_DESCRIPTOR List[1];&#10;} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;">CM_RESOURCE_LIST</a></strong>, which can have additional partial resource descriptors in its array.</p>
+
 <p><strong>IoReportResourceForDetection</strong>, with the help of the PnP manager, determines whether the resources being requested conflict with resources that have already been claimed.</p>
+
 <p>If a conflict is detected, this routine sets the BOOLEAN at <em>ConflictDetected</em> to <strong>TRUE</strong> and returns STATUS_CONFLICTING_ADDRESSES.</p>
+
 <p>If no conflict is detected, this routine claims the resources, sets the BOOLEAN at <em>ConflictDetected</em> to <strong>FALSE</strong>, and returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
+
 <p>If this routine succeeds and the driver detects a legacy device, the driver reports the device to the PnP manager by calling <a href="ioreportdetecteddevice" title="NTSTATUS IoReportDetectedDevice(&#10;  [in]           PDRIVER_OBJECT                 DriverObject,&#10;  [in]           INTERFACE_TYPE                 LegacyBusType,&#10;  [in]           ULONG                          BusNumber,&#10;  [in]           ULONG                          SlotNumber,&#10;  [in, optional] PCM_RESOURCE_LIST              ResourceList,&#10;  [in, optional] PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements,&#10;  [in]           BOOLEAN                        ResourceAssigned,&#10;  [in, out]      PDEVICE_OBJECT                 *DeviceObject&#10;);">IoReportDetectedDevice</a>. In that call, the driver sets <em>ResourceAssigned</em> to <strong>TRUE</strong> so the PnP manager does not attempt to claim the resources again.</p>
+
 <p>When a driver no longer requires the resources claimed by a call to this routine, the driver calls this routine again with a <em>DriverList</em> or <em>DeviceList</em> with a <strong>Count</strong> of zero.</p>
+
 <p>If a driver claims resources on a device-specific basis for more than one device, the driver must call this routine for each such device.</p>
+
 <p>A driver can call this routine more than once for a given device. If one set of resources fails, the driver can call the routine again for the same device with a different set of resources. If a set of resources succeeds, the driver can call this routine again with a new list; the new list replaces the previous list.</p>
+
 <p>Callers of <strong>IoReportResourceForDetection</strong> must be running at IRQL = PASSIVE_LEVEL in the context of a system thread.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="cm_resource_list" title="typedef struct _CM_RESOURCE_LIST {&#10;  ULONG                       Count;&#10;  CM_FULL_RESOURCE_DESCRIPTOR List[1];&#10;} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;">CM_RESOURCE_LIST</a></strong></p>
+
 <p><a href="ioreportdetecteddevice" title="NTSTATUS IoReportDetectedDevice(&#10;  [in]           PDRIVER_OBJECT                 DriverObject,&#10;  [in]           INTERFACE_TYPE                 LegacyBusType,&#10;  [in]           ULONG                          BusNumber,&#10;  [in]           ULONG                          SlotNumber,&#10;  [in, optional] PCM_RESOURCE_LIST              ResourceList,&#10;  [in, optional] PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirements,&#10;  [in]           BOOLEAN                        ResourceAssigned,&#10;  [in, out]      PDEVICE_OBJECT                 *DeviceObject&#10;);">IoReportDetectedDevice</a></p>
 <hr>
 <div class="ntdoc-description-links">

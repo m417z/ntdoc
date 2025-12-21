@@ -68,62 +68,90 @@ VOID MiniportShutdown(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>MINIPORT_SHUTDOWN callback function</h1>
+
 <h2>Description</h2>
+
 <p>NDIS calls a miniport driver's
-<em>MiniportShutdownEx</em> function when the system is shutting down. This function puts the miniport into the Shutdown state, where no other callback can occur (including <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a>). For more information about miniport driver states, see <a href="https://learn.microsoft.com/windows-hardware/drivers/network/miniport-adapter-states-and-operations">Miniport Adapter States and Operations</a>.</p>
+<em>MiniportShutdownEx</em> function when the system is shutting down. This function puts the miniport into the Shutdown state, where no other callback can occur (including <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a>). For more information about miniport driver states, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/miniport-adapter-states-and-operations">Miniport Adapter States and Operations</a>.</p>
+
 <p><strong>Note</strong> You must declare the function by using the <strong>MINIPORT_SHUTDOWN</strong> type. For more
 information, see the following Examples section.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>MiniportAdapterContext</code> [in]</h3>
+
 <p>A handle to a context area that the miniport driver allocated in its
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> function.
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> function.
 The driver uses this context area to maintain state information for a miniport adapter.</p>
+
 <h3><code>ShutdownAction</code> [in]</h3>
+
 <p>The reason why NDIS called the shutdown function. The following values are valid:</p>
+
 <h4>NdisShutdownPowerOff</h4>
+
 <p>Indicates that NDIS called
 <em>MiniportShutdownEx</em> because the system is shutting down.</p>
+
 <h4>NdisShutdownBugCheck</h4>
+
 <p>Indicates that NDIS called
 <em>MiniportShutdownEx</em> because of a system error.</p>
+
 <h2>Remarks</h2>
+
 <p>A driver specifies the
 <em>MiniportShutdownEx</em> entry point when it calls the
 <a href="ndismregisterminiportdriver" title="NDIS_STATUS NdisMRegisterMiniportDriver(&#10;  [in]           PDRIVER_OBJECT                        DriverObject,&#10;  [in]           PUNICODE_STRING                       RegistryPath,&#10;  [in, optional] NDIS_HANDLE                           MiniportDriverContext,&#10;  [in]           PNDIS_MINIPORT_DRIVER_CHARACTERISTICS MiniportDriverCharacteristics,&#10;  [out]          PNDIS_HANDLE                          NdisMiniportDriverHandle&#10;);">NdisMRegisterMiniportDriver</a> function.</p>
+
 <p><em>MiniportShutdownEx</em> restores the miniport adapter to a known initial state (the
 state before NDIS called the miniport driver's
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> function for
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> function for
 the miniport adapter). This makes sure that the miniport adapter is in a known state and ready to be
 reinitialized when the computer is restarted after a system shutdown occurs for any reason, including an
 unrecoverable system error.</p>
+
 <p><em>MiniportShutdownEx</em> can read or write to I/O ports, memory-mapped device I/O
 space, or bus-specific configuration space by calling the
 <a href="ndismgetbusdata" title="ULONG NdisMGetBusData(&#10;        NDIS_HANDLE NdisMiniportHandle,&#10;  [in]  ULONG       WhichSpace,&#10;  [in]  ULONG       Offset,&#10;  [out] PVOID       Buffer,&#10;  [in]  ULONG       Length&#10;);">NdisMGetBusData</a> or
 <a href="ndismsetbusdata" title="ULONG NdisMSetBusData(&#10;       IN NDIS_HANDLE NdisMiniportHandle,&#10;  [in] IN ULONG       WhichSpace,&#10;  [in] IN ULONG       Offset,&#10;  [in] IN PVOID       Buffer,&#10;  [in] IN ULONG       Length&#10;);">NdisMSetBusData</a> function to disable a DMA
 engine, disable interrupts, or reset the hardware to a known state so the hardware can be restarted
 safely.</p>
+
 <p>If NDIS calls
 <em>MiniportShutdownEx</em> because of an unrecoverable error, the
 <em>ShutdownAction</em> parameter is set to
 <strong>NdisShutdownBugCheck</strong> and
 <em>MiniportShutdownEx</em> is running at a high IRQL. In this case, the miniport driver
 must not call any
-<strong>Ndis<em>Xxx</em></strong> functions except those functions that can be called at any IRQL.</p>
+<strong>Ndis*Xxx</strong>* functions except those functions that can be called at any IRQL.</p>
+
 <p>If NDIS calls
 <em>MiniportShutdownEx</em> because of a user-initiated shutdown,
 <em>MiniportShutdownEx</em> runs at IRQL = PASSIVE_LEVEL and the miniport driver can
 call other
-<strong>Ndis<em>Xxx</em></strong> functions.</p>
-<p>If NDIS calls <em>MiniportShutdownEx</em> because of an unrecoverable error, the <em>ShutdownAction</em> parameter is set to <strong>NdisShutdownBugCheck</strong> and <em>MiniportShutdownEx</em> is running at a high IRQL. In this case, the miniport driver must not call any <strong>Ndis<em>Xxx</em></strong> functions except those functions that can be called at any IRQL. Starting with NDIS 6.30 miniports, NDIS does not call <em>MiniportShutdownEx</em> during a BugCheck unless the miniport provides the <strong>NDIS_MINIPORT_ATTRIBUTES_REGISTER_BUGCHECK_CALLBACK</strong> flag in its adapter registration attributes.</p>
+<strong>Ndis*Xxx</strong>* functions.</p>
+
+<p>If NDIS calls <em>MiniportShutdownEx</em> because of an unrecoverable error, the <em>ShutdownAction</em> parameter is set to <strong>NdisShutdownBugCheck</strong> and <em>MiniportShutdownEx</em> is running at a high IRQL. In this case, the miniport driver must not call any <strong>Ndis*Xxx</strong>* functions except those functions that can be called at any IRQL. Starting with NDIS 6.30 miniports, NDIS does not call <em>MiniportShutdownEx</em> during a BugCheck unless the miniport provides the <strong>NDIS_MINIPORT_ATTRIBUTES_REGISTER_BUGCHECK_CALLBACK</strong> flag in its adapter registration attributes.</p>
+
 <p>If the value of <em>ShutdownAction</em> is <strong>NdisShutdownPowerOff</strong>, the miniport driver may optionally free its resources. However, this is neither required nor encouraged, because the system shutdown makes it unnecessary.</p>
+
 <p>If the value of <em>ShutdownAction</em> is <strong>NdisShutdownBugCheck</strong>, the miniport driver must not free its resources.</p>
-<p><strong>Important</strong> If <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> causes a system error, then the miniport driver will see a nested call to <em>MiniportShutdownEx</em> with <em>ShutdownAction</em><strong>NdisShutdownBugCheck</strong>. In this case, <em>MiniportShutdownEx</em> should return immediately without doing any work.</p>
+
+<p><strong>Important</strong> If <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> causes a system error, then the miniport driver will see a nested call to <em>MiniportShutdownEx</em> with <em>ShutdownAction</em><strong>NdisShutdownBugCheck</strong>. In this case, <em>MiniportShutdownEx</em> should return immediately without doing any work.</p>
+
 <h3>Examples</h3>
-<p>To define a <em>MiniportShutdownEx</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-<p>For example, to define a <em>MiniportShutdownEx</em> function that is named &quot;MyShutdownEx&quot;, use the <strong>MINIPORT_SHUTDOWN</strong> type as shown in this code example:</p>
+
+<p>To define a <em>MiniportShutdownEx</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>For example, to define a <em>MiniportShutdownEx</em> function that is named "MyShutdownEx", use the <strong>MINIPORT_SHUTDOWN</strong> type as shown in this code example:</p>
+
 <pre><code>MINIPORT_SHUTDOWN MyShutdownEx;
 </code></pre>
+
 <p>Then, implement your function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 VOID
  MyShutdownEx(
@@ -132,15 +160,25 @@ VOID
     )
   {...}
 </code></pre>
-<p>The <strong>MINIPORT_SHUTDOWN</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>MINIPORT_SHUTDOWN</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
-<p>For information about <em>Use_decl_annotations</em>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<p>The <strong>MINIPORT_SHUTDOWN</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>MINIPORT_SHUTDOWN</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
+
+<p>For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/network/adapter-states-of-a-miniport-driver">Adapter States of a Miniport Driver</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/network/miniport-adapter-shutdown">Miniport Adapter Shutdown</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/network/miniport-adapter-states-and-operations">Miniport Adapter States and Operations</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/adapter-states-of-a-miniport-driver">Adapter States of a Miniport Driver</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/miniport-adapter-shutdown">Miniport Adapter Shutdown</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/miniport-adapter-states-and-operations">Miniport Adapter States and Operations</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a></p>
+
 <p><a href="ndismgetbusdata" title="ULONG NdisMGetBusData(&#10;        NDIS_HANDLE NdisMiniportHandle,&#10;  [in]  ULONG       WhichSpace,&#10;  [in]  ULONG       Offset,&#10;  [out] PVOID       Buffer,&#10;  [in]  ULONG       Length&#10;);">NdisMGetBusData</a></p>
+
 <p><a href="ndismregisterminiportdriver" title="NDIS_STATUS NdisMRegisterMiniportDriver(&#10;  [in]           PDRIVER_OBJECT                        DriverObject,&#10;  [in]           PUNICODE_STRING                       RegistryPath,&#10;  [in, optional] NDIS_HANDLE                           MiniportDriverContext,&#10;  [in]           PNDIS_MINIPORT_DRIVER_CHARACTERISTICS MiniportDriverCharacteristics,&#10;  [out]          PNDIS_HANDLE                          NdisMiniportDriverHandle&#10;);">NdisMRegisterMiniportDriver</a></p>
+
 <p><a href="ndismsetbusdata" title="ULONG NdisMSetBusData(&#10;       IN NDIS_HANDLE NdisMiniportHandle,&#10;  [in] IN ULONG       WhichSpace,&#10;  [in] IN ULONG       Offset,&#10;  [in] IN PVOID       Buffer,&#10;  [in] IN ULONG       Length&#10;);">NdisMSetBusData</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -65,32 +65,59 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>KsPinGetTrailingEdgeStreamPointer function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>KsPinGetTrailingEdgeStreamPointer</strong> function acquires the trailing edge stream pointer for the queue associated with the specified pin.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Pin</code> [in]</h3>
+
 <p>A pointer to the <a href="kspin" title="typedef struct _KSPIN {&#10;  const KSPIN_DESCRIPTOR_EX *Descriptor;&#10;  KSOBJECT_BAG              Bag;&#10;  PVOID                     Context;&#10;  ULONG                     Id;&#10;  KSPIN_COMMUNICATION       Communication;&#10;  BOOLEAN                   ConnectionIsExternal;&#10;  KSPIN_INTERFACE           ConnectionInterface;&#10;  KSPIN_MEDIUM              ConnectionMedium;&#10;  KSPRIORITY                ConnectionPriority;&#10;  PKSDATAFORMAT             ConnectionFormat;&#10;  PKSMULTIPLE_ITEM          AttributeList;&#10;  ULONG                     StreamHeaderSize;&#10;  KSPIN_DATAFLOW            DataFlow;&#10;  KSSTATE                   DeviceState;&#10;  KSRESET                   ResetState;&#10;  KSSTATE                   ClientState;&#10;} KSPIN, *PKSPIN;">KSPIN</a> structure for whose queue to return the trailing edge stream pointer.</p>
+
 <h3><code>State</code> [in]</h3>
+
 <p>This parameter specifies the state in which to acquire the trailing edge stream pointer. Can be one of the following:</p>
+
 <h4>KSSTREAM_POINTER_STATE_UNLOCKED</h4>
+
 <p>Acquire the leading edge stream pointer regardless of whether it references a data frame or not.</p>
+
 <p>No attempts can be made to access any data associated with the pointer until the pointer is locked. Also note that frames associated with an unlocked stream pointer can be canceled.</p>
+
 <h4>KSSTREAM_POINTER_STATE_LOCKED</h4>
+
 <p>Acquire and lock the leading edge stream pointer. If no data frame is associated with the stream pointer, return <strong>NULL</strong>. If a non<strong>null</strong> pointer is returned, it is a locked stream pointer and has a data frame associated with it. Frames associated with a locked stream pointer <em>cannot</em> be canceled.</p>
+
 <h2>Return value</h2>
+
 <p><strong>KsPinGetTrailingEdgeStreamPointer</strong> returns either a pointer to a <a href="ksstream_pointer" title="typedef struct _KSSTREAM_POINTER {&#10;  PVOID                    Context;&#10;  PKSPIN                   Pin;&#10;  PKSSTREAM_HEADER         StreamHeader;&#10;  PKSSTREAM_POINTER_OFFSET Offset;&#10;  KSSTREAM_POINTER_OFFSET  OffsetIn;&#10;  KSSTREAM_POINTER_OFFSET  OffsetOut;&#10;} KSSTREAM_POINTER, *PKSSTREAM_POINTER;">KSSTREAM_POINTER</a> structure representing the trailing edge stream pointer or <strong>NULL</strong>. A return value of <strong>NULL</strong> can indicate that there is no trailing edge for the queue associated with the pin. In this case, the pin descriptor probably does not specify that the pin should have a distinct trailing edge. Alternatively, <strong>NULL</strong> can indicate that there is no queue associated with the pin. In this case, the pin in question does not use the standard transport mechanism. A return value of <strong>NULL</strong> can also indicate that an attempt to lock the trailing edge failed. In other words, there is no data frame currently associated with the leading edge.</p>
+
 <h2>Remarks</h2>
+
 <p>The trailing edge stream pointer is a special pointer into the data stream that exists if and only if the pin descriptor for the pin specifies a distinct trailing edge. If this pointer exists, it points to the oldest data in the queue unless specifically advanced by a <strong><a href="ksstreampointeradvance" title="KSDDKAPI NTSTATUS KsStreamPointerAdvance(&#10;  [in] PKSSTREAM_POINTER StreamPointer&#10;);">KsStreamPointerAdvance</a></strong><em>Xxx</em> or a <a href="ksstreampointerunlock" title="void KsStreamPointerUnlock(&#10;  [in] PKSSTREAM_POINTER StreamPointer,&#10;  [in] BOOLEAN           Eject&#10;);">KsStreamPointerUnlock</a> call. Older data can exist in the queue also if cloned stream pointers exist for frames older than the one pointed to by the trailing edge.</p>
+
 <p>Data frames that reside in the window between the leading edge stream pointer and the trailing edge stream pointer have at least one reference count and thus will not leave the queue and be completed until they exit the window as a result of the advancement of the trailing edge. Note that frames between the leading edge and trailing edge are <strong>not</strong> locked by default and therefore can be canceled.</p>
-<p><strong>KsPinGetTrailingEdgeStreamPointer</strong> is mostly of use in pin-centric filters. For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/stream/pin-centric-processing">Pin-Centric Processing</a> and <a href="https://learn.microsoft.com/windows-hardware/drivers/stream/filter-centric-processing">Filter-Centric Processing</a>.</p>
+
+<p><strong>KsPinGetTrailingEdgeStreamPointer</strong> is mostly of use in pin-centric filters. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/stream/pin-centric-processing">Pin-Centric Processing</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/stream/filter-centric-processing">Filter-Centric Processing</a>.</p>
+
 <p><strong>KsPinGetTrailingEdgeStreamPointer</strong> will not work unless the pin descriptor for the pin specifies that the queue is to have a distinct trailing edge by setting the KSPIN_FLAG_DISTINCT_TRAILING_EDGE flag.</p>
+
 <h2>See also</h2>
+
 <p><a href="kspingetleadingedgestreampointer" title="KSDDKAPI PKSSTREAM_POINTER KsPinGetLeadingEdgeStreamPointer(&#10;  [in] PKSPIN                 Pin,&#10;  [in] KSSTREAM_POINTER_STATE State&#10;);">KsPinGetLeadingEdgeStreamPointer</a></p>
+
 <p><a href="ksstreampointeradvance" title="KSDDKAPI NTSTATUS KsStreamPointerAdvance(&#10;  [in] PKSSTREAM_POINTER StreamPointer&#10;);">KsStreamPointerAdvance</a></p>
+
 <p><a href="ksstreampointeradvanceoffsetsandunlock" title="void KsStreamPointerAdvanceOffsetsAndUnlock(&#10;  [in] PKSSTREAM_POINTER StreamPointer,&#10;  [in] ULONG             InUsed,&#10;  [in] ULONG             OutUsed,&#10;  [in] BOOLEAN           Eject&#10;);">KsStreamPointerAdvanceOffsetsAndUnlock</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/ks-ksstreampointerclone">KsStreamPointerClone</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/ks-ksstreampointerclone">KsStreamPointerClone</a></p>
+
 <p><a href="ksstreampointerdelete" title="void KsStreamPointerDelete(&#10;  [in] PKSSTREAM_POINTER StreamPointer&#10;);">KsStreamPointerDelete</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/ks-ksstreampointerlock">KsStreamPointerLock</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/ks-ksstreampointerlock">KsStreamPointerLock</a></p>
+
 <p><a href="ksstreampointerunlock" title="void KsStreamPointerUnlock(&#10;  [in] PKSSTREAM_POINTER StreamPointer,&#10;  [in] BOOLEAN           Eject&#10;);">KsStreamPointerUnlock</a></p>
 <hr>
 <div class="ntdoc-description-links">

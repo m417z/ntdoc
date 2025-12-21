@@ -69,19 +69,33 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>EVT_ACX_CIRCUIT_POWER_DOWN</strong> callback is used by the driver to add functionality in the power down path of a ACXCIRCUIT object.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Device</code></h3>
-<p>A WDFDEVICE object (described in <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/summary-of-framework-objects">WDF - Summary of Framework Objects</a>) associated with the specified ACXCIRCUIT.</p>
+
+<p>A WDFDEVICE object (described in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/summary-of-framework-objects">WDF - Summary of Framework Objects</a>) associated with the specified ACXCIRCUIT.</p>
+
 <h3><code>Circuit</code></h3>
-<p>The ACXCIRCUIT object (described in <a href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">Summary of ACX Objects</a>) powered down.</p>
+
+<p>The ACXCIRCUIT object (described in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">Summary of ACX Objects</a>) powered down.</p>
+
 <h3><code>TargetState</code></h3>
+
 <p>A <a href="wdf_power_device_state" title="typedef enum _WDF_POWER_DEVICE_STATE {&#10;  WdfPowerDeviceInvalid = 0,&#10;  WdfPowerDeviceD0,&#10;  WdfPowerDeviceD1,&#10;  WdfPowerDeviceD2,&#10;  WdfPowerDeviceD3,&#10;  WdfPowerDeviceD3Final,&#10;  WdfPowerDevicePrepareForHibernation,&#10;  WdfPowerDeviceMaximum&#10;} WDF_POWER_DEVICE_STATE, *PWDF_POWER_DEVICE_STATE;">WDF_POWER_DEVICE_STATE</a> typed enumerator that identifies the device power state that the device is about to enter.</p>
+
 <h2>Return value</h2>
-<p>Returns <code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> if the call was successful. Otherwise, it returns an appropriate error code. For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">Using NTSTATUS Values</a>.</p>
+
+<p>Returns <code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> if the call was successful. Otherwise, it returns an appropriate error code. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">Using NTSTATUS Values</a>.</p>
+
 <h2>Remarks</h2>
+
 <p>To register an EvtAcxCircuitPrepareHardware callback function, a driver must call <a href="acxcircuitinitsetacxcircuitpnppowercallbacks" title="VOID AcxCircuitInitSetAcxCircuitPnpPowerCallbacks(&#10;  PACXCIRCUIT_INIT                CircuitInit,&#10;  PACX_CIRCUIT_PNPPOWER_CALLBACKS EvtPnpPowerCallbacks&#10;);">AcxCircuitInitSetAcxCircuitPnpPowerCallbacks</a>.</p>
+
 <p>If the driver has registered an EvtCircuitPowerDown callback function, the ACX framework calls the function each time one of the driver's devices leaves its working (D0) state. A device leaves the D0 state when one of the following occurs:</p>
+
 <ul>
 <li>The system and all of its devices are about to leave their working states and enter a low-power state.</li>
 <li>The device is about to enter a low-power state because it is idle, if the device supports low-power idle.</li>
@@ -89,71 +103,86 @@
 <li>A user has indicated, typically by means of an application's user interface, that he or she wants to remove the device.</li>
 <li>The framework also calls the EvtCircuitPowerDown callback function after a device has been removed unexpectedly (surprise-removed).</li>
 </ul>
+
 <p>For more information about when the framework calls this callback function, see PnP and Power Management Scenarios.</p>
+
 <p>Unless the device has been surprise-removed, the ACX framework calls this callback function immediately after it disables the device's interrupts, but before the device's power is reduced from D0 and before WDF invokes the driver's EvtDeviceD0Exit callback on the associated devices. The TargetState parameter identifies the device power state that the device is about to enter.</p>
+
 <p>The EvtCircuitPowerDown callback function must perform any operations that are necessary before the ACXCIRCUT's hardware enters the specified low-power state, such as saving any information that the driver will need later to restore the ACXCIRCUIT's hardware to its D0 power state.</p>
+
 <p>If TargetState is WdfPowerDeviceD3Final, you should assume that the system is being turned off, the associated device is about to be removed, or a resource rebalance is in progress. If your driver must save information, it should write it to disk or some other permanent storage medium.</p>
+
 <p>For more information about drivers that provide this callback function, see
-<a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/supporting-pnp-and-power-management-in-function-drivers">Supporting PnP and Power Management in Function Driver</a>.</p>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/supporting-pnp-and-power-management-in-function-drivers">Supporting PnP and Power Management in Function Driver</a>.</p>
+
 <h3>Example</h3>
+
 <p>Example usage is shown below. This example shows stopping some timer instances in test code when the circuit powered down.</p>
-<pre lang="cpp"><code>EVT_ACX_CIRCUIT_POWER_DOWN          CodecR_EvtCircuitPowerDown;
 
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-CreateCircuit()
-{
-    ...
-    <a href="acx_circuit_pnppower_callbacks_init" title="VOID ACX_CIRCUIT_PNPPOWER_CALLBACKS_INIT(&#10;  PACX_CIRCUIT_PNPPOWER_CALLBACKS PnpPowerCallbacks&#10;);">ACX_CIRCUIT_PNPPOWER_CALLBACKS_INIT</a>(&amp;powerCallbacks);
-    powerCallbacks.EvtAcxCircuitPowerUp = CodecR_EvtCircuitPowerUp;
-    powerCallbacks.EvtAcxCircuitPowerDown = CodecR_EvtCircuitPowerDown;
-    <a href="acxcircuitinitsetacxcircuitpnppowercallbacks" title="VOID AcxCircuitInitSetAcxCircuitPnpPowerCallbacks(&#10;  PACXCIRCUIT_INIT                CircuitInit,&#10;  PACX_CIRCUIT_PNPPOWER_CALLBACKS EvtPnpPowerCallbacks&#10;);">AcxCircuitInitSetAcxCircuitPnpPowerCallbacks</a>(circuitInit, &amp;powerCallbacks);
-    ...
-}
+<div class="codehilite">
+<pre><span></span><code><span class="n">EVT_ACX_CIRCUIT_POWER_DOWN</span><span class="w">          </span><span class="n">CodecR_EvtCircuitPowerDown</span><span class="p">;</span>
 
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-CodecR_EvtCircuitPowerDown (
-    _In_ WDFDEVICE  Device,
-    _In_ ACXCIRCUIT Circuit,
-    _In_ <a href="wdf_power_device_state" title="typedef enum _WDF_POWER_DEVICE_STATE {&#10;  WdfPowerDeviceInvalid = 0,&#10;  WdfPowerDeviceD0,&#10;  WdfPowerDeviceD1,&#10;  WdfPowerDeviceD2,&#10;  WdfPowerDeviceD3,&#10;  WdfPowerDeviceD3Final,&#10;  WdfPowerDevicePrepareForHibernation,&#10;  WdfPowerDeviceMaximum&#10;} WDF_POWER_DEVICE_STATE, *PWDF_POWER_DEVICE_STATE;">WDF_POWER_DEVICE_STATE</a> TargetState
-    )
-{
-    UNREFERENCED_PARAMETER(Device);
-    UNREFERENCED_PARAMETER(TargetState);
+<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="nf">CreateCircuit</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="n"><a href="acx_circuit_pnppower_callbacks_init" title="VOID ACX_CIRCUIT_PNPPOWER_CALLBACKS_INIT(&#10;  PACX_CIRCUIT_PNPPOWER_CALLBACKS PnpPowerCallbacks&#10;);">ACX_CIRCUIT_PNPPOWER_CALLBACKS_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">powerCallbacks</span><span class="p">);</span>
+<span class="w">    </span><span class="n">powerCallbacks</span><span class="p">.</span><span class="n">EvtAcxCircuitPowerUp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CodecR_EvtCircuitPowerUp</span><span class="p">;</span>
+<span class="w">    </span><span class="n">powerCallbacks</span><span class="p">.</span><span class="n">EvtAcxCircuitPowerDown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CodecR_EvtCircuitPowerDown</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="acxcircuitinitsetacxcircuitpnppowercallbacks" title="VOID AcxCircuitInitSetAcxCircuitPnpPowerCallbacks(&#10;  PACXCIRCUIT_INIT                CircuitInit,&#10;  PACX_CIRCUIT_PNPPOWER_CALLBACKS EvtPnpPowerCallbacks&#10;);">AcxCircuitInitSetAcxCircuitPnpPowerCallbacks</a></span><span class="p">(</span><span class="n">circuitInit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">powerCallbacks</span><span class="p">);</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="p">}</span>
 
-    CODEC_RENDER_CIRCUIT_CONTEXT *  circuitCtx;
-    CODEC_MUTE_ELEMENT_CONTEXT *    muteCtx;
-    CODEC_VOLUME_ELEMENT_CONTEXT *  volumeCtx;
+<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="nf">CodecR_EvtCircuitPowerDown</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="w">  </span><span class="n">Device</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">ACXCIRCUIT</span><span class="w"> </span><span class="n">Circuit</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="wdf_power_device_state" title="typedef enum _WDF_POWER_DEVICE_STATE {&#10;  WdfPowerDeviceInvalid = 0,&#10;  WdfPowerDeviceD0,&#10;  WdfPowerDeviceD1,&#10;  WdfPowerDeviceD2,&#10;  WdfPowerDeviceD3,&#10;  WdfPowerDeviceD3Final,&#10;  WdfPowerDevicePrepareForHibernation,&#10;  WdfPowerDeviceMaximum&#10;} WDF_POWER_DEVICE_STATE, *PWDF_POWER_DEVICE_STATE;">WDF_POWER_DEVICE_STATE</a></span><span class="w"> </span><span class="n">TargetState</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">Device</span><span class="p">);</span>
+<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">TargetState</span><span class="p">);</span>
 
-    PAGED_CODE();
+<span class="w">    </span><span class="n">CODEC_RENDER_CIRCUIT_CONTEXT</span><span class="w"> </span><span class="o">*</span><span class="w">  </span><span class="n">circuitCtx</span><span class="p">;</span>
+<span class="w">    </span><span class="n">CODEC_MUTE_ELEMENT_CONTEXT</span><span class="w"> </span><span class="o">*</span><span class="w">    </span><span class="n">muteCtx</span><span class="p">;</span>
+<span class="w">    </span><span class="n">CODEC_VOLUME_ELEMENT_CONTEXT</span><span class="w"> </span><span class="o">*</span><span class="w">  </span><span class="n">volumeCtx</span><span class="p">;</span>
 
-    // for testing.
-    circuitCtx = GetRenderCircuitContext(Circuit);
-    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(circuitCtx);
+<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
 
-    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(circuitCtx-&gt;MuteElement);
-    muteCtx = GetCodecMuteElementContext(circuitCtx-&gt;MuteElement);
-    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(muteCtx);
+<span class="w">    </span><span class="c1">// for testing.</span>
+<span class="w">    </span><span class="n">circuitCtx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetRenderCircuitContext</span><span class="p">(</span><span class="n">Circuit</span><span class="p">);</span>
+<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">circuitCtx</span><span class="p">);</span>
 
-    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(muteCtx-&gt;Timer);
-    <a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a>(muteCtx-&gt;Timer, TRUE);
+<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">circuitCtx</span><span class="o">-&gt;</span><span class="n">MuteElement</span><span class="p">);</span>
+<span class="w">    </span><span class="n">muteCtx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetCodecMuteElementContext</span><span class="p">(</span><span class="n">circuitCtx</span><span class="o">-&gt;</span><span class="n">MuteElement</span><span class="p">);</span>
+<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">muteCtx</span><span class="p">);</span>
 
-    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(circuitCtx-&gt;VolumeElement);
-    volumeCtx = GetCodecVolumeElementContext(circuitCtx-&gt;VolumeElement);
-    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(volumeCtx);
+<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">muteCtx</span><span class="o">-&gt;</span><span class="n">Timer</span><span class="p">);</span>
+<span class="w">    </span><span class="n"><a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a></span><span class="p">(</span><span class="n">muteCtx</span><span class="o">-&gt;</span><span class="n">Timer</span><span class="p">,</span><span class="w"> </span><span class="n">TRUE</span><span class="p">);</span>
 
-    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(volumeCtx-&gt;Timer);
-    <a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a>(volumeCtx-&gt;Timer, TRUE);
+<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">circuitCtx</span><span class="o">-&gt;</span><span class="n">VolumeElement</span><span class="p">);</span>
+<span class="w">    </span><span class="n">volumeCtx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetCodecVolumeElementContext</span><span class="p">(</span><span class="n">circuitCtx</span><span class="o">-&gt;</span><span class="n">VolumeElement</span><span class="p">);</span>
+<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">volumeCtx</span><span class="p">);</span>
 
-    return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-}
+<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">volumeCtx</span><span class="o">-&gt;</span><span class="n">Timer</span><span class="p">);</span>
+<span class="w">    </span><span class="n"><a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a></span><span class="p">(</span><span class="n">volumeCtx</span><span class="o">-&gt;</span><span class="n">Timer</span><span class="p">,</span><span class="w"> </span><span class="n">TRUE</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <h3>ACX requirements</h3>
+
 <p><strong>Minimum ACX version:</strong> 1.0</p>
-<p>For more information about ACX versions, see <a href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
+
+<p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
+
 <h2>See also</h2>
+
 <ul>
-<li><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxcircuit/">acxcircuit.h header</a></li>
-<li><a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/supporting-pnp-and-power-management-in-function-drivers">Supporting PnP and Power Management in Function Driver</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxcircuit/">acxcircuit.h header</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/supporting-pnp-and-power-management-in-function-drivers">Supporting PnP and Power Management in Function Driver</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

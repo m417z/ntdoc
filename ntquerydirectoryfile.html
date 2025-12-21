@@ -151,73 +151,133 @@ ZwQueryDirectoryFile(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>NtQueryDirectoryFile function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>NtQueryDirectoryFile</strong> routine returns various kinds of information about files in the directory specified by a given file handle.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>FileHandle</code> [in]</h3>
+
 <p>A handle returned by <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong> or <strong><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></strong> for the file object that represents the directory for which information is being requested. The file object must have been opened for asynchronous I/O if the caller specifies a non-NULL value for <strong>Event</strong> or <strong>ApcRoutine</strong>.</p>
+
 <h3><code>Event</code> [in, optional]</h3>
+
 <p>An optional handle for a caller-created event. If this parameter is supplied, the caller will be put into a wait state until the requested operation is completed and the given event is set to the Signaled state. This parameter is optional and can be NULL. It must be NULL if the caller will wait for the <strong>FileHandle</strong> to be set to the Signaled state.</p>
+
 <h3><code>ApcRoutine</code> [in, optional]</h3>
+
 <p>An address of an optional, caller-supplied APC routine to be called when the requested operation completes. This parameter is optional and can be NULL. If there is an I/O completion object associated with the file object, this parameter must be NULL.</p>
+
 <h3><code>ApcContext</code> [in, optional]</h3>
+
 <p>An optional pointer to a caller-determined context area if the caller supplies an APC or if an I/O completion object is associated with the file object. When the operation completes, this context is passed to the APC, if one was specified, or is included as part of the completion message that the I/O Manager posts to the associated I/O completion object.</p>
+
 <p>This parameter is optional and can be NULL. It must be NULL if <strong>ApcRoutine</strong> is NULL and there is no I/O completion object associated with the file object.</p>
+
 <h3><code>IoStatusBlock</code> [out]</h3>
+
 <p>A pointer to an <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure that receives the final completion status and information about the operation. For successful calls that return data, the number of bytes written to the <strong>FileInformation</strong> buffer is returned in the structure's <strong>Information</strong> member.</p>
+
 <h3><code>FileInformation</code> [out]</h3>
+
 <p>A pointer to a buffer that receives the desired information about the file. The structure of the information returned in the buffer is defined by the <strong>FileInformationClass</strong> parameter.</p>
+
 <h3><code>Length</code> [in]</h3>
+
 <p>The size, in bytes, of the buffer pointed to by <strong>FileInformation</strong>. The caller should set this parameter according to the given <strong>FileInformationClass</strong>.</p>
+
 <h3><code>FileInformationClass</code> [in]</h3>
+
 <p>The type of information to be returned about files in the directory. Type of information to be returned about files in the directory. See the <strong>FileInformationClass</strong> parameter of <strong><a href="ntquerydirectoryfileex" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryDirectoryFileEx(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass,&#10;    _In_ ULONG QueryFlags,&#10;    _In_opt_ PCUNICODE_STRING FileName&#10;    );">NtQueryDirectoryFileEx</a></strong> for the list of possible values.</p>
+
 <h3><code>ReturnSingleEntry</code> [in]</h3>
+
 <p>Set to <strong>TRUE</strong> if only a single entry should be returned, <strong>FALSE</strong> otherwise. If this parameter is <strong>TRUE</strong>, <strong>NtQueryDirectoryFile</strong> returns only the first entry that is found.</p>
+
 <h3><code>FileName</code> [in, optional]</h3>
+
 <p>An optional pointer to a caller-allocated Unicode string containing the name of a file (or multiple files, if wildcards are used) within the directory specified by <strong>FileHandle</strong>. This parameter is optional and can be NULL.</p>
+
 <p>If <strong>FileName</strong> is not NULL, only files whose names match the <strong>FileName</strong> string are included in the directory scan. If <strong>FileName</strong> is NULL, all files are included.</p>
+
 <p>The <strong>FileName</strong> is used as a search expression and is captured on the very first call to <strong>NtQueryDirectoryFile</strong> for a given handle. Subsequent calls to <strong>NtQueryDirectoryFile</strong> will use the search expression set in the first call. The <strong>FileName</strong> parameter passed to subsequent calls will be ignored.</p>
+
 <h3><code>RestartScan</code> [in]</h3>
+
 <p>Set to <strong>TRUE</strong> if the scan is to start at the first entry in the directory. Set to <strong>FALSE</strong> if resuming the scan from a previous call.</p>
+
 <p>When the <strong>NtQueryDirectoryFile</strong> routine is called for a particular handle, the <strong>RestartScan</strong> parameter is treated as if it were set to <strong>TRUE</strong>, regardless of its value. On subsequent <strong>NtQueryDirectoryFile</strong> calls, the value of the <strong>RestartScan</strong> parameter is honored.</p>
+
 <h2>Return value</h2>
+
 <p>The <strong>NtQueryDirectoryFile</strong>routine returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate error status. The set of error status values that can be returned is file-system-specific. <strong>NtQueryDirectoryFile</strong>also returns the number of bytes actually written to the given <strong>FileInformation</strong> buffer in the <strong>Information</strong> member of <strong>IoStatusblock</strong>. See <strong><a href="ntquerydirectoryfileex" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryDirectoryFileEx(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass,&#10;    _In_ ULONG QueryFlags,&#10;    _In_opt_ PCUNICODE_STRING FileName&#10;    );">NtQueryDirectoryFileEx</a></strong> for a list of some possible error codes.</p>
+
 <h2>Remarks</h2>
+
 <p>The <strong>NtQueryDirectoryFile</strong> routine returns information about files that are contained in the directory represented by <strong>FileHandle</strong>.</p>
+
 <p>If provided, the value of the <strong>FileName</strong> parameter determines the entries that are included in the directory scan for all subsequent calls to <strong>NtQueryDirectoryFile</strong> for a given <strong>FileHandle</strong>.</p>
+
 <p>If there is at least one matching entry, <strong>NtQueryDirectoryFile</strong> creates a <strong>FILE_<em>XXX</em>_INFORMATION</strong> structure for each entry and stores them in the buffer.</p>
+
 <p>Assuming that at least one matching directory entry is found, the number of entries for which information is returned is the *smallest of the following:</p>
+
 <ul>
 <li>One entry, if <strong>ReturnSingleEntry</strong> is <strong>TRUE</strong> and <strong>FileName</strong> is NULL.</li>
 <li>The number of entries that match the <strong>FileName</strong> string, if <strong>FileName</strong> is not NULL. (Note that if the string contains no wildcards, there can be at most one matching entry.)</li>
 <li>The number of entries whose information fits into the specified buffer.</li>
 <li>The number of entries contained in the directory.</li>
 </ul>
+
 <p>On the first call to <strong>NtQueryDirectoryFile</strong>, if the structure created for the first entry found is too large to fit into the output buffer, the routine writes the fixed portion of the structure to the output buffer. The routine then writes to the output buffer as much of the <strong>FileName</strong> string as will fit. (The fixed portion of the structure consists of all fields except the final <strong>FileName</strong> string. On the first call, but not on subsequent calls, the I/O system ensures that the buffer is large enough to hold the fixed portion of the appropriate <strong>FILE_<em>XXX</em>_INFORMATION</strong> structure.) When this happens, <strong>NtQueryDirectoryFile</strong> returns an appropriate status value such as STATUS_BUFFER_OVERFLOW.</p>
-<p>On each call, <strong>NtQueryDirectoryFile</strong> returns as many <strong>FILE_<em>XXX</em>_INFORMATION</strong> structures (one per directory entry) as can be contained entirely in the buffer pointed to by <strong>FileInformation</strong>. On the first call, <strong>NtQueryDirectoryFile</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> only if the output buffer contains at least one complete structure. On subsequent calls, if the output buffer contains no structures, <strong>NtQueryDirectoryFile</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> but sets <strong>IoStatusblock</strong>-&gt;<strong>Information</strong> = 0 to notify the caller of this condition. In this case, the caller should allocate a larger buffer and call <strong>NtQueryDirectoryFile</strong> again. No information about any remaining entries is reported. Thus, except in the cases listed above where only one entry is returned, <strong>NtQueryDirectoryFile</strong> must be called at least twice to enumerate the contents of an entire directory.</p>
+
+<p>On each call, <strong>NtQueryDirectoryFile</strong> returns as many <strong>FILE_<em>XXX</em>_INFORMATION</strong> structures (one per directory entry) as can be contained entirely in the buffer pointed to by <strong>FileInformation</strong>. On the first call, <strong>NtQueryDirectoryFile</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> only if the output buffer contains at least one complete structure. On subsequent calls, if the output buffer contains no structures, <strong>NtQueryDirectoryFile</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> but sets <strong>IoStatusblock</strong>-><strong>Information</strong> = 0 to notify the caller of this condition. In this case, the caller should allocate a larger buffer and call <strong>NtQueryDirectoryFile</strong> again. No information about any remaining entries is reported. Thus, except in the cases listed above where only one entry is returned, <strong>NtQueryDirectoryFile</strong> must be called at least twice to enumerate the contents of an entire directory.</p>
+
 <p>When calling <strong>NtQueryDirectoryFile</strong>, you may see changes made to the directory that occur in parallel with <strong>NtQueryDirectoryFile</strong> calls. This behavior is dependent on the implementation of the underlying file system.</p>
+
 <p>The final call to <strong>NtQueryDirectoryFile</strong> returns an empty output buffer and reports an appropriate status value such as STATUS_NO_MORE_FILES.</p>
+
 <p>If <strong>NtQueryDirectoryFile</strong> is called multiple times on the same directory and some other operation changes the contents of that directory, any changes may or may not be seen, depending on the timing of the operations.</p>
+
 <p><strong>NtQueryDirectoryFile</strong>returns zero in any member of a <strong>FILE_<em>XXX</em>_INFORMATION</strong> structure that is not supported by the file system.</p>
-<p>Callers of <strong>NtQueryDirectoryFile</strong> must be running at IRQL = PASSIVE_LEVEL and <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/disabling-apcs">with special kernel APCs enabled</a>.</p>
-<p>For information about other file information query routines, see <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#file-objects">File Objects</a>.</p>
+
+<p>Callers of <strong>NtQueryDirectoryFile</strong> must be running at IRQL = PASSIVE_LEVEL and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/disabling-apcs">with special kernel APCs enabled</a>.</p>
+
+<p>For information about other file information query routines, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#file-objects">File Objects</a>.</p>
+
 <blockquote>
-<p>[!NOTE]
-If the call to the <strong>NtQueryDirectoryFile</strong> function occurs in user mode, you should use the name &quot;<strong>NtQueryDirectoryFile</strong>&quot; instead of &quot;<strong>ZwQueryDirectoryFile</strong>&quot;.</p>
+  <p>[!NOTE]
+  If the call to the <strong>NtQueryDirectoryFile</strong> function occurs in user mode, you should use the name "<strong>NtQueryDirectoryFile</strong>" instead of "<strong>ZwQueryDirectoryFile</strong>".</p>
 </blockquote>
-<p>For calls from kernel-mode drivers, the <strong>Nt<em>XXX</em></strong> and <strong>Zw<em>XXX</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>XXX</em></strong> and <strong>Zw<em>XXX</em></strong> versions of a routine, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt*XXX</strong>* and <strong>Zw*XXX</strong>* versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt*XXX</strong>* and <strong>Zw*XXX</strong>* versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="file_both_dir_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_BOTH_DIR_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    ULONG EaSize;&#10;    CCHAR ShortNameLength;&#10;    WCHAR ShortName[12];&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;">FILE_BOTH_DIR_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_directory_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_DIRECTORY_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_DIRECTORY_INFORMATION, *PFILE_DIRECTORY_INFORMATION;">FILE_DIRECTORY_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_full_dir_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_FULL_DIR_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    ULONG EaSize;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_FULL_DIR_INFORMATION, *PFILE_FULL_DIR_INFORMATION;">FILE_FULL_DIR_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_id_both_dir_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_ID_BOTH_DIR_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    ULONG EaSize;&#10;    CCHAR ShortNameLength;&#10;    WCHAR ShortName[12];&#10;    union&#10;    {&#10;        LARGE_INTEGER FileId;&#10;        FILE_INTERNAL_INFORMATION FileInternal; // rev&#10;...">FILE_ID_BOTH_DIR_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_id_full_dir_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_ID_FULL_DIR_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    ULONG EaSize;&#10;    union&#10;    {&#10;        LARGE_INTEGER FileId;&#10;        FILE_INTERNAL_INFORMATION FileInternal; // rev&#10;    };&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;...">FILE_ID_FULL_DIR_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_names_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_NAMES_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_NAMES_INFORMATION, *PFILE_NAMES_INFORMATION;">FILE_NAMES_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_objectid_information" title="typedef struct _FILE_OBJECTID_INFORMATION&#10;{&#10;    ULONGLONG FileReference;&#10;    UCHAR ObjectId[16]; // GUID&#10;    union&#10;    {&#10;        struct&#10;        {&#10;            UCHAR BirthVolumeId[16];&#10;            UCHAR BirthObjectId[16];&#10;            UCHAR DomainId[16];&#10;        };&#10;        UCHAR ExtendedInfo[48];&#10;    };&#10;} FILE_OBJECTID_INFORMATION, *PFILE_OBJECTID_INFORMATION;">FILE_OBJECTID_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_reparse_point_information" title="typedef struct _FILE_REPARSE_POINT_INFORMATION&#10;{&#10;    LONGLONG FileReference;&#10;    ULONG Tag;&#10;} FILE_REPARSE_POINT_INFORMATION, *PFILE_REPARSE_POINT_INFORMATION;">FILE_REPARSE_POINT_INFORMATION</a></strong></p>
+
 <p><strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong></p>
+
 <p><strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong></p>
+
 <p><strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong></p>
+
 <p><strong><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -232,86 +292,149 @@ If the call to the <strong>NtQueryDirectoryFile</strong> function occurs in user
 </div>
 <div class="ntdoc-description">
 <h1>ZwQueryDirectoryFile function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>ZwQueryDirectoryFile</strong> routine returns various information about files in the directory specified by a given file handle.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>FileHandle</code> [in]</h3>
+
 <p>A handle returned by <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong> or <strong><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">ZwOpenFile</a></strong> for the file object that represents the directory for which information is being requested. The file object must have been opened for asynchronous I/O if the caller specifies a non-<strong>NULL</strong> value for <strong>Event</strong> or <strong>ApcRoutine</strong>.</p>
+
 <h3><code>Event</code> [in, optional]</h3>
+
 <p>An optional handle for a caller-created event. If this parameter is supplied, the caller will be put into a wait state until the requested operation is completed and the given event is set to the Signaled state. This parameter is optional and can be <strong>NULL</strong>. It must be <strong>NULL</strong> if the caller will wait for the <strong>FileHandle</strong> to be set to the Signaled state.</p>
+
 <h3><code>ApcRoutine</code> [in, optional]</h3>
+
 <p>An address of an optional, caller-supplied APC routine to be called when the requested operation completes. This parameter is optional and can be <strong>NULL</strong>. If there is an I/O completion object associated with the file object, this parameter must be <strong>NULL</strong>.</p>
+
 <h3><code>ApcContext</code> [in, optional]</h3>
+
 <p>An optional pointer to a caller-determined context area if the caller supplies an APC or if an I/O completion object is associated with the file object. When the operation completes, this context is passed to the APC, if one was specified, or is included as part of the completion message that the I/O Manager posts to the associated I/O completion object.</p>
+
 <p>This parameter is optional and can be <strong>NULL</strong>. It must be <strong>NULL</strong> if <strong>ApcRoutine</strong> is <strong>NULL</strong> and there is no I/O completion object associated with the file object.</p>
+
 <h3><code>IoStatusBlock</code> [out]</h3>
+
 <p>A pointer to an <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure that receives the final completion status and information about the operation. For successful calls that return data, the number of bytes written to the <strong>FileInformation</strong> buffer is returned in the structure's <strong>Information</strong> member.</p>
+
 <h3><code>FileInformation</code> [out]</h3>
+
 <p>A pointer to an output buffer that receives the desired information about the file. The structure of the information returned in the buffer is defined by the <strong>FileInformationClass</strong> parameter.</p>
+
 <h3><code>Length</code> [in]</h3>
+
 <p>The size, in bytes, of the buffer pointed to by <strong>FileInformation</strong>. The caller should set this parameter according to the given <strong>FileInformationClass</strong>.</p>
+
 <h3><code>FileInformationClass</code> [in]</h3>
+
 <p>The type of information to be returned about files in the directory. See the <strong>FileInformationClass</strong> parameter of <strong><a href="ntquerydirectoryfileex" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryDirectoryFileEx(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass,&#10;    _In_ ULONG QueryFlags,&#10;    _In_opt_ PCUNICODE_STRING FileName&#10;    );">NtQueryDirectoryFileEx</a></strong> for the list of possible values.</p>
+
 <h3><code>ReturnSingleEntry</code> [in]</h3>
+
 <p>Set to <strong>TRUE</strong> if only a single entry should be returned, <strong>FALSE</strong> otherwise. If this parameter is <strong>TRUE</strong>, <strong>ZwQueryDirectoryFile</strong> returns only the first entry that is found.</p>
+
 <h3><code>FileName</code> [in, optional]</h3>
+
 <p>An optional pointer to a caller-allocated Unicode string containing the name of a file (or multiple files, if wildcards are used) within the directory specified by <strong>FileHandle</strong>. This parameter is optional:</p>
+
 <ul>
 <li>If <strong>FileName</strong> is not <strong>NULL</strong>, only files whose names match the <strong>FileName</strong> string are included in the directory scan.</li>
 <li>If <strong>FileName</strong> is <strong>NULL</strong>, all files are included if <strong>ReturnSingleEntry</strong> is <strong>FALSE</strong>; one file is included if <strong>ReturnSingleEntry</strong> is <strong>TRUE</strong>.</li>
 </ul>
+
 <p>The <strong>FileName</strong> is used as a search expression and is captured on the very first call to <strong>ZwQueryDirectoryFile</strong> for a given handle. Subsequent calls to <strong>ZwQueryDirectoryFile</strong> will use the search expression set in the first call. The <strong>FileName</strong> parameter passed to subsequent calls will be ignored.</p>
+
 <h3><code>RestartScan</code> [in]</h3>
+
 <p>Set to <strong>TRUE</strong> if the scan is to start at the first entry in the directory. Set to <strong>FALSE</strong> if resuming the scan from a previous call.</p>
+
 <p>When the <strong>ZwQueryDirectoryFile</strong> routine is called for a particular handle, the <strong>RestartScan</strong> parameter is treated as if it were set to <strong>TRUE</strong>, regardless of its value. On subsequent <strong>ZwQueryDirectoryFile</strong> calls, the value of the <strong>RestartScan</strong> parameter is honored.</p>
+
 <h2>Return value</h2>
+
 <p>The <strong>ZwQueryDirectoryFile</strong> routine returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate error status. The set of error status values that can be returned is file system-specific. <strong>ZwQueryDirectoryFile</strong> also returns the number of bytes actually written to the given <strong>FileInformation</strong> buffer in the <strong>Information</strong> member of <strong>IoStatusBlock</strong>. See <strong><a href="ntquerydirectoryfileex" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryDirectoryFileEx(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass,&#10;    _In_ ULONG QueryFlags,&#10;    _In_opt_ PCUNICODE_STRING FileName&#10;    );">NtQueryDirectoryFileEx</a></strong> for a list of some possible error codes.</p>
+
 <h2>Remarks</h2>
+
 <p>The <strong>ZwQueryDirectoryFile</strong> routine returns information about files that are contained in the directory represented by <strong>FileHandle</strong>.</p>
+
 <p>If provided, <strong>FileName</strong> determines the entries that are included in the directory scan for all subsequent calls to <strong>ZwQueryDirectoryFile</strong> for a given <strong>FileHandle</strong>.</p>
+
 <p>If there is at least one matching entry, <strong>ZwQueryDirectoryFile</strong> creates a <strong>FILE_<em>XXX</em>_INFORMATION</strong> structure for each entry and stores them in the buffer.</p>
+
 <p>Assuming that at least one matching directory entry is found, the number of entries for which information is returned is the <em>smallest</em> of the following:</p>
+
 <ul>
 <li>One entry, if <strong>ReturnSingleEntry</strong> is <strong>TRUE</strong> and <strong>FileName</strong> is <strong>NULL</strong>.</li>
 <li>The number of entries that match the <strong>FileName</strong> string, if <strong>FileName</strong> is not <strong>NULL</strong>. If the string contains no wildcards, there can be at most one matching entry.</li>
 <li>The number of entries whose information fits into the specified buffer.</li>
 <li>The number of entries contained in the directory.</li>
 </ul>
+
 <p>On the first call to <strong>ZwQueryDirectoryFile</strong>, if the structure it creates for the first entry found is too large to fit into the output buffer, this routine does the following:</p>
+
 <ul>
 <li>Writes the fixed portion of the structure to <strong>FileInformation</strong>'s output buffer. The fixed portion consists of all fields except the final <strong>FileName</strong> string. On the first call, but not on subsequent calls, the I/O system ensures that the buffer is large enough to hold the fixed portion of the appropriate <strong>FILE_<em>XXX</em>_INFORMATION</strong> structure.</li>
 <li>Writes to the output buffer as much of the <strong>FileName</strong> string as will fit.</li>
 <li>Returns an appropriate status value such as STATUS_BUFFER_OVERFLOW.</li>
 </ul>
+
 <p>On each call, <strong>ZwQueryDirectoryFile</strong> returns as many <strong>FILE_<em>XXX</em>_INFORMATION</strong> structures (one per directory entry) as can be contained entirely in the buffer pointed to by <strong>FileInformation</strong>:</p>
+
 <ul>
 <li>On the first call, <strong>ZwQueryDirectoryFile</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> only if the output buffer contains at least one complete structure.</li>
-<li>On subsequent calls, if the output buffer contains no structures, <strong>ZwQueryDirectoryFile</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> but sets <strong>IoStatusBlock</strong>-&gt;<strong>Information</strong> = 0 to notify the caller of this condition. In this case, the caller should allocate a larger buffer and call <strong>ZwQueryDirectoryFile</strong> again. No information about any remaining entries is reported. Thus, except in the cases listed above where only one entry is returned, <strong>ZwQueryDirectoryFile</strong> must be called at least twice to enumerate the contents of an entire directory.</li>
+<li>On subsequent calls, if the output buffer contains no structures, <strong>ZwQueryDirectoryFile</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> but sets <strong>IoStatusBlock</strong>-><strong>Information</strong> = 0 to notify the caller of this condition. In this case, the caller should allocate a larger buffer and call <strong>ZwQueryDirectoryFile</strong> again. No information about any remaining entries is reported. Thus, except in the cases listed above where only one entry is returned, <strong>ZwQueryDirectoryFile</strong> must be called at least twice to enumerate the contents of an entire directory.</li>
 </ul>
+
 <p>When calling <strong>ZwQueryDirectoryFile</strong>, you might see changes made to the directory that occur in parallel with <strong>ZwQueryDirectoryFile</strong> calls. This behavior is dependent on the implementation of the underlying file system.</p>
+
 <p>The final call to <strong>ZwQueryDirectoryFile</strong> returns an empty output buffer and reports an appropriate status value such as STATUS_NO_MORE_FILES.</p>
+
 <p>If <strong>ZwQueryDirectoryFile</strong> is called multiple times on the same directory and some other operation changes the contents of that directory, any changes might or might not be seen, depending on the timing of the operations.</p>
+
 <p><strong>ZwQueryDirectoryFile</strong> returns zero in any member of a <strong>FILE_<em>XXX</em>_INFORMATION</strong> structure that is not supported by the file system.</p>
-<p>Callers of <strong>ZwQueryDirectoryFile</strong> must be running at IRQL = PASSIVE_LEVEL and <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/disabling-apcs">with special kernel APCs enabled</a>.</p>
-<p>For information about other file information query routines, see <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#file-objects">File Objects</a>.</p>
+
+<p>Callers of <strong>ZwQueryDirectoryFile</strong> must be running at IRQL = PASSIVE_LEVEL and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/disabling-apcs">with special kernel APCs enabled</a>.</p>
+
+<p>For information about other file information query routines, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#file-objects">File Objects</a>.</p>
+
 <blockquote>
-<p>[!NOTE]
-If the call to the <strong>ZwQueryDirectoryFile</strong> function occurs in user mode, you should use the name &quot;<strong>NtQueryDirectoryFile</strong>&quot; instead of &quot;<strong>ZwQueryDirectoryFile</strong>&quot;.</p>
+  <p>[!NOTE]
+  If the call to the <strong>ZwQueryDirectoryFile</strong> function occurs in user mode, you should use the name "<strong>NtQueryDirectoryFile</strong>" instead of "<strong>ZwQueryDirectoryFile</strong>".</p>
 </blockquote>
-<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt*Xxx</strong>* and <strong>Zw*Xxx</strong>* versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt*Xxx</strong>* and <strong>Zw*Xxx</strong>* versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="file_both_dir_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_BOTH_DIR_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    ULONG EaSize;&#10;    CCHAR ShortNameLength;&#10;    WCHAR ShortName[12];&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;">FILE_BOTH_DIR_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_directory_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_DIRECTORY_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_DIRECTORY_INFORMATION, *PFILE_DIRECTORY_INFORMATION;">FILE_DIRECTORY_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_full_dir_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_FULL_DIR_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    ULONG EaSize;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_FULL_DIR_INFORMATION, *PFILE_FULL_DIR_INFORMATION;">FILE_FULL_DIR_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_id_both_dir_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_ID_BOTH_DIR_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    ULONG EaSize;&#10;    CCHAR ShortNameLength;&#10;    WCHAR ShortName[12];&#10;    union&#10;    {&#10;        LARGE_INTEGER FileId;&#10;        FILE_INTERNAL_INFORMATION FileInternal; // rev&#10;...">FILE_ID_BOTH_DIR_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_id_full_dir_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_ID_FULL_DIR_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    LARGE_INTEGER CreationTime;&#10;    LARGE_INTEGER LastAccessTime;&#10;    LARGE_INTEGER LastWriteTime;&#10;    LARGE_INTEGER ChangeTime;&#10;    LARGE_INTEGER EndOfFile;&#10;    LARGE_INTEGER AllocationSize;&#10;    ULONG FileAttributes;&#10;    ULONG FileNameLength;&#10;    ULONG EaSize;&#10;    union&#10;    {&#10;        LARGE_INTEGER FileId;&#10;        FILE_INTERNAL_INFORMATION FileInternal; // rev&#10;    };&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;...">FILE_ID_FULL_DIR_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_names_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_NAMES_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_NAMES_INFORMATION, *PFILE_NAMES_INFORMATION;">FILE_NAMES_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_objectid_information" title="typedef struct _FILE_OBJECTID_INFORMATION&#10;{&#10;    ULONGLONG FileReference;&#10;    UCHAR ObjectId[16]; // GUID&#10;    union&#10;    {&#10;        struct&#10;        {&#10;            UCHAR BirthVolumeId[16];&#10;            UCHAR BirthObjectId[16];&#10;            UCHAR DomainId[16];&#10;        };&#10;        UCHAR ExtendedInfo[48];&#10;    };&#10;} FILE_OBJECTID_INFORMATION, *PFILE_OBJECTID_INFORMATION;">FILE_OBJECTID_INFORMATION</a></strong></p>
+
 <p><strong><a href="file_reparse_point_information" title="typedef struct _FILE_REPARSE_POINT_INFORMATION&#10;{&#10;    LONGLONG FileReference;&#10;    ULONG Tag;&#10;} FILE_REPARSE_POINT_INFORMATION, *PFILE_REPARSE_POINT_INFORMATION;">FILE_REPARSE_POINT_INFORMATION</a></strong></p>
+
 <p><strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
+
 <p><strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong></p>
+
 <p><strong><a href="ntquerydirectoryfileex" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryDirectoryFileEx(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass,&#10;    _In_ ULONG QueryFlags,&#10;    _In_opt_ PCUNICODE_STRING FileName&#10;    );">ZwQueryDirectoryFileEx</a></strong></p>
+
 <p><strong><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">ZwOpenFile</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -325,30 +448,50 @@ If the call to the <strong>ZwQueryDirectoryFile</strong> function occurs in user
 <h1>NTinternals.net (undocumented.ntinternals.net)</h1>
 </div>
 <div class="ntdoc-description">
-<p>This function is documented in Windows Driver Kit <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntquerydirectoryfile">here</a> and <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwquerydirectoryfile">here</a>.</p>
+<p>This function is documented in Windows Driver Kit <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntquerydirectoryfile">here</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwquerydirectoryfile">here</a>.</p>
+
 <hr />
+
 <p><code>NtQueryDirectoryFile</code> is used to enumerate entries (files or directories) placed into file container object (directory). <em>Win32 API</em> use it in <code>FindFirstFile</code>-<code>FindNextFile</code> routines.</p>
+
 <h3>FileHandle</h3>
+
 <p><code>HANDLE</code> to File Object opened with <code><a href="file_directory_file" title="#define FILE_DIRECTORY_FILE 0x00000001">FILE_DIRECTORY_FILE</a></code> option and <code>FILE_LIST_DIRECTORY</code> access.</p>
+
 <h3>Event</h3>
+
 <p>Optional <code>HANDLE</code> to Event Object signaled after query complete.</p>
+
 <h3>ApcRoutine</h3>
+
 <p>Optional pointer to user's <em>APC</em> routine queued after query complete.</p>
+
 <h3>ApcContext</h3>
+
 <p>Parameter for <code>ApcRoutine</code>.</p>
+
 <h3>IoStatusBlock</h3>
+
 <p>Pointer to <code><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></code> structure. After enumeration complete, <code>Information</code> member of this structure contains number of bytes written into <code>FileInformation</code> buffer. <code>Status</code> member contains IO result of call, and can be one of:</p>
+
 <ul>
 <li><code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> - Enumeration has results in <code>FileInformation</code> buffer.</li>
 <li><code>STATUS_NO_MORE_FILES</code> - <code>FileInformation</code> buffer is empty, and next call isn't needed.</li>
 <li><code>STATUS_NO_SUCH_FILE</code> - Returned when <code>FileMask</code> parameter specify exactly one file (don't contains <code>'*'</code> or <code>'?'</code> characters), and queried directory don't contains that file.</li>
 </ul>
+
 <h3>FileInformation</h3>
+
 <p>User's allocated buffer for output data.</p>
+
 <h3>Length</h3>
+
 <p>Length of <code>FileInformation</code> buffer, in bytes.</p>
+
 <h3>FileInformationClass</h3>
+
 <p>Information class. Can be one of:</p>
+
 <ul>
 <li><code>FileDirectoryInformation</code></li>
 <li><code>FileFullDirectoryInformation</code></li>
@@ -356,21 +499,34 @@ If the call to the <strong>ZwQueryDirectoryFile</strong> function occurs in user
 <li><code>FileNamesInformation</code></li>
 <li><code>FileOleDirectoryInformation</code></li>
 </ul>
+
 <h3>ReturnSingleEntry</h3>
+
 <p>If set, only one entry is returned.</p>
+
 <h3>FileMask</h3>
+
 <p>If specified, only information about files matches this wildchar mask will be returned.</p>
+
 <p><code>WARNING:</code> There's no rule specifying what to do when caller makes two calls to <code>NtQueryDirectoryFile</code> both with different masks. Typically <code>FileMask</code> specified in second call will be ignored, and results will match the first (for example: <strong>NTFS.SYS</strong>). The best solution is to close directory <code>HANDLE</code> after every call with <code>FileMask</code> parameter specified.</p>
+
 <h3>RestartScan</h3>
+
 <p>Used with <code>ReturnSingleEntry</code> parameter. If set, <code>NtQueryDirectoryFile</code> continue enumeration after last enumerated element in previous call. If no, returns the first entry in directory.</p>
+
 <hr />
+
 <p>For detailed information about results, see <code><a href="file_information_class" title="typedef enum _FILE_INFORMATION_CLASS&#10;{&#10;    FileDirectoryInformation = 1,                   // q: FILE_DIRECTORY_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileFullDirectoryInformation,                   // q: FILE_FULL_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBothDirectoryInformation,                   // q: FILE_BOTH_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBasicInformation,                           // qs: FILE_BASIC_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileStandardInformation,                        // q: FILE_STANDARD_INFORMATION, FILE_STANDARD_INFORMATION_EX&#10;    FileInternalInformation,                        // q: FILE_INTERNAL_INFORMATION&#10;    FileEaInformation,                              // q: FILE_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileAccessInformation,                          // q: FILE_ACCESS_INFORMATION&#10;    FileNameInformation,                            // q: FILE_NAME_INFORMATION&#10;    FileRenameInformation,                          // s: FILE_RENAME_INFORMATION (requires DELETE) // 10&#10;    FileLinkInformation,                            // s: FILE_LINK_INFORMATION&#10;    FileNamesInformation,                           // q: FILE_NAMES_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileDispositionInformation,                     // s: FILE_DISPOSITION_INFORMATION (requires DELETE)&#10;    FilePositionInformation,                        // qs: FILE_POSITION_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileFullEaInformation,                          // q: FILE_FULL_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileModeInformation,                            // qs: FILE_MODE_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileAlignmentInformation,                       // q: FILE_ALIGNMENT_INFORMATION&#10;    FileAllInformation,                             // q: FILE_ALL_INFORMATION&#10;...">FILE_INFORMATION_CLASS</a></code> with information classes specified above.</p>
+
 <h1>Documented by</h1>
+
 <ul>
 <li>Tomasz Nowak</li>
 <li>Bo Branten</li>
 </ul>
+
 <h1>See also</h1>
+
 <ul>
 <li><code><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></code></li>
 <li><code><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></code></li>

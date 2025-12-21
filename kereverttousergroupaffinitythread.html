@@ -64,29 +64,49 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>KeRevertToUserGroupAffinityThread function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>KeRevertToUserGroupAffinityThread</strong> routine restores the group affinity of the calling thread to its original value at the time that the thread was created.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>PreviousAffinity</code> [in]</h3>
+
 <p>A pointer to the group affinity to restore. This parameter points to a <a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a> structure that contains a group number and an affinity mask. The affinity mask specifies the set of logical processors that the user thread can run on.</p>
+
 <h2>Remarks</h2>
+
 <p>This routine changes the group number and group-relative affinity mask of the calling thread. The group number and affinity mask identify a set of processors on which the thread can run. If successful, the routine schedules the thread to run on a processor in this set.</p>
-<p>The <em>PreviousAffinity</em> parameter points to a <strong><a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a></strong> structure that specifies the new group number (<strong>Group</strong> member) and affinity mask (<strong>Mask</strong> member) for the thread. If <em>PreviousAffinity</em>-&gt;<strong>Mask</strong> is nonzero, <strong>KeRevertToUserGroupAffinityThread</strong> sets the group number and affinity mask of the calling thread to the values in the structure. If <em>PreviousAffinity</em>-&gt;<strong>Mask</strong> is zero, the routine restores the group number and affinity mask to their original values at the time that the thread was initialized.</p>
+
+<p>The <em>PreviousAffinity</em> parameter points to a <strong><a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a></strong> structure that specifies the new group number (<strong>Group</strong> member) and affinity mask (<strong>Mask</strong> member) for the thread. If <em>PreviousAffinity</em>-><strong>Mask</strong> is nonzero, <strong>KeRevertToUserGroupAffinityThread</strong> sets the group number and affinity mask of the calling thread to the values in the structure. If <em>PreviousAffinity</em>-><strong>Mask</strong> is zero, the routine restores the group number and affinity mask to their original values at the time that the thread was initialized.</p>
+
 <p>A process can have affinity for more than one group at a time. However, a thread can be assigned to only one group at any time, and that group is always in the affinity of the thread's process.</p>
+
 <p>A thread can change the group to which it is assigned by calling the <a href="kesetsystemgroupaffinitythread" title="VOID KeSetSystemGroupAffinityThread(&#10;  [in]            PGROUP_AFFINITY Affinity,&#10;  [out, optional] PGROUP_AFFINITY PreviousAffinity&#10;);">KeSetSystemGroupAffinityThread</a> routine. Following one or more calls to <strong><a href="kesetsystemgroupaffinitythread" title="VOID KeSetSystemGroupAffinityThread(&#10;  [in]            PGROUP_AFFINITY Affinity,&#10;  [out, optional] PGROUP_AFFINITY PreviousAffinity&#10;);">KeSetSystemGroupAffinityThread</a></strong>, the thread can restore the original group affinity that it had when the thread was created by calling <strong>KeRevertToUserGroupAffinityThread</strong>.</p>
+
 <p>After the thread is created, a call to <strong>KeRevertToUserGroupAffinityThread</strong> has no effect (that is, the group number and affinity mask of the thread remain unchanged) unless the thread first calls <strong><a href="kesetsystemgroupaffinitythread" title="VOID KeSetSystemGroupAffinityThread(&#10;  [in]            PGROUP_AFFINITY Affinity,&#10;  [out, optional] PGROUP_AFFINITY PreviousAffinity&#10;);">KeSetSystemGroupAffinityThread</a></strong>. Following a call to <strong>KeRevertToUserGroupAffinityThread</strong>, a second call to <strong>KeRevertToUserGroupAffinityThread</strong> has no effect unless the thread first calls <strong><a href="kesetsystemgroupaffinitythread" title="VOID KeSetSystemGroupAffinityThread(&#10;  [in]            PGROUP_AFFINITY Affinity,&#10;  [out, optional] PGROUP_AFFINITY PreviousAffinity&#10;);">KeSetSystemGroupAffinityThread</a></strong>.</p>
-<p>The routine changes the group number and affinity mask to the values that are specified in *<em>PreviousAffinity</em> only if the following are true:</p>
+
+<p>The routine changes the group number and affinity mask to the values that are specified in <em>*PreviousAffinity</em> only if the following are true:</p>
+
 <ul>
 <li>The group number is valid.</li>
 <li>The affinity mask is valid (that is, only mask bits that correspond to logical processors in the group are set).</li>
 <li>At least one of the processors that is specified in the affinity mask is active.</li>
 </ul>
+
 <p>If any of these conditions is not met, the call to <strong>KeRevertToUserGroupAffinityThread</strong> has no effect.</p>
+
 <p>A related routine, <a href="kereverttouseraffinitythreadex" title="VOID KeRevertToUserAffinityThreadEx(&#10;  [in] KAFFINITY Affinity&#10;);">KeRevertToUserAffinityThreadEx</a>, changes the affinity mask of the calling thread, but this routine, unlike <strong>KeRevertToUserGroupAffinityThread</strong>, does not accept a group number as an input parameter. In Windows 7 and later versions of the Windows operating system, <strong><a href="kereverttouseraffinitythreadex" title="VOID KeRevertToUserAffinityThreadEx(&#10;  [in] KAFFINITY Affinity&#10;);">KeRevertToUserAffinityThreadEx</a></strong> assumes that the affinity mask refers to processors in group 0, which is compatible with the behavior of this routine in earlier versions of Windows that do not support groups. This behavior ensures that existing drivers that call <strong><a href="kereverttouseraffinitythreadex" title="VOID KeRevertToUserAffinityThreadEx(&#10;  [in] KAFFINITY Affinity&#10;);">KeRevertToUserAffinityThreadEx</a></strong> and that use no group-oriented features will run correctly in multiprocessor systems that have two or more groups. However, drivers that use any group-oriented features in Windows 7 and later versions of the Windows operating system should call <strong>KeRevertToUserGroupAffinityThread</strong> instead of <strong><a href="kereverttouseraffinitythreadex" title="VOID KeRevertToUserAffinityThreadEx(&#10;  [in] KAFFINITY Affinity&#10;);">KeRevertToUserAffinityThreadEx</a></strong>.</p>
+
 <p>If <strong>KeRevertToUserGroupAffinityThread</strong> is called at IRQL &lt;= APC_LEVEL and the call is successful, the new (reverted) group affinity takes effect immediately. When the call returns, the calling thread is already running on a processor that is specified in the new group affinity. If <strong>KeRevertToUserGroupAffinityThread</strong> is called at IRQL = DISPATCH_LEVEL and the call is successful, the pending processor change is deferred until the caller lowers the IRQL below DISPATCH_LEVEL.</p>
+
 <h2>See also</h2>
+
 <p><a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a></p>
+
 <p><a href="kereverttouseraffinitythreadex" title="VOID KeRevertToUserAffinityThreadEx(&#10;  [in] KAFFINITY Affinity&#10;);">KeRevertToUserAffinityThreadEx</a></p>
+
 <p><a href="kesetsystemgroupaffinitythread" title="VOID KeSetSystemGroupAffinityThread(&#10;  [in]            PGROUP_AFFINITY Affinity,&#10;  [out, optional] PGROUP_AFFINITY PreviousAffinity&#10;);">KeSetSystemGroupAffinityThread</a></p>
 <hr>
 <div class="ntdoc-description-links">

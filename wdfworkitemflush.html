@@ -64,46 +64,66 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfWorkItemFlush function</h1>
+
 <h2>Description</h2>
+
 <p>[Applies to KMDF and UMDF]</p>
+
 <p>The <strong>WdfWorkItemFlush</strong> method returns after a specified work item has been serviced.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>WorkItem</code> [in]</h3>
+
 <p>A handle to a framework work-item object that is obtained from a previous call to <a href="wdfworkitemcreate" title="NTSTATUS WdfWorkItemCreate(&#10;  [in]  PWDF_WORKITEM_CONFIG   Config,&#10;  [in]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out] WDFWORKITEM            *WorkItem&#10;);">WdfWorkItemCreate</a>.</p>
+
 <h2>Remarks</h2>
+
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-<p>If <strong><a href="wdfworkitemenqueue" title="VOID WdfWorkItemEnqueue(&#10;  [in] WDFWORKITEM WorkItem&#10;);">WdfWorkItemEnqueue</a></strong> has been called and your driver calls the <strong>WdfWorkItemFlush</strong> method, the method does not return until a system worker thread has removed the specified work item from the work-item queue and called the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function, and the <em>EvtWorkItem</em> callback function has subsequently returned after processing the work item.
+
+<p>If <strong><a href="wdfworkitemenqueue" title="VOID WdfWorkItemEnqueue(&#10;  [in] WDFWORKITEM WorkItem&#10;);">WdfWorkItemEnqueue</a></strong> has been called and your driver calls the <strong>WdfWorkItemFlush</strong> method, the method does not return until a system worker thread has removed the specified work item from the work-item queue and called the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function, and the <em>EvtWorkItem</em> callback function has subsequently returned after processing the work item.
 Note that <strong>WdfWorkItemFlush</strong> does wait for an already running <em>EvtWorkItem</em> callback function to complete.</p>
+
 <p>If <strong><a href="wdfworkitemenqueue" title="VOID WdfWorkItemEnqueue(&#10;  [in] WDFWORKITEM WorkItem&#10;);">WdfWorkItemEnqueue</a></strong> has not been called, calling <strong>WdfWorkItemFlush</strong> completes immediately.</p>
+
 <p>It is illegal to call <strong>WdfWorkItemFlush</strong> from within the work item callback or from code it calls that runs on the same system worker thread.
 Indeed, if driver verifier is enabled, WDF breaks into the debugger to warn that doing so will lead to deadlock.
 On the other hand, calling <strong><a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a></strong> on the work item object from within the callback is perfectly fine.</p>
-<p>Most drivers that use work items do not need to call <strong>WdfWorkItemFlush</strong>. A driver might call <strong>WdfWorkItemFlush</strong> if it must synchronize completion of work items with the removal of a remote I/O target. In this case, the driver can call <strong>WdfWorkItemFlush</strong> from within its <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfiotarget/nc-wdfiotarget-evt_wdf_io_target_query_remove">EvtIoTargetQueryRemove</a> callback function.</p>
-<p>For more information about work items, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-framework-work-items">Using Framework Work Items</a>.</p>
-<h4>Examples</h4>
-<p>The following code example is an <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfiotarget/nc-wdfiotarget-evt_wdf_io_target_query_remove">EvtIoTargetQueryRemove</a> callback function from the <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">Toaster</a> sample driver.</p>
-<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-ToastMon_EvtIoTargetQueryRemove(
-    WDFIOTARGET IoTarget
-)
-{
-    PTARGET_DEVICE_INFO  targetDeviceInfo = NULL;
-    //
-    // Get the I/O target object's context.
-    //
-    targetDeviceInfo = GetTargetDeviceInfo(IoTarget);
-    //
-    // Ensure that the I/O target's work item
-    // has been processed before closing the target.
-    //
-    WdfWorkItemFlush(targetDeviceInfo-&gt;WorkItem);
-    <a href="wdfiotargetcloseforqueryremove" title="VOID WdfIoTargetCloseForQueryRemove(&#10;  [in] WDFIOTARGET IoTarget&#10;);">WdfIoTargetCloseForQueryRemove</a>(IoTarget);
 
-    return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-}
+<p>Most drivers that use work items do not need to call <strong>WdfWorkItemFlush</strong>. A driver might call <strong>WdfWorkItemFlush</strong> if it must synchronize completion of work items with the removal of a remote I/O target. In this case, the driver can call <strong>WdfWorkItemFlush</strong> from within its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfiotarget/nc-wdfiotarget-evt_wdf_io_target_query_remove">EvtIoTargetQueryRemove</a> callback function.</p>
+
+<p>For more information about work items, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-framework-work-items">Using Framework Work Items</a>.</p>
+
+<h4>Examples</h4>
+
+<p>The following code example is an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfiotarget/nc-wdfiotarget-evt_wdf_io_target_query_remove">EvtIoTargetQueryRemove</a> callback function from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">Toaster</a> sample driver.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="nf">ToastMon_EvtIoTargetQueryRemove</span><span class="p">(</span>
+<span class="w">    </span><span class="n">WDFIOTARGET</span><span class="w"> </span><span class="n">IoTarget</span>
+<span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">PTARGET_DEVICE_INFO</span><span class="w">  </span><span class="n">targetDeviceInfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Get the I/O target object&#39;s context.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="n">targetDeviceInfo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetTargetDeviceInfo</span><span class="p">(</span><span class="n">IoTarget</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Ensure that the I/O target&#39;s work item</span>
+<span class="w">    </span><span class="c1">// has been processed before closing the target.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="n">WdfWorkItemFlush</span><span class="p">(</span><span class="n">targetDeviceInfo</span><span class="o">-&gt;</span><span class="n">WorkItem</span><span class="p">);</span>
+<span class="w">    </span><span class="n"><a href="wdfiotargetcloseforqueryremove" title="VOID WdfIoTargetCloseForQueryRemove(&#10;  [in] WDFIOTARGET IoTarget&#10;);">WdfIoTargetCloseForQueryRemove</a></span><span class="p">(</span><span class="n">IoTarget</span><span class="p">);</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

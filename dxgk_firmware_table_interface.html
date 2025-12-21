@@ -70,141 +70,215 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>_DXGK_FIRMWARE_TABLE_INTERFACE structure</h1>
-<h2>Description</h2>
-<p>Contains functions that user-mode display drivers can use to read and enumerate the system firmware table. These functions are supplied by the Microsoft DirectX graphics kernel subsystem and can be called by WDDM 1.2 and later user-mode display drivers.</p>
-<h2>Members</h2>
-<h3><code>Size</code></h3>
-<p>The size, in bytes, of this structure.</p>
-<h3><code>Version</code></h3>
-<p>The version number of the System Firmware Table interface. Version number constants are defined in Dispmprt.h (for example, <strong>DXGK_FIRMWARE_TABLE_INTERFACE_VERSION_1</strong>).</p>
-<h3><code>Context</code></h3>
-<p>A pointer to a context that is provided by the display port driver.</p>
-<h3><code>InterfaceReference</code></h3>
-<p>A pointer to an interface reference function that is implemented by the display port driver.</p>
-<h3><code>InterfaceDereference</code></h3>
-<p>A pointer to an interface dereference function that is implemented by the display port driver.</p>
-<h3><code>EnumSystemFirmwareTables</code></h3>
-<p>Enumerates the system firmware table. All input parameters are supplied by the display miniport driver.</p>
-<p>Syntax:</p>
-<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> EnumSystemFirmwareTables(
-  _In_      VOID  *Context,
-  _In_      <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProviderSignature,
-  _In_      <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TableId,
-  _In_      <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> BufferSize,
-  _Out_opt_ VOID  *Buffer,
-  _Out_     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> *RequiredSize
-);
-</code></pre>
-<p>The raw SMBIOS table provider ('RSMB') currently returns a single table identifier, 0x0000. This corresponds to the raw SMBIOS firmware table.</p>
-<p>The raw firmware table provider ('FIRM') returns a list of <strong><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></strong> table identifiers. Each identifier corresponds to the beginning of a physical address range. Currently, this provider returns 'C0000' and 'E0000'. These values correspond to physical memory from 0xC0000 to 0xDFFFF and 0xE0000 to 0xFFFFF, respectively.</p>
-<p>The ACPI table provider ('ACPI') returns a list of <strong><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></strong> table identifiers. Each identifier returned corresponds to the <strong>Signature</strong> member of the <strong>DESCRIPTION_HEADER</strong> structure for an ACPI table currently in the ACPI namespace of the system.</p>
-<p>For ACPI, if the system contains multiple tables with the same name, they are all enumerated with EnumSystemFirmwareTables. However, ReadSystemFirmwareTable retrieves only the first table in the list with this name.</p>
-<h4>Context</h4>
-<p>A handle to a context block that is associated with a display adapter. The display miniport driver's DxgkDdiAddDevice function previously provided this handle to the DirectX graphics kernel subsystem.</p>
-<h4>ProviderSignature</h4>
-<p>The identifier of the firmware table provider to which the query is to be directed. This parameter can be one of the following values.</p>
-<table>
-<thead>
-<tr>
-<th align="left"><strong>Value</strong></th>
-<th align="left"><strong>Meaning</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td align="left"><strong>'ACPI'</strong></td>
-<td align="left">The ACPI firmware table provider.</td>
-</tr>
-<tr>
-<td align="left"><strong>'FIRM'</strong></td>
-<td align="left">The raw firmware table provider.</td>
-</tr>
-<tr>
-<td align="left"><strong>'RSMB'</strong></td>
-<td align="left">The raw SMBIOS firmware table provider.</td>
-</tr>
-</tbody>
-</table>
-<h4>TableId</h4>
-<p>The identifier of the firmware table. This identifier is in little-endian format, so you must reverse the characters in the string.</p>
-<p>For example, FACP is an ACPI provider, as described in the <strong>Signature</strong> member of the <strong>DESCRIPTION_HEADER</strong> structure in the <a href="https://uefi.org/specifications">ACPI specification</a>. Therefore, use 'PCAF' to specify the FACP table, as shown in the following example:</p>
-<pre lang="cpp"><code>retVal = ReadSystemFirmwareTable('ACPI', 'PCAF', pBuffer, BUFSIZE);
-</code></pre>
-<h4>BufferSize</h4>
-<p>The size of the buffer pointed to by the <em>Buffer</em> parameter, in bytes.</p>
-<h4>Buffer</h4>
-<p>An optional pointer to a buffer that receives the list of firmware tables. If this parameter is <strong>NULL</strong>, the return value is the required buffer size.</p>
-<p>For more information on the contents of this buffer, see the Remarks section.</p>
-<h4>RequiredSize</h4>
-<p>A pointer to a value that receives the minimum size of the buffer pointed to by <em>Buffer</em>, in bytes, that the operating system needs to process the enumeration request.</p>
-<h3><code>ReadSystemFirmwareTable</code></h3>
-<p>Reads the system firmware table. All input parameters are supplied by the display miniport driver.</p>
-<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ReadSystemFirmwareTable(
-  _In_      VOID  *Context,
-  _In_      <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProviderSignature,
-  _In_      <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TableId,
-  _In_      <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> BufferSize,
-  _Out_opt_ VOID  *Buffer,
-  _Out_     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> *RequiredSize
-);
-</code></pre>
-<p>The raw SMBIOS table provider ('RSMB') retrieves the contents of the raw SMBIOS firmware table. The buffer pointed to by the <em>Buffer</em> parameter receives the following data:</p>
-<pre lang="cpp"><code>#include &lt;windows.h&gt;
 
-struct RawSMBIOSData
-{
-    <a href="byte" title="typedef unsigned char BYTE;">BYTE</a>    Used20CallingMethod;
-    <a href="byte" title="typedef unsigned char BYTE;">BYTE</a>    SMBIOSMajorVersion;
-    <a href="byte" title="typedef unsigned char BYTE;">BYTE</a>    SMBIOSMinorVersion;
-    <a href="byte" title="typedef unsigned char BYTE;">BYTE</a>    DmiRevision;
-    <a href="dword" title="typedef unsigned long DWORD;">DWORD</a>    Length;
-    <a href="byte" title="typedef unsigned char BYTE;">BYTE</a>    SMBIOSTableData[];
-};
+<h2>Description</h2>
+
+<p>Contains functions that user-mode display drivers can use to read and enumerate the system firmware table. These functions are supplied by the Microsoft DirectX graphics kernel subsystem and can be called by WDDM 1.2 and later user-mode display drivers.</p>
+
+<h2>Members</h2>
+
+<h3><code>Size</code></h3>
+
+<p>The size, in bytes, of this structure.</p>
+
+<h3><code>Version</code></h3>
+
+<p>The version number of the System Firmware Table interface. Version number constants are defined in Dispmprt.h (for example, <strong>DXGK_FIRMWARE_TABLE_INTERFACE_VERSION_1</strong>).</p>
+
+<h3><code>Context</code></h3>
+
+<p>A pointer to a context that is provided by the display port driver.</p>
+
+<h3><code>InterfaceReference</code></h3>
+
+<p>A pointer to an interface reference function that is implemented by the display port driver.</p>
+
+<h3><code>InterfaceDereference</code></h3>
+
+<p>A pointer to an interface dereference function that is implemented by the display port driver.</p>
+
+<h3><code>EnumSystemFirmwareTables</code></h3>
+
+<p>Enumerates the system firmware table. All input parameters are supplied by the display miniport driver.</p>
+
+<p>Syntax:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="nf">EnumSystemFirmwareTables</span><span class="p">(</span>
+<span class="w">  </span><span class="n">_In_</span><span class="w">      </span><span class="n">VOID</span><span class="w">  </span><span class="o">*</span><span class="n">Context</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_In_</span><span class="w">      </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">ProviderSignature</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_In_</span><span class="w">      </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">TableId</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_In_</span><span class="w">      </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">BufferSize</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_Out_opt_</span><span class="w"> </span><span class="n">VOID</span><span class="w">  </span><span class="o">*</span><span class="n">Buffer</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_Out_</span><span class="w">     </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="o">*</span><span class="n">RequiredSize</span>
+<span class="p">);</span>
 </code></pre>
-<p>The raw firmware table provider ('FIRM') retrieves the contents of the specified physical address range. ReadSystemFirmwareTable returns the size of the address range.</p>
-<p>The ACPI table provider ('ACPI') retrieves the contents of the specified ACPI table. Because OEMs can include ACPI firmware tables that are not listed in the ACPI specification, you should first call the EnumSystemFirmwareTables function to enumerate all ACPI tables that are currently on the system.</p>
+</div>
+
+<p>The raw SMBIOS table provider ('RSMB') currently returns a single table identifier, 0x0000. This corresponds to the raw SMBIOS firmware table.</p>
+
+<p>The raw firmware table provider ('FIRM') returns a list of <strong><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></strong> table identifiers. Each identifier corresponds to the beginning of a physical address range. Currently, this provider returns 'C0000' and 'E0000'. These values correspond to physical memory from 0xC0000 to 0xDFFFF and 0xE0000 to 0xFFFFF, respectively.</p>
+
+<p>The ACPI table provider ('ACPI') returns a list of <strong><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></strong> table identifiers. Each identifier returned corresponds to the <strong>Signature</strong> member of the <strong>DESCRIPTION_HEADER</strong> structure for an ACPI table currently in the ACPI namespace of the system.</p>
+
 <p>For ACPI, if the system contains multiple tables with the same name, they are all enumerated with EnumSystemFirmwareTables. However, ReadSystemFirmwareTable retrieves only the first table in the list with this name.</p>
+
 <h4>Context</h4>
-<p>A handle to a context block that is associated with a display adapter. The display miniport driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device">DxgkDdiAddDevice</a> function previously provided this handle to the DirectX graphics kernel subsystem.</p>
+
+<p>A handle to a context block that is associated with a display adapter. The display miniport driver's DxgkDdiAddDevice function previously provided this handle to the DirectX graphics kernel subsystem.</p>
+
 <h4>ProviderSignature</h4>
+
 <p>The identifier of the firmware table provider to which the query is to be directed. This parameter can be one of the following values.</p>
+
 <table>
 <thead>
 <tr>
-<th align="left"><strong>Value</strong></th>
-<th align="left"><strong>Meaning</strong></th>
+  <th style="text-align:left;"><strong>Value</strong></th>
+  <th style="text-align:left;"><strong>Meaning</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left"><strong>'ACPI'</strong></td>
-<td align="left">The ACPI firmware table provider.</td>
+  <td style="text-align:left;"><strong>'ACPI'</strong></td>
+  <td style="text-align:left;">The ACPI firmware table provider.</td>
 </tr>
 <tr>
-<td align="left"><strong>'FIRM'</strong></td>
-<td align="left">The raw firmware table provider.</td>
+  <td style="text-align:left;"><strong>'FIRM'</strong></td>
+  <td style="text-align:left;">The raw firmware table provider.</td>
 </tr>
 <tr>
-<td align="left"><strong>'RSMB'</strong></td>
-<td align="left">The raw SMBIOS firmware table provider.</td>
+  <td style="text-align:left;"><strong>'RSMB'</strong></td>
+  <td style="text-align:left;">The raw SMBIOS firmware table provider.</td>
 </tr>
 </tbody>
 </table>
+
 <h4>TableId</h4>
+
 <p>The identifier of the firmware table. This identifier is in little-endian format, so you must reverse the characters in the string.</p>
-<p>For example, FACP is an ACPI provider, as described in the <strong>Signature</strong> member of the <strong>DESCRIPTION_HEADER</strong> structure in the <a href="https://uefi.org/specifications">ACPI specification</a>. Therefore, use 'PCAF' to specify the FACP table, as shown in the following example:</p>
-<pre lang="cpp"><code>retVal = ReadSystemFirmwareTable('ACPI', 'PCAF', pBuffer, BUFSIZE);
+
+<p>For example, FACP is an ACPI provider, as described in the <strong>Signature</strong> member of the <strong>DESCRIPTION_HEADER</strong> structure in the <a rel="noopener" target="_blank" href="https://uefi.org/specifications">ACPI specification</a>. Therefore, use 'PCAF' to specify the FACP table, as shown in the following example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">retVal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ReadSystemFirmwareTable</span><span class="p">(</span><span class="err">&#39;</span><span class="n">ACPI</span><span class="err">&#39;</span><span class="p">,</span><span class="w"> </span><span class="err">&#39;</span><span class="n">PCAF</span><span class="err">&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">pBuffer</span><span class="p">,</span><span class="w"> </span><span class="n">BUFSIZE</span><span class="p">);</span>
 </code></pre>
+</div>
+
 <h4>BufferSize</h4>
+
 <p>The size of the buffer pointed to by the <em>Buffer</em> parameter, in bytes.</p>
+
 <h4>Buffer</h4>
-<p>An optional pointer to a buffer that receives the requested firmware table. If this parameter is <strong>NULL</strong>, the return value is the required buffer size.</p>
+
+<p>An optional pointer to a buffer that receives the list of firmware tables. If this parameter is <strong>NULL</strong>, the return value is the required buffer size.</p>
+
 <p>For more information on the contents of this buffer, see the Remarks section.</p>
+
 <h4>RequiredSize</h4>
+
+<p>A pointer to a value that receives the minimum size of the buffer pointed to by <em>Buffer</em>, in bytes, that the operating system needs to process the enumeration request.</p>
+
+<h3><code>ReadSystemFirmwareTable</code></h3>
+
+<p>Reads the system firmware table. All input parameters are supplied by the display miniport driver.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="nf">ReadSystemFirmwareTable</span><span class="p">(</span>
+<span class="w">  </span><span class="n">_In_</span><span class="w">      </span><span class="n">VOID</span><span class="w">  </span><span class="o">*</span><span class="n">Context</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_In_</span><span class="w">      </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">ProviderSignature</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_In_</span><span class="w">      </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">TableId</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_In_</span><span class="w">      </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">BufferSize</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_Out_opt_</span><span class="w"> </span><span class="n">VOID</span><span class="w">  </span><span class="o">*</span><span class="n">Buffer</span><span class="p">,</span>
+<span class="w">  </span><span class="n">_Out_</span><span class="w">     </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="o">*</span><span class="n">RequiredSize</span>
+<span class="p">);</span>
+</code></pre>
+</div>
+
+<p>The raw SMBIOS table provider ('RSMB') retrieves the contents of the raw SMBIOS firmware table. The buffer pointed to by the <em>Buffer</em> parameter receives the following data:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;windows.h&gt;</span>
+
+<span class="k">struct</span><span class="w"> </span><span class="nc">RawSMBIOSData</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="byte" title="typedef unsigned char BYTE;">BYTE</a></span><span class="w">    </span><span class="n">Used20CallingMethod</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="byte" title="typedef unsigned char BYTE;">BYTE</a></span><span class="w">    </span><span class="n">SMBIOSMajorVersion</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="byte" title="typedef unsigned char BYTE;">BYTE</a></span><span class="w">    </span><span class="n">SMBIOSMinorVersion</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="byte" title="typedef unsigned char BYTE;">BYTE</a></span><span class="w">    </span><span class="n">DmiRevision</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></span><span class="w">    </span><span class="n">Length</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="byte" title="typedef unsigned char BYTE;">BYTE</a></span><span class="w">    </span><span class="n">SMBIOSTableData</span><span class="p">[];</span>
+<span class="p">};</span>
+</code></pre>
+</div>
+
+<p>The raw firmware table provider ('FIRM') retrieves the contents of the specified physical address range. ReadSystemFirmwareTable returns the size of the address range.</p>
+
+<p>The ACPI table provider ('ACPI') retrieves the contents of the specified ACPI table. Because OEMs can include ACPI firmware tables that are not listed in the ACPI specification, you should first call the EnumSystemFirmwareTables function to enumerate all ACPI tables that are currently on the system.</p>
+
+<p>For ACPI, if the system contains multiple tables with the same name, they are all enumerated with EnumSystemFirmwareTables. However, ReadSystemFirmwareTable retrieves only the first table in the list with this name.</p>
+
+<h4>Context</h4>
+
+<p>A handle to a context block that is associated with a display adapter. The display miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device">DxgkDdiAddDevice</a> function previously provided this handle to the DirectX graphics kernel subsystem.</p>
+
+<h4>ProviderSignature</h4>
+
+<p>The identifier of the firmware table provider to which the query is to be directed. This parameter can be one of the following values.</p>
+
+<table>
+<thead>
+<tr>
+  <th style="text-align:left;"><strong>Value</strong></th>
+  <th style="text-align:left;"><strong>Meaning</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td style="text-align:left;"><strong>'ACPI'</strong></td>
+  <td style="text-align:left;">The ACPI firmware table provider.</td>
+</tr>
+<tr>
+  <td style="text-align:left;"><strong>'FIRM'</strong></td>
+  <td style="text-align:left;">The raw firmware table provider.</td>
+</tr>
+<tr>
+  <td style="text-align:left;"><strong>'RSMB'</strong></td>
+  <td style="text-align:left;">The raw SMBIOS firmware table provider.</td>
+</tr>
+</tbody>
+</table>
+
+<h4>TableId</h4>
+
+<p>The identifier of the firmware table. This identifier is in little-endian format, so you must reverse the characters in the string.</p>
+
+<p>For example, FACP is an ACPI provider, as described in the <strong>Signature</strong> member of the <strong>DESCRIPTION_HEADER</strong> structure in the <a rel="noopener" target="_blank" href="https://uefi.org/specifications">ACPI specification</a>. Therefore, use 'PCAF' to specify the FACP table, as shown in the following example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">retVal</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ReadSystemFirmwareTable</span><span class="p">(</span><span class="err">&#39;</span><span class="n">ACPI</span><span class="err">&#39;</span><span class="p">,</span><span class="w"> </span><span class="err">&#39;</span><span class="n">PCAF</span><span class="err">&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">pBuffer</span><span class="p">,</span><span class="w"> </span><span class="n">BUFSIZE</span><span class="p">);</span>
+</code></pre>
+</div>
+
+<h4>BufferSize</h4>
+
+<p>The size of the buffer pointed to by the <em>Buffer</em> parameter, in bytes.</p>
+
+<h4>Buffer</h4>
+
+<p>An optional pointer to a buffer that receives the requested firmware table. If this parameter is <strong>NULL</strong>, the return value is the required buffer size.</p>
+
+<p>For more information on the contents of this buffer, see the Remarks section.</p>
+
+<h4>RequiredSize</h4>
+
 <p>A pointer to a value that receives the minimum size of the buffer pointed to by <em>Buffer</em>, in bytes, that the operating system needs to process the read request.</p>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/ns-dispmprt-_dxgk_firmware_table_interface">EnumSystemFirmwareTables</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/ns-dispmprt-_dxgk_firmware_table_interface">ReadSystemFirmwareTable</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/ns-dispmprt-_dxgk_firmware_table_interface">EnumSystemFirmwareTables</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/ns-dispmprt-_dxgk_firmware_table_interface">ReadSystemFirmwareTable</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

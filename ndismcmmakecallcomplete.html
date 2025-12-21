@@ -68,60 +68,78 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>NdisMCmMakeCallComplete macro</h1>
+
 <h2>Description</h2>
+
 <p><strong>NdisMCmMakeCallComplete</strong> returns the final status of a client's request, for which the MCM driver
 previously returned NDIS_STATUS_PENDING, to make an outgoing call.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>_S_</code></h3>
+
 <p>Specifies the final status of the attempt to make the connection, either NDIS_STATUS_SUCCESS or
 any caller-determined NDIS_STATUS_
 <em>XXX</em> except NDIS_STATUS_PENDING.</p>
+
 <h3><code>_VH_</code></h3>
+
 <p>Specifies the handle to the client-created VC, which the MCM driver obtained as an input parameter
 to its
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_co_create_vc">ProtocolCoCreateVc</a> function and,
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_co_create_vc">ProtocolCoCreateVc</a> function and,
 more recently, from the
 <em>CallMgrVcContext</em> passed to its
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cm_make_call">ProtocolCmMakeCall</a> function.</p>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cm_make_call">ProtocolCmMakeCall</a> function.</p>
+
 <h3><code>_PH_</code></h3>
+
 <p>Specifies the handle to the initial party on the client-created multipoint VC, which the MCM
 driver obtained as an input parameter to its
 <em>ProtocolCmMakeCall</em> function. If the given
 <em>NdisVcHandle</em> represented a point-to-point VC, this parameter was <strong>NULL</strong>.</p>
+
 <h3><code>_CC_</code></h3>
+
 <p>Specifies the handle to a caller-allocated resident context area, in which the MCM driver will
 maintain per-party state information, or this parameter is <strong>NULL</strong> if
 <em>NdisPartyHandle</em> is <strong>NULL</strong>. For a multipoint VC, NDIS passes this MCM-driver-supplied
 <em>CallManagerPartyContext</em> handle in all subsequent calls to the ProtocolCm<em>Xxx</em> functions that concern this party. If
 <em>Status</em> is anything other than NDIS_STATUS_SUCCESS, NDIS ignores this parameter.</p>
+
 <h3><code>_CP_</code></h3>
+
 <p>Pointer to a structure of type
-<a href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff545384(v=vs.85)">CO_CALL_PARAMETERS</a> that specifies the call
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff545384(v=vs.85)">CO_CALL_PARAMETERS</a> that specifies the call
 parameters set up for this connection if
 <em>Status</em> is NDIS_STATUS_SUCCESS.</p>
+
 <h2>Remarks</h2>
+
 <p>An MCM driver should call
 <strong>NdisMCmMakeCallComplete</strong> with NDIS_STATUS_SUCCESS only if it is ready to make data transfers on the
 VC. That is, the MCM driver has negotiated with the network to establish the call parameters for the VC,
 set up a NIC for those call parameters, and called
 <a href="ndismcmactivatevc" title="NDIS_STATUS NdisMCmActivateVc(&#10;  [in] NDIS_HANDLE         NdisVcHandle,&#10;  [in] PCO_CALL_PARAMETERS CallParameters&#10;);">NdisMCmActivateVc</a> to notify NDIS of the
 VC activation.</p>
+
 <p>An MCM driver must call
 <strong>NdisMCmMakeCallComplete</strong> if its
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cm_make_call">ProtocolCmMakeCall</a> function
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cm_make_call">ProtocolCmMakeCall</a> function
 previously returned NDIS_STATUS_PENDING for the given
 <em>NdisVcHandle</em> .The client, which initiated the pending outgoing call, cannot use the VC to make
 transfers until the miniport driver calls
 <strong>NdisMCmMakeCallComplete</strong> with NDIS_STATUS_SUCCESS.</p>
+
 <p>Even if the attempted connection failed, neither NDIS nor the client can release the resources they
 allocated to maintain state until the MCM driver's call to
 <strong>NdisMCmMakeCallComplete</strong> causes a call to that client's
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cl_make_call_complete">ProtocolClMakeCallComplete</a> function. In fact, neglecting to call
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cl_make_call_complete">ProtocolClMakeCallComplete</a> function. In fact, neglecting to call
 <strong>NdisMCmMakeCallComplete</strong> for a failed attempt to set up such a connection causes a memory leak in
 the MCM driver as well; it prevents the client from tearing down the VC it created for its failed
 outgoing call, so the MCM driver's
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_co_delete_vc">ProtocolCoDeleteVc</a> function is not
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_co_delete_vc">ProtocolCoDeleteVc</a> function is not
 called to release the resources the miniport driver allocated for that VC.</p>
+
 <p>If the MCM driver passes an error, such as NDIS_STATUS_FAILURE, for the
 <em>Status</em>, it must consider the
 <em>NdisPartyHandle</em>, if any, invalid when
@@ -132,6 +150,7 @@ resources that it allocated to maintain state for the given party after
 driver allocated for tracking the state of the client-created VC whenever the MCM driver passes an error
 status to
 <strong>NdisMCmMakeCallComplete</strong>.</p>
+
 <p>In the course of setting up a client-initiated outgoing call, the MCM driver can modify the
 client-supplied call parameters originally passed in to its
 <em>ProtocolCmMakeCall</em> function. If it does, the MCM driver must pass its modifications in the buffer
@@ -140,18 +159,27 @@ at
 <strong>NdisMCmMakeCallComplete</strong>. If the client finds these modified call parameters unacceptable, it will
 then tear down the call, which also causes a call to the MCM driver's
 <em>ProtocolCoDeleteVc</em> function.</p>
+
 <p>Only connection-oriented miniport drivers that provide integrated call-management support can call
 <strong>NdisMCmMakeCallComplete</strong>. Stand-alone call managers, which register themselves with NDIS as
 protocol drivers, call
 <strong><a href="ndiscmmakecallcomplete" title="VOID NdisCmMakeCallComplete(&#10;  [in]           NDIS_STATUS         Status,&#10;  [in]           NDIS_HANDLE         NdisVcHandle,&#10;  [in, optional] NDIS_HANDLE         NdisPartyHandle,&#10;  [in, optional] NDIS_HANDLE         CallMgrPartyContext,&#10;  [in]           PCO_CALL_PARAMETERS CallParameters&#10;);">NdisCmMakeCallComplete</a></strong> instead.</p>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff545384(v=vs.85)">CO_CALL_PARAMETERS</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/network/ff545384(v=vs.85)">CO_CALL_PARAMETERS</a></p>
+
 <p><a href="ndisallocatefromnpagedlookasidelist" title="void NdisAllocateFromNPagedLookasideList(&#10;  _L&#10;);">NdisAllocateFromNPagedLookasideList</a></p>
+
 <p><a href="ndisclmakecall" title="NDIS_STATUS NdisClMakeCall(&#10;  [in]            NDIS_HANDLE         NdisVcHandle,&#10;  [in, out]       PCO_CALL_PARAMETERS CallParameters,&#10;  [in, optional]  NDIS_HANDLE         ProtocolPartyContext,&#10;  [out, optional] PNDIS_HANDLE        NdisPartyHandle&#10;);">NdisClMakeCall</a></p>
+
 <p><a href="ndiscmmakecallcomplete" title="VOID NdisCmMakeCallComplete(&#10;  [in]           NDIS_STATUS         Status,&#10;  [in]           NDIS_HANDLE         NdisVcHandle,&#10;  [in, optional] NDIS_HANDLE         NdisPartyHandle,&#10;  [in, optional] NDIS_HANDLE         CallMgrPartyContext,&#10;  [in]           PCO_CALL_PARAMETERS CallParameters&#10;);">NdisCmMakeCallComplete</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cl_make_call_complete">ProtocolClMakeCallComplete</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cm_make_call">ProtocolCmMakeCall</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_co_delete_vc">ProtocolCoDeleteVc</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cl_make_call_complete">ProtocolClMakeCallComplete</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cm_make_call">ProtocolCmMakeCall</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_co_delete_vc">ProtocolCoDeleteVc</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

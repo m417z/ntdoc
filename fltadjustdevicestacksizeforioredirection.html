@@ -66,49 +66,72 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>FltAdjustDeviceStackSizeForIoRedirection function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>FltAdjustDeviceStackSizeForIoRedirection</strong> routine increases the size of the source device stack to allow a minifilter to redirect I/O from a specified source instance to a specified target instance when the target stack is deeper than the source stack.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>SourceInstance</code> [in]</h3>
+
 <p>The filter instance on the source device stack.</p>
+
 <h3><code>TargetInstance</code> [in]</h3>
+
 <p>The filter instance on the target device stack.</p>
+
 <h3><code>SourceDeviceStackSizeModified</code> [out, optional]</h3>
+
 <p>This optional parameter has a value of <strong>TRUE</strong> if the <strong>FltAdjustDeviceStackSizeForIoRedirection</strong> routine modified the size of the source device stack, <strong>FALSE</strong> otherwise.</p>
+
 <h2>Return value</h2>
+
 <table>
 <thead>
 <tr>
-<th>Return value</th>
-<th>Description</th>
+  <th>Return value</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
-<td>Success.</td>
+  <td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
+  <td>Success.</td>
 </tr>
 <tr>
-<td>STATUS_NOT_SUPPORTED</td>
-<td>The redirection is not supported.</td>
+  <td>STATUS_NOT_SUPPORTED</td>
+  <td>The redirection is not supported.</td>
 </tr>
 <tr>
-<td>STATUS_INVALID_PARAMETER</td>
-<td>The source device stack would be too large after calling this routine.</td>
+  <td>STATUS_INVALID_PARAMETER</td>
+  <td>The source device stack would be too large after calling this routine.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>Using <strong>FltAdjustDeviceStackSizeForIoRedirection</strong> does not guarantee that every <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> that the minifilter encounters will be sufficient in size to be redirected to the target stack. IRPs that were allocated and issued before the call to <strong>FltAdjustDeviceStackSizeForIoRedirection</strong> would still have been allocated based on the old stack size.</p>
+
 <p>A minifilter can adjust the stack size during instance setup if the filter knows which stack the I/O will be redirected to.</p>
+
 <p>The filter can issue its own create operation down the new stack using <a href="fltcreatefile" title="NTSTATUS FLTAPI FltCreateFile(&#10;  [in]           PFLT_FILTER        Filter,&#10;  [in, optional] PFLT_INSTANCE      Instance,&#10;  [out]          PHANDLE            FileHandle,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              CreateDisposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           ULONG              Flags&#10;);">FltCreateFile</a>. Before completing the create operation, the filter can adjust the stack size to account for the target stack. Doing that adjustment ensures that the stack size will be adjusted before the create action is completed. All IRPs allocated for that file object will have a large enough stack to support redirection.</p>
+
 <p>During instance-setup or during post-create callback for a redirected file object, use <a href="fltisioredirectionallowed" title="NTSTATUS FLTAPI FltIsIoRedirectionAllowed(&#10;  [in]  PFLT_INSTANCE SourceInstance,&#10;  [in]  PFLT_INSTANCE TargetInstance,&#10;  [out] PBOOLEAN      RedirectionAllowed&#10;);">FltIsIoRedirectionAllowed</a> to determine if redirection is possible without modifying the source stack. If necessary, use <strong>FltAdjustDeviceStackSizeForIoRedirection</strong> to adjust the source stack.</p>
+
 <p>In the pre-operation callback for every operation that needs redirection, use <a href="fltisioredirectionallowedforoperation" title="NTSTATUS FLTAPI FltIsIoRedirectionAllowedForOperation(&#10;  [in]            PFLT_CALLBACK_DATA Data,&#10;  [in]            PFLT_INSTANCE      TargetInstance,&#10;  [out]           PBOOLEAN           RedirectionAllowedThisIo,&#10;  [out, optional] PBOOLEAN           RedirectionAllowedAllIo&#10;);">FltIsIoRedirectionAllowedForOperation</a> to determine if redirection is possible without modifying the source stack. If necessary, use <strong>FltAdjustDeviceStackSizeForIoRedirection</strong> to adjust the source stack.</p>
+
 <h2>See also</h2>
+
 <p><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></p>
+
 <p><a href="flt_io_parameter_block" title="typedef struct _FLT_IO_PARAMETER_BLOCK {&#10;  ULONG          IrpFlags;&#10;  UCHAR          MajorFunction;&#10;  UCHAR          MinorFunction;&#10;  UCHAR          OperationFlags;&#10;  UCHAR          Reserved;&#10;  PFILE_OBJECT   TargetFileObject;&#10;  PFLT_INSTANCE  TargetInstance;&#10;  FLT_PARAMETERS Parameters;&#10;} FLT_IO_PARAMETER_BLOCK, *PFLT_IO_PARAMETER_BLOCK;">FLT_IO_PARAMETER_BLOCK</a></p>
+
 <p><a href="fltisioredirectionallowed" title="NTSTATUS FLTAPI FltIsIoRedirectionAllowed(&#10;  [in]  PFLT_INSTANCE SourceInstance,&#10;  [in]  PFLT_INSTANCE TargetInstance,&#10;  [out] PBOOLEAN      RedirectionAllowed&#10;);">FltIsIoRedirectionAllowed</a></p>
+
 <p><a href="fltisioredirectionallowedforoperation" title="NTSTATUS FLTAPI FltIsIoRedirectionAllowedForOperation(&#10;  [in]            PFLT_CALLBACK_DATA Data,&#10;  [in]            PFLT_INSTANCE      TargetInstance,&#10;  [out]           PBOOLEAN           RedirectionAllowedThisIo,&#10;  [out, optional] PBOOLEAN           RedirectionAllowedAllIo&#10;);">FltIsIoRedirectionAllowedForOperation</a></p>
+
 <p><a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a></p>
 <hr>
 <div class="ntdoc-description-links">

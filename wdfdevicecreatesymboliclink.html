@@ -65,64 +65,92 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfDeviceCreateSymbolicLink function</h1>
+
 <h2>Description</h2>
+
 <p>[Applies to KMDF and UMDF]</p>
+
 <p>The <strong>WdfDeviceCreateSymbolicLink</strong> method creates a symbolic link to a specified device.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Device</code> [in]</h3>
+
 <p>A handle to a framework device object.</p>
+
 <h3><code>SymbolicLinkName</code> [in]</h3>
+
 <p>A pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that contains a user-visible name for the device.</p>
+
 <h2>Return value</h2>
+
 <p>If the operation succeeds, the <strong>WdfDeviceCreateSymbolicLink</strong> returns STATUS_SUCCCESS. Additional return values include:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-<td>The system cannot allocate space to store the device name.</td>
+  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+  <td>The system cannot allocate space to store the device name.</td>
 </tr>
 </tbody>
 </table>
-<p>The method might return other <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
+
+<p>The method might return other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
+
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
+
 <h2>Remarks</h2>
-<p>If a driver creates a symbolic link for a device, applications can use the symbolic link name to access the device. Typically, instead of providing symbolic links, framework-based drivers provide <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-device-interfaces">device interfaces</a> that applications can use to access their devices.</p>
+
+<p>If a driver creates a symbolic link for a device, applications can use the symbolic link name to access the device. Typically, instead of providing symbolic links, framework-based drivers provide <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-device-interfaces">device interfaces</a> that applications can use to access their devices.</p>
+
 <p>If the device is removed unexpectedly (surprise-removed), the framework removes the symbolic link to the device. The driver can then use the symbolic link name for a new instance of the device.</p>
+
 <h4>Examples</h4>
-<p>The following code example from a KMDF driver creates an <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ms-dos-device-names">MS-DOS device name</a> that an application can use to access a device.</p>
-<pre lang="cpp"><code>#define DOS_DEVICE_NAME  L&quot;\\DosDevices\\MyDevice&quot;
-<a href="declare_const_unicode_string" title="#define DECLARE_CONST_UNICODE_STRING(_var, _str) \&#10;const WCHAR _var ## _buffer[] = _str; \&#10;const UNICODE_STRING _var = { sizeof(_str) - sizeof(WCHAR), sizeof(_str), (PWCH) _var ## _buffer }">DECLARE_CONST_UNICODE_STRING</a>(dosDeviceName, DOS_DEVICE_NAME);
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
 
-status = WdfDeviceCreateSymbolicLink(
-                                     controlDevice,
-                                     &amp;dosDeviceName
-                                     );
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-    goto Error;
-}
+<p>The following code example from a KMDF driver creates an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ms-dos-device-names">MS-DOS device name</a> that an application can use to access a device.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="cp">#define DOS_DEVICE_NAME  L&quot;\\DosDevices\\MyDevice&quot;</span>
+<span class="n"><a href="declare_const_unicode_string" title="#define DECLARE_CONST_UNICODE_STRING(_var, _str) \&#10;const WCHAR _var ## _buffer[] = _str; \&#10;const UNICODE_STRING _var = { sizeof(_str) - sizeof(WCHAR), sizeof(_str), (PWCH) _var ## _buffer }">DECLARE_CONST_UNICODE_STRING</a></span><span class="p">(</span><span class="n">dosDeviceName</span><span class="p">,</span><span class="w"> </span><span class="n">DOS_DEVICE_NAME</span><span class="p">);</span>
+<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="p">;</span>
+
+<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDeviceCreateSymbolicLink</span><span class="p">(</span>
+<span class="w">                                     </span><span class="n">controlDevice</span><span class="p">,</span>
+<span class="w">                                     </span><span class="o">&amp;</span><span class="n">dosDeviceName</span>
+<span class="w">                                     </span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">Error</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <p>A UMDF driver must provide a symbolic link name in the global <strong>DosDevices</strong> namespace, as the following code example illustrates.</p>
-<pre lang="cpp"><code>#define DOS_DEVICE_NAME  L&quot;\\DosDevices\\Global\\MyDevice&quot;
-<a href="declare_const_unicode_string" title="#define DECLARE_CONST_UNICODE_STRING(_var, _str) \&#10;const WCHAR _var ## _buffer[] = _str; \&#10;const UNICODE_STRING _var = { sizeof(_str) - sizeof(WCHAR), sizeof(_str), (PWCH) _var ## _buffer }">DECLARE_CONST_UNICODE_STRING</a>(dosDeviceName, DOS_DEVICE_NAME);
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
 
-status = WdfDeviceCreateSymbolicLink(
-                                     controlDevice,
-                                     &amp;dosDeviceName
-                                     );
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-    goto Error;
-}
+<div class="codehilite">
+<pre><span></span><code><span class="cp">#define DOS_DEVICE_NAME  L&quot;\\DosDevices\\Global\\MyDevice&quot;</span>
+<span class="n"><a href="declare_const_unicode_string" title="#define DECLARE_CONST_UNICODE_STRING(_var, _str) \&#10;const WCHAR _var ## _buffer[] = _str; \&#10;const UNICODE_STRING _var = { sizeof(_str) - sizeof(WCHAR), sizeof(_str), (PWCH) _var ## _buffer }">DECLARE_CONST_UNICODE_STRING</a></span><span class="p">(</span><span class="n">dosDeviceName</span><span class="p">,</span><span class="w"> </span><span class="n">DOS_DEVICE_NAME</span><span class="p">);</span>
+<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="p">;</span>
+
+<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDeviceCreateSymbolicLink</span><span class="p">(</span>
+<span class="w">                                     </span><span class="n">controlDevice</span><span class="p">,</span>
+<span class="w">                                     </span><span class="o">&amp;</span><span class="n">dosDeviceName</span>
+<span class="w">                                     </span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">Error</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
-<p>For information about global and local <strong>\DosDevices</strong> namespaces, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/local-and-global-ms-dos-device-names">Local and Global MS-DOS Device Names</a>.</p>
+</div>
+
+<p>For information about global and local <strong>\DosDevices</strong> namespaces, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/local-and-global-ms-dos-device-names">Local and Global MS-DOS Device Names</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></p>
 <hr>
 <div class="ntdoc-description-links">

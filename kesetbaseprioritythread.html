@@ -65,37 +65,55 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>KeSetBasePriorityThread</strong> routine sets the run-time priority, relative to the current process, for a given thread.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Thread</code> [in, out]</h3>
+
 <p>Pointer to a dispatcher object of type KTHREAD.</p>
+
 <h3><code>Increment</code> [in]</h3>
+
 <p>Specifies the value to be added to the base priority of the process for the <strong>Thread</strong>. This value can be positive or negative.</p>
+
 <p>The effective range depends on the process's priority class:</p>
+
 <ul>
 <li>For variable priority class processes: The resulting priority must stay within 1 to (<code><a href="low_realtime_priority" title="#define LOW_REALTIME_PRIORITY 16 // Lowest realtime priority level">LOW_REALTIME_PRIORITY</a></code> - 1)</li>
 <li>For real-time priority class processes: The resulting priority must stay within <code><a href="low_realtime_priority" title="#define LOW_REALTIME_PRIORITY 16 // Lowest realtime priority level">LOW_REALTIME_PRIORITY</a></code> to <code><a href="high_priority" title="#define HIGH_PRIORITY 31 // Highest thread priority level">HIGH_PRIORITY</a></code></li>
 </ul>
+
 <p>If the absolute value of <strong>Increment</strong> is greater than or equal to <code>(<a href="high_priority" title="#define HIGH_PRIORITY 31 // Highest thread priority level">HIGH_PRIORITY</a> + 1) / 2</code>, priority saturation occurs, meaning subsequent changes to the parent process base priority will not affect this thread's base priority.</p>
+
 <h2>Return value</h2>
+
 <p><strong>KeSetBasePriorityThread</strong> returns the previous base priority increment of the given thread. The previous base priority increment is defined as the difference between the specified thread's old base priority and the base priority of the thread's process.</p>
+
 <p>Special return values:</p>
+
 <ul>
-<li>
-<p>This function returns 0 when an attempt is made to change the priority of an idle thread (threads in the initial kernel process). The function does not allow idle thread priorities to be changed.</p>
-</li>
-<li>
-<p>For saturated threads, this function returns <code>((<a href="high_priority" title="#define HIGH_PRIORITY 31 // Highest thread priority level">HIGH_PRIORITY</a> + 1) / 2) * saturation_value</code> rather than the simple priority difference, where saturation_value is +1 or -1 depending on whether the thread was saturated at high or low priority.</p>
-</li>
+<li><p>This function returns 0 when an attempt is made to change the priority of an idle thread (threads in the initial kernel process). The function does not allow idle thread priorities to be changed.</p></li>
+<li><p>For saturated threads, this function returns <code>((<a href="high_priority" title="#define HIGH_PRIORITY 31 // Highest thread priority level">HIGH_PRIORITY</a> + 1) / 2) * saturation_value</code> rather than the simple priority difference, where saturation_value is +1 or -1 depending on whether the thread was saturated at high or low priority.</p></li>
 </ul>
+
 <h2>Remarks</h2>
+
 <p>The new base priority is computed by adding the given <strong>Increment</strong>, which can be a negative value, to the base priority of the specified thread's process. The resultant value is stored as the base priority of the specified thread.</p>
+
 <p>Drivers that set up device-dedicated threads with variable priority attributes can call this routine to set such a thread's priority relative to the system process in which the thread is created.</p>
+
 <p>The new base priority is restricted to the priority class of the given thread's process. Therefore, the base priority is not allowed to cross over from a variable priority class to a real-time priority class or vice versa.</p>
+
 <p><strong>KeSetBasePriorityThread</strong> is a relatively expensive operation that should be used sparingly. Avoid frequent calls to this function, as repeated priority changes (such as once per minute) can significantly impact system performance and prevent the scheduler from operating efficiently. Use this function only when persistent priority changes are required, not for temporary adjustments or periodic updates.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="kegetcurrentthread" title="PKTHREAD KeGetCurrentThread();">KeGetCurrentThread</a></strong></p>
+
 <p><strong><a href="kequeryprioritythread" title="KPRIORITY KeQueryPriorityThread(&#10;  [in] PKTHREAD Thread&#10;);">KeQueryPriorityThread</a></strong></p>
+
 <p><strong><a href="kesetprioritythread" title="KPRIORITY KeSetPriorityThread(&#10;  [in, out] PKTHREAD  Thread,&#10;  [in]      KPRIORITY Priority&#10;);">KeSetPriorityThread</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

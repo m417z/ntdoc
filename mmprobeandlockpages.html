@@ -66,34 +66,58 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>MmProbeAndLockPages function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>MmProbeAndLockPages</strong> routine probes the specified virtual memory pages, makes them resident, and locks them in memory (say for a DMA transfer). This ensures the pages cannot be freed and reallocated while a device driver (or hardware) is still using them.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>MemoryDescriptorList</code> [in, out]</h3>
+
 <p>A pointer to an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> that specifies a virtual memory buffer. If the routine successfully locks the pages in memory, the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> is updated to describe the underlying physical pages.</p>
+
 <h3><code>AccessMode</code> [in]</h3>
+
 <p>The access mode in which to probe the arguments, either <strong>KernelMode</strong> or <strong>UserMode</strong>.</p>
+
 <h3><code>Operation</code> [in]</h3>
+
 <p>The type of operation for which the caller wants the access rights probed and the pages locked. Set this parameter to <strong>IoReadAccess</strong>, <strong>IoWriteAccess</strong>, or <strong>IoModifyAccess</strong>. <strong>IoReadAccess</strong> indicates that the driver can examine the contents of the buffer but cannot change the contents. <strong>IoWriteAccess</strong> and <strong>IoModifyAccess</strong>, which are equivalent, indicate that the driver has both read and write access to the buffer.</p>
+
 <h2>Remarks</h2>
+
 <p>The highest-level driver in a chain of layered drivers that use direct I/O calls this routine. Drivers that use buffered I/O never call <strong>MmProbeAndLockPages</strong>.</p>
+
 <p><strong>MmProbeAndLockPages</strong> performs the following operations:</p>
+
 <ol>
 <li>If the specified memory range is paged to a backing store (disk, network, and so on), <strong>MmProbeAndLockPages</strong> makes it resident.</li>
 <li>The routine then confirms that the pages permit the operation specified by the <em>Operation</em> parameter.</li>
 <li>If the memory range permits the specified operation, the routine locks the pages in memory so that they cannot be paged out. Use the <a href="mmunlockpages" title="VOID MmUnlockPages(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmUnlockPages</a> routine to unlock the pages.</li>
-<li>Finally, the routine updates the <a href="https://learn.microsoft.com/windows-hardware/drivers/">page frame number</a> (PFN) array in the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> to describe the locked physical pages.</li>
+<li>Finally, the routine updates the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/">page frame number</a> (PFN) array in the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> to describe the locked physical pages.</li>
 </ol>
+
 <p>A successful call to <strong>MmProbeAndLockPages</strong> locks the pages in an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> and sets the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> structure to the locked state. Every such call must be matched by a corresponding call to <strong><a href="mmunlockpages" title="VOID MmUnlockPages(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmUnlockPages</a></strong> that unlocks the pages and sets the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> to the unlocked state. After an <strong>MmProbeAndLockPages</strong> call sets an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> to the locked state, a second call to MmProbeAndLockPages to lock the same <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> is not allowed until <strong><a href="mmunlockpages" title="VOID MmUnlockPages(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmUnlockPages</a></strong> is first called to unlock the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>.</p>
+
 <p>If two or more MDLs describe the same physical page, the page can be locked multiple times—once for each <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>. The page is unlocked when the last <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> is set to the unlocked state.</p>
+
 <p>A routine such as <a href="mmbuildmdlfornonpagedpool" title="VOID MmBuildMdlForNonPagedPool(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmBuildMdlForNonPagedPool</a> or <a href="iobuildpartialmdl" title="VOID IoBuildPartialMdl(&#10;  [in]      PMDL  SourceMdl,&#10;  [in, out] PMDL  TargetMdl,&#10;  [in]      PVOID VirtualAddress,&#10;  [in]      ULONG Length&#10;);">IoBuildPartialMdl</a> updates an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> to describe pages that are either nonpageable or already locked. A call to <strong>MmProbeAndLockPages</strong> or <strong><a href="mmunlockpages" title="VOID MmUnlockPages(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmUnlockPages</a></strong> to lock or unlock such an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> is not allowed.</p>
-<p>Calls to <strong>MmProbeAndLockPages</strong> must be enclosed in a <strong>try/except</strong> block. If the pages do not support the specified operation, the routine raises the STATUS_ACCESS_VIOLATION or other exceptions. For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/handling-exceptions">Handling Exceptions</a>.</p>
+
+<p>Calls to <strong>MmProbeAndLockPages</strong> must be enclosed in a <strong>try/except</strong> block. If the pages do not support the specified operation, the routine raises the STATUS_ACCESS_VIOLATION or other exceptions. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/handling-exceptions">Handling Exceptions</a>.</p>
+
 <p>Callers of <strong>MmProbeAndLockPages</strong> must be running at IRQL &lt;= APC_LEVEL for pageable addresses, or at IRQL &lt;= DISPATCH_LEVEL for nonpageable addresses.</p>
+
 <p>This routine does not provide any guarantees about the virtual address that describes these pages (that is, the virtual address might be unmapped, reused, and so on). However, the physical pages are guaranteed to be locked on successful return.</p>
-<p>To avoid page faults, use <a href="https://learn.microsoft.com/windows/win32/api/memoryapi/nf-memoryapi-virtuallock"><strong>VirtualLock</strong></a> to lock the virtual address so it will not be trimmed unless the app unlocks it or explicitly frees it by calling <a href="https://learn.microsoft.com/windows/win32/api/memoryapi/nf-memoryapi-virtualfree"><strong>VirtualFree</strong></a> or <a href="https://learn.microsoft.com/windows/win32/api/memoryapi/nf-memoryapi-unmapviewoffile"><strong>UnmapViewOfFile</strong></a>.</p>
+
+<p>To avoid page faults, use <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/memoryapi/nf-memoryapi-virtuallock"><strong>VirtualLock</strong></a> to lock the virtual address so it will not be trimmed unless the app unlocks it or explicitly frees it by calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/memoryapi/nf-memoryapi-virtualfree"><strong>VirtualFree</strong></a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/memoryapi/nf-memoryapi-unmapviewoffile"><strong>UnmapViewOfFile</strong></a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="iobuildpartialmdl" title="VOID IoBuildPartialMdl(&#10;  [in]      PMDL  SourceMdl,&#10;  [in, out] PMDL  TargetMdl,&#10;  [in]      PVOID VirtualAddress,&#10;  [in]      ULONG Length&#10;);">IoBuildPartialMdl</a></p>
+
 <p><a href="mmbuildmdlfornonpagedpool" title="VOID MmBuildMdlForNonPagedPool(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmBuildMdlForNonPagedPool</a></p>
+
 <p><a href="mmunlockpages" title="VOID MmUnlockPages(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmUnlockPages</a></p>
 <hr>
 <div class="ntdoc-description-links">

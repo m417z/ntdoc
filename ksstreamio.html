@@ -74,88 +74,121 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>KsStreamIo</strong> function performs a stream read or write against the specified file object. The function attempts to use <strong>FastIoDispatch</strong> if possible, or it generates a read or write request against the device object.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>FileObject</code> [in]</h3>
+
 <p>Specifies the file object to perform the I/O against.</p>
+
 <h3><code>Event</code> [in, optional]</h3>
+
 <p>Optionally contains the event to use in the I/O. If none is passed, the call is assumed to be on a synchronous file object or the caller is waiting for the file object's event, or else it can be asynchronously completed. If used, and the KSSTREAM_SYNCHRONOUS flag is not set, this must be an event allocated by the object manager. If the caller is performing asynchronous I/O, it must either wait for the file object's event or pass an event in this parameter and wait for it. If this is not done, then there is no way for the caller to know when the IoStatusBlock has been updated by the call.</p>
+
 <h3><code>PortContext</code> [in, optional]</h3>
+
 <p>Optionally contains context information for a completion port.</p>
+
 <h3><code>CompletionRoutine</code> [in, optional]</h3>
+
 <p>Optionally points to a completion routine for this <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>.</p>
+
 <h3><code>CompletionContext</code> [in, optional]</h3>
+
 <p>If <em>CompletionRoutine</em> is specified, this provides a context pointer in the completion routine callback.</p>
+
 <h3><code>CompletionInvocationFlags</code> [in, optional]</h3>
+
 <p>Specifies invocation flags specifying when the completion routine is invoked. See following table for the values used.</p>
+
 <h3><code>IoStatusBlock</code> [out]</h3>
+
 <p>Location to return the status information. This is always assumed to be a valid address, regardless of the requester mode. The value must remain valid until the call has updated the status. The caller must either perform synchronous I/O or must wait for the file object's event or an event passed in the Event parameter before allowing this address to become invalid.</p>
+
 <h3><code>StreamHeaders</code> [in, out]</h3>
+
 <p>Specifies the list of stream headers. This address, as well as the addresses of the data buffers, are assumed to have been probed for appropriate access. Kernel-mode clients submitting streaming headers must allocate the headers from NonPagedPool memory.</p>
+
 <h3><code>Length</code> [in]</h3>
+
 <p>Specifies the size of the <em>StreamHeaders</em> passed.</p>
+
 <h3><code>Flags</code> [in]</h3>
+
 <p>Specifies various flags for the I/O. See the following table for the values used.</p>
+
 <h3><code>RequestorMode</code> [in]</h3>
+
 <p>Indicates the processor mode to place in the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> if one is needs to be generated. This variable also determines if a fast I/O call can be performed. If the requester mode is not kernel mode, but the previous mode is, then fast I/O cannot be used.</p>
+
 <h2>Return value</h2>
+
 <p>The <strong>KsStreamIo</strong> function returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if successful, STATUS_PENDING if action is pending, or if unsuccessful it returns an I/O error.</p>
+
 <h2>Remarks</h2>
+
 <p>The following enumerated values are used for the <em>CompletionInvocationFlags</em> variable and are of type <a href="kscompletion_invocation" title="typedef enum {&#10;  KsInvokeOnSuccess,&#10;  KsInvokeOnError,&#10;  KsInvokeOnCancel&#10;} KSCOMPLETION_INVOCATION;">KSCOMPLETION_INVOCATION</a>:</p>
+
 <table>
 <thead>
 <tr>
-<th><em>CompletionInvocationFlags</em></th>
-<th>Description</th>
+  <th><em>CompletionInvocationFlags</em></th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>KsInvokeOnSuccess</td>
-<td>Invokes the completion routine on success.</td>
+  <td>KsInvokeOnSuccess</td>
+  <td>Invokes the completion routine on success.</td>
 </tr>
 <tr>
-<td>KsInvokeOnError</td>
-<td>Invokes the completion routine on error.</td>
+  <td>KsInvokeOnError</td>
+  <td>Invokes the completion routine on error.</td>
 </tr>
 <tr>
-<td>KsInvokeOnCancel</td>
-<td>Invokes the completion routine on cancellation.</td>
+  <td>KsInvokeOnCancel</td>
+  <td>Invokes the completion routine on cancellation.</td>
 </tr>
 </tbody>
 </table>
+
 <p>The following defined values are used for the <em>Flags</em> variable:</p>
+
 <table>
 <thead>
 <tr>
-<th><em>Flags</em></th>
-<th>Description</th>
+  <th><em>Flags</em></th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>KSSTREAM_READ</td>
-<td>Specifies that an IOCTL_KS_STREAMREAD <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is to be built. This is the default.</td>
+  <td>KSSTREAM_READ</td>
+  <td>Specifies that an IOCTL_KS_STREAMREAD <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is to be built. This is the default.</td>
 </tr>
 <tr>
-<td>KSSTREAM_WRITE</td>
-<td>Specifies that an IOCTL_KS_STREAMWRITE <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is to be built.</td>
+  <td>KSSTREAM_WRITE</td>
+  <td>Specifies that an IOCTL_KS_STREAMWRITE <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is to be built.</td>
 </tr>
 <tr>
-<td>KSSTREAM_PAGED_DATA</td>
-<td>Specifies that the data is pageable. This is the default and can be used at all times.</td>
+  <td>KSSTREAM_PAGED_DATA</td>
+  <td>Specifies that the data is pageable. This is the default and can be used at all times.</td>
 </tr>
 <tr>
-<td>KSSTREAM_NONPAGED_DATA</td>
-<td>Specifies that the data is nonpaged and can be used as a performance enhancement.</td>
+  <td>KSSTREAM_NONPAGED_DATA</td>
+  <td>Specifies that the data is nonpaged and can be used as a performance enhancement.</td>
 </tr>
 <tr>
-<td>KSSTREAM_SYNCHRONOUS</td>
-<td>Specifies that the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is synchronous. This means that if the <em>Event</em> parameter is passed, it is not treated as an object manager event and is not referenced or dereferenced.</td>
+  <td>KSSTREAM_SYNCHRONOUS</td>
+  <td>Specifies that the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is synchronous. This means that if the <em>Event</em> parameter is passed, it is not treated as an object manager event and is not referenced or dereferenced.</td>
 </tr>
 </tbody>
 </table>
+
 <p>KSSTREAM_READ is equivalent to KSPROBE_STREAMREAD.</p>
+
 <p>Similarly, KSSTREAM_WRITE is equivalent to KSPROBE_STREAMWRITE.</p>
 <hr>
 <div class="ntdoc-description-links">

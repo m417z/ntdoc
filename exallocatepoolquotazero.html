@@ -66,28 +66,48 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <blockquote>
-<p>[!CAUTION]
-Microsoft is aware of an issue with ExAllocatePoolQuotaZero that can lead to an allocation not getting zeroed on Windows 10, version 1909.This issue has been fixed in a security refresh of the WDK for Windows 10, version 2004 and the Enterprise WDK (EWDK) for Windows 10, version 2004 on December 16th, 2020. For information on downloading the latest WDK, see <a href="https://learn.microsoft.com/windows-hardware/drivers/download-the-wdk">Download the Windows Driver Kit (WDK)</a>.</p>
+  <p>[!CAUTION]
+  Microsoft is aware of an issue with ExAllocatePoolQuotaZero that can lead to an allocation not getting zeroed on Windows 10, version 1909.This issue has been fixed in a security refresh of the WDK for Windows 10, version 2004 and the Enterprise WDK (EWDK) for Windows 10, version 2004 on December 16th, 2020. For information on downloading the latest WDK, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/download-the-wdk">Download the Windows Driver Kit (WDK)</a>.</p>
 </blockquote>
+
 <p>This routine is a wrapper for and a recommended replacement option for <a href="exallocatepoolwithquotatag" title="PVOID ExAllocatePoolWithQuotaTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithQuotaTag</a>.</p>
+
 <p>ExAllocatePoolQuotaZero allocates pool memory of the specified type and returns a pointer to the allocated block. It is identical to <a href="exallocatepoolwithquotatag" title="PVOID ExAllocatePoolWithQuotaTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithQuotaTag</a> except it zero initializes the allocated memory. If this is not desired, use <a href="exallocatepoolquotauninitialized" title="PVOID ExAllocatePoolQuotaUninitialized(&#10;  __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  SIZE_T                                         NumberOfBytes,&#10;  ULONG                                          Tag&#10;);">ExAllocatePoolQuotaUninitialized</a> instead.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>PoolType</code></h3>
+
 <p>The type of pool memory to allocate. For a description of the available pool memory types, see <strong><a href="pool_type" title="typedef enum _POOL_TYPE {&#10;    NonPagedPool,&#10;    NonPagedPoolExecute = NonPagedPool,&#10;    PagedPool,&#10;    NonPagedPoolMustSucceed = NonPagedPool + 2,&#10;    DontUseThisType,&#10;    NonPagedPoolCacheAligned = NonPagedPool + 4,&#10;    PagedPoolCacheAligned,&#10;    NonPagedPoolCacheAlignedMustS = NonPagedPool + 6,&#10;    MaxPoolType,&#10;    NonPagedPoolBase = 0,&#10;    NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,&#10;    NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,&#10;    NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,&#10;    NonPagedPoolSession = 32,&#10;    PagedPoolSession = NonPagedPoolSession + 1,&#10;    NonPagedPoolMustSucceedSession = PagedPoolSession + 1,&#10;    DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,&#10;    NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,&#10;    PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,&#10;...">POOL_TYPE</a></strong>.</p>
+
 <p>Similarly, you can modify the <em>PoolType</em> value by bitwise-ORing this value with the POOL_COLD_ALLOCATION flag (also defined in <code>wdm.h</code>) as a hint to the kernel to allocate the memory from pages that are likely to be paged out quickly. To reduce the amount of resident pool memory as much as possible, you should not reference these allocations frequently. The POOL_COLD_ALLOCATION flag is only advisory.</p>
+
 <h3><code>NumberOfBytes</code></h3>
+
 <p>The number of bytes to allocate.</p>
+
 <h3><code>Tag</code></h3>
+
 <p>The pool tag to use for the allocated memory. Specify the pool tag as a non-zero character literal of one to four characters delimited by single quotation marks (for example, <code>Tag1</code>). The string is usually specified in reverse order (for example, <code>1gaT</code>). Each ASCII character in the tag must be a value in the range 0x20 (space) to 0x7E (tilde). Each allocation code path should use a unique pool tag to help debuggers and verifiers identify the code path.</p>
+
 <h2>Return value</h2>
+
 <p>ExAllocatePoolQuotaZero returns a pointer to the allocated pool.</p>
+
 <p>If the request cannot be satisfied, ExAllocatePoolQuotaZero raises an exception unless POOL_QUOTA_FAIL_INSTEAD_OF_RAISE is specified. Using POOL_QUOTA_FAIL_INSTEAD_OF_RAISE is preferred for performance reasons.</p>
+
 <h2>Remarks</h2>
+
 <p>To run on versions of Windows prior to Windows 10 version 2004, the driver must define POOL_ZERO_DOWN_LEVEL_SUPPORT and call <a href="exinitializedriverruntime" title="VOID ExInitializeDriverRuntime(&#10;  ULONG RuntimeFlags&#10;);">ExInitializeDriverRuntime</a> before calling this function.</p>
+
 <p>This routine is called by highest-level drivers that allocate memory to satisfy a request in the context of the process that originally made the I/O request. Lower-level drivers call <a href="exallocatepoolzero" title="PVOID ExAllocatePoolZero(&#10;  __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  SIZE_T                                         NumberOfBytes,&#10;  ULONG                                          Tag&#10;);">ExAllocatePoolZero</a> instead.</p>
+
 <p>See the Remarks section of <a href="exallocatepoolwithquotatag" title="PVOID ExAllocatePoolWithQuotaTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithQuotaTag</a> for additional guidance.</p>
+
 <h2>See also</h2>
+
 <p><a href="exallocatepoolquotauninitialized" title="PVOID ExAllocatePoolQuotaUninitialized(&#10;  __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  SIZE_T                                         NumberOfBytes,&#10;  ULONG                                          Tag&#10;);">ExAllocatePoolQuotaUninitialized</a></p>
 <hr>
 <div class="ntdoc-description-links">

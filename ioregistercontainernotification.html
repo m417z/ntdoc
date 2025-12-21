@@ -69,78 +69,112 @@ IoRegisterContainerNotification(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The <strong>IoRegisterContainerNotification</strong> routine registers a kernel-mode driver to receive notifications about a specified class of events.</p>
+
 <h2>Syntax</h2>
-<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-IoRegisterContainerNotification(
-    _In_ <a href="io_container_notification_class" title="typedef enum _IO_CONTAINER_NOTIFICATION_CLASS {&#10;  IoSessionStateNotification,&#10;  IoMaxContainerNotificationClass&#10;} IO_CONTAINER_NOTIFICATION_CLASS;">IO_CONTAINER_NOTIFICATION_CLASS</a> NotificationClass,
-    _In_ PIO_CONTAINER_NOTIFICATION_FUNCTION CallbackFunction,
-    _In_reads_bytes_opt_(NotificationInformationLength) PVOID NotificationInformation,
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NotificationInformationLength,
-    _Out_ PVOID * CallbackRegistration
-    );
+
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="nf">IoRegisterContainerNotification</span><span class="p">(</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="io_container_notification_class" title="typedef enum _IO_CONTAINER_NOTIFICATION_CLASS {&#10;  IoSessionStateNotification,&#10;  IoMaxContainerNotificationClass&#10;} IO_CONTAINER_NOTIFICATION_CLASS;">IO_CONTAINER_NOTIFICATION_CLASS</a></span><span class="w"> </span><span class="n">NotificationClass</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">PIO_CONTAINER_NOTIFICATION_FUNCTION</span><span class="w"> </span><span class="n">CallbackFunction</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_reads_bytes_opt_</span><span class="p">(</span><span class="n">NotificationInformationLength</span><span class="p">)</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">NotificationInformation</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">NotificationInformationLength</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_Out_</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">CallbackRegistration</span>
+<span class="w">    </span><span class="p">);</span>
 </code></pre>
+</div>
+
 <h2>Parameters</h2>
+
 <h3><code>NotificationClass</code> [in]</h3>
+
 <p>Specifies the class of events for which the caller (driver) requests notifications. Set this parameter to the following <a href="io_container_notification_class" title="typedef enum _IO_CONTAINER_NOTIFICATION_CLASS {&#10;  IoSessionStateNotification,&#10;  IoMaxContainerNotificationClass&#10;} IO_CONTAINER_NOTIFICATION_CLASS;">IO_CONTAINER_NOTIFICATION_CLASS</a> enumeration value:</p>
+
 <ul>
 <li><strong>IoSessionStateNotification</strong></li>
 </ul>
+
 <p>For more information, see the following Remarks section.</p>
+
 <h3><code>CallbackFunction</code> [in]</h3>
+
 <p>A pointer to a callback function that is implemented by the caller (driver). The I/O manager calls this function to notify the caller when an event of the class indicated by <em>NotificationClass</em> occurs. For <em>NotificationClass</em> = <strong>IoSessionStateNotification</strong>, this parameter is a pointer to a caller-supplied <a href="io_session_notification_function" title="IO_SESSION_NOTIFICATION_FUNCTION IoSessionNotificationFunction;&#10;&#10;NTSTATUS IoSessionNotificationFunction(&#10;  [in] PVOID SessionObject,&#10;  [in] PVOID IoObject,&#10;  [in] ULONG Event,&#10;  [in] PVOID Context,&#10;  [in] PVOID NotificationPayload,&#10;  [in] ULONG PayloadLength&#10;)&#10;{...}">IO_SESSION_NOTIFICATION_FUNCTION</a> function. However, the caller should cast this function pointer to type PIO_CONTAINER_NOTIFICATION_FUNCTION to match the parameter type. For more information, see the following Remarks section.</p>
+
 <h3><code>NotificationInformation</code> [in, optional]</h3>
+
 <p>A pointer to a caller-allocated buffer that contains the notification information structure for an event of the class specified by <em>NotificationClass</em>. For <em>NotificationClass</em> = <strong>IoSessionStateNotification</strong>, <em>NotificationInformation</em> points to an <strong><a href="io_session_state_notification" title="typedef struct _IO_SESSION_STATE_NOTIFICATION {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;  PVOID IoObject;&#10;  ULONG EventMask;&#10;  PVOID Context;&#10;} IO_SESSION_STATE_NOTIFICATION, *PIO_SESSION_STATE_NOTIFICATION;">IO_SESSION_STATE_NOTIFICATION</a></strong> structure. The caller must fill out this structure before it calls <strong>IoRegisterContainerNotification</strong>. During this call, <strong>IoRegisterContainerNotification</strong> copies the data from this structure, and the I/O manager does not access the driver's copy of the structure after the call returns.</p>
+
 <h3><code>NotificationInformationLength</code> [in]</h3>
+
 <p>The size, in bytes, of the notification information structure contained in the buffer that is pointed to by <em>NotificationInformation</em>. For <em>NotificationClass</em> = <strong>IoSessionStateNotification</strong>, set this parameter to <strong>sizeof</strong>(<strong><a href="io_session_state_notification" title="typedef struct _IO_SESSION_STATE_NOTIFICATION {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;  PVOID IoObject;&#10;  ULONG EventMask;&#10;  PVOID Context;&#10;} IO_SESSION_STATE_NOTIFICATION, *PIO_SESSION_STATE_NOTIFICATION;">IO_SESSION_STATE_NOTIFICATION</a></strong>).</p>
+
 <h3><code>CallbackRegistration</code> [out]</h3>
+
 <p>A pointer to a location into which this routine writes the address of a container notification registration object. This object is an opaque, system object in which the I/O manager stores information about the caller's container notification registration. When notifications are no longer required, the caller cancels the registration by passing this object pointer to the <a href="iounregistercontainernotification" title="VOID IoUnregisterContainerNotification(&#10;  [in] PVOID CallbackRegistration&#10;);">IoUnregisterContainerNotification</a> routine.</p>
+
 <h2>Return value</h2>
+
 <p><strong>IoRegisterContainerNotification</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call is successful. Possible error return values include the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INVALID_PARAMETER_1</strong></td>
-<td>Parameter <em>NotificationClass</em> is not a valid <strong><a href="io_container_notification_class" title="typedef enum _IO_CONTAINER_NOTIFICATION_CLASS {&#10;  IoSessionStateNotification,&#10;  IoMaxContainerNotificationClass&#10;} IO_CONTAINER_NOTIFICATION_CLASS;">IO_CONTAINER_NOTIFICATION_CLASS</a></strong> enumeration constant.</td>
+  <td><strong>STATUS_INVALID_PARAMETER_1</strong></td>
+  <td>Parameter <em>NotificationClass</em> is not a valid <strong><a href="io_container_notification_class" title="typedef enum _IO_CONTAINER_NOTIFICATION_CLASS {&#10;  IoSessionStateNotification,&#10;  IoMaxContainerNotificationClass&#10;} IO_CONTAINER_NOTIFICATION_CLASS;">IO_CONTAINER_NOTIFICATION_CLASS</a></strong> enumeration constant.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INVALID_PARAMETER_3</strong></td>
-<td>The information in the structure that is pointed to by <em>NotificationInformation</em> is incorrect.</td>
+  <td><strong>STATUS_INVALID_PARAMETER_3</strong></td>
+  <td>The information in the structure that is pointed to by <em>NotificationInformation</em> is incorrect.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INVALID_PARAMETER_4</strong></td>
-<td>Parameter <em>NotificationInformationLength</em> does not equal the size of the notification information structure that is required for use with the specified <em>NotificationClass</em> parameter value.</td>
+  <td><strong>STATUS_INVALID_PARAMETER_4</strong></td>
+  <td>Parameter <em>NotificationInformationLength</em> does not equal the size of the notification information structure that is required for use with the specified <em>NotificationClass</em> parameter value.</td>
 </tr>
 <tr>
-<td><strong>STATUS_ALREADY_COMMITTED</strong></td>
-<td>The driver is already registered to receive <em>NotificationClass</em> notifications of events that are associated with the specified I/O object.</td>
+  <td><strong>STATUS_ALREADY_COMMITTED</strong></td>
+  <td>The driver is already registered to receive <em>NotificationClass</em> notifications of events that are associated with the specified I/O object.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-<td>The operating system has insufficient resources to create the requested registration.</td>
+  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+  <td>The operating system has insufficient resources to create the requested registration.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
-<p>This routine can potentially support notifications of events in a variety of event classes. In Windows 7, this routine supports only <strong>IoSessionStateNotification</strong> notifications, which notify a kernel-mode driver of changes in the status of user sessions that the driver is interested in. For user-mode applications, the <a href="https://learn.microsoft.com/windows/win32/api/wtsapi32/nf-wtsapi32-wtsregistersessionnotification">WTSRegisterSessionNotification</a> function fills a similar role.</p>
+
+<p>This routine can potentially support notifications of events in a variety of event classes. In Windows 7, this routine supports only <strong>IoSessionStateNotification</strong> notifications, which notify a kernel-mode driver of changes in the status of user sessions that the driver is interested in. For user-mode applications, the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/wtsapi32/nf-wtsapi32-wtsregistersessionnotification">WTSRegisterSessionNotification</a> function fills a similar role.</p>
+
 <p>The function pointer type for the <em>CallbackFunction</em> parameter is defined as follows:</p>
-<pre lang="cpp"><code>typedef <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-  (*PIO_CONTAINER_NOTIFICATION_FUNCTION)(
-    );
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="w">  </span><span class="p">(</span><span class="o">*</span><span class="n">PIO_CONTAINER_NOTIFICATION_FUNCTION</span><span class="p">)(</span>
+<span class="w">    </span><span class="p">);</span>
 </code></pre>
+</div>
+
 <p>The caller should cast the callback function pointer to this type to match the <em>CallbackFunction</em> parameter type. <strong>IoRegisterContainerNotification</strong> determines the actual type of the callback function pointer from the <em>NotificationClass</em> parameter. For <em>NotificationClass</em> = <strong>IoSessionStateNotification</strong>, <em>CallbackFunction</em> points to an <a href="io_session_notification_function" title="IO_SESSION_NOTIFICATION_FUNCTION IoSessionNotificationFunction;&#10;&#10;NTSTATUS IoSessionNotificationFunction(&#10;  [in] PVOID SessionObject,&#10;  [in] PVOID IoObject,&#10;  [in] ULONG Event,&#10;  [in] PVOID Context,&#10;  [in] PVOID NotificationPayload,&#10;  [in] ULONG PayloadLength&#10;)&#10;{...}">IO_SESSION_NOTIFICATION_FUNCTION</a> function.</p>
+
 <h2>See also</h2>
+
 <p><a href="io_container_notification_class" title="typedef enum _IO_CONTAINER_NOTIFICATION_CLASS {&#10;  IoSessionStateNotification,&#10;  IoMaxContainerNotificationClass&#10;} IO_CONTAINER_NOTIFICATION_CLASS;">IO_CONTAINER_NOTIFICATION_CLASS</a></p>
+
 <p><a href="io_session_notification_function" title="IO_SESSION_NOTIFICATION_FUNCTION IoSessionNotificationFunction;&#10;&#10;NTSTATUS IoSessionNotificationFunction(&#10;  [in] PVOID SessionObject,&#10;  [in] PVOID IoObject,&#10;  [in] ULONG Event,&#10;  [in] PVOID Context,&#10;  [in] PVOID NotificationPayload,&#10;  [in] ULONG PayloadLength&#10;)&#10;{...}">IO_SESSION_NOTIFICATION_FUNCTION</a></p>
+
 <p><strong><a href="io_session_state_notification" title="typedef struct _IO_SESSION_STATE_NOTIFICATION {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;  PVOID IoObject;&#10;  ULONG EventMask;&#10;  PVOID Context;&#10;} IO_SESSION_STATE_NOTIFICATION, *PIO_SESSION_STATE_NOTIFICATION;">IO_SESSION_STATE_NOTIFICATION</a></strong></p>
+
 <p><a href="iounregistercontainernotification" title="VOID IoUnregisterContainerNotification(&#10;  [in] PVOID CallbackRegistration&#10;);">IoUnregisterContainerNotification</a></p>
-<p><a href="https://learn.microsoft.com/windows/win32/api/wtsapi32/nf-wtsapi32-wtsregistersessionnotification">WTSRegisterSessionNotification</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/wtsapi32/nf-wtsapi32-wtsregistersessionnotification">WTSRegisterSessionNotification</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

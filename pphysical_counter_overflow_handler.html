@@ -68,66 +68,80 @@ VOID PphysicalCounterOverflowHandler(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p>The PPHYSICAL_COUNTER_OVERFLOW_HANDLER is implemented by the client driver to handle counter overflows from the counters resources acquired through the <strong><a href="halallocatehardwarecounters" title="NTHALAPI NTSTATUS HalAllocateHardwareCounters(&#10;        PGROUP_AFFINITY                 GroupAffinty,&#10;  [in]  ULONG                           GroupCount,&#10;  [in]  PPHYSICAL_COUNTER_RESOURCE_LIST ResourceList,&#10;  [out] PHANDLE                         CounterSetHandle&#10;);">HalAllocateHardwareCounters</a></strong> routine.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>OverflowBits</code></h3>
+
 <p>Provides a bitmap describing which counters overflowed.</p>
+
 <h3><code>OwningHandle</code></h3>
+
 <p>Provides the <strong>HANDLE</strong> corresponding to the resource set the overflowing counters belong to.</p>
+
 <h2>Remarks</h2>
+
 <p>Register your implementation of this callback function by calling <strong><a href="halallocatehardwarecounters" title="NTHALAPI NTSTATUS HalAllocateHardwareCounters(&#10;        PGROUP_AFFINITY                 GroupAffinty,&#10;  [in]  ULONG                           GroupCount,&#10;  [in]  PPHYSICAL_COUNTER_RESOURCE_LIST ResourceList,&#10;  [out] PHANDLE                         CounterSetHandle&#10;);">HalAllocateHardwareCounters</a></strong> with a structure of type <strong><a href="physical_counter_resource_list" title="typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {&#10;  ULONG                                Count;&#10;  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];&#10;} PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;">PHYSICAL_COUNTER_RESOURCE_LIST</a></strong>. In the <strong><a href="physical_counter_resource_list" title="typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {&#10;  ULONG                                Count;&#10;  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];&#10;} PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;">PHYSICAL_COUNTER_RESOURCE_LIST</a></strong>, provide a structure of type <a href="physical_counter_resource_descriptor" title="typedef struct _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR {&#10;  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE Type;&#10;  ULONG                                     Flags;&#10;  union {&#10;    ULONG                                       CounterIndex;&#10;    struct {&#10;      ULONG Begin;&#10;      ULONG End;&#10;    } Range;&#10;    PPHYSICAL_COUNTER_OVERFLOW_HANDLER          OverflowHandler;&#10;    PHYSICAL_COUNTER_EVENT_BUFFER_CONFIGURATION EventBufferConfiguration;&#10;    ULONG                                       IdentificationTag;&#10;  } u;&#10;} PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR, *PPHYSICAL_COUNTER_RESOURCE_DESCRIPTOR;">PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR</a> that specifies a <strong><a href="physical_counter_resource_descriptor_type" title="typedef enum _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE {&#10;  ResourceTypeSingle,&#10;  ResourceTypeRange,&#10;  ResourceTypeExtendedCounterConfiguration,&#10;  ResourceTypeOverflow,&#10;  ResourceTypeEventBuffer,&#10;  ResourceTypeIdenitificationTag,&#10;  ResourceTypeMax&#10;} PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE;">PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE</a></strong> of <strong>ResourceTypeOverflow</strong>.</p>
+
 <p>Here is an example prototype for an overflow handler:</p>
-<pre lang="cpp"><code>VOID
-PmuAwareOverflowHandler (
-    _In_ <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> OverflowStatus,
-    _In_ HANDLE OwningHandle
-    )
 
-/*++
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="nf">PmuAwareOverflowHandler</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">OverflowStatus</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">HANDLE</span><span class="w"> </span><span class="n">OwningHandle</span>
+<span class="w">    </span><span class="p">)</span>
 
-Routine Description:
+<span class="cm">/*++</span>
 
-    This routine is the PMU Overflow Handler for a sharing driver.
+<span class="cm">Routine Description:</span>
 
-Arguments:
+<span class="cm">    This routine is the PMU Overflow Handler for a sharing driver.</span>
 
-    OverflowStatus - The counters which have overflowed.
+<span class="cm">Arguments:</span>
 
-    OwningHandle - The handle owning the counters.
+<span class="cm">    OverflowStatus - The counters which have overflowed.</span>
 
-Return Value:
+<span class="cm">    OwningHandle - The handle owning the counters.</span>
 
-    None.
+<span class="cm">Return Value:</span>
 
---*/
-{
-}
+<span class="cm">    None.</span>
+
+<span class="cm">--*/</span>
+<span class="p">{</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <p>To register the overflow handler, use code like this:</p>
-<pre lang="cpp"><code>VOID
-CreateOverflowDescriptor (
-    _Inout_ <a href="physical_counter_resource_list" title="typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {&#10;  ULONG                                Count;&#10;  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];&#10;} PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;">PPHYSICAL_COUNTER_RESOURCE_LIST</a> CounterResourceList,
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DescriptorIndex
-    )
-{
 
-    CounterResourceList-&gt;Descriptors[DescriptorIndex].Type = ResourceTypeOverflow;
-    CounterResourceList-&gt;Descriptors[DescriptorIndex].u.OverflowHandler = PmuAwareOverflowHandler;
-}
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="nf">CreateOverflowDescriptor</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">_Inout_</span><span class="w"> </span><span class="n"><a href="physical_counter_resource_list" title="typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {&#10;  ULONG                                Count;&#10;  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];&#10;} PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;">PPHYSICAL_COUNTER_RESOURCE_LIST</a></span><span class="w"> </span><span class="n">CounterResourceList</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">DescriptorIndex</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+
+<span class="w">    </span><span class="n">CounterResourceList</span><span class="o">-&gt;</span><span class="n">Descriptors</span><span class="p">[</span><span class="n">DescriptorIndex</span><span class="p">].</span><span class="n">Type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ResourceTypeOverflow</span><span class="p">;</span>
+<span class="w">    </span><span class="n">CounterResourceList</span><span class="o">-&gt;</span><span class="n">Descriptors</span><span class="p">[</span><span class="n">DescriptorIndex</span><span class="p">].</span><span class="n">u</span><span class="p">.</span><span class="n">OverflowHandler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PmuAwareOverflowHandler</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <p>This callback is called at IRQL = PROFILE_LEVEL. This means it must always be memory-resident. The callback should return as quickly as possible and should not attempt to do any of the following.</p>
+
 <ul>
-<li>
-<p>Acquire or release spin locks.</p>
-</li>
-<li>
-<p>Access paged pool that is not locked in memory</p>
-</li>
-<li>
-<p>Call a pageable routine.</p>
-</li>
+<li><p>Acquire or release spin locks.</p></li>
+<li><p>Access paged pool that is not locked in memory</p></li>
+<li><p>Call a pageable routine.</p></li>
 </ul>
+
 <p>The callback does not need to handle clearing any overflow registers as it will be handled by the HAL.</p>
+
 <h2>See also</h2>
 <hr>
 <div class="ntdoc-description-links">

@@ -92,7 +92,9 @@ ZwQuerySecurityAttributesToken(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <p>Queries details about one or more token security attributes by name.</p>
+
 <h1>Parameters</h1>
+
 <ul>
 <li><code>TokenHandle</code> - a handle to the token or one of the supported pseudo-handles (see below). The handle must grant <code>TOKEN_QUERY</code> access.</li>
 <li><code>Attributes</code> - a pointer to an array attribute names to retrieve.</li>
@@ -101,24 +103,35 @@ ZwQuerySecurityAttributesToken(
 <li><code>Length</code> - the size of the provided buffer in bytes.</li>
 <li><code>ReturnLength</code> - an optional pointer to a variable that receives the number of bytes written when the function succeeds or the number of bytes requires when the buffer is too small.</li>
 </ul>
+
 <h1>Pseudo-handles</h1>
+
 <p>This function supports the following pseudo-handle values <strong>on Windows 8 and above</strong>:</p>
+
 <ul>
 <li><code><a href="ntcurrentprocesstoken" title="#define NtCurrentProcessToken() ((HANDLE)(LONG_PTR)-4) // NtOpenProcessToken(NtCurrentProcess())">NtCurrentProcessToken</a></code> - performs the query on the primary token of the calling process.</li>
 <li><code><a href="ntcurrentthreadtoken" title="#define NtCurrentThreadToken() ((HANDLE)(LONG_PTR)-5) // NtOpenThreadToken(NtCurrentThread())">NtCurrentThreadToken</a></code> - performs the query on the impersonation token of the calling thread. The function fails if the thread is not impersonating.</li>
 <li><code><a href="ntcurrentthreadeffectivetoken" title="#define NtCurrentThreadEffectiveToken() ((HANDLE)(LONG_PTR)-6) // NtOpenThreadToken(NtCurrentThread()) + NtOpenProcessToken(NtCurrentProcess())">NtCurrentThreadEffectiveToken</a></code> - performs the query on the impersonation token of the calling thread, if present. Otherwise, the function uses the primary token of the calling process.</li>
 </ul>
+
 <h1>Notable return values</h1>
+
 <ul>
 <li><code>STATUS_BUFFER_TOO_SMALL</code> and <code>STATUS_INFO_LENGTH_MISMATCH</code> indicate that the requested information does not fit into the provided buffer.</li>
 <li><code>STATUS_CANT_OPEN_ANONYMOUS</code> - the caller attempted to query information about the current thread token while impersonating an anonymous token.</li>
 <li><code>STATUS_NOT_FOUND</code> - one or more attribute names were not found in the token.</li>
 </ul>
+
 <h1>Remarks</h1>
+
 <p>The names of attributes are case-insensitive.</p>
+
 <p>This function has a <strong>bug/inconsistency</strong> and might succeed without returning any attributes (i.e., returning an array with zero entries) when the provided token has no associated security attributes. Therefore, it is recommended to check the <code>AttributeCount</code> field in the returned buffer before accessing the rest of the data.</p>
+
 <p>To enumerate all security attributes associated with a token, use <code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code> with <code><a href="tokensecurityattributes" title="#define TokenSecurityAttributes 39 // q; s: TOKEN_SECURITY_ATTRIBUTES_[AND_OPERATION_]INFORMATION (requires SeTcbPrivilege)">TokenSecurityAttributes</a></code> info class.</p>
+
 <h1>See also</h1>
+
 <ul>
 <li><code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code></li>
 <li><code><a href="ntsetinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _In_reads_bytes_(TokenInformationLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength&#10;    );">NtSetInformationToken</a></code></li>

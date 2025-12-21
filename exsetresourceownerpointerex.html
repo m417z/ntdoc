@@ -66,38 +66,69 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>ExSetResourceOwnerPointerEx function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>ExSetResourceOwnerPointerEx</strong> routine transfers the ownership of an executive resource from the calling thread to an owner pointer, which is a system address that identifies the resource owner.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Resource</code> [in, out]</h3>
-<p>A pointer to an executive resource (an opaque <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eresource-structures">ERESOURCE</a> structure) that is owned by the calling thread. The caller previously allocated this structure and initialized it by calling the <a href="exinitializeresourcelite" title="NTSTATUS ExInitializeResourceLite(&#10;  [out] PERESOURCE Resource&#10;);">ExInitializeResourceLite</a> routine. For more information, see the following Remarks section.</p>
+
+<p>A pointer to an executive resource (an opaque <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eresource-structures">ERESOURCE</a> structure) that is owned by the calling thread. The caller previously allocated this structure and initialized it by calling the <a href="exinitializeresourcelite" title="NTSTATUS ExInitializeResourceLite(&#10;  [out] PERESOURCE Resource&#10;);">ExInitializeResourceLite</a> routine. For more information, see the following Remarks section.</p>
+
 <h3><code>OwnerPointer</code> [in]</h3>
+
 <p>A pointer value that identifies the resource owner. This parameter value is nominally a pointer to a value of type ERESOURCE_THREAD but is cast to type PVOID. The caller must set the two least significant bits of this pointer value to ones. For more information, see the following Remarks section.</p>
+
 <h3><code>Flags</code> [in]</h3>
+
 <p>A set of flags that can modify the operation of this routine. Set this parameter either to zero or to the following flag value:</p>
+
 <ul>
 <li>FLAG_OWNER_POINTER_IS_THREAD</li>
 </ul>
+
 <p>If <em>Flags</em> = FLAG_OWNER_POINTER_IS_THREAD, <em>OwnerPointer</em> must point to a value of type ERESOURCE_THREAD, which is a pointer to an opaque thread object. If <em>Flags</em> = 0, <em>OwnerPointer</em> must point to a storage object in system memory that remains allocated until the resource is released. For more information, see the following Remarks section.</p>
+
 <h2>Remarks</h2>
+
 <p>This routine is available in Windows 7 and later versions of the Windows operating system.</p>
-<p><strong>ExSetResourceOwnerPointerEx</strong> enables a thread, which acts as a resource manager, to transfer ownership of an executive resource, which the thread has already acquired, to another thread, which then uses the resource. The executive resource is represented by an <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eresource-structures">ERESOURCE</a> structure.</p>
-<p>The caller must set the two least significant bits of the <em>OwnerPointer</em> parameter value to ones. The operating system uses these bits internally to distinguish an owner pointer that has been set by an <strong>ExSetResourceOwnerPointerEx</strong> call from a thread that has acquired a resource by calling the <a href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)">ExAcquireResourceExclusiveLite</a> or <a href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)">ExAcquireResourceSharedLite</a> routine.</p>
+
+<p><strong>ExSetResourceOwnerPointerEx</strong> enables a thread, which acts as a resource manager, to transfer ownership of an executive resource, which the thread has already acquired, to another thread, which then uses the resource. The executive resource is represented by an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eresource-structures">ERESOURCE</a> structure.</p>
+
+<p>The caller must set the two least significant bits of the <em>OwnerPointer</em> parameter value to ones. The operating system uses these bits internally to distinguish an owner pointer that has been set by an <strong>ExSetResourceOwnerPointerEx</strong> call from a thread that has acquired a resource by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)">ExAcquireResourceExclusiveLite</a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)">ExAcquireResourceSharedLite</a> routine.</p>
+
 <p>The thread that calls <strong>ExSetResourceOwnerPointerEx</strong> to transfer ownership of a resource must be the same thread that previously called the <strong>ExAcquireResource<em>Xxx</em>Lite</strong> routine to acquire the resource.</p>
+
 <p>If the resource-manager thread acquired the resource for exclusive access (by calling <strong><a href="exacquireresourceexclusivelite" title="BOOLEAN ExAcquireResourceExclusiveLite(&#10;  [in, out] PERESOURCE Resource,&#10;  [in]      BOOLEAN    Wait&#10;);">ExAcquireResourceExclusiveLite</a></strong>), the <strong>ExSetResourceOwnerPointerEx</strong> call transfers exclusive-access ownership to the resource-user thread. If the resource-manager thread acquired the resource for shared access (by calling <strong><a href="exacquireresourcesharedlite" title="BOOLEAN ExAcquireResourceSharedLite(&#10;  [in, out] PERESOURCE Resource,&#10;  [in]      BOOLEAN    Wait&#10;);">ExAcquireResourceSharedLite</a></strong>), the <strong>ExSetResourceOwnerPointerEx</strong> call transfers shared-access ownership to the resource-user thread.</p>
-<p>When the resource-user thread no longer needs the resource, the resource should be released. Typically, the resource-user thread releases the resource. To do so, it must call the <a href="https://learn.microsoft.com/previous-versions/ff545585(v=vs.85)">ExReleaseResourceForThreadLite</a> routine. In this call, the <em>ThreadId</em> parameter value must match the value of the <em>OwnerPointer</em> parameter (including the two least significant bits) in the previous <strong>ExSetResourceOwnerPointerEx</strong> call that transferred ownership of the resource.</p>
-<p>After a <strong>ExSetResourceOwnerPointerEx</strong> call transfers ownership of a resource, the only other <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-eresource-routines">ERESOURCE routine</a> that a driver can call for the specified resource is <strong><a href="exreleaseresourceforthreadlite" title="VOID ExReleaseResourceForThreadLite(&#10;  [in, out] PERESOURCE       Resource,&#10;  [in]      ERESOURCE_THREAD ResourceThreadId&#10;);">ExReleaseResourceForThreadLite</a></strong>. An attempt to call another <strong>ERESOURCE</strong> routine, such as <a href="exreleaseresourcelite" title="VOID ExReleaseResourceLite(&#10;  [in, out] PERESOURCE Resource&#10;);">ExReleaseResourceLite</a>, for this resource is an error.</p>
-<p><strong>ExSetResourceOwnerPointerEx</strong> can operate in two significantly different modes. The mode is specified by the <em>Flags</em> parameter. To select the more versatile of the two modes, set <em>Flags</em> = FLAG_OWNER_POINTER_IS_THREAD. This <em>Flags</em> value informs the operating system that the <em>OwnerPointer</em> parameter is a pointer to the thread object of the resource-manager thread. The operating system can, if necessary, use this information to temporarily boost the priority of this thread to avoid priority inversion. To obtain the thread object pointer to use for the <em>OwnerPointer</em> value, a driver can call the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nf-ntddk-psgetcurrentthread">ExGetCurrentResourceThread</a> routine. Remember to set the two least significant bits of the <em>OwnerPointer</em> value to ones.</p>
+
+<p>When the resource-user thread no longer needs the resource, the resource should be released. Typically, the resource-user thread releases the resource. To do so, it must call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff545585(v=vs.85)">ExReleaseResourceForThreadLite</a> routine. In this call, the <em>ThreadId</em> parameter value must match the value of the <em>OwnerPointer</em> parameter (including the two least significant bits) in the previous <strong>ExSetResourceOwnerPointerEx</strong> call that transferred ownership of the resource.</p>
+
+<p>After a <strong>ExSetResourceOwnerPointerEx</strong> call transfers ownership of a resource, the only other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-eresource-routines">ERESOURCE routine</a> that a driver can call for the specified resource is <strong><a href="exreleaseresourceforthreadlite" title="VOID ExReleaseResourceForThreadLite(&#10;  [in, out] PERESOURCE       Resource,&#10;  [in]      ERESOURCE_THREAD ResourceThreadId&#10;);">ExReleaseResourceForThreadLite</a></strong>. An attempt to call another <strong>ERESOURCE</strong> routine, such as <a href="exreleaseresourcelite" title="VOID ExReleaseResourceLite(&#10;  [in, out] PERESOURCE Resource&#10;);">ExReleaseResourceLite</a>, for this resource is an error.</p>
+
+<p><strong>ExSetResourceOwnerPointerEx</strong> can operate in two significantly different modes. The mode is specified by the <em>Flags</em> parameter. To select the more versatile of the two modes, set <em>Flags</em> = FLAG_OWNER_POINTER_IS_THREAD. This <em>Flags</em> value informs the operating system that the <em>OwnerPointer</em> parameter is a pointer to the thread object of the resource-manager thread. The operating system can, if necessary, use this information to temporarily boost the priority of this thread to avoid priority inversion. To obtain the thread object pointer to use for the <em>OwnerPointer</em> value, a driver can call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nf-ntddk-psgetcurrentthread">ExGetCurrentResourceThread</a> routine. Remember to set the two least significant bits of the <em>OwnerPointer</em> value to ones.</p>
+
 <p>If <em>Flags</em> is zero, the behavior of <strong>ExSetResourceOwnerPointerEx</strong> is the same as that of the legacy <a href="exsetresourceownerpointer" title="VOID ExSetResourceOwnerPointer(&#10;  [in, out] PERESOURCE Resource,&#10;  [in]      PVOID      OwnerPointer&#10;);">ExSetResourceOwnerPointer</a> routine, which is available in Windows 2000 and later versions of the Windows operating system. That is, the <em>OwnerPointer</em> parameter points to a storage object that the resource-manager thread allocates in system memory before it calls <strong>ExSetResourceOwnerPointerEx</strong>. In this case, the object type and value are not relevant because <strong>ExSetResourceOwnerPointerEx</strong> does not attempt to access the object itself. Instead, the routine simply uses the memory address of the object to identify the resource owner. The storage for the object must begin at an even four-byte boundary in memory. To prevent two drivers from inadvertently using the same owner pointer at the same time, the resource-manager thread must not release the storage for the object until the resource is released.</p>
-<p>For more information about managing executive resources, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-eresource-routines">Introduction to ERESOURCE Routines</a>.</p>
+
+<p>For more information about managing executive resources, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/introduction-to-eresource-routines">Introduction to ERESOURCE Routines</a>.</p>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eresource-structures">ERESOURCE</a></p>
-<p><a href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)">ExAcquireResourceExclusiveLite</a></p>
-<p><a href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)">ExAcquireResourceSharedLite</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nf-ntddk-psgetcurrentthread">ExGetCurrentResourceThread</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eresource-structures">ERESOURCE</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)">ExAcquireResourceExclusiveLite</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)">ExAcquireResourceSharedLite</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nf-ntddk-psgetcurrentthread">ExGetCurrentResourceThread</a></p>
+
 <p><a href="exinitializeresourcelite" title="NTSTATUS ExInitializeResourceLite(&#10;  [out] PERESOURCE Resource&#10;);">ExInitializeResourceLite</a></p>
-<p><a href="https://learn.microsoft.com/previous-versions/ff545585(v=vs.85)">ExReleaseResourceForThreadLite</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff545585(v=vs.85)">ExReleaseResourceForThreadLite</a></p>
+
 <p><a href="exreleaseresourcelite" title="VOID ExReleaseResourceLite(&#10;  [in, out] PERESOURCE Resource&#10;);">ExReleaseResourceLite</a></p>
+
 <p><a href="exsetresourceownerpointer" title="VOID ExSetResourceOwnerPointer(&#10;  [in, out] PERESOURCE Resource,&#10;  [in]      PVOID      OwnerPointer&#10;);">ExSetResourceOwnerPointer</a></p>
 <hr>
 <div class="ntdoc-description-links">

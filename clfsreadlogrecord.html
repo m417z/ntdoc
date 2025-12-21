@@ -72,54 +72,86 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>ClfsReadLogRecord function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>ClfsReadLogRecord</strong> routine reads a target record in a CLFS stream and returns a read context that the caller can use to read the records preceding or following it in the stream.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>pvMarshalContext</code> [in]</h3>
+
 <p>A pointer to an opaque context that represents a marshalling area. The caller previously obtained this pointer by calling <a href="clfscreatemarshallingarea" title="CLFSUSER_API NTSTATUS ClfsCreateMarshallingArea(&#10;  [in]           PLOG_FILE_OBJECT   plfoLog,&#10;  [in]           POOL_TYPE          ePoolType,&#10;  [in, optional] PALLOCATE_FUNCTION pfnAllocBuffer,&#10;  [in, optional] PFREE_FUNCTION     pfnFreeBuffer,&#10;  [in]           ULONG              cbMarshallingBuffer,&#10;  [in]           ULONG              cMaxWriteBuffers,&#10;  [in]           ULONG              cMaxReadBuffers,&#10;  [out]          PVOID              *ppvMarshalContext&#10;);">ClfsCreateMarshallingArea</a>.</p>
+
 <h3><code>plsnFirst</code> [in, out]</h3>
-<p>A pointer to a <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_cls_lsn">CLFS_LSN</a> structure that supplies the LSN of the target record in the log.</p>
+
+<p>A pointer to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_cls_lsn">CLFS_LSN</a> structure that supplies the LSN of the target record in the log.</p>
+
 <h3><code>peContextMode</code> [in]</h3>
+
 <p>A value from the <a href="clfs_context_mode" title="typedef enum _CLFS_CONTEXT_MODE {&#10;  ClfsContextNone,&#10;  ClfsContextUndoNext,&#10;  ClfsContextPrevious,&#10;  ClfsContextForward&#10;} CLFS_CONTEXT_MODE, *PCLFS_CONTEXT_MODE, PPCLFS_CONTEXT_MODE;">CLFS_CONTEXT_MODE</a> enumeration that specifies the initial mode (ClfsContextUndoNext, ClfsContextPrevious, or ClfsContextForward) of the read context returned in <em>ppvReadContext</em>.</p>
+
 <h3><code>ppvReadBuffer</code> [out]</h3>
+
 <p>A pointer to a variable that receives a pointer to the data buffer of the target record.</p>
+
 <h3><code>pcbReadBuffer</code> [out]</h3>
-<p>A pointer to a <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>-typed variable that receives the size, in bytes, of the buffer pointed to by *<em>ppvReadBuffer</em>. This is the length of the data buffer of the target record.</p>
+
+<p>A pointer to a <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>-typed variable that receives the size, in bytes, of the buffer pointed to by <em>*ppvReadBuffer</em>. This is the length of the data buffer of the target record.</p>
+
 <h3><code>peRecordType</code> [out]</h3>
+
 <p>A pointer to a variable of type CLFS_RECORD_TYPE that receives one of the following values.</p>
+
 <table>
 <thead>
 <tr>
-<th>Value</th>
-<th>Meaning</th>
+  <th>Value</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>ClfsDataRecord</strong></td>
-<td>The target record is a data record.</td>
+  <td><strong>ClfsDataRecord</strong></td>
+  <td>The target record is a data record.</td>
 </tr>
 <tr>
-<td><strong>ClfsRestartRecord</strong></td>
-<td>The target record is a restart record.</td>
+  <td><strong>ClfsRestartRecord</strong></td>
+  <td>The target record is a restart record.</td>
 </tr>
 </tbody>
 </table>
+
 <h3><code>plsnUndoNext</code> [out]</h3>
+
 <p>A pointer to a <strong>CLFS_LSN</strong> structure that receives the undo-next LSN of the target record.</p>
+
 <h3><code>plsnPrevious</code> [out]</h3>
+
 <p>A pointer to a <strong>CLFS_LSN</strong> structure that receives the previous LSN of the target record.</p>
+
 <h3><code>ppvReadContext</code> [out]</h3>
+
 <p>A pointer to a variable that receives a pointer to an opaque read context. The client repeatedly passes this context to <a href="clfsreadnextlogrecord" title="CLFSUSER_API NTSTATUS ClfsReadNextLogRecord(&#10;  [in, out]      PVOID             pvReadContext,&#10;  [out]          PVOID             *ppvBuffer,&#10;  [out]          PULONG            pcbBuffer,&#10;  [in, out]      PCLFS_RECORD_TYPE peRecordType,&#10;  [in, optional] PCLFS_LSN         plsnUser,&#10;  [out]          PCLFS_LSN         plsnUndoNext,&#10;  [out]          PCLFS_LSN         plsnPrevious,&#10;  [out]          PCLFS_LSN         plsnRecord&#10;);">ClfsReadNextLogRecord</a> to read the remaining records in a sequence. After the client has read all the records in the sequence, it calls <a href="clfsterminatereadlog" title="CLFSUSER_API NTSTATUS ClfsTerminateReadLog(&#10;  [in] PVOID pvCursorContext&#10;);">ClfsTerminateReadLog</a> to free the read context.</p>
+
 <h2>Return value</h2>
+
 <p><strong>ClfsReadLogRecord</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if it succeeds; otherwise, it returns one of the error codes defined in Ntstatus.h.</p>
+
 <h2>Remarks</h2>
+
 <p>You must call <strong><a href="clfsterminatereadlog" title="CLFSUSER_API NTSTATUS ClfsTerminateReadLog(&#10;  [in] PVOID pvCursorContext&#10;);">ClfsTerminateReadLog</a></strong> when you have finished using the read context in order to avoid a memory leak.</p>
-<p>For an explanation of CLFS concepts and terminology, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-common-log-file-system">Common Log File System</a>.</p>
-<p>For information about reading records from CLFS streams, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/reading-data-records-from-a-clfs-stream">Reading Data Records from a CLFS Stream</a> and <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/reading-restart-records-from-a-clfs-stream">Reading Restart Records from a CLFS Stream</a>.</p>
+
+<p>For an explanation of CLFS concepts and terminology, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-common-log-file-system">Common Log File System</a>.</p>
+
+<p>For information about reading records from CLFS streams, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/reading-data-records-from-a-clfs-stream">Reading Data Records from a CLFS Stream</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/reading-restart-records-from-a-clfs-stream">Reading Restart Records from a CLFS Stream</a>.</p>
+
 <p>Read contexts are not thread-safe. Clients are responsible for serializing access to read contexts.</p>
+
 <h2>See also</h2>
+
 <p><a href="clfsreadnextlogrecord" title="CLFSUSER_API NTSTATUS ClfsReadNextLogRecord(&#10;  [in, out]      PVOID             pvReadContext,&#10;  [out]          PVOID             *ppvBuffer,&#10;  [out]          PULONG            pcbBuffer,&#10;  [in, out]      PCLFS_RECORD_TYPE peRecordType,&#10;  [in, optional] PCLFS_LSN         plsnUser,&#10;  [out]          PCLFS_LSN         plsnUndoNext,&#10;  [out]          PCLFS_LSN         plsnPrevious,&#10;  [out]          PCLFS_LSN         plsnRecord&#10;);">ClfsReadNextLogRecord</a></p>
+
 <p><a href="clfsterminatereadlog" title="CLFSUSER_API NTSTATUS ClfsTerminateReadLog(&#10;  [in] PVOID pvCursorContext&#10;);">ClfsTerminateReadLog</a></p>
 <hr>
 <div class="ntdoc-description-links">

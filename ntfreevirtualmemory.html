@@ -120,109 +120,143 @@ ZwFreeVirtualMemory(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>NtFreeVirtualMemory function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>NtFreeVirtualMemory</strong> routine releases, decommits, or both releases and decommits, a region of pages within the virtual address space of a specified process.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>ProcessHandle</code> [in]</h3>
+
 <p>A handle for the process in whose context the pages to be freed reside. Use the <strong><a href="ntcurrentprocess" title="#define NtCurrentProcess() ((HANDLE)(LONG_PTR)-1)">NtCurrentProcess</a></strong> macro, defined in <em>Ntddk.h</em>, to specify the current process.</p>
+
 <h3><code>BaseAddress</code> [in, out]</h3>
+
 <p>A pointer to a variable that will receive the base virtual address of the freed region of pages.</p>
+
 <p>If the <a href="mem_release" title="#define MEM_RELEASE 0x00008000">MEM_RELEASE</a> flag is set in the <em>FreeType</em> parameter, <em>*BaseAddress</em> must be the base address returned by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong> when the region was reserved.</p>
+
 <h3><code>RegionSize</code> [in, out]</h3>
+
 <p>A pointer to a variable that will receive the actual size, in bytes, of the freed region of pages. The routine rounds the initial value of this variable up to the next host page size boundary and writes the rounded value back to this variable.</p>
+
 <p>If the <a href="mem_release" title="#define MEM_RELEASE 0x00008000">MEM_RELEASE</a> flag is set in <em>*FreeType</em>, <em>*RegionSize</em> must be zero. <strong>NtFreeVirtualMemory</strong> frees the entire region that was reserved in the initial allocation call to <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong>.</p>
+
 <p>If the <a href="mem_decommit" title="#define MEM_DECOMMIT 0x00004000">MEM_DECOMMIT</a> flag is set in <em>*FreeType</em>, <strong>NtFreeVirtualMemory</strong> decommits all memory pages that contain one or more bytes in the range from <em>*BaseAddress</em> to (<em>*BaseAddress</em> + <em>*RegionSize</em>). This means, for example, that if a two-byte region of memory straddles a page boundary, both pages are decommitted.</p>
+
 <p><strong>NtFreeVirtualMemory</strong> decommits the entire region that was reserved by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong>. If the following three conditions are met, the entire region enters the reserved state:</p>
+
 <ul>
 <li>The <a href="mem_decommit" title="#define MEM_DECOMMIT 0x00004000">MEM_DECOMMIT</a> flag is set.</li>
 <li><em>*BaseAddress</em> is the base address returned by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong> when the region was reserved.</li>
 <li><em>*RegionSize</em> is zero.</li>
 </ul>
+
 <h3><code>FreeType</code> [in]</h3>
+
 <p>A bitmask containing flags that describe the type of free operation that <strong>NtFreeVirtualMemory</strong> will perform for the specified region of pages. The possible values are listed in the following table.</p>
+
 <table>
 <thead>
 <tr>
-<th>Flag</th>
-<th>Meaning</th>
+  <th>Flag</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="mem_decommit" title="#define MEM_DECOMMIT 0x00004000">MEM_DECOMMIT</a></td>
-<td><strong>NtFreeVirtualMemory</strong> will decommit the specified region of pages. The pages enter the reserved state. <strong>NtFreeVirtualMemory</strong> doesn't fail if you attempt to decommit an uncommitted page. This means that you can decommit a range of pages without first determining their current commitment state.</td>
+  <td><a href="mem_decommit" title="#define MEM_DECOMMIT 0x00004000">MEM_DECOMMIT</a></td>
+  <td><strong>NtFreeVirtualMemory</strong> will decommit the specified region of pages. The pages enter the reserved state. <strong>NtFreeVirtualMemory</strong> doesn't fail if you attempt to decommit an uncommitted page. This means that you can decommit a range of pages without first determining their current commitment state.</td>
 </tr>
 <tr>
-<td><a href="mem_release" title="#define MEM_RELEASE 0x00008000">MEM_RELEASE</a></td>
-<td><strong>NtFreeVirtualMemory</strong> will release the specified region of pages. The pages enter the free state. If you specify this flag, <strong>RegionSize</strong> must be zero, and <strong>BaseAddress</strong> must point to the base address returned by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong> when the region was reserved. <strong>NtFreeVirtualMemory</strong> fails if either of these conditions is not met. If any pages in the region are currently committed, <strong>NtFreeVirtualMemory</strong> first decommits and then releases them. <strong>NtFreeVirtualMemory</strong> doesn't fail if you attempt to release pages that are in different states, some reserved and some committed. This means that you can release a range of pages without first determining their current commitment state.</td>
+  <td><a href="mem_release" title="#define MEM_RELEASE 0x00008000">MEM_RELEASE</a></td>
+  <td><strong>NtFreeVirtualMemory</strong> will release the specified region of pages. The pages enter the free state. If you specify this flag, <strong>RegionSize</strong> must be zero, and <strong>BaseAddress</strong> must point to the base address returned by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong> when the region was reserved. <strong>NtFreeVirtualMemory</strong> fails if either of these conditions is not met. If any pages in the region are currently committed, <strong>NtFreeVirtualMemory</strong> first decommits and then releases them. <strong>NtFreeVirtualMemory</strong> doesn't fail if you attempt to release pages that are in different states, some reserved and some committed. This means that you can release a range of pages without first determining their current commitment state.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Return value</h2>
+
 <p><strong>NtFreeVirtualMemory</strong> returns either <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an error status code. Possible error status codes include the following.</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_ACCESS_DENIED</strong></td>
-<td>A process has requested access to an object, but has not been granted those access rights.</td>
+  <td><strong>STATUS_ACCESS_DENIED</strong></td>
+  <td>A process has requested access to an object, but has not been granted those access rights.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INVALID_HANDLE</strong></td>
-<td>An invalid <em>ProcessHandle</em> value was specified.</td>
+  <td><strong>STATUS_INVALID_HANDLE</strong></td>
+  <td>An invalid <em>ProcessHandle</em> value was specified.</td>
 </tr>
 <tr>
-<td><strong>STATUS_OBJECT_TYPE_MISMATCH</strong></td>
-<td>There is a mismatch between the type of object required by the requested operation and the type of object that is specified in the request.</td>
+  <td><strong>STATUS_OBJECT_TYPE_MISMATCH</strong></td>
+  <td>There is a mismatch between the type of object required by the requested operation and the type of object that is specified in the request.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>Each page in the process's virtual address space is in one of the three states described in the following table.</p>
+
 <table>
 <thead>
 <tr>
-<th>State</th>
-<th>Meaning</th>
+  <th>State</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>FREE</td>
-<td>The page is neither committed nor reserved. The page is not accessible to the process. Attempting to read from or write to a free page results in an access violation exception. You can use <strong>NtFreeVirtualMemory</strong> to put reserved or committed pages into the free state.</td>
+  <td>FREE</td>
+  <td>The page is neither committed nor reserved. The page is not accessible to the process. Attempting to read from or write to a free page results in an access violation exception. You can use <strong>NtFreeVirtualMemory</strong> to put reserved or committed pages into the free state.</td>
 </tr>
 <tr>
-<td>RESERVED</td>
-<td>The page is reserved. The range of addresses cannot be used by other allocation functions. The page is not accessible to the process and has no physical storage associated with it. Attempting to read from or write to a reserved page results in an access violation exception. You can use <strong>NtFreeVirtualMemory</strong> to put committed memory pages into the reserved state, and to put reserved memory pages into the free state.</td>
+  <td>RESERVED</td>
+  <td>The page is reserved. The range of addresses cannot be used by other allocation functions. The page is not accessible to the process and has no physical storage associated with it. Attempting to read from or write to a reserved page results in an access violation exception. You can use <strong>NtFreeVirtualMemory</strong> to put committed memory pages into the reserved state, and to put reserved memory pages into the free state.</td>
 </tr>
 <tr>
-<td>COMMITTED</td>
-<td>The page is committed. Physical storage in memory or in the paging file on disk is allocated for the page, and access is controlled by a protection code. The system initializes and loads each committed page into physical memory only at the first attempt to read from or write to that page. When a process terminates, the system releases all storage for committed pages. You can use <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong> to put committed memory pages into either the reserved or free state.</td>
+  <td>COMMITTED</td>
+  <td>The page is committed. Physical storage in memory or in the paging file on disk is allocated for the page, and access is controlled by a protection code. The system initializes and loads each committed page into physical memory only at the first attempt to read from or write to that page. When a process terminates, the system releases all storage for committed pages. You can use <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong> to put committed memory pages into either the reserved or free state.</td>
 </tr>
 </tbody>
 </table>
+
 <p><strong>NtFreeVirtualMemory</strong> can perform the following operations:</p>
+
 <ul>
 <li>Decommit a region of committed or uncommitted pages. After this operation, the pages are in the reserved state.</li>
 <li>Release a region of reserved pages. After this operation, the pages are in the free state.</li>
 <li>Decommit and release a region of committed or uncommitted pages. After this operation, the pages are in the free state.</li>
 </ul>
+
 <p><strong>NtFreeVirtualMemory</strong> can decommit a range of pages that are in different states, some committed and some uncommitted. This means that you can decommit a range of pages without first determining the current commitment state of each page. Decommitting a page releases its physical storage, either in memory or in the paging file on disk.</p>
+
 <p>If a page is decommitted but not released, its state changes to reserved. You can subsequently call <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong> to commit it, or <strong>NtFreeVirtualMemory</strong> to release it. Attempting to read from or write to a reserved page results in an access violation exception.</p>
+
 <p><strong>NtFreeVirtualMemory</strong> can release a range of pages that are in different states, some reserved and some committed. This means that you can release a range of pages without first determining the current commitment state of each page. The entire range of pages originally reserved by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong> must be released at the same time.</p>
+
 <p>If a page is released, its state changes to free, and it is available for subsequent allocation operations. After memory has been released or decommitted, you can never refer to the memory again. Any information that may have been in that memory is gone forever. Attempting to read from or write to a free page results in an access violation exception. If you require information, do not decommit or free memory that contains that information.</p>
-<p>For more information about memory management support for kernel-mode drivers, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/managing-memory-for-drivers">Memory Management for Windows Drivers</a>.</p>
+
+<p>For more information about memory management support for kernel-mode drivers, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/managing-memory-for-drivers">Memory Management for Windows Drivers</a>.</p>
+
 <blockquote>
-<p>[!NOTE]
-If the call to the <strong>NtFreeVirtualMemory</strong> function occurs in user mode, you should use the name &quot;<strong>NtFreeVirtualMemory</strong>&quot; instead of &quot;<strong>ZwFreeVirtualMemory</strong>&quot;.</p>
+  <p>[!NOTE]
+  If the call to the <strong>NtFreeVirtualMemory</strong> function occurs in user mode, you should use the name "<strong>NtFreeVirtualMemory</strong>" instead of "<strong>ZwFreeVirtualMemory</strong>".</p>
 </blockquote>
-<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt*Xxx</strong>* and <strong>Zw*Xxx</strong>* versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt*Xxx</strong>* and <strong>Zw*Xxx</strong>* versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -237,106 +271,141 @@ If the call to the <strong>NtFreeVirtualMemory</strong> function occurs in user 
 </div>
 <div class="ntdoc-description">
 <h1>ZwFreeVirtualMemory function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>ZwFreeVirtualMemory</strong> routine releases, decommits, or both, a region of pages within the virtual address space of a specified process.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>ProcessHandle</code> [in]</h3>
+
 <p>A handle for the process in whose context the pages to be freed reside. Use the <strong><a href="ntcurrentprocess" title="#define NtCurrentProcess() ((HANDLE)(LONG_PTR)-1)">NtCurrentProcess</a></strong> macro, defined in Ntddk.h, to specify the current process.</p>
+
 <h3><code>BaseAddress</code> [in, out]</h3>
+
 <p>A pointer to a variable that will receive the virtual address of the freed region of pages.</p>
+
 <p>If the <a href="mem_release" title="#define MEM_RELEASE 0x00008000">MEM_RELEASE</a> flag is set in the <em>FreeType</em> parameter, <em>BaseAddress</em> must be the base address returned by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwAllocateVirtualMemory</a></strong> when the region was reserved.</p>
+
 <h3><code>RegionSize</code> [in, out]</h3>
+
 <p>A pointer to a variable that will receive the actual size, in bytes, of the freed region of pages. The routine rounds the initial value of this variable up to the next host page size boundary and writes the rounded value back to this variable.</p>
+
 <p>If the <a href="mem_release" title="#define MEM_RELEASE 0x00008000">MEM_RELEASE</a> flag is set in the <em>FreeType</em> parameter, the variable pointed to by <em>RegionSize</em> must be zero. <strong>ZwFreeVirtualMemory</strong> frees the entire region that was reserved in the initial allocation call to <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwAllocateVirtualMemory</a></strong>.</p>
+
 <p>If the <a href="mem_decommit" title="#define MEM_DECOMMIT 0x00004000">MEM_DECOMMIT</a> flag is set in the <em>FreeType</em> parameter, <strong>ZwFreeVirtualMemory</strong> decommits all memory pages that contain one or more bytes in the range from the <em>BaseAddress</em> parameter to (<em>BaseAddress</em> + <em>RegionSize</em>). This means, for example, that if a two-byte region of memory straddles a page boundary, both pages are decommitted.</p>
+
 <p><strong>ZwFreeVirtualMemory</strong> decommits the entire region that was reserved by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwAllocateVirtualMemory</a></strong>. If the following three conditions are met, the entire region enters the reserved state:</p>
+
 <ul>
 <li>The <a href="mem_decommit" title="#define MEM_DECOMMIT 0x00004000">MEM_DECOMMIT</a> flag is set.</li>
 <li><em>BaseAddress</em> is the base address returned by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwAllocateVirtualMemory</a></strong> when the region was reserved.</li>
 <li><em>RegionSize&lt;</em> is zero.</li>
 </ul>
+
 <h3><code>FreeType</code> [in]</h3>
+
 <p>A bitmask that contains flags that describe the type of free operation that <strong>ZwFreeVirtualMemory</strong> will perform for the specified region of pages. Possible values are the following:</p>
+
 <ul>
-<li>
-<p><a href="mem_decommit" title="#define MEM_DECOMMIT 0x00004000">MEM_DECOMMIT</a></p>
+<li><p><a href="mem_decommit" title="#define MEM_DECOMMIT 0x00004000">MEM_DECOMMIT</a></p>
+
 <ul>
-<li>
-<p><strong>ZwFreeVirtualMemory</strong> will decommit the specified region of pages. The pages enter the reserved state.</p>
-</li>
-<li>
-<p><strong>ZwFreeVirtualMemory</strong> does not fail if you attempt to decommit an uncommitted page. This means that you can decommit a range of pages without first determining their current commitment state.</p>
-</li>
-</ul>
-</li>
-<li>
-<p><a href="mem_release" title="#define MEM_RELEASE 0x00008000">MEM_RELEASE</a></p>
+<li><p><strong>ZwFreeVirtualMemory</strong> will decommit the specified region of pages. The pages enter the reserved state.</p></li>
+<li><p><strong>ZwFreeVirtualMemory</strong> does not fail if you attempt to decommit an uncommitted page. This means that you can decommit a range of pages without first determining their current commitment state.</p></li>
+</ul></li>
+<li><p><a href="mem_release" title="#define MEM_RELEASE 0x00008000">MEM_RELEASE</a></p>
+
 <p><strong>ZwFreeVirtualMemory</strong> will release the specified region of pages. The pages enter the free state.</p>
-</li>
-</ul>
+
 <p>If you specify this flag, The variable that <strong>RegionSize</strong> points to must be zero, and <strong>BaseAddress</strong> must point to the base address returned by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwAllocateVirtualMemory</a></strong> when the region was reserved. <strong>ZwFreeVirtualMemory</strong> fails if either of these conditions is not met.</p>
-<p>If any pages in the region are currently committed, <strong>ZwFreeVirtualMemory</strong> first decommits and then releases them.</p>
+
+<p>If any pages in the region are currently committed, <strong>ZwFreeVirtualMemory</strong> first decommits and then releases them.</p></li>
+</ul>
+
 <p><strong>ZwFreeVirtualMemory</strong> does not fail if you attempt to release pages that are in different states, some reserved and some committed. This means that you can release a range of pages without first determining their current commitment state.</p>
+
 <h2>Return value</h2>
+
 <p><strong>ZwFreeVirtualMemory</strong> returns either <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an error status code. Possible error status codes include the following.</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>STATUS_ACCESS_DENIED</td>
-<td>A process has requested access to an object, but has not been granted those access rights.</td>
+  <td>STATUS_ACCESS_DENIED</td>
+  <td>A process has requested access to an object, but has not been granted those access rights.</td>
 </tr>
 <tr>
-<td>STATUS_INVALID_HANDLE</td>
-<td>An invalid <em>ProcessHandle</em> value was specified.</td>
+  <td>STATUS_INVALID_HANDLE</td>
+  <td>An invalid <em>ProcessHandle</em> value was specified.</td>
 </tr>
 <tr>
-<td>STATUS_OBJECT_TYPE_MISMATCH</td>
-<td>There is a mismatch between the type of object required by the requested operation and the type of object that is specified in the request.</td>
+  <td>STATUS_OBJECT_TYPE_MISMATCH</td>
+  <td>There is a mismatch between the type of object required by the requested operation and the type of object that is specified in the request.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
+
 <p>Each page in the process's virtual address space is in one of the three states described as follows.</p>
+
 <ul>
-<li>State is FREE</li>
-</ul>
+<li><p>State is FREE</p>
+
 <p>The page is neither committed nor reserved. The page is not accessible to the process. Attempting to read from or write to a free page results in an access violation exception.</p>
-<p>You can use <strong>ZwFreeVirtualMemory</strong> to put reserved or committed pages into the free state.</p>
-<ul>
-<li>State is RESERVED</li>
-</ul>
+
+<p>You can use <strong>ZwFreeVirtualMemory</strong> to put reserved or committed pages into the free state.</p></li>
+<li><p>State is RESERVED</p>
+
 <p>The page is reserved. The range of addresses cannot be used by other allocation functions. The page is not accessible to the process and has no physical storage associated with it. Attempting to read from or write to a reserved page results in an access violation exception.</p>
-<p>You can use <strong>ZwFreeVirtualMemory</strong> to put committed memory pages into the reserved state, and to put reserved memory pages into the free state.</p>
-<ul>
-<li>State is COMMITTED</li>
-</ul>
+
+<p>You can use <strong>ZwFreeVirtualMemory</strong> to put committed memory pages into the reserved state, and to put reserved memory pages into the free state.</p></li>
+<li><p>State is COMMITTED</p>
+
 <p>The page is committed. Physical storage in memory or in the paging file on disk is allocated for the page, and access is controlled by a protection code.</p>
+
 <p>The system initializes and loads each committed page into physical memory only at the first attempt to read from or write to that page.</p>
+
 <p>When a process terminates, the system releases all storage for committed pages.</p>
-<p>You can use <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwAllocateVirtualMemory</a></strong> to put committed memory pages into either the reserved or free state.</p>
+
+<p>You can use <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwAllocateVirtualMemory</a></strong> to put committed memory pages into either the reserved or free state.</p></li>
+</ul>
+
 <p><strong>ZwFreeVirtualMemory</strong> can perform the following operations:</p>
+
 <ul>
 <li>Decommit a region of committed or uncommitted pages. After this operation, the pages are in the reserved state.</li>
 <li>Release a region of reserved pages. After this operation, the pages are in the free state.</li>
 <li>Decommit and release a region of committed or uncommitted pages. After this operation, the pages are in the free state.</li>
 </ul>
+
 <p><strong>ZwFreeVirtualMemory</strong> can decommit a range of pages that are in different states, some committed and some uncommitted. This means that you can decommit a range of pages without first determining the current commitment state of each page. Decommitting a page releases its physical storage, either in memory or in the paging file on disk.</p>
+
 <p>If a page is decommitted but not released, its state changes to reserved. You can subsequently call <strong>ZwFreeVirtualMemory</strong> to commit it, or <strong>ZwFreeVirtualMemory</strong> to release it. Attempting to read from or write to a reserved page results in an access violation exception.</p>
+
 <p><strong>ZwFreeVirtualMemory</strong> can release a range of pages that are in different states, some reserved and some committed. This means that you can release a range of pages without first determining the current commitment state of each page. The entire range of pages originally reserved by <strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwAllocateVirtualMemory</a></strong> must be released at the same time.</p>
+
 <p>If a page is released, its state changes to free, and it is available for subsequent allocation operations. After memory has been released or decommitted, you can never refer to the memory again. Any information that may have been in that memory is gone forever. Attempting to read from or write to a free page results in an access violation exception. If you require information, do not decommit or free memory that contains that information.</p>
-<p>For more information about memory management support for kernel-mode drivers, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/managing-memory-for-drivers">Memory Management for Windows Drivers</a>.</p>
+
+<p>For more information about memory management support for kernel-mode drivers, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/managing-memory-for-drivers">Memory Management for Windows Drivers</a>.</p>
+
 <blockquote>
-<p>[!NOTE]
-If the call to the <strong>ZwFreeVirtualMemory</strong> function occurs in user mode, you should use the name &quot;<strong>NtFreeVirtualMemory</strong>&quot; instead of &quot;<strong>ZwFreeVirtualMemory</strong>&quot;.</p>
+  <p>[!NOTE]
+  If the call to the <strong>ZwFreeVirtualMemory</strong> function occurs in user mode, you should use the name "<strong>NtFreeVirtualMemory</strong>" instead of "<strong>ZwFreeVirtualMemory</strong>".</p>
 </blockquote>
-<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt*Xxx</strong>* and <strong>Zw*Xxx</strong>* versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt*Xxx</strong>* and <strong>Zw*Xxx</strong>* versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwAllocateVirtualMemory</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -350,18 +419,27 @@ If the call to the <strong>ZwFreeVirtualMemory</strong> function occurs in user 
 <h1>NTinternals.net (undocumented.ntinternals.net)</h1>
 </div>
 <div class="ntdoc-description">
-<p>This function is documented in Windows Driver Kit <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntfreevirtualmemory">here</a> and <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwfreevirtualmemory">here</a>.</p>
+<p>This function is documented in Windows Driver Kit <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntfreevirtualmemory">here</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwfreevirtualmemory">here</a>.</p>
+
 <hr />
+
 <h3>RegionSize</h3>
+
 <p>If you put pointer to <em>NULL</em> value as <code>RegionSize</code>, system will free all region, and put size of it in result.</p>
+
 <h3>FreeType</h3>
+
 <p>Can be one of the values: <code><a href="mem_decommit" title="#define MEM_DECOMMIT 0x00004000">MEM_DECOMMIT</a></code>, or <code><a href="mem_release" title="#define MEM_RELEASE 0x00008000">MEM_RELEASE</a></code>.</p>
+
 <h1>Documented by</h1>
+
 <ul>
 <li>Tomasz Nowak</li>
 <li>ReactOS</li>
 </ul>
+
 <h1>See also</h1>
+
 <ul>
 <li><code><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></code></li>
 </ul>

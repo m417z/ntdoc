@@ -63,95 +63,124 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h2>Description</h2>
+
 <p><strong>FSCTL_REARRANGE_FILE</strong> rearranges allocation within the file, moving clusters from a requested contiguous source range within a file to another location within the same file.</p>
+
 <h2>Parameters</h2>
+
 <h3>Major code</h3>
+
 <h3>Input buffer</h3>
+
 <p>Pointer to a <strong><a href="rearrange_file_data" title="typedef struct _REARRANGE_FILE_DATA {&#10;  ULONGLONG SourceStartingOffset;&#10;  ULONGLONG TargetOffset;&#10;  HANDLE    SourceFileHandle;&#10;  ULONG     Length;&#10;  ULONG     Flags;&#10;} REARRANGE_FILE_DATA, *PREARRANGE_FILE_DATA;">REARRANGE_FILE_DATA</a></strong> structure that describes the allocation to be rearranged. (For 32-bit callers, the input buffer is a pointer to a <strong>REARRANGE_FILE_DATA32</strong> structure.)</p>
+
 <h3>Input buffer length</h3>
+
 <p>Size in bytes of the input buffer.</p>
+
 <h3>Output buffer</h3>
+
 <p>None; set to NULL.</p>
+
 <h3>Output buffer length</h3>
+
 <p>Set to zero.</p>
+
 <h3>Input/output buffer</h3>
+
 <h3>Input/output buffer length</h3>
+
 <h3>Status block</h3>
+
 <h2>Return values</h2>
+
 <p><strong>FSCTL_REARRANGE_FILE</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> upon successful completion; otherwise it returns an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code such as one of the following.</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Meaning</th>
+  <th>Return code</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>STATUS_ACCESS_DENIED</td>
-<td>Only kernel-mode calls are allowed.</td>
+  <td>STATUS_ACCESS_DENIED</td>
+  <td>Only kernel-mode calls are allowed.</td>
 </tr>
 <tr>
-<td>STATUS_BUFFER_TOO_SMALL</td>
-<td>The specified input buffer length is smaller than sizeof(<a href="rearrange_file_data" title="typedef struct _REARRANGE_FILE_DATA {&#10;  ULONGLONG SourceStartingOffset;&#10;  ULONGLONG TargetOffset;&#10;  HANDLE    SourceFileHandle;&#10;  ULONG     Length;&#10;  ULONG     Flags;&#10;} REARRANGE_FILE_DATA, *PREARRANGE_FILE_DATA;">REARRANGE_FILE_DATA</a>).</td>
+  <td>STATUS_BUFFER_TOO_SMALL</td>
+  <td>The specified input buffer length is smaller than sizeof(<a href="rearrange_file_data" title="typedef struct _REARRANGE_FILE_DATA {&#10;  ULONGLONG SourceStartingOffset;&#10;  ULONGLONG TargetOffset;&#10;  HANDLE    SourceFileHandle;&#10;  ULONG     Length;&#10;  ULONG     Flags;&#10;} REARRANGE_FILE_DATA, *PREARRANGE_FILE_DATA;">REARRANGE_FILE_DATA</a>).</td>
 </tr>
 <tr>
-<td>STATUS_PENDING</td>
-<td>Operation completion is pending.</td>
+  <td>STATUS_PENDING</td>
+  <td>Operation completion is pending.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>Remarks</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-rearrange_file_data">Request parameters</a> contain source and target file byte offsets, and length in bytes of the source region to move, all of which must be cluster-aligned.</p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntifs/ns-ntifs-rearrange_file_data">Request parameters</a> contain source and target file byte offsets, and length in bytes of the source region to move, all of which must be cluster-aligned.</p>
+
 <ul>
 <li>If moving clusters down, the target file offset indicates the point at which the lower boundary of the moving source range should be aligned.</li>
 <li>If moving clusters up, the target file offset indicates the point at which the source range's upper boundary should be aligned.</li>
 </ul>
+
 <p>In both cases, the target offset indicates that the source range should be inserted before the cluster that begins at the target offset, the distinction being forced by the constraint that the allocation size remains fixed.</p>
+
 <p>Unlike <strong><a href="fsctl_shuffle_file" title="// CTL_CODE(0x0009, 0x0d0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define FSCTL_SHUFFLE_FILE 0x0009C340">FSCTL_SHUFFLE_FILE</a></strong>, <strong>FSCTL_REARRANGE_FILE</strong> doesn't allow adding allocations containing random data.</p>
+
 <p>To perform this operation, call <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> or <strong><a href="ntfscontrolfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtFsControlFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG FsControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">ZwFsControlFile</a></strong> with the following parameters.</p>
+
 <table>
 <thead>
 <tr>
-<th>Parameter</th>
-<th>Description</th>
+  <th>Parameter</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>Instance</strong></td>
-<td>[in] For <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> only. An opaque instance pointer for the caller. This parameter is required and cannot be NULL.</td>
+  <td><strong>Instance</strong></td>
+  <td>[in] For <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> only. An opaque instance pointer for the caller. This parameter is required and cannot be NULL.</td>
 </tr>
 <tr>
-<td><strong>FileObject</strong></td>
-<td>[in] For <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> only. A file object pointer for the file or directory that is the target of this request. This parameter is required and cannot be NULL.</td>
+  <td><strong>FileObject</strong></td>
+  <td>[in] For <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> only. A file object pointer for the file or directory that is the target of this request. This parameter is required and cannot be NULL.</td>
 </tr>
 <tr>
-<td><strong>FileHandle</strong></td>
-<td>[in] For <strong><a href="ntfscontrolfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtFsControlFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG FsControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">ZwFsControlFile</a></strong> only. File handle of the file or directory that is the target of this request. This parameter is required and cannot be NULL.</td>
+  <td><strong>FileHandle</strong></td>
+  <td>[in] For <strong><a href="ntfscontrolfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtFsControlFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG FsControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">ZwFsControlFile</a></strong> only. File handle of the file or directory that is the target of this request. This parameter is required and cannot be NULL.</td>
 </tr>
 <tr>
-<td><strong>IoStatusBlock</strong></td>
-<td>[out] For <strong><a href="ntfscontrolfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtFsControlFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG FsControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">ZwFsControlFile</a></strong> only. Pointer to an <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure that contains the final status of the request.</td>
+  <td><strong>IoStatusBlock</strong></td>
+  <td>[out] For <strong><a href="ntfscontrolfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtFsControlFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG FsControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">ZwFsControlFile</a></strong> only. Pointer to an <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure that contains the final status of the request.</td>
 </tr>
 <tr>
-<td><strong>FsControlCode</strong></td>
-<td>[in] Set to <strong>FSCTL_REARRANGE_FILE</strong>.</td>
+  <td><strong>FsControlCode</strong></td>
+  <td>[in] Set to <strong>FSCTL_REARRANGE_FILE</strong>.</td>
 </tr>
 <tr>
-<td><strong>InputBuffer</strong></td>
-<td>[in] See IOCTL parameters.</td>
+  <td><strong>InputBuffer</strong></td>
+  <td>[in] See IOCTL parameters.</td>
 </tr>
 <tr>
-<td><strong>InputBufferLength</strong></td>
-<td>[in] See IOCTL parameters.</td>
+  <td><strong>InputBufferLength</strong></td>
+  <td>[in] See IOCTL parameters.</td>
 </tr>
 </tbody>
 </table>
+
 <h2>See also</h2>
+
 <p><strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong></p>
+
 <p><strong><a href="fsctl_shuffle_file" title="// CTL_CODE(0x0009, 0x0d0, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define FSCTL_SHUFFLE_FILE 0x0009C340">FSCTL_SHUFFLE_FILE</a></strong></p>
+
 <p><strong><a href="rearrange_file_data" title="typedef struct _REARRANGE_FILE_DATA {&#10;  ULONGLONG SourceStartingOffset;&#10;  ULONGLONG TargetOffset;&#10;  HANDLE    SourceFileHandle;&#10;  ULONG     Length;&#10;  ULONG     Flags;&#10;} REARRANGE_FILE_DATA, *PREARRANGE_FILE_DATA;">REARRANGE_FILE_DATA</a></strong></p>
+
 <p><strong><a href="ntfscontrolfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtFsControlFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG FsControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">ZwFsControlFile</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

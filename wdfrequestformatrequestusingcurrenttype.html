@@ -64,55 +64,74 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfRequestFormatRequestUsingCurrentType function</h1>
+
 <h2>Description</h2>
+
 <p>[Applies to KMDF and UMDF]</p>
-<p>The <strong>WdfRequestFormatRequestUsingCurrentType</strong> method formats a specified I/O request so that the driver can <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/forwarding-i-o-requests">forward</a> it, unmodified, to the driver's local I/O target.</p>
+
+<p>The <strong>WdfRequestFormatRequestUsingCurrentType</strong> method formats a specified I/O request so that the driver can <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/forwarding-i-o-requests">forward</a> it, unmodified, to the driver's local I/O target.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Request</code> [in]</h3>
+
 <p>A handle to a framework request object that the driver received from one of its I/O queues.</p>
+
 <h2>Remarks</h2>
+
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-<p>When your driver <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/receiving-i-o-requests">receives an I/O request</a>, sometimes you will want the driver to forward the request, unmodified, to its local I/O target. To forward such a request, the driver must:</p>
+
+<p>When your driver <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/receiving-i-o-requests">receives an I/O request</a>, sometimes you will want the driver to forward the request, unmodified, to its local I/O target. To forward such a request, the driver must:</p>
+
 <ol>
 <li>Call <strong>WdfRequestFormatRequestUsingCurrentType</strong> to format the request object so that the framework can pass the request to the driver's local I/O target.</li>
 <li>Call <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> to send the request to the I/O target.</li>
 </ol>
-<p>For more information about <strong>WdfRequestFormatRequestUsingCurrentType</strong>, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/forwarding-i-o-requests">Forwarding I/O Requests</a>.</p>
+
+<p>For more information about <strong>WdfRequestFormatRequestUsingCurrentType</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/forwarding-i-o-requests">Forwarding I/O Requests</a>.</p>
+
 <h4>Examples</h4>
-<p>The following code example is an <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_default">EvtIoDefault</a> callback function that forwards every I/O request that it receives, without modification, to the device's local I/O target.</p>
-<pre lang="cpp"><code>VOID
-MyEvtIoDefault(
-    WDFQUEUE Queue,
-    WDFREQUEST Request
-    )
-{
-    <a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a> options;
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
 
-    WdfRequestFormatRequestUsingCurrentType(Request);
+<p>The following code example is an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_default">EvtIoDefault</a> callback function that forwards every I/O request that it receives, without modification, to the device's local I/O target.</p>
 
-    <a href="wdf_request_send_options_init" title="VOID WDF_REQUEST_SEND_OPTIONS_INIT(&#10;  [out] PWDF_REQUEST_SEND_OPTIONS Options,&#10;  [in]  ULONG                     Flags&#10;);">WDF_REQUEST_SEND_OPTIONS_INIT</a>(
-                                  &amp;options,
-                                  WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET
-                                  );
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="nf">MyEvtIoDefault</span><span class="p">(</span>
+<span class="w">    </span><span class="n">WDFQUEUE</span><span class="w"> </span><span class="n">Queue</span><span class="p">,</span>
+<span class="w">    </span><span class="n">WDFREQUEST</span><span class="w"> </span><span class="n">Request</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a></span><span class="w"> </span><span class="n">options</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
 
-    ret = <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> (
-                          Request,
-                          <a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a>(<a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue)),
-                          &amp;options
-                          );
-    if (!ret) {
-        status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(Request);
-        <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
-                           Request,
-                           status
-                           );
-    }
-    return;
-}
+<span class="w">    </span><span class="n">WdfRequestFormatRequestUsingCurrentType</span><span class="p">(</span><span class="n">Request</span><span class="p">);</span>
+
+<span class="w">    </span><span class="n"><a href="wdf_request_send_options_init" title="VOID WDF_REQUEST_SEND_OPTIONS_INIT(&#10;  [out] PWDF_REQUEST_SEND_OPTIONS Options,&#10;  [in]  ULONG                     Flags&#10;);">WDF_REQUEST_SEND_OPTIONS_INIT</a></span><span class="p">(</span>
+<span class="w">                                  </span><span class="o">&amp;</span><span class="n">options</span><span class="p">,</span>
+<span class="w">                                  </span><span class="n">WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET</span>
+<span class="w">                                  </span><span class="p">);</span>
+
+<span class="w">    </span><span class="n">ret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></span><span class="w"> </span><span class="p">(</span>
+<span class="w">                          </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                          </span><span class="n"><a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a></span><span class="p">(</span><span class="n"><a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a></span><span class="p">(</span><span class="n">Queue</span><span class="p">)),</span>
+<span class="w">                          </span><span class="o">&amp;</span><span class="n">options</span>
+<span class="w">                          </span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">ret</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a></span><span class="p">(</span><span class="n">Request</span><span class="p">);</span>
+<span class="w">        </span><span class="n"><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></span><span class="p">(</span>
+<span class="w">                           </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">status</span>
+<span class="w">                           </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
+
 <p><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></p>
+
 <p><a href="wdfrequestwdmformatusingstacklocation" title="VOID WdfRequestWdmFormatUsingStackLocation(&#10;  [in] WDFREQUEST         Request,&#10;  [in] PIO_STACK_LOCATION Stack&#10;);">WdfRequestWdmFormatUsingStackLocation</a></p>
 <hr>
 <div class="ntdoc-description-links">

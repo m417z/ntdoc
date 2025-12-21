@@ -66,50 +66,80 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfRequestCompleteWithPriorityBoost function</h1>
+
 <h2>Description</h2>
+
 <p>[Applies to KMDF only]</p>
+
 <p>The <strong>WdfRequestCompleteWithPriorityBoost</strong> method completes a specified I/O request and supplies a completion status. It also specifies a value that the system can use to boost the run-time priority of the thread that requested the I/O operation.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Request</code> [in]</h3>
+
 <p>A handle to the framework request object that represents the I/O request that is being completed.</p>
+
 <h3><code>Status</code> [in]</h3>
-<p>An <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS value</a> that represents the completion status of the request. Valid status values include, but are not limited to, the following:</p>
+
+<p>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS value</a> that represents the completion status of the request. Valid status values include, but are not limited to, the following:</p>
+
 <h4><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></h4>
+
 <p>The driver successfully completed the request.</p>
+
 <h4>STATUS_CANCELLED</h4>
+
 <p>The driver canceled the request.</p>
+
 <h4>STATUS_UNSUCCESSFUL</h4>
+
 <p>The driver encountered an error while processing the request.</p>
+
 <h3><code>PriorityBoost</code> [in]</h3>
-<p>A system-defined constant value by which to increment the run-time priority of the original thread that requested the operation. Constant values are device-type-specific and are defined in <em>Wdm.h</em>. The format for the constant names is <em>XXX</em>_INCREMENT. For more information about priority boost values, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/specifying-priority-boosts-when-completing-i-o-requests">Specifying Priority Boosts When Completing I/O Requests</a>.</p>
+
+<p>A system-defined constant value by which to increment the run-time priority of the original thread that requested the operation. Constant values are device-type-specific and are defined in <em>Wdm.h</em>. The format for the constant names is <em>XXX</em>_INCREMENT. For more information about priority boost values, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/specifying-priority-boosts-when-completing-i-o-requests">Specifying Priority Boosts When Completing I/O Requests</a>.</p>
+
 <h2>Remarks</h2>
+
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
+
 <p>Your driver should call <strong>WdfRequestCompleteWithPriorityBoost</strong> if you want to override the default priority boost that the framework provides. For example, the driver might set the priority boost to IO_NO_INCREMENT if it was able to complete the request quickly, perhaps because it detected an error.</p>
+
 <p>After a call to <strong>WdfRequestCompleteWithPriorityBoost</strong> returns, the request handle is no longer valid unless the driver has called <a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a> to add one or more additional reference counts to the request object. Note that after <strong>WdfRequestCompleteWithPriorityBoost</strong> returns, the driver must not attempt to access the associated WDM <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> structure, even if it has called <strong><a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a></strong>.</p>
-<p>For more information about calling <strong>WdfRequestCompleteWithPriorityBoost</strong>, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">Completing I/O Requests</a>.</p>
+
+<p>For more information about calling <strong>WdfRequestCompleteWithPriorityBoost</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">Completing I/O Requests</a>.</p>
+
 <h4>Examples</h4>
+
 <p>The following code example shows how the example at <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> can use <strong>WdfRequestCompleteWithPriorityBoost</strong> instead of <strong><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></strong>.</p>
-<pre lang="cpp"><code>switch (params.Type) {
-    case WdfRequestTypeRead:
-        length = params.Parameters.Read.Length;
-        direction = WdfDmaDirectionReadFromDevice;
-        break;
-    case WdfRequestTypeWrite:
-        length = params.Parameters.Write.Length;
-        direction = WdfDmaDirectionWriteToDevice;
-        break;
-    default:
-        WdfRequestCompleteWithPriorityBoost(
-                                            Request,
-                                            STATUS_INVALID_PARAMETER,
-                                            IO_NO_INCREMENT
-                                            );
-        return;
-    }
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">params</span><span class="p">.</span><span class="n">Type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">WdfRequestTypeRead</span><span class="p">:</span>
+<span class="w">        </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">Read</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span>
+<span class="w">        </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDmaDirectionReadFromDevice</span><span class="p">;</span>
+<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="no">WdfRequestTypeWrite</span><span class="p">:</span>
+<span class="w">        </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">Write</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span>
+<span class="w">        </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDmaDirectionWriteToDevice</span><span class="p">;</span>
+<span class="w">        </span><span class="k">break</span><span class="p">;</span>
+<span class="w">    </span><span class="k">default</span><span class="o">:</span>
+<span class="w">        </span><span class="n">WdfRequestCompleteWithPriorityBoost</span><span class="p">(</span>
+<span class="w">                                            </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                                            </span><span class="n">STATUS_INVALID_PARAMETER</span><span class="p">,</span>
+<span class="w">                                            </span><span class="n">IO_NO_INCREMENT</span>
+<span class="w">                                            </span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
+
 <p><a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a></p>
+
 <p><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></p>
+
 <p><a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a></p>
 <hr>
 <div class="ntdoc-description-links">

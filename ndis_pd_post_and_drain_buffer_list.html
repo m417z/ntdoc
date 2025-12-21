@@ -70,32 +70,56 @@ VOID() NdisPdPostAndDrainBufferList(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>NDIS_PD_POST_AND_DRAIN_BUFFER_LIST callback function</h1>
+
 <h2>Description</h2>
+
 <p>The PacketDirect (PD) platform calls a PD-capable miniport driver's
 <em>PDPostAndDrainBufferList</em> function to post <a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a> structures to PD transmit/receive queues and draining any previously posted <strong><a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a></strong> structures that have been completed.</p>
+
 <p><strong>Note</strong> You must declare the function by using the <strong>NDIS_PD_POST_AND_DRAIN_BUFFER_LIST</strong> type. For more
 information, see the following Examples section.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Queue</code> [in, out]</h3>
+
 <p>A pointer to the transmit or receive queue that will receive posted buffers and will have completed buffers removed.</p>
+
 <h3><code>PostBufferListHead</code> [in, out]</h3>
+
 <p>The head of the post list. The provider removes the buffers in this list and adds them into the <strong>Queue</strong>.</p>
+
 <h3><code>DrainBufferListTail</code> [in, out]</h3>
+
 <p>The tail of the drain list. The provider removes any completed buffers from the <strong>Queue</strong> and adds them to this list.</p>
+
 <h3><code>MaxDrainCount</code> [in]</h3>
+
 <p>The maximum amount of <a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a> structures to drain. The provider must ensure not exceed this amount. A set of partial <strong><a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a></strong> structures that make up a single L2 packet count is 1.</p>
+
 <h2>Return value</h2>
+
 <p>This callback function does not return a value.</p>
+
 <h2>Remarks</h2>
+
 <p>The provider removes buffers from the PostBufferList and places them into the queue, starting with the head buffer in the list and advancing to the next buffer until either the PostBufferList is empty or the queue is full (or near full). The provider advanced to the PostListHead and returns the new list head to the caller. The provider also removes any completed buffers from the queue and inserts them into the tail of the DrainBufferList and returns the new DrainBufferList tail to the client.</p>
+
 <p><strong>Note</strong> The provider should drain as many buffers as it can in order to open up room for the buffers being posted. The PostBufferList and DrainBufferList are guaranteed to be disjoint buffer lists (The client never provides the head of a buffer list as the PostBufferListHead and the tail of that same list as DrainBufferListTail).</p>
+
 <p>The client can also pass an empty post buffer list to just drain completed buffers without posting any new buffers. The client can also set the MaxDrainCount to 0 to just post new buffers without draining any completed buffers. In rare cases, the client may invoke the call with both an empty post buffer list and the MaxDrainCount to 0. The provider must not assume otherwise and handle such a call properly such as a no-operation.</p>
+
 <h3>Examples</h3>
-<p>To define a <em>PDPostAndDrainBufferList</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-<p>For example, to define a <em>PDPostAndDrainBufferList</em> function that is named &quot;MyPDPostAndDrainBufferList&quot;, use the <strong>NDIS_PD_POST_AND_DRAIN_BUFFER_LIST</strong> type as shown in this code example:</p>
+
+<p>To define a <em>PDPostAndDrainBufferList</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
+<p>For example, to define a <em>PDPostAndDrainBufferList</em> function that is named "MyPDPostAndDrainBufferList", use the <strong>NDIS_PD_POST_AND_DRAIN_BUFFER_LIST</strong> type as shown in this code example:</p>
+
 <pre><code>NDIS_PD_POST_AND_DRAIN_BUFFER_LIST MyPDPostAndDrainBufferList;
 </code></pre>
+
 <p>Then, implement your function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 VOID
  MyPDPostAndDrainBufferList(
@@ -106,39 +130,44 @@ VOID
     )
   {...}
 </code></pre>
-<p>The <strong>NDIS_PD_POST_AND_DRAIN_BUFFER_LIST</strong> function type is defined in the Ntddndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>NDIS_PD_POST_AND_DRAIN_BUFFER_LIST</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
-<p>For information about <em>Use_decl_annotations</em>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<p>The <strong>NDIS_PD_POST_AND_DRAIN_BUFFER_LIST</strong> function type is defined in the Ntddndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>NDIS_PD_POST_AND_DRAIN_BUFFER_LIST</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
+
+<p>For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <p>The following is an example code snippet that illustrates the pointer indirections for this function.</p>
-<pre lang="cpp"><code><a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a>* PostHead = NULL;
-<a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a>** PostTail = &amp;PostHead;
-<a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a>* DrainHead = NULL;
-<a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a>** DrainTail = &amp;DrainHead;
 
-<a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a>* bufX = &lt;allocated <a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a>&gt;;
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a></span><span class="o">*</span><span class="w"> </span><span class="n">PostHead</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="n"><a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a></span><span class="o">**</span><span class="w"> </span><span class="n">PostTail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">PostHead</span><span class="p">;</span>
+<span class="n"><a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a></span><span class="o">*</span><span class="w"> </span><span class="n">DrainHead</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="n"><a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a></span><span class="o">**</span><span class="w"> </span><span class="n">DrainTail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">DrainHead</span><span class="p">;</span>
 
-bufX-&gt;NextPDBuffer = NULL;
-*PostTail = bufX;
-PostTail = &amp;bufX-&gt;NextPDBuffer;
+<span class="n"><a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a></span><span class="o">*</span><span class="w"> </span><span class="n">bufX</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&lt;</span><span class="n">allocated</span><span class="w"> </span><span class="n"><a href="pd_buffer" title="typedef struct _PD_BUFFER {&#10;  struct _PD_BUFFER   *NextPDBuffer;&#10;  struct _PD_BUFFER   *NextPartialPDBuffer;&#10;  PVOID               PDClientReserved;&#10;  PVOID               PDClientContext;&#10;  PUCHAR              DataBufferVirtualAddress;&#10;  DMA_LOGICAL_ADDRESS DataBufferDmaLogicalAddress;&#10;  ULONG               DataBufferSize;&#10;  USHORT              PDClientContextSize;&#10;  USHORT              Attributes;&#10;  USHORT              Flags;&#10;  USHORT              DataStart;&#10;  ULONG               DataLength;&#10;  union {&#10;    struct {&#10;      union {&#10;        ULONG64 RxFilterContext;&#10;        ULONG64 GftFlowEntryId;&#10;      };&#10;      ULONG                         RxHashValue;&#10;...">PD_BUFFER</a></span><span class="o">&gt;</span><span class="p">;</span>
 
-// BEFORE:
-//PostHead == bufX
-//PostTail == &amp;bufZ-&gt;NextPDBuffer
-//DrainHead == NULL
-//DrainTail == &amp;DrainHead
+<span class="n">bufX</span><span class="o">-&gt;</span><span class="n">NextPDBuffer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="o">*</span><span class="n">PostTail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bufX</span><span class="p">;</span>
+<span class="n">PostTail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">bufX</span><span class="o">-&gt;</span><span class="n">NextPDBuffer</span><span class="p">;</span>
 
-NDIS_PD_POST_AND_DRAIN_BUFFER_LIST(
-          Queue,
-          &amp;PostHead,
-          &amp;DrainTail,
-          32);
+<span class="c1">// BEFORE:</span>
+<span class="c1">//PostHead == bufX</span>
+<span class="c1">//PostTail == &amp;bufZ-&gt;NextPDBuffer</span>
+<span class="c1">//DrainHead == NULL</span>
+<span class="c1">//DrainTail == &amp;DrainHead</span>
 
-// AFTER:
-//PostHead == bufY
-//PostTail == &amp;bufZ-&gt;NextPDBuffer
-//DrainHead == buf1
-//DrainTail == &amp;buf5-&gt;NextPDBuffer
+<span class="n">NDIS_PD_POST_AND_DRAIN_BUFFER_LIST</span><span class="p">(</span>
+<span class="w">          </span><span class="n">Queue</span><span class="p">,</span>
+<span class="w">          </span><span class="o">&amp;</span><span class="n">PostHead</span><span class="p">,</span>
+<span class="w">          </span><span class="o">&amp;</span><span class="n">DrainTail</span><span class="p">,</span>
+<span class="w">          </span><span class="mi">32</span><span class="p">);</span>
 
+<span class="c1">// AFTER:</span>
+<span class="c1">//PostHead == bufY</span>
+<span class="c1">//PostTail == &amp;bufZ-&gt;NextPDBuffer</span>
+<span class="c1">//DrainHead == buf1</span>
+<span class="c1">//DrainTail == &amp;buf5-&gt;NextPDBuffer</span>
 </code></pre>
+</div>
 <hr>
 <div class="ntdoc-description-links">
 <p>

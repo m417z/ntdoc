@@ -69,163 +69,202 @@ VOID NdisTcpOffloadEventIndicate(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>NDIS_TCP_OFFLOAD_EVENT_INDICATE callback function</h1>
+
 <h2>Description</h2>
+
 <p>[The TCP chimney offload feature is deprecated and should not be used.]</p>
+
 <p>An offload target calls the
 <strong>NdisTcpOffloadEventHandler</strong> function to indicate an event that pertains to an offloaded TCP
 connection.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>NdisOffloadHandle</code> [in]</h3>
+
 <p>A handle that identifies the offloaded TCP connection on which the indication is being made. When
 the connection was offloaded, this handle was supplied in the
 <strong>NdisOffloadHandle</strong> member of the
 <a href="ndis_miniport_offload_block_list" title="typedef struct _NDIS_MINIPORT_OFFLOAD_BLOCK_LIST {&#10;  IN NDIS_OBJECT_HEADER                Header;&#10;  IN _NDIS_MINIPORT_OFFLOAD_BLOCK_LIST *NextBlock;&#10;#if ...&#10;  struct                               _NDIS_MINIPORT_OFFLOAD_BLOCK_LIST;&#10;  IN _NDIS_MINIPORT_OFFLOAD_BLOCK_LIST *DependentBlockList;&#10;#else&#10;  struct                               _NDIS_MINIPORT_OFFLOAD_BLOCK_LIST;&#10;#endif&#10;  OUT NDIS_STATUS                      Status;&#10;  IN PVOID                             NdisReserved[2];&#10;  IN OUT PVOID                         *MiniportOffloadContext;&#10;  IN NDIS_HANDLE                       NdisOffloadHandle;&#10;  IN PVOID                             ProtocolReserved[2];&#10;  IN PVOID                             MiniportReserved[2];&#10;  IN PVOID                             ImReserved[2];&#10;  IN PVOID                             Scratch[2];&#10;  IN PVOID                             SourceHandle;&#10;  IN NDIS_PORT_NUMBER                  PortNumber;&#10;  IN OUT PNET_BUFFER_LIST              NetBufferListChain;&#10;...">NDIS_MINIPORT_OFFLOAD_BLOCK_LIST</a> structure that was associated with the connection state.</p>
+
 <h3><code>EventType</code> [in]</h3>
+
 <p>The event being indicated as one of the following <strong>TCP_OFFLOAD_EVENT_TYPE</strong> values:</p>
+
 <h4>TcpIndicateDisconnect</h4>
+
 <p>Indicates that the remote host has initiated a graceful disconnect by sending a FIN segment on
 the connection.</p>
+
 <h4>TcpIndicateRetrieve</h4>
+
 <p>Indicates that the offload target is requesting the host stack to terminate the offload of a TCP
 connection.</p>
+
 <h4>TcpIndicateAbort</h4>
+
 <p>Indicates that the remote host has initiated an abortive disconnect by sending an acceptable RST
 segment on the connection.</p>
+
 <h4>TcpIndicateSendBacklogChange</h4>
+
 <p>Indicates a change in the preferred send backlog size.</p>
+
 <h3><code>EventSpecificInformation</code> [in]</h3>
+
 <p>Specifies additional information about the event being indicated as follows:</p>
+
 <h4>TcpIndicateDisconnect</h4>
+
 <p>Not meaningful.</p>
+
 <h4>TcpIndicateRetrieve</h4>
+
 <p>Indicates the reason for the upload request as a <strong>TCP_UPLOAD_REASON</strong> value. See the Remarks
 section for more information.</p>
+
 <h4>TcpIndicateAbort</h4>
+
 <p>Not meaningful.</p>
+
 <h4>TcpIndicateSendBacklogChange</h4>
+
 <p>Specifies the optimum number of send data bytes that the host stack should have outstanding at
 the offload target.</p>
+
 <h2>Remarks</h2>
+
 <h3>Indicating a Graceful Disconnect</h3>
+
 <p>An offload target should indicate a graceful disconnect only when:</p>
+
 <ul>
 <li>It has received a FIN segment from the remote host.</li>
 <li>All data received on the connection prior to the reception of the FIN segment has been consumed by
 the client application (that is, there is no receive data to be indicated on the connection).</li>
 </ul>
+
 <p>The offload target must not free the resources for the connection until the host stack terminates the
 offload of the connection.</p>
+
 <p>Note that a graceful disconnect shuts down only the receive half of the connection. It does not shut
 down the send half of the connection.</p>
+
 <h3>Indicating an Abortive Disconnect</h3>
+
 <p>When an offload target receives an acceptable RST segment on a TCP connection, it must:</p>
+
 <ol>
-<li>
-<p>In its internal state for the connection, mark the connection as aborted.</p>
-</li>
-<li>
-<p>Call the
+<li>In its internal state for the connection, mark the connection as aborted.</li>
+<li><p>Call the
 <strong>NdisTcpOffloadEventHandler</strong> function with an
 <em>EventType</em> of
 <strong>TcpIndicateAbort</strong>.</p>
-<p><strong>Note</strong> When the miniport indicates the <strong>TcpIndicateAbort</strong> event, the host TCP/IP stack will terminate the offload of the connection. The offload target is free to indicate the <strong>TcpIndicateAbort</strong> event as soon as the RST segment arrives.</p>
-</li>
-<li>
-<p>Complete all outstanding send requests and disconnect requests on the connection with
+
+<p><strong>Note</strong> When the miniport indicates the <strong>TcpIndicateAbort</strong> event, the host TCP/IP stack will terminate the offload of the connection. The offload target is free to indicate the <strong>TcpIndicateAbort</strong> event as soon as the RST segment arrives.</p></li>
+<li>Complete all outstanding send requests and disconnect requests on the connection with
 NDIS_STATUS_REQUEST_ABORTED. The offload target writes this status value to the
 <strong>Status</strong> member of each <a href="net_buffer_list" title="typedef struct _NET_BUFFER_LIST {&#10;  union {&#10;    struct {&#10;      NET_BUFFER_LIST *Next;&#10;      NET_BUFFER      *FirstNetBuffer;&#10;    };&#10;    SLIST_HEADER           Link;&#10;    NET_BUFFER_LIST_HEADER NetBufferListHeader;&#10;  };&#10;  NET_BUFFER_LIST_CONTEXT *Context;&#10;  NET_BUFFER_LIST         *ParentNetBufferList;&#10;  NDIS_HANDLE             NdisPoolHandle;&#10;  PVOID                   NdisReserved[2];&#10;  PVOID                   ProtocolReserved[4];&#10;  PVOID                   MiniportReserved[2];&#10;  PVOID                   Scratch;&#10;  NDIS_HANDLE             SourceHandle;&#10;  ULONG                   NblFlags;&#10;  LONG                    ChildRefCount;&#10;  ULONG                   Flags;&#10;...">NET_BUFFER_LIST</a> structure in the linked list that it passes to the
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_send_complete">NdisTcpOffloadSendComplete</a> function or to the
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_disconnect_complete">NdisTcpOffloadDisconnectComplete</a> function.</p>
-</li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_send_complete">NdisTcpOffloadSendComplete</a> function or to the
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_disconnect_complete">NdisTcpOffloadDisconnectComplete</a> function.</li>
 </ol>
+
 <p>The offload target must not free the resources for the connection until the host stack terminates the
 offload of the connection.</p>
+
 <h3>Requesting Termination of a TCP Connection</h3>
+
 <p>The offload target specifies the reason for the termination request as a <strong>TCP_UPLOAD_REASON</strong> value in
 the
 <em>EventSpecificInformation</em> parameter that it passes to the
 <strong>NdisTcpOffloadEventHandler</strong> function. In response, the host stack calls the
-<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-w_terminate_offload_handler">MiniportTerminateOffload</a> function
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-w_terminate_offload_handler">MiniportTerminateOffload</a> function
 of the offload target.</p>
+
 <p>The offload target can request the termination of only one TCP connection per call to
 <strong>NdisTcpOffloadEventHandler</strong>. The offload target cannot request the termination of a neighbor state
 object or a path state object. Only the host stack can initiate the termination of a neighbor or path
 state object.</p>
+
 <p>The following table describes events or circumstances that can cause an offload target to request the
 termination of the offload of a TCP connection.</p>
+
 <p>The right-most column indicates, for each <strong>TCP_UPLOAD_REASON</strong>, whether the host stack always uploads the
 connection (mandatory) or might or might not upload the connection (optional). In the mandatory cases, an
 offload target does not continue processing the offloaded connection. In the optional cases, an offload
 target must be able to continue processing on the offloaded connection if the host stack does not
 terminate the offload of that connection.</p>
+
 <table>
 <thead>
 <tr>
-<th>Event/Circumstance</th>
-<th>TCP_UPLOAD_REASON</th>
-<th>Host stack's termination of the TCP connection</th>
+  <th>Event/Circumstance</th>
+  <th>TCP_UPLOAD_REASON</th>
+  <th>Host stack's termination of the TCP connection</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>The hardware state used to track the connection is corrupt.</td>
-<td><strong>HardwareFailure</strong></td>
-<td>Mandatory</td>
+  <td>The hardware state used to track the connection is corrupt.</td>
+  <td><strong>HardwareFailure</strong></td>
+  <td>Mandatory</td>
 </tr>
 <tr>
-<td>Offload target attempted to send data on a TCP connection that depends on an invalidated state object.</td>
-<td><strong>InvalidState</strong></td>
-<td>Mandatory</td>
+  <td>Offload target attempted to send data on a TCP connection that depends on an invalidated state object.</td>
+  <td><strong>InvalidState</strong></td>
+  <td>Mandatory</td>
 </tr>
 <tr>
-<td>Offload target receives a segment with the URG bit set in the TCP header. Note that the offload target does not send an ACK to acknowledge the urgent data.</td>
-<td><strong>ReceivedUrgentData</strong></td>
-<td>Mandatory</td>
+  <td>Offload target receives a segment with the URG bit set in the TCP header. Note that the offload target does not send an ACK to acknowledge the urgent data.</td>
+  <td><strong>ReceivedUrgentData</strong></td>
+  <td>Mandatory</td>
 </tr>
 <tr>
-<td>A timeout occurred on the TCP connection.</td>
-<td><strong>TimeoutExpiration</strong></td>
-<td>Mandatory</td>
+  <td>A timeout occurred on the TCP connection.</td>
+  <td><strong>TimeoutExpiration</strong></td>
+  <td>Mandatory</td>
 </tr>
 <tr>
-<td>The offload target is requesting an upload for an unspecified reason.</td>
-<td><strong>UploadRequested</strong></td>
-<td>Mandatory</td>
+  <td>The offload target is requesting an upload for an unspecified reason.</td>
+  <td><strong>UploadRequested</strong></td>
+  <td>Mandatory</td>
 </tr>
 <tr>
-<td>The offload target has detected that too many transmit segments are being dropped on the TCP connection.</td>
-<td><strong>HighDropRate</strong></td>
-<td>Optional</td>
+  <td>The offload target has detected that too many transmit segments are being dropped on the TCP connection.</td>
+  <td><strong>HighDropRate</strong></td>
+  <td>Optional</td>
 </tr>
 <tr>
-<td>The offload target has detected that too many fragments are being received on the TCP connection.</td>
-<td><strong>HighFragmentation</strong></td>
-<td>Optional</td>
+  <td>The offload target has detected that too many fragments are being received on the TCP connection.</td>
+  <td><strong>HighFragmentation</strong></td>
+  <td>Optional</td>
 </tr>
 <tr>
-<td>The offload target has received too many out-of-order segments on the TCP connection.</td>
-<td><strong>HighOutofOrderPackets</strong></td>
-<td>Optional</td>
+  <td>The offload target has received too many out-of-order segments on the TCP connection.</td>
+  <td><strong>HighOutofOrderPackets</strong></td>
+  <td>Optional</td>
 </tr>
 <tr>
-<td>The activity (sends/receives) on the TCP connection is too low.</td>
-<td><strong>LowActivity</strong></td>
-<td>Optional</td>
+  <td>The activity (sends/receives) on the TCP connection is too low.</td>
+  <td><strong>LowActivity</strong></td>
+  <td>Optional</td>
 </tr>
 <tr>
-<td>There are no preposted receive buffers for the TCP connection.</td>
-<td><strong>NoBufferProposting</strong></td>
-<td>Optional</td>
+  <td>There are no preposted receive buffers for the TCP connection.</td>
+  <td><strong>NoBufferProposting</strong></td>
+  <td>Optional</td>
 </tr>
 <tr>
-<td>The received buffers posted for the TCP connection are too small.</td>
-<td><strong>SmallIO</strong></td>
-<td>Optional</td>
+  <td>The received buffers posted for the TCP connection are too small.</td>
+  <td><strong>SmallIO</strong></td>
+  <td>Optional</td>
 </tr>
 </tbody>
 </table>
+
 <p>The offload target must not initiate the termination of a half-closed TCP connection when that
 connection is in one of the following states:</p>
+
 <ul>
 <li>FIN_WAIT1--The local host stack has closed the TCP connection, but the connection might still be
 receiving data from the remote endpoint.</li>
@@ -233,30 +272,44 @@ receiving data from the remote endpoint.</li>
 it sent, but the offloaded connection might still be receiving data from the remote host.</li>
 <li>CLOSE_WAIT--The local host might still be sending data.</li>
 </ul>
+
 <p>An offload target can request the termination of all TCP connections that have been offloaded to it.
 For more information, see
 <a href="ndismoffloadeventindicate" title="VOID NdisMOffloadEventIndicate(&#10;  [in] IN NDIS_HANDLE                       NdisMiniportHandle,&#10;  [in] IN PNDIS_MINIPORT_OFFLOAD_BLOCK_LIST OffloadBlockList,&#10;  [in] IN ULONG                             IndicationCode&#10;);">NdisMOffloadEventIndicate</a>.</p>
+
 <h3>Indicating a Change in the Send Backlog Size</h3>
+
 <p>The send backlog size can be a function of the round-trip time (RTT) for the connection, the interface
 bandwidth, and other parameters. The specific variables and algorithm that the offload target uses to
 calculate the send backlog size are implementation-specific. An offload target could, for example, use
 minimum of the bandwidth-delay product and the advertised receive window as the algorithm. Note, however,
 that the send backlog size does not vary according to the number of data bytes that are currently posted
 for transmission on the connection.</p>
+
 <p>The offload target should implement a throttling mechanism to ensure that, if the value for
 <strong>SendBacklogSize</strong> changes too frequently or by too small an amount, the offload target does not
 indicate a
 <strong>SendBacklogSize</strong> event. This will prevent a storm of event indications from occurring.</p>
+
 <h2>See also</h2>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/network/indicating-tcp-chimney-specific-events">Indicating TCP Chimney-Specific Events</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-w_initiate_offload_handler">MiniportInitiateOffload</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-w_terminate_offload_handler">MiniportTerminateOffload</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/indicating-tcp-chimney-specific-events">Indicating TCP Chimney-Specific Events</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-w_initiate_offload_handler">MiniportInitiateOffload</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-w_terminate_offload_handler">MiniportTerminateOffload</a></p>
+
 <p><a href="ndismoffloadeventindicate" title="VOID NdisMOffloadEventIndicate(&#10;  [in] IN NDIS_HANDLE                       NdisMiniportHandle,&#10;  [in] IN PNDIS_MINIPORT_OFFLOAD_BLOCK_LIST OffloadBlockList,&#10;  [in] IN ULONG                             IndicationCode&#10;);">NdisMOffloadEventIndicate</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_disconnect_complete">NdisTcpOffloadDisconnectComplete</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_receive_complete">NdisTcpOffloadReceiveComplete</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_send_complete">NdisTcpOffloadSendComplete</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-tcp_offload_event_handler">ProtocolTcpOffloadEvent</a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/network/responding-to-the-reception-of-a-fin-or-rst-segment">Responding to
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_disconnect_complete">NdisTcpOffloadDisconnectComplete</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_receive_complete">NdisTcpOffloadReceiveComplete</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-ndis_tcp_offload_send_complete">NdisTcpOffloadSendComplete</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndischimney/nc-ndischimney-tcp_offload_event_handler">ProtocolTcpOffloadEvent</a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/responding-to-the-reception-of-a-fin-or-rst-segment">Responding to
 the Reception of a FIN or RST Segment</a></p>
 <hr>
 <div class="ntdoc-description-links">

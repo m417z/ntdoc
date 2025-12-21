@@ -68,44 +68,68 @@ VOID EvtWdfRequestImpersonate(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>EVT_WDF_REQUEST_IMPERSONATE callback function</h1>
+
 <h2>Description</h2>
+
 <p>[Applies to UMDF only]</p>
+
 <p>A driver's <em>EvtRequestImpersonate</em> event callback function performs tasks at the requested impersonation level, such as opening a protected file.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Request</code> [in]</h3>
+
 <p>A handle to a framework request object that represents the I/O request that requires impersonation.</p>
+
 <h3><code>Context</code> [in, optional]</h3>
+
 <p>A pointer to a context that was previously supplied in the <a href="wdfrequestimpersonate" title="NTSTATUS WdfRequestImpersonate(&#10;  [in]           WDFREQUEST                   Request,&#10;  [in]           SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,&#10;  [in]           PFN_WDF_REQUEST_IMPERSONATE  EvtRequestImpersonate,&#10;  [in, optional] PVOID                        Context&#10;);">WdfRequestImpersonate</a> method. This parameter is optional and can be NULL if a context is not required.</p>
+
 <h2>Remarks</h2>
+
 <p>User-Mode Driver Framework (UMDF) does not allow a driver's <em>EvtRequestImpersonate</em> callback function to call any of the framework's object methods. This ensures that the driver does not expose the impersonation level to other driver callback functions or other drivers.</p>
+
 <p>The <strong>EVT_WDF_REQUEST_IMPERSONATE</strong> function type is defined in the Wdfrequest.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <code>_Use_decl_annotations_</code> annotation to your function definition. The <code>_Use_decl_annotations_</code> annotation ensures that the annotations that are applied to the <strong>EVT_WDF_REQUEST_IMPERSONATE</strong> function type in the header file are used.</p>
+
 <p>The following restrictions also apply:</p>
+
 <ul>
-<li>
-<p>When the driver calls <strong><a href="wdfrequestimpersonate" title="NTSTATUS WdfRequestImpersonate(&#10;  [in]           WDFREQUEST                   Request,&#10;  [in]           SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,&#10;  [in]           PFN_WDF_REQUEST_IMPERSONATE  EvtRequestImpersonate,&#10;  [in, optional] PVOID                        Context&#10;);">WdfRequestImpersonate</a></strong> with <code>ImpersonationLevel = SecurityIdentification</code>, the callback cannot call <strong>LoadLibrary</strong> or perform any action requiring an access check.</p>
-</li>
-<li>
-<p>The same principle applies to DLL delay load. Consider an example in which the driver impersonates at identification level, and the callback calls <strong>GetUserNameW</strong>. Because this API in turn delay loads another DLL and calls <strong>GetUserNameExW</strong>, the initial call might fail with <strong>ERROR_PROC_NOT_FOUND</strong> or <strong>ERROR_BAD_IMPERSONATION_LEVEL</strong>. In such a case, the callback should instead call <strong>GetUserNameExW</strong> directly.</p>
-</li>
+<li><p>When the driver calls <strong><a href="wdfrequestimpersonate" title="NTSTATUS WdfRequestImpersonate(&#10;  [in]           WDFREQUEST                   Request,&#10;  [in]           SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,&#10;  [in]           PFN_WDF_REQUEST_IMPERSONATE  EvtRequestImpersonate,&#10;  [in, optional] PVOID                        Context&#10;);">WdfRequestImpersonate</a></strong> with <code>ImpersonationLevel = SecurityIdentification</code>, the callback cannot call <strong>LoadLibrary</strong> or perform any action requiring an access check.</p></li>
+<li><p>The same principle applies to DLL delay load. Consider an example in which the driver impersonates at identification level, and the callback calls <strong>GetUserNameW</strong>. Because this API in turn delay loads another DLL and calls <strong>GetUserNameExW</strong>, the initial call might fail with <strong>ERROR_PROC_NOT_FOUND</strong> or <strong>ERROR_BAD_IMPERSONATION_LEVEL</strong>. In such a case, the callback should instead call <strong>GetUserNameExW</strong> directly.</p></li>
 </ul>
-<p>For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/handling-client-impersonation-in-umdf-drivers">Handling Client Impersonation in UMDF Drivers</a>.</p>
+
+<p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/handling-client-impersonation-in-umdf-drivers">Handling Client Impersonation in UMDF Drivers</a>.</p>
+
 <h4>Examples</h4>
-<p>To define an <em>EvtRequestImpersonate</em> callback function, you must first provide a function declaration that identifies the type of callback function you’re defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it’s a requirement for writing drivers for the Windows operating system.</p>
+
+<p>To define an <em>EvtRequestImpersonate</em> callback function, you must first provide a function declaration that identifies the type of callback function you’re defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it’s a requirement for writing drivers for the Windows operating system.</p>
+
 <p>For example, to define an <em>EvtRequestImpersonate</em> callback function that is named <em>MyRequestImpersonate</em>, use the <strong>EVT_WDF_REQUEST_IMPERSONATE</strong> type as shown in this code example:</p>
-<pre lang="cpp"><code>EVT_WDF_REQUEST_IMPERSONATE  MyRequestImpersonate;
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">EVT_WDF_REQUEST_IMPERSONATE</span><span class="w">  </span><span class="n">MyRequestImpersonate</span><span class="p">;</span>
 </code></pre>
+</div>
+
 <p>Then, implement your callback function as follows:</p>
-<pre lang="cpp"><code>_Use_decl_annotations_
-VOID
- MyRequestImpersonate (
-    WDFREQUEST  Request
-    PVOID  Context
-    )
-  {...}
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">_Use_decl_annotations_</span>
+<span class="n">VOID</span>
+<span class="w"> </span><span class="n">MyRequestImpersonate</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w">  </span><span class="n">Context</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">  </span><span class="p">{...}</span>
 </code></pre>
-<p>For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>.</p>
-<p>For information about <em>Use_decl_annotations</em>, see <a href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+</div>
+
+<p>For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>.</p>
+
+<p>For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="wdfrequestimpersonate" title="NTSTATUS WdfRequestImpersonate(&#10;  [in]           WDFREQUEST                   Request,&#10;  [in]           SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,&#10;  [in]           PFN_WDF_REQUEST_IMPERSONATE  EvtRequestImpersonate,&#10;  [in, optional] PVOID                        Context&#10;);">WdfRequestImpersonate</a></p>
 <hr>
 <div class="ntdoc-description-links">

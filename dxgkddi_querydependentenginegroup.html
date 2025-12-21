@@ -68,28 +68,50 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>DXGKDDI_QUERYDEPENDENTENGINEGROUP callback function</h1>
+
 <h2>Description</h2>
+
 <p><em>Dxgkrnl</em>'s GPU scheduler calls <strong>DxgkddiQuerydependentenginegroup</strong> to query dependencies of nodes in a physical display adapter.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>hAdapter</code></h3>
-<p>[in] A handle to a context block that is associated with a display adapter. The display miniport driver previously provided this handle to the DirectX graphics kernel subsystem in the <strong>MiniportDeviceContext</strong> output parameter of the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a> function.</p>
+
+<p>[in] A handle to a context block that is associated with a display adapter. The display miniport driver previously provided this handle to the DirectX graphics kernel subsystem in the <strong>MiniportDeviceContext</strong> output parameter of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a> function.</p>
+
 <h3><code>pQueryDependentEngineGroup</code></h3>
+
 <p>[in/out] A <strong><a href="dxgkarg_querydependentenginegroup" title="typedef struct _DXGKARG_QUERYDEPENDENTENGINEGROUP {&#10;  [in]  UINT      NodeOrdinal;&#10;  [in]  UINT      EngineOrdinal;&#10;  [out] ULONGLONG DependentNodeOrdinalMask;&#10;} DXGKARG_QUERYDEPENDENTENGINEGROUP;">DXGKARG_QUERYDEPENDENTENGINEGROUP</a></strong> structure in which KMD specifies all nodes affected by the reset operation.</p>
+
 <h2>Return value</h2>
+
 <p><strong>DxgkddiQuerydependentenginegroup</strong> must return <strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong>.</p>
+
 <h2>Remarks</h2>
-<p><em>Dxgkrnl</em>'s GPU scheduler calls this function to get a description of all physical adapters (engines) that will be affected by an engine reset request. It helps improve user experience on hardware architectures that have dependencies among multiple engines that can affect the reset process. Note that all affected nodes must have the same engine affinity value. (See the engine affinity discussion in <a href="https://learn.microsoft.com/windows-hardware/drivers/display/tdr-changes-in-windows-8">TDR changes in Windows 8</a>.)</p>
-<p>The GPU scheduler calls <strong>DxgkDdiQueryDependentEngineGroup</strong> every time it calls <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_resetengine"><strong>DxgkDdiResetEngine</strong></a>. The GPU scheduler waits 500 milliseconds for the display miniport driver to complete preemption of all dependent engines. For any engines that the driver can't complete a preemption, the GPU scheduler calls the <strong>DxgkDdiResetEngine</strong> function sequentially based upon the engine ordinal value.</p>
+
+<p><em>Dxgkrnl</em>'s GPU scheduler calls this function to get a description of all physical adapters (engines) that will be affected by an engine reset request. It helps improve user experience on hardware architectures that have dependencies among multiple engines that can affect the reset process. Note that all affected nodes must have the same engine affinity value. (See the engine affinity discussion in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/tdr-changes-in-windows-8">TDR changes in Windows 8</a>.)</p>
+
+<p>The GPU scheduler calls <strong>DxgkDdiQueryDependentEngineGroup</strong> every time it calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_resetengine"><strong>DxgkDdiResetEngine</strong></a>. The GPU scheduler waits 500 milliseconds for the display miniport driver to complete preemption of all dependent engines. For any engines that the driver can't complete a preemption, the GPU scheduler calls the <strong>DxgkDdiResetEngine</strong> function sequentially based upon the engine ordinal value.</p>
+
 <p>Here is an example of how to compute the bitmask in the <strong><a href="dxgkarg_querydependentenginegroup" title="typedef struct _DXGKARG_QUERYDEPENDENTENGINEGROUP {&#10;  [in]  UINT      NodeOrdinal;&#10;  [in]  UINT      EngineOrdinal;&#10;  [out] ULONGLONG DependentNodeOrdinalMask;&#10;} DXGKARG_QUERYDEPENDENTENGINEGROUP;">DXGKARG_QUERYDEPENDENTENGINEGROUP</a></strong>.<strong>DependentNodeOrdinalMask</strong> member. If the original values of the <strong><a href="dxgkarg_querydependentenginegroup" title="typedef struct _DXGKARG_QUERYDEPENDENTENGINEGROUP {&#10;  [in]  UINT      NodeOrdinal;&#10;  [in]  UINT      EngineOrdinal;&#10;  [out] ULONGLONG DependentNodeOrdinalMask;&#10;} DXGKARG_QUERYDEPENDENTENGINEGROUP;">DXGKARG_QUERYDEPENDENTENGINEGROUP</a></strong> structure's <strong>NodeOrdinal</strong> and <strong>EngineOrdinal</strong> members are 1 and 0, respectively, and additional nodes with identifiers 2 and 4 will also be reset when node 1 is reset, the driver should set <strong>DependentNodeOrdinalMask</strong> to 10110, or 0x16 in hexadecimal notation. The index value <strong>EngineOrdinal</strong> is assumed to be identical for all dependent nodes. The node being reset is included in the <strong>DependentNodeOrdinalMask</strong> bit mask.</p>
+
 <p>This function should be made pageable, and it should always succeed.</p>
-<p>The operating system guarantees that this function follows the first level synchronization mode as defined in <a href="https://learn.microsoft.com/windows-hardware/drivers/display/threading-and-synchronization-first-level">Threading and Synchronization First Level</a>.</p>
-<p>For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/display/tdr-changes-in-windows-8">TDR changes in Windows 8</a>.</p>
+
+<p>The operating system guarantees that this function follows the first level synchronization mode as defined in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/threading-and-synchronization-first-level">Threading and Synchronization First Level</a>.</p>
+
+<p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/tdr-changes-in-windows-8">TDR changes in Windows 8</a>.</p>
+
 <h2>See also</h2>
+
 <p><strong><a href="dxgkarg_createcontext" title="typedef struct _DXGKARG_CREATECONTEXT {&#10;  [out] HANDLE                  hContext;&#10;  [in]  UINT                    NodeOrdinal;&#10;  [in]  UINT                    EngineAffinity;&#10;  [in]  DXGK_CREATECONTEXTFLAGS Flags;&#10;  [in]  VOID                    *pPrivateDriverData;&#10;  [in]  UINT                    PrivateDriverDataSize;&#10;  [out] DXGK_CONTEXTINFO        ContextInfo;&#10;} DXGKARG_CREATECONTEXT;">DXGKARG_CREATECONTEXT</a></strong></p>
+
 <p><strong><a href="dxgkarg_querydependentenginegroup" title="typedef struct _DXGKARG_QUERYDEPENDENTENGINEGROUP {&#10;  [in]  UINT      NodeOrdinal;&#10;  [in]  UINT      EngineOrdinal;&#10;  [out] ULONGLONG DependentNodeOrdinalMask;&#10;} DXGKARG_QUERYDEPENDENTENGINEGROUP;">DXGKARG_QUERYDEPENDENTENGINEGROUP</a></strong></p>
+
 <p><strong><a href="dxgk_drivercaps" title="typedef struct _DXGK_DRIVERCAPS {&#10;  [out] PHYSICAL_ADDRESS                   HighestAcceptableAddress;&#10;  [out] UINT                               MaxAllocationListSlotId;&#10;  [out] SIZE_T                             ApertureSegmentCommitLimit;&#10;  [out] UINT                               MaxPointerWidth;&#10;  [out] UINT                               MaxPointerHeight;&#10;  [out] DXGK_POINTERFLAGS                  PointerCaps;&#10;  [out] UINT                               InterruptMessageNumber;&#10;  [out] UINT                               NumberOfSwizzlingRanges;&#10;  [out] UINT                               MaxOverlays;&#10;  union {&#10;    [out] DXGK_GAMMARAMPCAPS      GammaRampCaps;&#10;    [out] DXGK_COLORTRANSFORMCAPS ColorTransformCaps;&#10;  };&#10;  [out] DXGK_PRESENTATIONCAPS              PresentationCaps;&#10;  [out] UINT                               MaxQueuedFlipOnVSync;&#10;  [out] DXGK_FLIPCAPS                      FlipCaps;&#10;  [out] DXGK_VIDSCHCAPS                    SchedulingCaps;&#10;  [out] DXGK_VIDMMCAPS                     MemoryManagementCaps;&#10;  [out] DXGK_GPUENGINETOPOLOGY             GpuEngineTopology;&#10;...">DXGK_DRIVERCAPS</a></strong></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a></p>
-<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_resetengine"><strong>DxgkDdiResetEngine</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_add_device"><strong>DxgkDdiAddDevice</strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_resetengine"><strong>DxgkDdiResetEngine</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

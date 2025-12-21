@@ -70,48 +70,74 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>KsPinGenerateEvents function</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>KsPinGenerateEvents</strong> function generates events of an indicated type that are present in <em>Pin</em>'s event list.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Pin</code> [in]</h3>
+
 <p>A pointer to the <a href="kspin" title="typedef struct _KSPIN {&#10;  const KSPIN_DESCRIPTOR_EX *Descriptor;&#10;  KSOBJECT_BAG              Bag;&#10;  PVOID                     Context;&#10;  ULONG                     Id;&#10;  KSPIN_COMMUNICATION       Communication;&#10;  BOOLEAN                   ConnectionIsExternal;&#10;  KSPIN_INTERFACE           ConnectionInterface;&#10;  KSPIN_MEDIUM              ConnectionMedium;&#10;  KSPRIORITY                ConnectionPriority;&#10;  PKSDATAFORMAT             ConnectionFormat;&#10;  PKSMULTIPLE_ITEM          AttributeList;&#10;  ULONG                     StreamHeaderSize;&#10;  KSPIN_DATAFLOW            DataFlow;&#10;  KSSTATE                   DeviceState;&#10;  KSRESET                   ResetState;&#10;  KSSTATE                   ClientState;&#10;} KSPIN, *PKSPIN;">KSPIN</a> structure on which to generate events.</p>
+
 <h3><code>EventSet</code> [in, optional]</h3>
+
 <p>A pointer to the event set GUID to match to determine which events to generate. If this parameter is <strong>NULL</strong>, set GUID is not taken into account for determining matching events.</p>
+
 <h3><code>EventId</code> [in]</h3>
+
 <p>The event ID to match to determine which events to generate.</p>
+
 <h3><code>DataSize</code> [in]</h3>
+
 <p>The size in bytes of the data with which to generate the data event.</p>
+
 <h3><code>Data</code> [in, optional]</h3>
+
 <p>A pointer to a data buffer. Specify if generating a data event.</p>
+
 <h3><code>CallBack</code> [in, optional]</h3>
+
 <p>A pointer to a caller-specified function that is called to determine whether a given event should be generated. If <strong>NULL</strong>, no callback verification is performed to determine whether an event should be generated (only <em>EventSet</em> and <em>EventId</em> are used). Prototype as follows:</p>
-<pre lang="cpp"><code>BOOLEAN CallBack
-(IN PVOID Context,
-    IN <a href="ksevent_entry" title="typedef struct _KSEVENT_ENTRY {&#10;  LIST_ENTRY         ListEntry;&#10;  PVOID              Object;&#10;  union {&#10;    PKSDPC_ITEM    DpcItem;&#10;    PKSBUFFER_ITEM BufferItem;&#10;  };&#10;  PKSEVENTDATA       EventData;&#10;  ULONG              NotificationType;&#10;  const KSEVENT_SET  *EventSet;&#10;  const KSEVENT_ITEM *EventItem;&#10;  PFILE_OBJECT       FileObject;&#10;  ULONG              SemaphoreAdjustment;&#10;  ULONG              Reserved;&#10;  ULONG              Flags;&#10;} KSEVENT_ENTRY, *PKSEVENT_ENTRY;">PKSEVENT_ENTRY</a> EventEntry);
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">BOOLEAN</span><span class="w"> </span><span class="nf">CallBack</span>
+<span class="p">(</span><span class="n">IN</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n"><a href="ksevent_entry" title="typedef struct _KSEVENT_ENTRY {&#10;  LIST_ENTRY         ListEntry;&#10;  PVOID              Object;&#10;  union {&#10;    PKSDPC_ITEM    DpcItem;&#10;    PKSBUFFER_ITEM BufferItem;&#10;  };&#10;  PKSEVENTDATA       EventData;&#10;  ULONG              NotificationType;&#10;  const KSEVENT_SET  *EventSet;&#10;  const KSEVENT_ITEM *EventItem;&#10;  PFILE_OBJECT       FileObject;&#10;  ULONG              SemaphoreAdjustment;&#10;  ULONG              Reserved;&#10;  ULONG              Flags;&#10;} KSEVENT_ENTRY, *PKSEVENT_ENTRY;">PKSEVENT_ENTRY</a></span><span class="w"> </span><span class="n">EventEntry</span><span class="p">);</span>
 </code></pre>
+</div>
+
 <p><strong>KsPinGenerateEvents</strong> passes the <em>CallBackContext</em> parameter unchanged as the <em>Context</em> parameter for the callback. The callback function returns <strong>TRUE</strong> if <em>EventEntry</em> should be generated. Otherwise, it returns <strong>FALSE</strong>.</p>
+
 <h3><code>CallBackContext</code> [in, optional]</h3>
+
 <p>A pointer to a caller-specified context that is passed to the callback function <em>CallBack</em>.</p>
+
 <h2>Remarks</h2>
+
 <p>When calling this function, a minidriver must place <em>Data</em> and <em>CallBackContext</em> in a locked, nonpageable data segment. The <em>CallBack</em> is made at DISPATCH_LEVEL. The callback function must be in a locked segment and must be prepared to run at IRQL = DISPATCH_LEVEL. Note that there is an additional issue in DX8 <em>only</em>: <em>EventSet</em> must be in a locked data segment.</p>
+
 <p>This is an inline function call to <a href="ksgenerateevents" title="void KsGenerateEvents(&#10;  [in]           PVOID                      Object,&#10;  [in, optional] const GUID                 *EventSet,&#10;  [in]           ULONG                      EventId,&#10;  [in]           ULONG                      DataSize,&#10;  [in, optional] PVOID                      Data,&#10;  [in, optional] PFNKSGENERATEEVENTCALLBACK CallBack,&#10;  [in, optional] PVOID                      CallBackContext&#10;);">KsGenerateEvents</a>, which performs the necessary typecasting. Minidrivers should usually call this version instead of directly calling <strong><a href="ksgenerateevents" title="void KsGenerateEvents(&#10;  [in]           PVOID                      Object,&#10;  [in, optional] const GUID                 *EventSet,&#10;  [in]           ULONG                      EventId,&#10;  [in]           ULONG                      DataSize,&#10;  [in, optional] PVOID                      Data,&#10;  [in, optional] PFNKSGENERATEEVENTCALLBACK CallBack,&#10;  [in, optional] PVOID                      CallBackContext&#10;);">KsGenerateEvents</a></strong>.</p>
+
 <p>An event is generated if the following three conditions hold:</p>
+
 <ul>
-<li>
-<p>The event is present in *Pin's *event list and <em>EventId</em> matches the event's ID.</p>
-</li>
-<li>
-<p><em>EventSet</em> either matches the event's set GUID or is <strong>NULL</strong>.</p>
-</li>
-<li>
-<p><em>CallBack</em> is either <strong>NULL</strong> or authorizes the match.</p>
-</li>
+<li><p>The event is present in <em>Pin's *event list and *EventId</em> matches the event's ID.</p></li>
+<li><p><em>EventSet</em> either matches the event's set GUID or is <strong>NULL</strong>.</p></li>
+<li><p><em>CallBack</em> is either <strong>NULL</strong> or authorizes the match.</p></li>
 </ul>
-<p>For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/stream/event-handling-in-avstream">Event Handling in AVStream</a> and <a href="https://learn.microsoft.com/windows-hardware/drivers/stream/ks-events">KS Events</a>.</p>
+
+<p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/stream/event-handling-in-avstream">Event Handling in AVStream</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/stream/ks-events">KS Events</a>.</p>
+
 <h2>See also</h2>
+
 <p><a href="ksevent_entry" title="typedef struct _KSEVENT_ENTRY {&#10;  LIST_ENTRY         ListEntry;&#10;  PVOID              Object;&#10;  union {&#10;    PKSDPC_ITEM    DpcItem;&#10;    PKSBUFFER_ITEM BufferItem;&#10;  };&#10;  PKSEVENTDATA       EventData;&#10;  ULONG              NotificationType;&#10;  const KSEVENT_SET  *EventSet;&#10;  const KSEVENT_ITEM *EventItem;&#10;  PFILE_OBJECT       FileObject;&#10;  ULONG              SemaphoreAdjustment;&#10;  ULONG              Reserved;&#10;  ULONG              Flags;&#10;} KSEVENT_ENTRY, *PKSEVENT_ENTRY;">KSEVENT_ENTRY</a></p>
+
 <p><a href="ksaddevent" title="void KsAddEvent(&#10;  [in] PVOID          Object,&#10;  [in] PKSEVENT_ENTRY EventEntry&#10;);">KsAddEvent</a></p>
+
 <p><a href="ksfiltergenerateevents" title="void KsFilterGenerateEvents(&#10;  [in]           PKSFILTER                  Filter,&#10;  [in, optional] const GUID                 *EventSet,&#10;  [in]           ULONG                      EventId,&#10;  [in]           ULONG                      DataSize,&#10;  [in]           PVOID                      Data,&#10;  [in, optional] PFNKSGENERATEEVENTCALLBACK CallBack,&#10;  [in, optional] PVOID                      CallBackContext&#10;);">KsFilterGenerateEvents</a></p>
+
 <p><a href="ksgenerateevents" title="void KsGenerateEvents(&#10;  [in]           PVOID                      Object,&#10;  [in, optional] const GUID                 *EventSet,&#10;  [in]           ULONG                      EventId,&#10;  [in]           ULONG                      DataSize,&#10;  [in, optional] PVOID                      Data,&#10;  [in, optional] PFNKSGENERATEEVENTCALLBACK CallBack,&#10;  [in, optional] PVOID                      CallBackContext&#10;);">KsGenerateEvents</a></p>
 <hr>
 <div class="ntdoc-description-links">

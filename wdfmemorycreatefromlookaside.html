@@ -65,67 +65,96 @@
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <h1>WdfMemoryCreateFromLookaside function</h1>
+
 <h2>Description</h2>
+
 <p>[Applies to KMDF only]</p>
+
 <p>The <strong>WdfMemoryCreateFromLookaside</strong> method creates a framework memory object and obtains a memory buffer from a specified lookaside list.</p>
+
 <h2>Parameters</h2>
+
 <h3><code>Lookaside</code> [in]</h3>
+
 <p>A handle to a framework lookaside-list object that is obtained by calling <a href="wdflookasidelistcreate" title="NTSTATUS WdfLookasideListCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES LookasideAttributes,&#10;  [in]           size_t                 BufferSize,&#10;  [in]           POOL_TYPE              PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES MemoryAttributes,&#10;  [in, optional] ULONG                  PoolTag,&#10;  [out]          WDFLOOKASIDE           *Lookaside&#10;);">WdfLookasideListCreate</a>.</p>
+
 <h3><code>Memory</code> [out]</h3>
+
 <p>A pointer to a location that receives a handle to the new framework memory object.</p>
+
 <h2>Return value</h2>
+
 <p><strong>WdfMemoryCreateFromLookaside</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, this method return one of the following values:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INVALID_PARAMETER</strong></td>
-<td>An invalid parameter was detected.</td>
+  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
+  <td>An invalid parameter was detected.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-<td>There was insufficient memory.</td>
+  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+  <td>There was insufficient memory.</td>
 </tr>
 </tbody>
 </table>
-<p>This method also might return other <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
+
+<p>This method also might return other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
+
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
+
 <h2>Remarks</h2>
+
 <p>After your driver calls <a href="wdflookasidelistcreate" title="NTSTATUS WdfLookasideListCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES LookasideAttributes,&#10;  [in]           size_t                 BufferSize,&#10;  [in]           POOL_TYPE              PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES MemoryAttributes,&#10;  [in, optional] ULONG                  PoolTag,&#10;  [out]          WDFLOOKASIDE           *Lookaside&#10;);">WdfLookasideListCreate</a> to create a lookaside-list object, the driver can call <strong>WdfMemoryCreateFromLookaside</strong> to obtain a buffer from the lookaside list.</p>
+
 <p>The framework provides a handle to a memory object that represents the buffer. When the framework creates the memory object, it uses object attributes that the driver supplied when it called <strong>WdfMemoryCreateFromLookaside</strong>.</p>
+
 <p>When your driver has finished using a memory object that it obtained from a lookaside list, the driver must call <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a> to return the memory object to the lookaside list.</p>
-<p>For more information about framework memory objects and lookaside lists, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-memory-buffers">Using Memory Buffers</a>.</p>
+
+<p>For more information about framework memory objects and lookaside lists, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-memory-buffers">Using Memory Buffers</a>.</p>
+
 <p>If lookaside-list buffers are being allocated from the pageable memory pool, the <strong>WdfMemoryCreateFromLookaside</strong> method must be called at IRQL &lt;= APC_LEVEL. Otherwise, the method can be called at IRQL &lt;= DISPATCH_LEVEL.</p>
+
 <h4>Examples</h4>
+
 <p>The following code example creates a lookaside list and stores the list's handle in driver-defined device object context space. Then, the driver obtains a buffer from the lookaside list.</p>
-<pre lang="cpp"><code>PDRIVER_CONTEXT  driverContext;
-WDFMEMORY  memHandle;
 
-driverContext = GetDriverContext(driver);
+<div class="codehilite">
+<pre><span></span><code><span class="n">PDRIVER_CONTEXT</span><span class="w">  </span><span class="n">driverContext</span><span class="p">;</span>
+<span class="n">WDFMEMORY</span><span class="w">  </span><span class="n">memHandle</span><span class="p">;</span>
 
-status = <a href="wdflookasidelistcreate" title="NTSTATUS WdfLookasideListCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES LookasideAttributes,&#10;  [in]           size_t                 BufferSize,&#10;  [in]           POOL_TYPE              PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES MemoryAttributes,&#10;  [in, optional] ULONG                  PoolTag,&#10;  [out]          WDFLOOKASIDE           *Lookaside&#10;);">WdfLookasideListCreate</a>(
-                                WDF_NO_OBJECT_ATTRIBUTES,
-                                sizeof(MY_LOOKASIDE_BUFFER),
-                                NonPagedPool,
-                                WDF_NO_OBJECT_ATTRIBUTES,
-                                MY_POOL_TAG,
-                                &amp;driverContext-&gt;LookasideListHandle
-                                );
-...
-status = WdfMemoryCreateFromLookaside(
-                                      driverContext-&gt;LookasideListHandle,
-                                      &amp;memHandle
-                                      );
+<span class="n">driverContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetDriverContext</span><span class="p">(</span><span class="n">driver</span><span class="p">);</span>
+
+<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdflookasidelistcreate" title="NTSTATUS WdfLookasideListCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES LookasideAttributes,&#10;  [in]           size_t                 BufferSize,&#10;  [in]           POOL_TYPE              PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES MemoryAttributes,&#10;  [in, optional] ULONG                  PoolTag,&#10;  [out]          WDFLOOKASIDE           *Lookaside&#10;);">WdfLookasideListCreate</a></span><span class="p">(</span>
+<span class="w">                                </span><span class="n">WDF_NO_OBJECT_ATTRIBUTES</span><span class="p">,</span>
+<span class="w">                                </span><span class="k">sizeof</span><span class="p">(</span><span class="n">MY_LOOKASIDE_BUFFER</span><span class="p">),</span>
+<span class="w">                                </span><span class="n">NonPagedPool</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">WDF_NO_OBJECT_ATTRIBUTES</span><span class="p">,</span>
+<span class="w">                                </span><span class="n">MY_POOL_TAG</span><span class="p">,</span>
+<span class="w">                                </span><span class="o">&amp;</span><span class="n">driverContext</span><span class="o">-&gt;</span><span class="n">LookasideListHandle</span>
+<span class="w">                                </span><span class="p">);</span>
+<span class="p">...</span>
+<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfMemoryCreateFromLookaside</span><span class="p">(</span>
+<span class="w">                                      </span><span class="n">driverContext</span><span class="o">-&gt;</span><span class="n">LookasideListHandle</span><span class="p">,</span>
+<span class="w">                                      </span><span class="o">&amp;</span><span class="n">memHandle</span>
+<span class="w">                                      </span><span class="p">);</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
+
 <p><a href="wdflookasidelistcreate" title="NTSTATUS WdfLookasideListCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES LookasideAttributes,&#10;  [in]           size_t                 BufferSize,&#10;  [in]           POOL_TYPE              PoolType,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES MemoryAttributes,&#10;  [in, optional] ULONG                  PoolTag,&#10;  [out]          WDFLOOKASIDE           *Lookaside&#10;);">WdfLookasideListCreate</a></p>
+
 <p><a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a></p>
+
 <p><a href="wdfmemorycreatepreallocated" title="NTSTATUS WdfMemoryCreatePreallocated(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]           __drv_aliasesMem PVOID Buffer,&#10;  [in]           size_t                 BufferSize,&#10;  [out]          WDFMEMORY              *Memory&#10;);">WdfMemoryCreatePreallocated</a></p>
+
 <p><a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a></p>
 <hr>
 <div class="ntdoc-description-links">
