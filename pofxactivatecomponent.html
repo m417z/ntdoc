@@ -65,79 +65,51 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-pofxactivatecomponent)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="pofxactivatecomponent-function">PoFxActivateComponent function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>PoFxActivateComponent function</h1>
+<h2>Description</h2>
 <p>The <strong>PoFxActivateComponent</strong> routine increments the activation reference count on the specified component.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="handle-in"><code>Handle</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Handle</code> [in]</h3>
 <p>A handle that represents the registration of the device with the power management framework (PoFx). The device driver previously received this handle from the <a href="pofxregisterdevice" title="NTSTATUS PoFxRegisterDevice(&#10;  [in]  PDEVICE_OBJECT Pdo,&#10;  [in]  PPO_FX_DEVICE  Device,&#10;  [out] POHANDLE       *Handle&#10;);">PoFxRegisterDevice</a> routine.</p>
-
-<h3 id="component-in"><code>Component</code> [in]</h3>
-
-<p>The index that identifies the component. This parameter is an index into the <strong>Components</strong> array in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_po_fx_device_v1">PO_FX_DEVICE</a> structure that the device driver used to register the device with PoFx. If the <strong>Components</strong> array contains N elements, component indexes range from 0 to N–1.</p>
-
-<h3 id="flags-in"><code>Flags</code> [in]</h3>
-
-<p>The flags for the activation operation. Set this member to zero or to one of the following flag <strong>PO_FX_FLAG_*XXX</strong>* bits:</p>
-
+<h3><code>Component</code> [in]</h3>
+<p>The index that identifies the component. This parameter is an index into the <strong>Components</strong> array in the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_po_fx_device_v1">PO_FX_DEVICE</a> structure that the device driver used to register the device with PoFx. If the <strong>Components</strong> array contains N elements, component indexes range from 0 to N–1.</p>
+<h3><code>Flags</code> [in]</h3>
+<p>The flags for the activation operation. Set this member to zero or to one of the following flag <strong>PO_FX_FLAG_<em>XXX</em></strong> bits:</p>
 <p>These two flag bits are mutually exclusive. For more information, see Remarks.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Value</th>
-  <th>Meaning</th>
+<th>Value</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>PO_FX_FLAG_BLOCKING</strong><br><br>0x1</td>
-  <td>Make the condition change synchronous. If this flag is set, the routine that requests the condition change does not return control to the calling driver until the component hardware completes the transition to the new condition. This flag can be used only if the caller is running at IRQL &lt; DISPATCH_LEVEL.</td>
+<td><strong>PO_FX_FLAG_BLOCKING</strong><!-- raw HTML omitted --><!-- raw HTML omitted -->0x1</td>
+<td>Make the condition change synchronous. If this flag is set, the routine that requests the condition change does not return control to the calling driver until the component hardware completes the transition to the new condition. This flag can be used only if the caller is running at IRQL &lt; DISPATCH_LEVEL.</td>
 </tr>
 <tr>
-  <td><strong>PO_FX_FLAG_ASYNC_ONLY</strong><br><br>0x2</td>
-  <td>Make the condition change fully asynchronous. If this flag is set, the calling driver's callback routine is called from a thread other than the thread in which the routine that requests the condition change is called. Thus, the routine that requests the condition change always returns asynchronously without waiting for the callback to complete.</td>
+<td><strong>PO_FX_FLAG_ASYNC_ONLY</strong><!-- raw HTML omitted --><!-- raw HTML omitted -->0x2</td>
+<td>Make the condition change fully asynchronous. If this flag is set, the calling driver's callback routine is called from a thread other than the thread in which the routine that requests the condition change is called. Thus, the routine that requests the condition change always returns asynchronously without waiting for the callback to complete.</td>
 </tr>
 </tbody>
 </table>
-
-<h2 id="remarks">Remarks</h2>
-
-<p>Before a device driver can access a component in a device, the driver must first call <strong>PoFxActivateComponent</strong> to obtain an activation reference to the component. If the component is not already in the active condition, this call initiates a transition from the idle condition to the active condition. When this transition completes, PoFx calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_active_condition_callback">ComponentActiveConditionCallback</a> routine to notify the driver. The driver can access the hardware registers in a component only when the component is in the active condition.</p>
-
+<h2>Remarks</h2>
+<p>Before a device driver can access a component in a device, the driver must first call <strong>PoFxActivateComponent</strong> to obtain an activation reference to the component. If the component is not already in the active condition, this call initiates a transition from the idle condition to the active condition. When this transition completes, PoFx calls the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_active_condition_callback">ComponentActiveConditionCallback</a> routine to notify the driver. The driver can access the hardware registers in a component only when the component is in the active condition.</p>
 <p>If the component is already in the active condition when <strong>PoFxActivateComponent</strong> is called, no transition is required, and the <em>ComponentActiveConditionCallback</em> routine is not called.</p>
-
 <p>After a component enters the active condition, it remains in the active condition for as long as the driver holds one or more activation references on the component. To release an activation reference, the driver calls the <a href="pofxidlecomponent" title="VOID PoFxIdleComponent(&#10;  [in] POHANDLE Handle,&#10;  [in] ULONG    Component,&#10;  [in] ULONG    Flags&#10;);">PoFxIdleComponent</a> routine. When the driver releases the last activation reference on a component, <strong><a href="pofxidlecomponent" title="VOID PoFxIdleComponent(&#10;  [in] POHANDLE Handle,&#10;  [in] ULONG    Component,&#10;  [in] ULONG    Flags&#10;);">PoFxIdleComponent</a></strong> initiates a transition from the active condition to the idle condition. A component that is in the idle condition can potentially enter a low-power Fx state.</p>
-
 <p>If <em>Flags</em> = <strong>PO_FX_FLAG_BLOCKING</strong>, the <strong>PoFxActivateComponent</strong> call is synchronous. If the component is already in the active condition, the call increments the activation reference count and returns without waiting. Otherwise, <strong>PoFxActivateComponent</strong> waits to return until the component completes the transition to the active condition. In this case, if the component is not already in the F0 state when the call occurs, <strong>PoFxActivateComponent</strong> calls the driver's <em>ComponentIdleStateCallback</em> routine to initiate the transition to F0. After the component enters the F0 state, <strong>PoFxActivateComponent</strong> calls the driver's <em>ComponentActiveConditionCallback</em> routine to inform the driver that the component is in the active condition. These callbacks occur in the same thread as the call to <strong>PoFxActivateComponent</strong>, and <strong>PoFxActivateComponent</strong> returns only after the <em>ComponentActiveConditionCallback</em> callback returns.</p>
-
 <p>If <em>Flags</em> = <strong>PO_FX_FLAG_ASYNC_ONLY</strong>, the <strong>PoFxActivateComponent</strong> call is asynchronous. If the component is already in the active condition, the call increments the activation reference count and returns. Otherwise, <strong>PoFxActivateComponent</strong> schedules the <em>ComponentIdleStateCallback</em> (if necessary) and <em>ComponentActiveConditionCallback</em> callbacks to occur in another thread, and then returns without waiting for either callback to occur. The callbacks can occur before or after <strong>PoFxActivateComponent</strong> returns. The driver relies on the <em>ComponentActiveConditionCallback</em> callback to determine when the component completes the transition to the active condition.</p>
-
 <p>The driver can set <em>Flags</em> = 0 to indicate that it does not care whether the <strong>PoFxActivateComponent</strong> call is synchronous or asynchronous. In this case, PoFx decides whether to make the call synchronous or asynchronous.</p>
-
 <p>Two or more code paths in the same driver might need to concurrently access a particular component. The <strong>PoFxActivateComponent</strong> and <strong><a href="pofxidlecomponent" title="VOID PoFxIdleComponent(&#10;  [in] POHANDLE Handle,&#10;  [in] ULONG    Component,&#10;  [in] ULONG    Flags&#10;);">PoFxIdleComponent</a></strong> routines use activation reference counts to enable the various parts of the driver to independently maintain access to the component without requiring the driver to centrally manage access to the component.</p>
-
 <p>PoFx maintains an activation reference count for each component in a device. A <strong>PoFxActivateComponent</strong> call increments this count by one, and a <strong><a href="pofxidlecomponent" title="VOID PoFxIdleComponent(&#10;  [in] POHANDLE Handle,&#10;  [in] ULONG    Component,&#10;  [in] ULONG    Flags&#10;);">PoFxIdleComponent</a></strong> call decrements the count by one. When the count is nonzero, the component either is in the active condition or is in the process of switching to the active condition. A component that has a count of zero either is in the idle condition or is in the process of switching to the idle condition.</p>
-
 <p>When a <strong>PoFxActivateComponent</strong> call causes the activation reference count to increment from 0 to 1, <strong>PoFxActivateComponent</strong> initiates a transition from the idle condition to the active condition. When a <strong><a href="pofxidlecomponent" title="VOID PoFxIdleComponent(&#10;  [in] POHANDLE Handle,&#10;  [in] ULONG    Component,&#10;  [in] ULONG    Flags&#10;);">PoFxIdleComponent</a></strong> call causes the count to decrement from 1 to 0, <strong><a href="pofxidlecomponent" title="VOID PoFxIdleComponent(&#10;  [in] POHANDLE Handle,&#10;  [in] ULONG    Component,&#10;  [in] ULONG    Flags&#10;);">PoFxIdleComponent</a></strong> initiates a transition from the active condition to the idle condition.</p>
-
-<p>PoFx notifies the driver when a transition between the active condition and idle condition occurs. A <em>ComponentActiveConditionCallback</em> callback notifies the driver of a transition to the active condition, and a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_idle_condition_callback">ComponentIdleConditionCallback</a> callback notifies the driver of a transition to the idle condition. When a <strong>PoFxActivateComponent</strong> or <strong><a href="pofxidlecomponent" title="VOID PoFxIdleComponent(&#10;  [in] POHANDLE Handle,&#10;  [in] ULONG    Component,&#10;  [in] ULONG    Flags&#10;);">PoFxIdleComponent</a></strong> call simply increments or decrements the activation reference count without causing such a transition, the driver receives no notification.</p>
-
-<h2 id="see-also">See also</h2>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_active_condition_callback">ComponentActiveConditionCallback</a></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_idle_state_callback">ComponentIdleStateCallback</a></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_po_fx_device_v1">PO_FX_DEVICE</a></p>
-
+<p>PoFx notifies the driver when a transition between the active condition and idle condition occurs. A <em>ComponentActiveConditionCallback</em> callback notifies the driver of a transition to the active condition, and a <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_idle_condition_callback">ComponentIdleConditionCallback</a> callback notifies the driver of a transition to the idle condition. When a <strong>PoFxActivateComponent</strong> or <strong><a href="pofxidlecomponent" title="VOID PoFxIdleComponent(&#10;  [in] POHANDLE Handle,&#10;  [in] ULONG    Component,&#10;  [in] ULONG    Flags&#10;);">PoFxIdleComponent</a></strong> call simply increments or decrements the activation reference count without causing such a transition, the driver receives no notification.</p>
+<h2>See also</h2>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_active_condition_callback">ComponentActiveConditionCallback</a></p>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_idle_state_callback">ComponentIdleStateCallback</a></p>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_po_fx_device_v1">PO_FX_DEVICE</a></p>
 <p><a href="pofxidlecomponent" title="VOID PoFxIdleComponent(&#10;  [in] POHANDLE Handle,&#10;  [in] ULONG    Component,&#10;  [in] ULONG    Flags&#10;);">PoFxIdleComponent</a></p>
-
 <p><a href="pofxregisterdevice" title="NTSTATUS PoFxRegisterDevice(&#10;  [in]  PDEVICE_OBJECT Pdo,&#10;  [in]  PPO_FX_DEVICE  Device,&#10;  [out] POHANDLE       *Handle&#10;);">PoFxRegisterDevice</a></p>
 <hr>
 <div class="ntdoc-description-links">

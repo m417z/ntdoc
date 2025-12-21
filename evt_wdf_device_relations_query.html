@@ -67,52 +67,29 @@ VOID EvtWdfDeviceRelationsQuery(
 <h1>Windows Driver Kit DDI reference (nc-wdfdevice-evt_wdf_device_relations_query)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="evt_wdf_device_relations_query-callback-function">EVT_WDF_DEVICE_RELATIONS_QUERY callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>EVT_WDF_DEVICE_RELATIONS_QUERY callback function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF only]</p>
-
 <p>A driver's <em>EvtDeviceRelationsQuery</em> event callback reports changes in the relationships among devices that are supported by the driver.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="device-in"><code>Device</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Device</code> [in]</h3>
 <p>A handle to a framework device object.</p>
-
-<h3 id="relationtype-in"><code>RelationType</code> [in]</h3>
-
+<h3><code>RelationType</code> [in]</h3>
 <p>A <a href="device_relation_type" title="typedef enum _DEVICE_RELATION_TYPE&#10;{&#10;    BusRelations,&#10;    EjectionRelations,&#10;    PowerRelations,&#10;    RemovalRelations,&#10;    TargetDeviceRelation,&#10;    SingleBusRelations,&#10;    TransportRelations&#10;} DEVICE_RELATION_TYPE, *PDEVICE_RELATION_TYPE;">DEVICE_RELATION_TYPE</a>-typed enumerator value. The <a href="device_relation_type" title="typedef enum _DEVICE_RELATION_TYPE&#10;{&#10;    BusRelations,&#10;    EjectionRelations,&#10;    PowerRelations,&#10;    RemovalRelations,&#10;    TargetDeviceRelation,&#10;    SingleBusRelations,&#10;    TransportRelations&#10;} DEVICE_RELATION_TYPE, *PDEVICE_RELATION_TYPE;">DEVICE_RELATION_TYPE</a> enumeration is defined in <em>wdm.h</em>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>To register the <em>EvtDeviceRelationsQuery</em> callback function, a driver must call <a href="wdfdeviceinitsetpnppowereventcallbacks" title="VOID WdfDeviceInitSetPnpPowerEventCallbacks(&#10;  [in] PWDFDEVICE_INIT               DeviceInit,&#10;  [in] PWDF_PNPPOWER_EVENT_CALLBACKS PnpPowerEventCallbacks&#10;);">WdfDeviceInitSetPnpPowerEventCallbacks</a>.</p>
-
 <p>Most framework-based drivers do not need to provide this callback function.</p>
-
-<p>During system initialization, the Plug and Play manager enumerates all of the devices on the system by sending an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-device-relations">IRP_MN_QUERY_DEVICE_RELATIONS</a> request to the driver stack. If a framework-based driver has registered an <em>EvtDeviceRelationsQuery</em> callback function, the framework calls it. The function driver for the bus must report all of the child devices that are attached to the bus.</p>
-
+<p>During system initialization, the Plug and Play manager enumerates all of the devices on the system by sending an <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-device-relations">IRP_MN_QUERY_DEVICE_RELATIONS</a> request to the driver stack. If a framework-based driver has registered an <em>EvtDeviceRelationsQuery</em> callback function, the framework calls it. The function driver for the bus must report all of the child devices that are attached to the bus.</p>
 <p>Additionally, after the framework calls the <a href="ioinvalidatedevicerelations" title="VOID IoInvalidateDeviceRelations(&#10;  [in] PDEVICE_OBJECT       DeviceObject,&#10;  [in] DEVICE_RELATION_TYPE Type&#10;);">IoInvalidateDeviceRelations</a> routine to report a changed relationship among the devices on the driver's bus, the Plug and Play manager sends another <a href="irp_mn_query_device_relations" title="#define IRP_MN_QUERY_DEVICE_RELATIONS 0x07">IRP_MN_QUERY_DEVICE_RELATIONS</a> request to the driver stack. The framework then calls the driver's <em>EvtDeviceRelationsQuery</em> callback function so that the driver can provide details about the change.</p>
-
 <p>The type of work that a driver must do depends on the value received for the <em>RelationType</em> parameter. The value can be one of the following:</p>
-
 <p><strong>BusRelations</strong></p>
-
 <p>Most framework-based drivers do not report bus relations in an EvtDeviceRelationsQuery callback function. Instead, the drivers follow the guidelines that are described in Enumerating the Devices on a Bus.</p>
-
 <p><strong>EjectionRelations</strong></p>
-
 <p>Most framework-based drivers do not report ejection relations in an EvtDeviceRelationsQuery callback function. Instead, the driver for the device's bus calls <a href="wdfpdoaddejectionrelationsphysicaldevice" title="NTSTATUS WdfPdoAddEjectionRelationsPhysicalDevice(&#10;  [in] WDFDEVICE      Device,&#10;  [in] PDEVICE_OBJECT PhysicalDevice&#10;);">WdfPdoAddEjectionRelationsPhysicalDevice</a> and <a href="wdfpdoremoveejectionrelationsphysicaldevice" title="VOID WdfPdoRemoveEjectionRelationsPhysicalDevice(&#10;  [in] WDFDEVICE      Device,&#10;  [in] PDEVICE_OBJECT PhysicalDevice&#10;);">WdfPdoRemoveEjectionRelationsPhysicalDevice</a>.</p>
-
 <p><strong>RemovalRelations</strong></p>
-
 <p>Most framework-based drivers do not report removal relations in an EvtDeviceRelationsQuery callback function. Instead, the drivers call <a href="wdfdeviceaddremovalrelationsphysicaldevice" title="NTSTATUS WdfDeviceAddRemovalRelationsPhysicalDevice(&#10;  [in] WDFDEVICE      Device,&#10;  [in] PDEVICE_OBJECT PhysicalDevice&#10;);">WdfDeviceAddRemovalRelationsPhysicalDevice</a> and <a href="wdfdeviceremoveremovalrelationsphysicaldevice" title="VOID WdfDeviceRemoveRemovalRelationsPhysicalDevice(&#10;  [in] WDFDEVICE      Device,&#10;  [in] PDEVICE_OBJECT PhysicalDevice&#10;);">WdfDeviceRemoveRemovalRelationsPhysicalDevice</a>.</p>
-
 <p><strong>TargetDeviceRelation</strong></p>
-
 <p>Framework-based drivers do not have to report a device's target relation. Instead, the framework handles this request.</p>
-
 <p>The framework can call the <em>EvtDeviceRelationsQuery</em> callback function with a <em>RelationType</em> value of <strong>EjectionRelations</strong> or <strong>RemovalRelations</strong> even if the device is being removed.</p>
 <hr>
 <div class="ntdoc-description-links">

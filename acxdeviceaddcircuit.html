@@ -64,69 +64,49 @@
 <h1>Windows Driver Kit DDI reference (nf-acxdevice-acxdeviceaddcircuit)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>AcxDeviceAddCircuit</strong> function adds an ACX circuit to a <strong>WDFDEVICE</strong> to create an audio endpoint.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="device"><code>Device</code></h3>
-
+<h2>Parameters</h2>
+<h3><code>Device</code></h3>
 <p>A <strong>WDFDEVICE</strong> representing the device to which the circuit will be added.</p>
-
-<h3 id="circuit"><code>Circuit</code></h3>
-
+<h3><code>Circuit</code></h3>
 <p>The circuit to add to the <em>Device</em>.</p>
-
-<h2 id="return-value">Return value</h2>
-
-<p><strong>AcxDeviceAddCircuit</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call was successful. Otherwise, it returns an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">NTSTATUS</a> error code.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Return value</h2>
+<p><strong>AcxDeviceAddCircuit</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call was successful. Otherwise, it returns an <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">NTSTATUS</a> error code.</p>
+<h2>Remarks</h2>
 <p>The audio circuit is the core building block of ACX. An audio driver creates one or more ACX circuit objects to represent a partial or complete audio data and control path. ACX assembles these ACX circuit objects together to create a complete audio path which represents an audio endpoint.</p>
-
 <p>This function can only be called from the <a href="evt_wdf_device_prepare_hardware" title="EVT_WDF_DEVICE_PREPARE_HARDWARE EvtWdfDevicePrepareHardware;&#10;&#10;NTSTATUS EvtWdfDevicePrepareHardware(&#10;  [in] WDFDEVICE Device,&#10;  [in] WDFCMRESLIST ResourcesRaw,&#10;  [in] WDFCMRESLIST ResourcesTranslated&#10;)&#10;{...}">EVT_WDF_DEVICE_PREPARE_HARDWARE</a> callback function for this device.</p>
+<h3>Example</h3>
+<pre lang="cpp"><code>WDFDEVICE             Device;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>              status;
+PCODEC_DEVICE_CONTEXT devCtx;
 
-<h3 id="example">Example</h3>
+// Code to initialize the WDFDEVICE...
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">WDFDEVICE</span><span class="w">             </span><span class="n">Device</span><span class="p">;</span>
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">              </span><span class="n">status</span><span class="p">;</span>
-<span class="n">PCODEC_DEVICE_CONTEXT</span><span class="w"> </span><span class="n">devCtx</span><span class="p">;</span>
+devCtx = GetCodecDeviceContext(Device);
+<a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(devCtx != NULL);
 
-<span class="c1">// Code to initialize the WDFDEVICE...</span>
+//
+// Add static circuit to device's list.
+//
+<a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(devCtx-&gt;Render);
+status = AcxDeviceAddCircuit(Device, devCtx-&gt;Render);
 
-<span class="n">devCtx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetCodecDeviceContext</span><span class="p">(</span><span class="n">Device</span><span class="p">);</span>
-<span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">devCtx</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
-
-<span class="c1">//</span>
-<span class="c1">// Add static circuit to device&#39;s list.</span>
-<span class="c1">//</span>
-<span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">devCtx</span><span class="o">-&gt;</span><span class="n">Render</span><span class="p">);</span>
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AcxDeviceAddCircuit</span><span class="p">(</span><span class="n">Device</span><span class="p">,</span><span class="w"> </span><span class="n">devCtx</span><span class="o">-&gt;</span><span class="n">Render</span><span class="p">);</span>
-
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">FALSE</span><span class="p">);</span>
-<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">exit</span><span class="p">;</span>
-<span class="p">}</span>
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
+{
+    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
+    goto exit;
+}
 </code></pre>
-</div>
-
-<h3 id="acx-requirements">ACX requirements</h3>
-
+<h3>ACX requirements</h3>
 <p><strong>Minimum ACX version:</strong> 1.0</p>
-
-<p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<p>For more information about ACX versions, see <a href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
+<h2>See also</h2>
 <ul>
 <li><a href="acxdeviceaddcircuitdevice" title="NTSTATUS AcxDeviceAddCircuitDevice(&#10;  WDFDEVICE ParentDevice,&#10;  WDFDEVICE Device&#10;);">AcxDeviceAddCircuitDevice</a></li>
 <li><a href="acxdevicedetachcircuit" title="NTSTATUS AcxDeviceDetachCircuit(&#10;  WDFDEVICE  Device,&#10;  ACXCIRCUIT Circuit&#10;);">AcxDeviceDetachCircuit</a></li>
 <li><a href="acxdeviceremovecircuit" title="NTSTATUS AcxDeviceRemoveCircuit(&#10;  WDFDEVICE  Device,&#10;  ACXCIRCUIT Circuit&#10;);">AcxDeviceRemoveCircuit</a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxdevice/">acxdevice.h header</a></li>
+<li><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxdevice/">acxdevice.h header</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

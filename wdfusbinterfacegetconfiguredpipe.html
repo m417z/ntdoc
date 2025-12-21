@@ -65,78 +65,52 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfusb-wdfusbinterfacegetconfiguredpipe)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wdfusbinterfacegetconfiguredpipe-function">WdfUsbInterfaceGetConfiguredPipe function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WdfUsbInterfaceGetConfiguredPipe function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfUsbInterfaceGetConfiguredPipe</strong> method returns a handle to the framework pipe object that is associated with a specified USB device interface and pipe index. Optionally, the method also returns information about the pipe.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="usbinterface-in"><code>UsbInterface</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>UsbInterface</code> [in]</h3>
 <p>A handle to a USB interface object that was obtained by calling <a href="wdfusbtargetdevicegetinterface" title="WDFUSBINTERFACE WdfUsbTargetDeviceGetInterface(&#10;  [in] WDFUSBDEVICE UsbDevice,&#10;  [in] UCHAR        InterfaceIndex&#10;);">WdfUsbTargetDeviceGetInterface</a>.</p>
-
-<h3 id="pipeindex-in"><code>PipeIndex</code> [in]</h3>
-
+<h3><code>PipeIndex</code> [in]</h3>
 <p>A zero-based index into the set of framework pipe objects that are associated with the specified interface object.</p>
-
-<h3 id="pipeinfo-in-out-optional"><code>PipeInfo</code> [in, out, optional]</h3>
-
+<h3><code>PipeInfo</code> [in, out, optional]</h3>
 <p>A pointer to a caller-allocated <a href="wdf_usb_pipe_information" title="typedef struct _WDF_USB_PIPE_INFORMATION {&#10;  ULONG             Size;&#10;  ULONG             MaximumPacketSize;&#10;  UCHAR             EndpointAddress;&#10;  UCHAR             Interval;&#10;  UCHAR             SettingIndex;&#10;  WDF_USB_PIPE_TYPE PipeType;&#10;  ULONG             MaximumTransferSize;&#10;} WDF_USB_PIPE_INFORMATION, *PWDF_USB_PIPE_INFORMATION;">WDF_USB_PIPE_INFORMATION</a> structure that the framework fills in. This parameter is optional and can be <strong>NULL</strong>.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>If the operation succeeds, <strong>WdfUsbInterfaceGetConfiguredPipe</strong> returns a handle to the framework pipe object that is associated with the specified interface object and pipe index. The method returns <strong>NULL</strong> if the <a href="wdf_usb_pipe_information" title="typedef struct _WDF_USB_PIPE_INFORMATION {&#10;  ULONG             Size;&#10;  ULONG             MaximumPacketSize;&#10;  UCHAR             EndpointAddress;&#10;  UCHAR             Interval;&#10;  UCHAR             SettingIndex;&#10;  WDF_USB_PIPE_TYPE PipeType;&#10;  ULONG             MaximumTransferSize;&#10;} WDF_USB_PIPE_INFORMATION, *PWDF_USB_PIPE_INFORMATION;">WDF_USB_PIPE_INFORMATION</a> structure's size is incorrect or if the pipe index value is too large.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>Your driver can call <strong>WdfUsbInterfaceGetConfiguredPipe</strong> after it has called <a href="wdfusbtargetdeviceselectconfig" title="NTSTATUS WdfUsbTargetDeviceSelectConfig(&#10;  [in]           WDFUSBDEVICE                         UsbDevice,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES               PipeAttributes,&#10;  [in, out]      PWDF_USB_DEVICE_SELECT_CONFIG_PARAMS Params&#10;);">WdfUsbTargetDeviceSelectConfig</a>.</p>
-
-<p>For more information about the <strong>WdfUsbInterfaceGetConfiguredPipe</strong> method and USB I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/usb-i-o-targets">USB I/O Targets</a>.</p>
-
-<h4 id="examples">Examples</h4>
-
+<p>For more information about the <strong>WdfUsbInterfaceGetConfiguredPipe</strong> method and USB I/O targets, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/usb-i-o-targets">USB I/O Targets</a>.</p>
+<h4>Examples</h4>
 <p>The following code example sends a USB abort request to each configured pipe of a specified USB interface.</p>
+<pre lang="cpp"><code><a href="byte" title="typedef unsigned char BYTE;">BYTE</a>  count, i;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="byte" title="typedef unsigned char BYTE;">BYTE</a></span><span class="w">  </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">i</span><span class="p">;</span>
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="p">;</span>
+count = <a href="wdfusbinterfacegetnumconfiguredpipes" title="BYTE WdfUsbInterfaceGetNumConfiguredPipes(&#10;  [in] WDFUSBINTERFACE UsbInterface&#10;);">WdfUsbInterfaceGetNumConfiguredPipes</a>(UsbInterface);
 
-<span class="n">count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfusbinterfacegetnumconfiguredpipes" title="BYTE WdfUsbInterfaceGetNumConfiguredPipes(&#10;  [in] WDFUSBINTERFACE UsbInterface&#10;);">WdfUsbInterfaceGetNumConfiguredPipes</a></span><span class="p">(</span><span class="n">UsbInterface</span><span class="p">);</span>
+for (i = 0; i &lt; count; i++) {
+    WDFUSBPIPE pipe;
+    pipe = WdfUsbInterfaceGetConfiguredPipe(
+                                            UsbInterface,
+                                            i,
+                                            NULL
+                                            );
+    status = <a href="wdfusbtargetpipeabortsynchronously" title="NTSTATUS WdfUsbTargetPipeAbortSynchronously(&#10;  [in]           WDFUSBPIPE                Pipe,&#10;  [in, optional] WDFREQUEST                Request,&#10;  [in, optional] PWDF_REQUEST_SEND_OPTIONS RequestOptions&#10;);">WdfUsbTargetPipeAbortSynchronously</a>(
+                                            pipe,
+                                            WDF_NO_HANDLE,
+                                            NULL
+                                            );
 
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">count</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">WDFUSBPIPE</span><span class="w"> </span><span class="n">pipe</span><span class="p">;</span>
-<span class="w">    </span><span class="n">pipe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfUsbInterfaceGetConfiguredPipe</span><span class="p">(</span>
-<span class="w">                                            </span><span class="n">UsbInterface</span><span class="p">,</span>
-<span class="w">                                            </span><span class="n">i</span><span class="p">,</span>
-<span class="w">                                            </span><span class="nb">NULL</span>
-<span class="w">                                            </span><span class="p">);</span>
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfusbtargetpipeabortsynchronously" title="NTSTATUS WdfUsbTargetPipeAbortSynchronously(&#10;  [in]           WDFUSBPIPE                Pipe,&#10;  [in, optional] WDFREQUEST                Request,&#10;  [in, optional] PWDF_REQUEST_SEND_OPTIONS RequestOptions&#10;);">WdfUsbTargetPipeAbortSynchronously</a></span><span class="p">(</span>
-<span class="w">                                            </span><span class="n">pipe</span><span class="p">,</span>
-<span class="w">                                            </span><span class="n">WDF_NO_HANDLE</span><span class="p">,</span>
-<span class="w">                                            </span><span class="nb">NULL</span>
-<span class="w">                                            </span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">break</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+        break;
+    }
+}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="wdf_usb_pipe_information" title="typedef struct _WDF_USB_PIPE_INFORMATION {&#10;  ULONG             Size;&#10;  ULONG             MaximumPacketSize;&#10;  UCHAR             EndpointAddress;&#10;  UCHAR             Interval;&#10;  UCHAR             SettingIndex;&#10;  WDF_USB_PIPE_TYPE PipeType;&#10;  ULONG             MaximumTransferSize;&#10;} WDF_USB_PIPE_INFORMATION, *PWDF_USB_PIPE_INFORMATION;">WDF_USB_PIPE_INFORMATION</a></p>
-
 <p><a href="wdfusbinterfacegetnumconfiguredpipes" title="BYTE WdfUsbInterfaceGetNumConfiguredPipes(&#10;  [in] WDFUSBINTERFACE UsbInterface&#10;);">WdfUsbInterfaceGetNumConfiguredPipes</a></p>
-
 <p><a href="wdfusbtargetdevicegetinterface" title="WDFUSBINTERFACE WdfUsbTargetDeviceGetInterface(&#10;  [in] WDFUSBDEVICE UsbDevice,&#10;  [in] UCHAR        InterfaceIndex&#10;);">WdfUsbTargetDeviceGetInterface</a></p>
-
 <p><a href="wdfusbtargetdeviceselectconfig" title="NTSTATUS WdfUsbTargetDeviceSelectConfig(&#10;  [in]           WDFUSBDEVICE                         UsbDevice,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES               PipeAttributes,&#10;  [in, out]      PWDF_USB_DEVICE_SELECT_CONFIG_PARAMS Params&#10;);">WdfUsbTargetDeviceSelectConfig</a></p>
 <hr>
 <div class="ntdoc-description-links">

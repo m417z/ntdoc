@@ -66,82 +66,52 @@
 <h1>Windows Driver Kit DDI reference (nf-rxworkq-rxdispatchtoworkerthread)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="rxdispatchtoworkerthread-function">RxDispatchToWorkerThread function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>RxDispatchToWorkerThread function</h1>
+<h2>Description</h2>
 <p><strong>RxDispatchToWorkerThread</strong> invokes a routine in the context of a worker thread. The memory for the <a href="work_queue_item" title="typedef struct _WORK_QUEUE_ITEM {&#10;  LIST_ENTRY             List;&#10;  PWORKER_THREAD_ROUTINE WorkerRoutine;&#10;  __volatile PVOID       Parameter;&#10;} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;">WORK_QUEUE_ITEM</a> is allocated by this routine.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="pmrxdeviceobject-in"><code>pMRxDeviceObject</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>pMRxDeviceObject</code> [in]</h3>
 <p>A pointer to the device object of the corresponding network mini-redirector driver.</p>
-
-<h3 id="workqueuetype-in"><code>WorkQueueType</code> [in]</h3>
-
+<h3><code>WorkQueueType</code> [in]</h3>
 <p>The type of the work queue representing the priority of the task. The <em>WorkQueueType</em> parameter can be one of can be one of the following enumerations for <a href="work_queue_type" title="typedef enum _WORK_QUEUE_TYPE {&#10;  CriticalWorkQueue,&#10;  DelayedWorkQueue,&#10;  HyperCriticalWorkQueue,&#10;  NormalWorkQueue,&#10;  BackgroundWorkQueue,&#10;  RealTimeWorkQueue,&#10;  SuperCriticalWorkQueue,&#10;  MaximumWorkQueue,&#10;  CustomPriorityWorkQueue&#10;} WORK_QUEUE_TYPE;">WORK_QUEUE_TYPE</a>:</p>
-
-<h4 id="criticalworkqueue">CriticalWorkQueue</h4>
-
+<h4>CriticalWorkQueue</h4>
 <p>Insert the <a href="work_queue_item" title="typedef struct _WORK_QUEUE_ITEM {&#10;  LIST_ENTRY             List;&#10;  PWORKER_THREAD_ROUTINE WorkerRoutine;&#10;  __volatile PVOID       Parameter;&#10;} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;">WORK_QUEUE_ITEM</a> into the queue from which a system thread with a real-time priority attribute will process the work item.</p>
-
-<h4 id="delayedworkqueue">DelayedWorkQueue</h4>
-
+<h4>DelayedWorkQueue</h4>
 <p>Insert the <a href="work_queue_item" title="typedef struct _WORK_QUEUE_ITEM {&#10;  LIST_ENTRY             List;&#10;  PWORKER_THREAD_ROUTINE WorkerRoutine;&#10;  __volatile PVOID       Parameter;&#10;} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;">WORK_QUEUE_ITEM</a> into the queue from which a system thread with a variable priority attribute will process the work item.</p>
-
-<h4 id="hypercriticalworkqueue">HyperCriticalWorkQueue</h4>
-
+<h4>HyperCriticalWorkQueue</h4>
 <p>Insert the <a href="work_queue_item" title="typedef struct _WORK_QUEUE_ITEM {&#10;  LIST_ENTRY             List;&#10;  PWORKER_THREAD_ROUTINE WorkerRoutine;&#10;  __volatile PVOID       Parameter;&#10;} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;">WORK_QUEUE_ITEM</a> into the queue from which a system thread will process the work item so that the routine to be invoked is not blocked.</p>
-
-<h3 id="routine-in"><code>Routine</code> [in]</h3>
-
+<h3><code>Routine</code> [in]</h3>
 <p>A pointer to the routine to be invoked.</p>
-
-<h3 id="pcontext-in"><code>pContext</code> [in]</h3>
-
+<h3><code>pContext</code> [in]</h3>
 <p>A pointer to a context parameter associated with the work item to complete that is passed to the driver.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>RxDispatchToWorkerThread</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success or one of the following error codes on failure:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-  <td>The item could not be dispatched.</td>
+<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+<td>The item could not be dispatched.</td>
 </tr>
 </tbody>
 </table>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>There are two common cases of dispatching operations to worker threads:</p>
-
 <ul>
 <li>For a very infrequent operation, space can be conserved by dynamically allocating and freeing memory for the work queue item when its is needed. The <strong>RxDispatchToWorkerThread</strong> routine would be used in this case</li>
 <li>When an operation is going to be repeatedly dispatched, time is conserved by allocating in advance the <a href="work_queue_item" title="typedef struct _WORK_QUEUE_ITEM {&#10;  LIST_ENTRY             List;&#10;  PWORKER_THREAD_ROUTINE WorkerRoutine;&#10;  __volatile PVOID       Parameter;&#10;} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;">WORK_QUEUE_ITEM</a> as part of the data structure to be dispatched and using this pre-allocated memory repeatedly. The <a href="rxposttoworkerthread" title="NTSTATUS RxPostToWorkerThread(&#10;  [in] IN PRDBSS_DEVICE_OBJECT     pMRxDeviceObject,&#10;  [in] IN WORK_QUEUE_TYPE          WorkQueueType,&#10;  [in] IN PRX_WORK_QUEUE_ITEM      pWorkQueueItem,&#10;  [in] IN PRX_WORKERTHREAD_ROUTINE Routine,&#10;  [in] IN PVOID                    pContext&#10;);">RxPostToWorkerThread</a> routine would be used in this case</li>
 </ul>
-
 <p>The trade off between the two dispatching operations is time versus space (memory usage).</p>
-
 <p>The <strong>RxDispatchToWorkerThread</strong> invokes a routine in the context of a worker thread. The memory for the <a href="work_queue_item" title="typedef struct _WORK_QUEUE_ITEM {&#10;  LIST_ENTRY             List;&#10;  PWORKER_THREAD_ROUTINE WorkerRoutine;&#10;  __volatile PVOID       Parameter;&#10;} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;">WORK_QUEUE_ITEM</a> is allocated by the <strong>RxDispatchToWorkerThread</strong> routine from non-paged pool memory. Hence this routine can fail if insufficient resources are available.</p>
-
 <p>The current implementation of the <strong>RxDispatchToWorkerThread</strong> routine queues work onto the same processor from which the call originated.</p>
-
 <p>If the <strong>RxDispatchToWorkerThread</strong> routine fails on a debug build, the <strong><a href="_rxlog" title="VOID _RxLog(&#10;  PCSTR format,&#10;  ...   &#10;);">_RxLog</a></strong> routine is called with details of the error. If the <strong>RxDispatchToWorkerThread</strong> routine fails and WMI is enabled in the kernel, details of the error will be logged with WMI.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="rxposttoworkerthread" title="NTSTATUS RxPostToWorkerThread(&#10;  [in] IN PRDBSS_DEVICE_OBJECT     pMRxDeviceObject,&#10;  [in] IN WORK_QUEUE_TYPE          WorkQueueType,&#10;  [in] IN PRX_WORK_QUEUE_ITEM      pWorkQueueItem,&#10;  [in] IN PRX_WORKERTHREAD_ROUTINE Routine,&#10;  [in] IN PVOID                    pContext&#10;);">RxPostToWorkerThread</a></p>
-
 <p><a href="rxspindownmrxdispatcher" title="NTSTATUS RxSpinDownMRxDispatcher(&#10;  [in, out] IN OUT PRDBSS_DEVICE_OBJECT pMRxDeviceObject&#10;);">RxSpinDownMRxDispatcher</a></p>
 <hr>
 <div class="ntdoc-description-links">

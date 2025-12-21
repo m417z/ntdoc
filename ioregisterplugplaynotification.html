@@ -69,166 +69,109 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-ioregisterplugplaynotification)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>IoRegisterPlugPlayNotification</strong> routine registers a Plug and Play (PnP) notification callback routine to be called when a PnP event of the specified category occurs.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="eventcategory-in"><code>EventCategory</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>EventCategory</code> [in]</h3>
 <p>Specifies an enumeration value from <strong><a href="io_notification_event_category" title="typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {&#10;  EventCategoryReserved,&#10;  EventCategoryHardwareProfileChange,&#10;  EventCategoryDeviceInterfaceChange,&#10;  EventCategoryTargetDeviceChange,&#10;  EventCategoryKernelSoftRestart&#10;} IO_NOTIFICATION_EVENT_CATEGORY;">IO_NOTIFICATION_EVENT_CATEGORY</a></strong> that indicates the category of PnP event for which the callback routine is being registered.</p>
-
-<h3 id="eventcategoryflags-in"><code>EventCategoryFlags</code> [in]</h3>
-
+<h3><code>EventCategoryFlags</code> [in]</h3>
 <p>Flag bits that modify the registration operation. Possible values include:</p>
-
-<h4 id="pnpnotify_device_interface_include_existing_interfaces">PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES</h4>
-
+<h4>PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES</h4>
 <p>Only valid with an <em>EventCategory</em> of <strong>EventCategoryDeviceInterfaceChange</strong>. If set, the PnP manager calls the driver callback routine for each device interface instance that is currently registered and active and registers the callback routine for future arrivals or removals of device interface instances.</p>
-
-<h3 id="eventcategorydata-in-optional"><code>EventCategoryData</code> [in, optional]</h3>
-
+<h3><code>EventCategoryData</code> [in, optional]</h3>
 <p>A pointer to further information about the events for which <em>CallbackRoutine</em> is being registered. The information varies for different <em>EventCategory</em> values:</p>
-
 <ul>
-<li><p>When <em>EventCategory</em> is <strong>EventCategoryDeviceInterfaceChange</strong>, <em>EventCategoryData</em> must point to a GUID specifying a device interface class. <em>CallbackRoutine</em> will be called when an interface of that class is enabled or removed.</p></li>
-<li><p>When <em>EventCategory</em> is <strong>EventCategoryHardwareProfileChange</strong>, <em>EventCategoryData</em> must be <strong>NULL</strong>.</p></li>
-<li><p>When <em>EventCategory</em> is <strong>EventCategoryTargetDeviceChange</strong>, <em>EventCategoryData</em> must point to the file object for which PnP notification is requested.</p></li>
+<li>
+<p>When <em>EventCategory</em> is <strong>EventCategoryDeviceInterfaceChange</strong>, <em>EventCategoryData</em> must point to a GUID specifying a device interface class. <em>CallbackRoutine</em> will be called when an interface of that class is enabled or removed.</p>
+</li>
+<li>
+<p>When <em>EventCategory</em> is <strong>EventCategoryHardwareProfileChange</strong>, <em>EventCategoryData</em> must be <strong>NULL</strong>.</p>
+</li>
+<li>
+<p>When <em>EventCategory</em> is <strong>EventCategoryTargetDeviceChange</strong>, <em>EventCategoryData</em> must point to the file object for which PnP notification is requested.</p>
+</li>
 </ul>
-
-<h3 id="driverobject-in"><code>DriverObject</code> [in]</h3>
-
+<h3><code>DriverObject</code> [in]</h3>
 <p>A pointer to the caller's driver object.</p>
-
 <p>To ensure that the driver remains loaded while it is registered for PnP notification, this call increments the reference count on <em>DriverObject</em>. The PnP manager decrements the reference count when this registration is removed.</p>
-
 <p>For <strong>EventCategoryTargetDeviceChange</strong>, <em>DriverObject</em> must not be the driver object of the target device; rather, it should be the driver object of the driver that implements <em>CallbackRoutine</em>.</p>
-
-<h3 id="callbackroutine-in"><code>CallbackRoutine</code> [in]</h3>
-
+<h3><code>CallbackRoutine</code> [in]</h3>
 <p>A pointer to the PnP notification callback routine to be called when the specified PnP event occurs.</p>
-
 <p>The function prototype for this callback routine is defined as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="w">  </span><span class="nf">DRIVER_NOTIFICATION_CALLBACK_ROUTINE</span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">NotificationStructure</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_Inout_opt_</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span>
-<span class="w">    </span><span class="p">);</span>
+<pre lang="cpp"><code>typedef <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  DRIVER_NOTIFICATION_CALLBACK_ROUTINE(
+    _In_ PVOID NotificationStructure,
+    _Inout_opt_ PVOID Context
+    );
 </code></pre>
-</div>
-
 <p>The callback routine's <em>NotificationStructure</em> is specific to the <em>EventCategory</em> value, as shown in the following table.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Event category</th>
-  <th>Notification structure</th>
+<th>Event category</th>
+<th>Notification structure</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>EventCategoryDeviceInterfaceChange</strong></td>
-  <td><strong><a href="device_interface_change_notification" title="typedef struct _DEVICE_INTERFACE_CHANGE_NOTIFICATION {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  GUID            Event;&#10;  GUID            InterfaceClassGuid;&#10;  PUNICODE_STRING SymbolicLinkName;&#10;} DEVICE_INTERFACE_CHANGE_NOTIFICATION, *PDEVICE_INTERFACE_CHANGE_NOTIFICATION;">DEVICE_INTERFACE_CHANGE_NOTIFICATION</a></strong></td>
+<td><strong>EventCategoryDeviceInterfaceChange</strong></td>
+<td><strong><a href="device_interface_change_notification" title="typedef struct _DEVICE_INTERFACE_CHANGE_NOTIFICATION {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  GUID            Event;&#10;  GUID            InterfaceClassGuid;&#10;  PUNICODE_STRING SymbolicLinkName;&#10;} DEVICE_INTERFACE_CHANGE_NOTIFICATION, *PDEVICE_INTERFACE_CHANGE_NOTIFICATION;">DEVICE_INTERFACE_CHANGE_NOTIFICATION</a></strong></td>
 </tr>
 <tr>
-  <td><strong>EventCategoryHardwareProfileChange</strong></td>
-  <td><strong><a href="hwprofile_change_notification" title="typedef struct _HWPROFILE_CHANGE_NOTIFICATION {&#10;  USHORT Version;&#10;  USHORT Size;&#10;  GUID   Event;&#10;} HWPROFILE_CHANGE_NOTIFICATION, *PHWPROFILE_CHANGE_NOTIFICATION;">HWPROFILE_CHANGE_NOTIFICATION</a></strong></td>
+<td><strong>EventCategoryHardwareProfileChange</strong></td>
+<td><strong><a href="hwprofile_change_notification" title="typedef struct _HWPROFILE_CHANGE_NOTIFICATION {&#10;  USHORT Version;&#10;  USHORT Size;&#10;  GUID   Event;&#10;} HWPROFILE_CHANGE_NOTIFICATION, *PHWPROFILE_CHANGE_NOTIFICATION;">HWPROFILE_CHANGE_NOTIFICATION</a></strong></td>
 </tr>
 <tr>
-  <td><strong>EventCategoryTargetDeviceChange</strong></td>
-  <td><strong><a href="target_device_removal_notification" title="typedef struct _TARGET_DEVICE_REMOVAL_NOTIFICATION {&#10;  USHORT       Version;&#10;  USHORT       Size;&#10;  GUID         Event;&#10;  PFILE_OBJECT FileObject;&#10;} TARGET_DEVICE_REMOVAL_NOTIFICATION, *PTARGET_DEVICE_REMOVAL_NOTIFICATION;">TARGET_DEVICE_REMOVAL_NOTIFICATION</a></strong><br><br>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-pnp-custom-notification">Using PnP Notification</a> and <strong><a href="target_device_custom_notification" title="typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {&#10;  USHORT       Version;&#10;  USHORT       Size;&#10;  GUID         Event;&#10;  PFILE_OBJECT FileObject;&#10;  LONG         NameBufferOffset;&#10;  UCHAR        CustomDataBuffer[1];&#10;} TARGET_DEVICE_CUSTOM_NOTIFICATION, *PTARGET_DEVICE_CUSTOM_NOTIFICATION;">TARGET_DEVICE_CUSTOM_NOTIFICATION</a></strong>.</td>
+<td><strong>EventCategoryTargetDeviceChange</strong></td>
+<td><strong><a href="target_device_removal_notification" title="typedef struct _TARGET_DEVICE_REMOVAL_NOTIFICATION {&#10;  USHORT       Version;&#10;  USHORT       Size;&#10;  GUID         Event;&#10;  PFILE_OBJECT FileObject;&#10;} TARGET_DEVICE_REMOVAL_NOTIFICATION, *PTARGET_DEVICE_REMOVAL_NOTIFICATION;">TARGET_DEVICE_REMOVAL_NOTIFICATION</a></strong><!-- raw HTML omitted --><!-- raw HTML omitted -->For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-pnp-custom-notification">Using PnP Notification</a> and <strong><a href="target_device_custom_notification" title="typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {&#10;  USHORT       Version;&#10;  USHORT       Size;&#10;  GUID         Event;&#10;  PFILE_OBJECT FileObject;&#10;  LONG         NameBufferOffset;&#10;  UCHAR        CustomDataBuffer[1];&#10;} TARGET_DEVICE_CUSTOM_NOTIFICATION, *PTARGET_DEVICE_CUSTOM_NOTIFICATION;">TARGET_DEVICE_CUSTOM_NOTIFICATION</a></strong>.</td>
 </tr>
 </tbody>
 </table>
-
 <p>The callback routine's <em>Context</em> parameter contains the context data the driver supplied during registration.</p>
-
-<p>For information about including a function declaration for the callback routine that meets the requirements of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), see Examples.</p>
-
+<p>For information about including a function declaration for the callback routine that meets the requirements of <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), see Examples.</p>
 <p>The PnP manager calls driver callback routines at IRQL = PASSIVE_LEVEL.</p>
-
-<h3 id="context-in-optional"><code>Context</code> [in, optional]</h3>
-
+<h3><code>Context</code> [in, optional]</h3>
 <p>A pointer to a caller-allocated buffer containing context that the PnP manager passes to the callback routine.</p>
-
-<h3 id="notificationentry-out"><code>NotificationEntry</code> [out]</h3>
-
+<h3><code>NotificationEntry</code> [out]</h3>
 <p>A pointer to an opaque value returned by this call that identifies the registration. Pass this value to the <a href="iounregisterplugplaynotificationex" title="NTSTATUS IoUnregisterPlugPlayNotificationEx(&#10;  [in] PVOID NotificationEntry&#10;);">IoUnregisterPlugPlayNotificationEx</a> routine to remove the registration.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>IoRegisterPlugPlayNotification</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate error status.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>A driver registers for an event category. Each category includes one or more types of PnP events.</p>
-
 <p>A driver can register different callback routines for different event categories or can register a single callback routine. A single callback routine can cast the <em>NotificationStructure</em> to a <strong><a href="plugplay_notification_header" title="typedef struct _PLUGPLAY_NOTIFICATION_HEADER {&#10;  USHORT Version;&#10;  USHORT Size;&#10;  GUID   Event;&#10;} PLUGPLAY_NOTIFICATION_HEADER, *PPLUGPLAY_NOTIFICATION_HEADER;">PLUGPLAY_NOTIFICATION_HEADER</a></strong> and use the <strong>Event</strong> field to determine the exact type of the notification structure.</p>
-
 <p>If the caller specifies PNPNOTIFY_DEVICE_INTERFACE_INCLUDE_EXISTING_INTERFACES, the operating system might call the PnP notification callback routine twice for a single <strong>EventCategoryDeviceInterfaceChange</strong> event for an existing interface. You can safely ignore the second call to the callback. The operating system will not call the callback more than twice for a single event.</p>
-
 <p>PnP notification callback routines should complete their tasks as quickly as possible and return control to the PnP manager, to prevent delays in notifying other drivers and applications that have registered for the event.</p>
-
 <p>The PnP manager does not take out a reference on the file object when a driver registers for notification of an <strong>EventCategoryTargetDeviceChange</strong> event. If the driver's PnP notification callback routine requires access to the file object, the driver should take out an extra reference on the file object before calling <strong>IoRegisterPlugPlayNotification</strong>.</p>
-
-<p>Typically, Kernel-Mode Driver Framework (KMDF) drivers should call <strong>IoRegisterPlugPlayNotification</strong> from their <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_self_managed_io_init">EvtDeviceSelfManagedIoInit</a> callback function, and should call <strong><a href="iounregisterplugplaynotification" title="NTSTATUS IoUnregisterPlugPlayNotification(&#10;  [in] PVOID NotificationEntry&#10;);">IoUnregisterPlugPlayNotification</a></strong> from their <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_self_managed_io_cleanup">EvtDeviceSelfManagedIoCleanup</a> callback function. These drivers should <strong>not</strong> call <strong>IoRegisterPlugPlayNotification</strong> from their <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function; otherwise, the PnP notification callback routine might be called before the driver stack is started by PnP, in which case the driver will not be prepared to handle the notification.</p>
-
-<p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-pnp-notification">Using PnP Notification</a>.</p>
-
-<h3 id="examples">Examples</h3>
-
-<p>To define a PnP notification callback routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-
+<p>Typically, Kernel-Mode Driver Framework (KMDF) drivers should call <strong>IoRegisterPlugPlayNotification</strong> from their <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_self_managed_io_init">EvtDeviceSelfManagedIoInit</a> callback function, and should call <strong><a href="iounregisterplugplaynotification" title="NTSTATUS IoUnregisterPlugPlayNotification(&#10;  [in] PVOID NotificationEntry&#10;);">IoUnregisterPlugPlayNotification</a></strong> from their <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_self_managed_io_cleanup">EvtDeviceSelfManagedIoCleanup</a> callback function. These drivers should <strong>not</strong> call <strong>IoRegisterPlugPlayNotification</strong> from their <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function; otherwise, the PnP notification callback routine might be called before the driver stack is started by PnP, in which case the driver will not be prepared to handle the notification.</p>
+<p>For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-pnp-notification">Using PnP Notification</a>.</p>
+<h3>Examples</h3>
+<p>To define a PnP notification callback routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
 <p>For example, to define a PnP notification callback routine that is named <code>MyCallbackRoutine</code>, use the DRIVER_NOTIFICATION_CALLBACK_ROUTINE type as shown in this code example:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">DRIVER_NOTIFICATION_CALLBACK_ROUTINE</span><span class="w"> </span><span class="n">MyCallbackRoutine</span><span class="p">;</span>
+<pre lang="cpp"><code>DRIVER_NOTIFICATION_CALLBACK_ROUTINE MyCallbackRoutine;
 </code></pre>
-</div>
-
 <p>Then, implement your callback routine as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">_Use_decl_annotations_</span>
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="w">  </span><span class="n">MyCallbackRoutine</span><span class="p">(</span>
-<span class="w">    </span><span class="n">PVOID</span><span class="w"> </span><span class="n">NotificationStructure</span><span class="p">,</span>
-<span class="w">    </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="w">  </span><span class="p">{</span>
-<span class="w">      </span><span class="c1">// Function body</span>
-<span class="w">  </span><span class="p">}</span>
+<pre lang="cpp"><code>_Use_decl_annotations_
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+  MyCallbackRoutine(
+    PVOID NotificationStructure,
+    PVOID Context
+    )
+  {
+      // Function body
+  }
 </code></pre>
-</div>
-
-<p>The <strong>DRIVER_NOTIFICATION_CALLBACK_ROUTINE</strong> function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the DRIVER_NOTIFICATION_CALLBACK_ROUTINE function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-pnp-custom-notification">Using PnP Notification</a></p>
-
+<p>The <strong>DRIVER_NOTIFICATION_CALLBACK_ROUTINE</strong> function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the DRIVER_NOTIFICATION_CALLBACK_ROUTINE function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+<h2>See also</h2>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-pnp-custom-notification">Using PnP Notification</a></p>
 <p><strong><a href="device_interface_change_notification" title="typedef struct _DEVICE_INTERFACE_CHANGE_NOTIFICATION {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  GUID            Event;&#10;  GUID            InterfaceClassGuid;&#10;  PUNICODE_STRING SymbolicLinkName;&#10;} DEVICE_INTERFACE_CHANGE_NOTIFICATION, *PDEVICE_INTERFACE_CHANGE_NOTIFICATION;">DEVICE_INTERFACE_CHANGE_NOTIFICATION</a></strong></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_self_managed_io_cleanup">EvtDeviceSelfManagedIoCleanup</a></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_self_managed_io_init">EvtDeviceSelfManagedIoInit</a></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a></p>
-
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_self_managed_io_cleanup">EvtDeviceSelfManagedIoCleanup</a></p>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_self_managed_io_init">EvtDeviceSelfManagedIoInit</a></p>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a></p>
 <p><strong><a href="hwprofile_change_notification" title="typedef struct _HWPROFILE_CHANGE_NOTIFICATION {&#10;  USHORT Version;&#10;  USHORT Size;&#10;  GUID   Event;&#10;} HWPROFILE_CHANGE_NOTIFICATION, *PHWPROFILE_CHANGE_NOTIFICATION;">HWPROFILE_CHANGE_NOTIFICATION</a></strong></p>
-
 <p><a href="iounregisterplugplaynotification" title="NTSTATUS IoUnregisterPlugPlayNotification(&#10;  [in] PVOID NotificationEntry&#10;);">IoUnregisterPlugPlayNotification</a></p>
-
 <p><a href="iounregisterplugplaynotificationex" title="NTSTATUS IoUnregisterPlugPlayNotificationEx(&#10;  [in] PVOID NotificationEntry&#10;);">IoUnregisterPlugPlayNotificationEx</a></p>
-
 <p><strong><a href="plugplay_notification_header" title="typedef struct _PLUGPLAY_NOTIFICATION_HEADER {&#10;  USHORT Version;&#10;  USHORT Size;&#10;  GUID   Event;&#10;} PLUGPLAY_NOTIFICATION_HEADER, *PPLUGPLAY_NOTIFICATION_HEADER;">PLUGPLAY_NOTIFICATION_HEADER</a></strong></p>
-
 <p><strong><a href="target_device_custom_notification" title="typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {&#10;  USHORT       Version;&#10;  USHORT       Size;&#10;  GUID         Event;&#10;  PFILE_OBJECT FileObject;&#10;  LONG         NameBufferOffset;&#10;  UCHAR        CustomDataBuffer[1];&#10;} TARGET_DEVICE_CUSTOM_NOTIFICATION, *PTARGET_DEVICE_CUSTOM_NOTIFICATION;">TARGET_DEVICE_CUSTOM_NOTIFICATION</a></strong></p>
-
 <p><strong><a href="target_device_removal_notification" title="typedef struct _TARGET_DEVICE_REMOVAL_NOTIFICATION {&#10;  USHORT       Version;&#10;  USHORT       Size;&#10;  GUID         Event;&#10;  PFILE_OBJECT FileObject;&#10;} TARGET_DEVICE_REMOVAL_NOTIFICATION, *PTARGET_DEVICE_REMOVAL_NOTIFICATION;">TARGET_DEVICE_REMOVAL_NOTIFICATION</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

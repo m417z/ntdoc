@@ -66,77 +66,52 @@
 <h1>Windows Driver Kit DDI reference (nf-ntddk-halallocatehardwarecounters)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>HalAllocateHardwareCounters</strong> routine allocates a set of hardware performance counter resources.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="groupaffinty"><code>GroupAffinty</code></h3>
-
+<h2>Parameters</h2>
+<h3><code>GroupAffinty</code></h3>
 <p>A pointer to a set of <strong><a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a></strong> structures indicating which processors' counter resources the consumer requests. If this parameter is <strong>NULL</strong>, then the request indicates an allocation across all processors in the system.</p>
-
-<h3 id="groupcount-in"><code>GroupCount</code> [in]</h3>
-
+<h3><code>GroupCount</code> [in]</h3>
 <p>Supplies the number of <strong><a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a></strong> structures provided by the <em>GroupAffinty</em> parameter, or zero if <em>GroupAffinity</em> is <strong>NULL</strong>.</p>
-
-<h3 id="resourcelist-in"><code>ResourceList</code> [in]</h3>
-
+<h3><code>ResourceList</code> [in]</h3>
 <p>A pointer to a <strong><a href="physical_counter_resource_list" title="typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {&#10;  ULONG                                Count;&#10;  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];&#10;} PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;">PHYSICAL_COUNTER_RESOURCE_LIST</a></strong> containing the resources required by the consumer. If this parameter is <strong>NULL</strong>, then the consumer is requesting exclusive ownership of the performance monitoring unit.</p>
-
-<h3 id="countersethandle-out"><code>CounterSetHandle</code> [out]</h3>
-
-<p>A pointer to a location into which the routine writes a handle to the allocated counter resources. To release these resources later, the caller must pass this handle to the <a href="halfreehardwarecounters" title="NTSTATUS HalFreeHardwareCounters(&#10;  _In_ HANDLE CounterSetHandle&#10;);">HalFreeHardwareCounters</a> routine. If the requested counter resources are unavailable, <strong>HalAllocateHardwareCounters</strong> sets <strong>CounterSetHandle* = **NULL</strong> and returns STATUS_INSUFFICIENT_RESOURCES.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h3><code>CounterSetHandle</code> [out]</h3>
+<p>A pointer to a location into which the routine writes a handle to the allocated counter resources. To release these resources later, the caller must pass this handle to the <a href="halfreehardwarecounters" title="NTSTATUS HalFreeHardwareCounters(&#10;  _In_ HANDLE CounterSetHandle&#10;);">HalFreeHardwareCounters</a> routine. If the requested counter resources are unavailable, <strong>HalAllocateHardwareCounters</strong> sets *<em>CounterSetHandle</em> = <strong>NULL</strong> and returns STATUS_INSUFFICIENT_RESOURCES.</p>
+<h2>Return value</h2>
 <p><strong>HalAllocateHardwareCounters</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call was successful. Possible error return values include the following status codes.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-  <td>The requested counter resources are currently unavailable.</td>
+<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+<td>The requested counter resources are currently unavailable.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
-  <td>The caller specified an invalid parameter value.</td>
+<td><strong>STATUS_INVALID_PARAMETER</strong></td>
+<td>The caller specified an invalid parameter value.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_NOT_SUPPORTED</strong></td>
-  <td>The caller supplied resources in the resource list that are currently not supported.</td>
+<td><strong>STATUS_NOT_SUPPORTED</strong></td>
+<td>The caller supplied resources in the resource list that are currently not supported.</td>
 </tr>
 </tbody>
 </table>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>Most processors have performance monitor units (PMUs) that contain a number of hardware counters. Software tools use these counters to monitor various aspects of system performance. Typically, such a tool consists of a custom kernel-mode driver to program the counters and a user-mode application that communicates with the driver.</p>
-
 <p>If more than one such tool is installed on a computer, the associated drivers must avoid trying to use the same hardware counters simultaneously. To avoid such resource conflicts, all drivers that use counter resources should use the <strong>HalAllocateHardwareCounters</strong> and <strong><a href="halfreehardwarecounters" title="NTSTATUS HalFreeHardwareCounters(&#10;  _In_ HANDLE CounterSetHandle&#10;);">HalFreeHardwareCounters</a></strong> routines to coordinate their sharing of these resources.</p>
-
 <p>A counter resource is a single hardware counter, a block of contiguous counters, a counter overflow interrupt, or an event buffer configuration in a PMU.</p>
-
 <p>Before configuring the counters, a driver can call the <strong>HalAllocateHardwareCounters</strong> routine to acquire exclusive access to a set of counter resources. After the driver no longer needs these resources, it must free the resources by calling the <strong><a href="halfreehardwarecounters" title="NTSTATUS HalFreeHardwareCounters(&#10;  _In_ HANDLE CounterSetHandle&#10;);">HalFreeHardwareCounters</a></strong> routine.</p>
-
 <p>In versions of Windows before Windows 10 version 1903, a successful call to <strong>HalAllocateHardwareCounters</strong> grants the caller exclusive access to all counter resources in the performance monitor unit of a single-processor system. In a multiprocessor system, a successful call grants the caller exclusive access to all counter resources in all processors in the system. GroupAffinity and ResourceList must be <strong>NULL</strong> and GroupCount must be zero.</p>
-
 <p>Starting in Windows 10 version 1903, counter resources can be allocated based on the resource list and group affinities provided.</p>
-
 <p>Virtualization software typically does not virtualize hardware performance counters. Thus, these counters might not be available in a virtual machine, regardless of whether <strong>HalAllocateHardwareCounters</strong> returns a status code of <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. For example, hardware performance counters are not available in a Hyper-V virtual machine, but <strong>HalAllocateHardwareCounters</strong> might still return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a></p>
-
 <p><a href="halfreehardwarecounters" title="NTSTATUS HalFreeHardwareCounters(&#10;  _In_ HANDLE CounterSetHandle&#10;);">HalFreeHardwareCounters</a></p>
-
 <p><strong><a href="physical_counter_resource_list" title="typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {&#10;  ULONG                                Count;&#10;  PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];&#10;} PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;">PHYSICAL_COUNTER_RESOURCE_LIST</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

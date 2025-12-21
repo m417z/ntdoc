@@ -64,49 +64,35 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-exsettimerresolution)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>ExSetTimerResolution</strong> routine modifies the frequency at which the system clock interrupts. Use this routine with extreme caution (see the following Remarks section).</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="desiredtime-in"><code>DesiredTime</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>DesiredTime</code> [in]</h3>
 <p>Specifies the amount of time that should elapse between each timer interrupt, in 100-nanosecond units. The minimum value is approximately 10,000 (1 millisecond) but can vary slightly by platform. (This parameter is ignored if <em>SetResolution</em> is <strong>FALSE</strong>.)</p>
-
-<h3 id="setresolution-in"><code>SetResolution</code> [in]</h3>
-
+<h3><code>SetResolution</code> [in]</h3>
 <p>If <strong>TRUE</strong>, the call is a request to set the clock interrupt frequency to the value specified by <em>DesiredTime</em>. If <strong>FALSE</strong>, the call is a request to restore the clock interrupt frequency to the system's default value, which is platform-specific.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>ExSetTimerResolution</strong> returns the new timer resolution, in 100-nanosecond units.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>To set the timer resolution, a driver calls this routine passing <strong>TRUE</strong> as the parameter for <em>SetResolution</em>. The following rules apply:</p>
-
 <ul>
-<li><p>The routine changes the clock interrupt frequency only if the specified <em>DesiredTime</em> value is less than the current setting.</p></li>
-<li><p>If a driver requests a <em>DesiredTime</em> value that is greater than what is currently set, the routine just returns the current setting.</p></li>
-<li><p>If a driver requests a <em>DesiredTime</em> value that is less than the system clock can support, the routine uses the smallest resolution the system can support, and returns that value.</p></li>
+<li>
+<p>The routine changes the clock interrupt frequency only if the specified <em>DesiredTime</em> value is less than the current setting.</p>
+</li>
+<li>
+<p>If a driver requests a <em>DesiredTime</em> value that is greater than what is currently set, the routine just returns the current setting.</p>
+</li>
+<li>
+<p>If a driver requests a <em>DesiredTime</em> value that is less than the system clock can support, the routine uses the smallest resolution the system can support, and returns that value.</p>
+</li>
 </ul>
-
 <p>If you use this routine to change the clock interrupt frequency, your driver must restore the default interrupt frequency, typically by making the following call before being unloaded:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">ExSetTimerResolution</span><span class="w"> </span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">FALSE</span><span class="p">);</span>
+<pre lang="cpp"><code>ExSetTimerResolution (0, FALSE);
 </code></pre>
-</div>
-
 <p>If multiple drivers have attempted to modify the clock interrupt frequency, the system does not restore the default frequency until all of these drivers have called this routine with a <em>SetResolution</em> value of <strong>FALSE</strong>.</p>
-
 <p>The result of changing the clock interrupt frequency is system-wide and can have a severely negative effect on system performance. Also note that higher clock interrupt frequencies can shorten a system's battery life.</p>
-
-<p>During the processing of an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-power">IRP_MJ_POWER</a> request, the power manager holds a lock on a resource that <strong>ExSetTimerResolution</strong> must acquire to complete. Consequently, a deadlock will occur if a driver directly or indirectly calls <strong>ExSetTimerResolution</strong> while processing a power request, and then waits for the call to <strong>ExSetTimerResolution</strong> to return before the driver completes the power request. For more information about safely calling <strong>ExSetTimerResolution</strong> while processing a power <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/calling-exsettimerresolution-while-processing-a-power-irp">Calling ExSetTimerResolution While Processing a Power IRP</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<p>During the processing of an <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-power">IRP_MJ_POWER</a> request, the power manager holds a lock on a resource that <strong>ExSetTimerResolution</strong> must acquire to complete. Consequently, a deadlock will occur if a driver directly or indirectly calls <strong>ExSetTimerResolution</strong> while processing a power request, and then waits for the call to <strong>ExSetTimerResolution</strong> to return before the driver completes the power request. For more information about safely calling <strong>ExSetTimerResolution</strong> while processing a power <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/calling-exsettimerresolution-while-processing-a-power-irp">Calling ExSetTimerResolution While Processing a Power IRP</a>.</p>
+<h2>See also</h2>
 <p><a href="kesettimerex" title="BOOLEAN KeSetTimerEx(&#10;  [in, out]      PKTIMER       Timer,&#10;  [in]           LARGE_INTEGER DueTime,&#10;  [in]           LONG          Period,&#10;  [in, optional] PKDPC         Dpc&#10;);">KeSetTimerEx</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -64,77 +64,49 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfdmaenabler-wdfdmaenablergetfragmentlength)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wdfdmaenablergetfragmentlength-function">WdfDmaEnablerGetFragmentLength function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WdfDmaEnablerGetFragmentLength function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF only]</p>
-
-<p>The <strong>WdfDmaEnablerGetFragmentLength</strong> method returns the maximum transfer length that the operating system supports for a single <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dma-transactions-and-dma-transfers">DMA transfer</a>.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="dmaenabler-in"><code>DmaEnabler</code> [in]</h3>
-
+<p>The <strong>WdfDmaEnablerGetFragmentLength</strong> method returns the maximum transfer length that the operating system supports for a single <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dma-transactions-and-dma-transfers">DMA transfer</a>.</p>
+<h2>Parameters</h2>
+<h3><code>DmaEnabler</code> [in]</h3>
 <p>A handle to a DMA enabler object that the driver obtained from a previous call to <a href="wdfdmaenablercreate" title="NTSTATUS WdfDmaEnablerCreate(&#10;  [in]           WDFDEVICE               Device,&#10;  [in]           PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES  Attributes,&#10;  [out]          WDFDMAENABLER           *DmaEnablerHandle&#10;);">WdfDmaEnablerCreate</a>.</p>
-
-<h3 id="dmadirection-in"><code>DmaDirection</code> [in]</h3>
-
+<h3><code>DmaDirection</code> [in]</h3>
 <p>A <a href="wdf_dma_direction" title="typedef enum _WDF_DMA_DIRECTION {&#10;  WdfDmaDirectionReadFromDevice = FALSE,&#10;  WdfDmaDirectionWriteToDevice = TRUE&#10;} WDF_DMA_DIRECTION;">WDF_DMA_DIRECTION</a>-typed value that specifies the direction of the DMA transfer operation. For more information, see the following Remarks section.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>WdfDmaEnablerGetFragmentLength</strong> returns the maximum length of a DMA transfer, in bytes, that the operating system can support, or zero if the <em>DmaDirection</em> parameter's value is invalid.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
-<h2 id="remarks">Remarks</h2>
-
-<p>The maximum DMA transfer length that the operating system can support depends on the number of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/map-registers">map registers</a> that are available. If enough map registers are available, <strong>WdfDmaEnablerGetFragmentLength</strong> returns the same value that <a href="wdfdmaenablergetmaximumlength" title="size_t WdfDmaEnablerGetMaximumLength(&#10;  [in] WDFDMAENABLER DmaEnabler&#10;);">WdfDmaEnablerGetMaximumLength</a> returns. Otherwise, the value that <strong>WdfDmaEnablerGetFragmentLength</strong> returns will be less than the value that <strong><a href="wdfdmaenablergetmaximumlength" title="size_t WdfDmaEnablerGetMaximumLength(&#10;  [in] WDFDMAENABLER DmaEnabler&#10;);">WdfDmaEnablerGetMaximumLength</a></strong> returns.</p>
-
+<h2>Remarks</h2>
+<p>The maximum DMA transfer length that the operating system can support depends on the number of <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/map-registers">map registers</a> that are available. If enough map registers are available, <strong>WdfDmaEnablerGetFragmentLength</strong> returns the same value that <a href="wdfdmaenablergetmaximumlength" title="size_t WdfDmaEnablerGetMaximumLength(&#10;  [in] WDFDMAENABLER DmaEnabler&#10;);">WdfDmaEnablerGetMaximumLength</a> returns. Otherwise, the value that <strong>WdfDmaEnablerGetFragmentLength</strong> returns will be less than the value that <strong><a href="wdfdmaenablergetmaximumlength" title="size_t WdfDmaEnablerGetMaximumLength(&#10;  [in] WDFDMAENABLER DmaEnabler&#10;);">WdfDmaEnablerGetMaximumLength</a></strong> returns.</p>
 <p>Your driver can determine the number of map registers that are available by using the BYTE_TO_PAGES macro, as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">BYTE_TO_PAGES</span><span class="p">(</span><span class="n">WdfDmaEnablerGetFragmentLength</span><span class="p">())</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span>
+<pre lang="cpp"><code>BYTE_TO_PAGES(WdfDmaEnablerGetFragmentLength()) + 1
 </code></pre>
-</div>
-
 <p>If your driver specified a duplex profile when it called <a href="wdfdmaenablercreate" title="NTSTATUS WdfDmaEnablerCreate(&#10;  [in]           WDFDEVICE               Device,&#10;  [in]           PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES  Attributes,&#10;  [out]          WDFDMAENABLER           *DmaEnablerHandle&#10;);">WdfDmaEnablerCreate</a>, the <em>DmaDirection</em> parameter's value must be <strong>WdfDmaDirectionReadFromDevice</strong> to obtain the maximum transfer length for read operations and <strong>WdfDmaDirectionWriteToDevice</strong> to obtain the maximum transfer length for write operations. If your driver did not specify a duplex profile, the driver can specify either <strong>WdfDmaDirectionReadFromDevice</strong> or <strong>WdfDmaDirectionWriteToDevice</strong> for <em>DmaDirection</em>.</p>
-
-<p>Note that if your driver's device supports duplex operation, <strong>WdfDmaEnablerGetFragmentLength</strong> can return different values for the read and write directions that the <em>DmaDirection</em> parameter specifies. This difference is because the framework creates a separate <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/adapter-objects-and-dma">adapter object</a> for each direction, and the operating system might provide a different number of map registers to each adapter object.</p>
-
-<h4 id="examples">Examples</h4>
-
+<p>Note that if your driver's device supports duplex operation, <strong>WdfDmaEnablerGetFragmentLength</strong> can return different values for the read and write directions that the <em>DmaDirection</em> parameter specifies. This difference is because the framework creates a separate <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/adapter-objects-and-dma">adapter object</a> for each direction, and the operating system might provide a different number of map registers to each adapter object.</p>
+<h4>Examples</h4>
 <p>The following code example determines the minimum number of map registers that are necessary to handle a NIC device's read operations, calculates the number of map registers that are available, and reports an error if the number of allocated map registers is insufficient.</p>
+<pre lang="cpp"><code><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  minimumMapRegisters;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  maxLengthSupported;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  mapRegistersAllocated;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">minimumMapRegisters</span><span class="p">;</span>
-<span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">maxLengthSupported</span><span class="p">;</span>
-<span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">mapRegistersAllocated</span><span class="p">;</span>
+miniMapRegisters = <a href="bytes_to_pages" title="#define BYTES_TO_PAGES(Size) (((Size) &gt;&gt; PAGE_SHIFT) + (((Size) &amp; PAGE_MASK) != 0))">BYTES_TO_PAGES</a>(NIC_MAX_PACKET_SIZE) + 1;
 
-<span class="n">miniMapRegisters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="bytes_to_pages" title="#define BYTES_TO_PAGES(Size) (((Size) &gt;&gt; PAGE_SHIFT) + (((Size) &amp; PAGE_MASK) != 0))">BYTES_TO_PAGES</a></span><span class="p">(</span><span class="n">NIC_MAX_PACKET_SIZE</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+maxLengthSupported =
+    (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>) WdfDmaEnablerGetFragmentLength(
+                                           FdoData-&gt;WdfDmaEnabler,
+                                           WdfDmaDirectionReadFromDevice
+                                           );
 
-<span class="n">maxLengthSupported</span><span class="w"> </span><span class="o">=</span>
-<span class="w">    </span><span class="p">(</span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="p">)</span><span class="w"> </span><span class="n">WdfDmaEnablerGetFragmentLength</span><span class="p">(</span>
-<span class="w">                                           </span><span class="n">FdoData</span><span class="o">-&gt;</span><span class="n">WdfDmaEnabler</span><span class="p">,</span>
-<span class="w">                                           </span><span class="n">WdfDmaDirectionReadFromDevice</span>
-<span class="w">                                           </span><span class="p">);</span>
+mapRegistersAllocated = <a href="bytes_to_pages" title="#define BYTES_TO_PAGES(Size) (((Size) &gt;&gt; PAGE_SHIFT) + (((Size) &amp; PAGE_MASK) != 0))">BYTES_TO_PAGES</a>(maxLengthSupported) + 1;
 
-<span class="n">mapRegistersAllocated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="bytes_to_pages" title="#define BYTES_TO_PAGES(Size) (((Size) &gt;&gt; PAGE_SHIFT) + (((Size) &amp; PAGE_MASK) != 0))">BYTES_TO_PAGES</a></span><span class="p">(</span><span class="n">maxLengthSupported</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">mapRegistersAllocated</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">minimumMapRegisters</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STATUS_INSUFFICIENT_RESOURCES</span><span class="p">;</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
-<span class="p">}</span>
+if (mapRegistersAllocated &lt; minimumMapRegisters) {
+    status = STATUS_INSUFFICIENT_RESOURCES;
+    return status;
+}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="wdf_dma_direction" title="typedef enum _WDF_DMA_DIRECTION {&#10;  WdfDmaDirectionReadFromDevice = FALSE,&#10;  WdfDmaDirectionWriteToDevice = TRUE&#10;} WDF_DMA_DIRECTION;">WDF_DMA_DIRECTION</a></p>
-
 <p><a href="wdfdmaenablercreate" title="NTSTATUS WdfDmaEnablerCreate(&#10;  [in]           WDFDEVICE               Device,&#10;  [in]           PWDF_DMA_ENABLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES  Attributes,&#10;  [out]          WDFDMAENABLER           *DmaEnablerHandle&#10;);">WdfDmaEnablerCreate</a></p>
-
 <p><a href="wdfdmaenablergetmaximumlength" title="size_t WdfDmaEnablerGetMaximumLength(&#10;  [in] WDFDMAENABLER DmaEnabler&#10;);">WdfDmaEnablerGetMaximumLength</a></p>
 <hr>
 <div class="ntdoc-description-links">

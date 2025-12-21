@@ -65,52 +65,38 @@
 <h1>Windows Driver Kit DDI reference (nf-ndis-ndisacquirerwlockread)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="ndisacquirerwlockread-function">NdisAcquireRWLockRead function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>NdisAcquireRWLockRead function</h1>
+<h2>Description</h2>
 <p>The
 <strong>NdisAcquireRWLockRead</strong> function obtains a read lock that the caller uses for read access to resources
 that are shared among driver threads.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="lock-in"><code>Lock</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Lock</code> [in]</h3>
 <p>A pointer to an opaque
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a> variable that represents a
+<a href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a> variable that represents a
 lock. The caller can use this lock to gain write or read access to resources that are shared between
 non-ISR driver threads.</p>
-
-<h3 id="lockstate-out"><code>LockState</code> [out]</h3>
-
+<h3><code>LockState</code> [out]</h3>
 <p>A pointer to an opaque
 <a href="lock_state_ex" title="typedef struct _LOCK_STATE_EX {&#10;  KIRQL OldIrql;&#10;  UCHAR LockState;&#10;  UCHAR Flags;&#10;} LOCK_STATE_EX, *PLOCK_STATE_EX;">LOCK_STATE_EX</a> variable that tracks the state
 of the lock. This variable exists in the interval between the times that the caller obtains and releases
 the lock. The caller must use a different variable of type <strong><a href="lock_state_ex" title="typedef struct _LOCK_STATE_EX {&#10;  KIRQL OldIrql;&#10;  UCHAR LockState;&#10;  UCHAR Flags;&#10;} LOCK_STATE_EX, *PLOCK_STATE_EX;">LOCK_STATE_EX</a></strong> for each attempt that it makes
 to obtain the lock from the same non-ISR driver thread.</p>
-
-<h3 id="flags-in"><code>Flags</code> [in]</h3>
-
+<h3><code>Flags</code> [in]</h3>
 <p>A <strong><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></strong> value that contains lock flags. Set this parameter to <strong>NDIS_RWL_AT_DISPATCH_LEVEL</strong> if the
 caller's current IRQL is <strong>DISPATCH_LEVEL</strong>. Otherwise, set this parameter to zero. For more information
 about dispatch IRQL tracking, see
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/dispatch-irql-tracking">Dispatch IRQL Tracking</a>.</p>
-
+<a href="https://learn.microsoft.com/windows-hardware/drivers/network/dispatch-irql-tracking">Dispatch IRQL Tracking</a>.</p>
 <p><strong>Note</strong> If the caller knows the current IRQL is <strong>DISPATCH_LEVEL</strong>, set this parameter to <strong>NDIS_RWL_AT_DISPATCH_LEVEL</strong>. This flag makes the lock even more efficient by causing it to omit a check for the current IRQL. If the current IRQL is unknown, do not test the current IRQL with <a href="kegetcurrentirql" title="NTHALAPI KIRQL KeGetCurrentIrql();">KeGetCurrentIrql</a> solely to determine whether to set this flag, as it is more efficient to allow the <strong>NdisAcquireRWLockRead</strong> function to test the IRQL itself.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>NDIS drivers call the
 <strong>NdisAcquireRWLockRead</strong> function to obtain read-only access to resources that are shared between
 driver threads.</p>
-
 <p>The driver must allocate a variable of type
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a> with the
+<a href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a> with the
 <a href="ndisallocaterwlock" title="PNDIS_RW_LOCK_EX NdisAllocateRWLock(&#10;  NDIS_HANDLE NdisHandle&#10;);">NdisAllocateRWLock</a> function before the
 driver calls the
 <strong>NdisAcquireRWLockRead</strong> function.</p>
-
 <p>After the driver calls
 <a href="ndisallocaterwlock" title="PNDIS_RW_LOCK_EX NdisAllocateRWLock(&#10;  NDIS_HANDLE NdisHandle&#10;);">NdisAllocateRWLock</a>, it can call
 <a href="ndisacquirerwlockwrite" title="VOID NdisAcquireRWLockWrite(&#10;  [in]  PNDIS_RW_LOCK_EX Lock,&#10;  [out] PLOCK_STATE_EX   LockState,&#10;  [in]  UCHAR            Flags&#10;);">NdisAcquireRWLockWrite</a> or
@@ -119,40 +105,26 @@ driver thread at a time can obtain write access to the resource. When one non-IS
 access, all read and write accesses by other non-ISR threads must wait until the write-access holder
 releases the lock. However, if a non-ISR thread has read access, other non-ISR threads can concurrently
 obtain read access.</p>
-
-<p>The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a> lock does not support promotion from read to write. Once a processor has acquired an <strong>NDIS_RW_LOCK_EX</strong> for read access (by calling <strong>NdisAcquireRWLockRead</strong>), the same processor must not attempt to acquire write access (by calling <a href="ndisacquirerwlockwrite" title="VOID NdisAcquireRWLockWrite(&#10;  [in]  PNDIS_RW_LOCK_EX Lock,&#10;  [out] PLOCK_STATE_EX   LockState,&#10;  [in]  UCHAR            Flags&#10;);">NdisAcquireRWLockWrite</a>) until the previous read access is released.</p>
-
-<p>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a> read lock can be acquired recursively on the same processor. For each call to <strong>NdisAcquireRWLockRead</strong>, there must be a corresponding call to <a href="ndisreleaserwlock" title="VOID NdisReleaseRWLock(&#10;  [in] PNDIS_RW_LOCK_EX Lock,&#10;  [in] PLOCK_STATE_EX   LockState&#10;);">NdisReleaseRWLock</a>. The lock is only released after the last call to <strong><a href="ndisreleaserwlock" title="VOID NdisReleaseRWLock(&#10;  [in] PNDIS_RW_LOCK_EX Lock,&#10;  [in] PLOCK_STATE_EX   LockState&#10;);">NdisReleaseRWLock</a></strong>.</p>
-
+<p>The <a href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a> lock does not support promotion from read to write. Once a processor has acquired an <strong>NDIS_RW_LOCK_EX</strong> for read access (by calling <strong>NdisAcquireRWLockRead</strong>), the same processor must not attempt to acquire write access (by calling <a href="ndisacquirerwlockwrite" title="VOID NdisAcquireRWLockWrite(&#10;  [in]  PNDIS_RW_LOCK_EX Lock,&#10;  [out] PLOCK_STATE_EX   LockState,&#10;  [in]  UCHAR            Flags&#10;);">NdisAcquireRWLockWrite</a>) until the previous read access is released.</p>
+<p>An <a href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a> read lock can be acquired recursively on the same processor. For each call to <strong>NdisAcquireRWLockRead</strong>, there must be a corresponding call to <a href="ndisreleaserwlock" title="VOID NdisReleaseRWLock(&#10;  [in] PNDIS_RW_LOCK_EX Lock,&#10;  [in] PLOCK_STATE_EX   LockState&#10;);">NdisReleaseRWLock</a>. The lock is only released after the last call to <strong><a href="ndisreleaserwlock" title="VOID NdisReleaseRWLock(&#10;  [in] PNDIS_RW_LOCK_EX Lock,&#10;  [in] PLOCK_STATE_EX   LockState&#10;);">NdisReleaseRWLock</a></strong>.</p>
 <p>The driver cannot use a lock to protect resources from read or write access that its other functions
 share with the
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_isr">MiniportInterrupt</a> or
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_disable_interrupt">MiniportDisableInterruptEx</a> function, or both. Instead, the driver must call
+<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_isr">MiniportInterrupt</a> or
+<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_disable_interrupt">MiniportDisableInterruptEx</a> function, or both. Instead, the driver must call
 <a href="ndismsynchronizewithinterruptex" title="BOOLEAN NdisMSynchronizeWithInterruptEx(&#10;  [in] NDIS_HANDLE                            NdisInterruptHandle,&#10;  [in] ULONG                                  MessageId,&#10;  [in] MINIPORT_SYNCHRONIZE_INTERRUPT_HANDLER SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeContext&#10;);">NdisMSynchronizeWithInterruptEx</a> so that its
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_synchronize_interrupt">MiniportSynchronizeInterrupt</a> function accesses such shared resources at the same DIRQL that its
+<a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_synchronize_interrupt">MiniportSynchronizeInterrupt</a> function accesses such shared resources at the same DIRQL that its
 <em>MiniportInterrupt</em> or
 <em>MiniportDisableInterruptEx</em> functions, or both do.</p>
-
 <p><strong>NdisAcquireRWLockRead</strong> always raises the IRQL to IRQL = <strong>DISPATCH_LEVEL</strong>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="lock_state_ex" title="typedef struct _LOCK_STATE_EX {&#10;  KIRQL OldIrql;&#10;  UCHAR LockState;&#10;  UCHAR Flags;&#10;} LOCK_STATE_EX, *PLOCK_STATE_EX;">LOCK_STATE_EX</a></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_disable_interrupt">MiniportDisableInterruptEx</a></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_isr">MiniportInterrupt</a></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_synchronize_interrupt">MiniportSynchronizeInterrupt</a></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a></p>
-
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_disable_interrupt">MiniportDisableInterruptEx</a></p>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_isr">MiniportInterrupt</a></p>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_synchronize_interrupt">MiniportSynchronizeInterrupt</a></p>
+<p><a href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff567279(v=vs.85)">NDIS_RW_LOCK_EX</a></p>
 <p><a href="ndisacquirerwlockwrite" title="VOID NdisAcquireRWLockWrite(&#10;  [in]  PNDIS_RW_LOCK_EX Lock,&#10;  [out] PLOCK_STATE_EX   LockState,&#10;  [in]  UCHAR            Flags&#10;);">NdisAcquireRWLockWrite</a></p>
-
 <p><a href="ndisallocaterwlock" title="PNDIS_RW_LOCK_EX NdisAllocateRWLock(&#10;  NDIS_HANDLE NdisHandle&#10;);">NdisAllocateRWLock</a></p>
-
 <p><a href="ndismsynchronizewithinterruptex" title="BOOLEAN NdisMSynchronizeWithInterruptEx(&#10;  [in] NDIS_HANDLE                            NdisInterruptHandle,&#10;  [in] ULONG                                  MessageId,&#10;  [in] MINIPORT_SYNCHRONIZE_INTERRUPT_HANDLER SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeContext&#10;);">NdisMSynchronizeWithInterruptEx</a></p>
-
 <p><a href="ndisreleaserwlock" title="VOID NdisReleaseRWLock(&#10;  [in] PNDIS_RW_LOCK_EX Lock,&#10;  [in] PLOCK_STATE_EX   LockState&#10;);">NdisReleaseRWLock</a></p>
 <hr>
 <div class="ntdoc-description-links">

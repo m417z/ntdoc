@@ -66,84 +66,83 @@
 <h1>Windows Driver Kit DDI reference (nf-winsplp-addportui)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>A port monitor UI DLL's <strong>AddPortUI</strong> function adds a printer port, then obtains port configuration information from the user and sends it to the port monitor server DLL.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="pszserver-in-optional"><code>pszServer</code> [in, optional]</h3>
-
+<h2>Parameters</h2>
+<h3><code>pszServer</code> [in, optional]</h3>
 <p>Caller-supplied pointer to a string representing a server name, or <strong>NULL</strong> if the printer is local.</p>
-
-<h3 id="hwnd-in"><code>hWnd</code> [in]</h3>
-
+<h3><code>hWnd</code> [in]</h3>
 <p>Caller-supplied handle of the window that should be used as the parent for dialog boxes. If <strong>NULL</strong>, no dialog boxes should be displayed.</p>
-
-<h3 id="pszmonitornamein"><code>pszMonitorNameIn</code></h3>
-
+<h3><code>pszMonitorNameIn</code></h3>
 <p>Caller-supplied pointer to a string representing the name of the monitor. Can be <strong>NULL</strong>.</p>
-
-<h3 id="ppszportnameout-out-optional"><code>ppszPortNameOut</code> [out, optional]</h3>
-
+<h3><code>ppszPortNameOut</code> [out, optional]</h3>
 <p>Caller-supplied pointer to a location to receive a port name string. Can be <strong>NULL</strong>, in which case a name is not returned.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>If the operation succeeds, the function should return <strong>TRUE</strong>. Otherwise SetLastError should be called to specify an error code, and the function should return <strong>FALSE</strong>. If the operation is canceled by the user or is unsupported, the function should call SetLastError(ERROR_CANCELLED), then return <strong>FALSE</strong>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>Port monitor UI DLLs are required to define an <strong>AddPortUI</strong> function and include the function's address in a <a href="monitorui" title="typedef struct _MONITORUI {&#10;  DWORD dwMonitorUISize;&#10;  BOOL()(PCWSTR pszServer,HWND hWnd,PCWSTR pszMonitorNameIn,PWSTR *ppszPortNameOut) * pfnAddPortUI;&#10;  BOOL( )(PCWSTR pName,HWND hWnd,PCWSTR pPortName) *pfnConfigurePortUI;&#10;  BOOL( )(PCWSTR pszServer,HWND hWnd,PCWSTR pszPortName) *pfnDeletePortUI;&#10;} MONITORUI, *PMONITORUI;">MONITORUI</a> structure.</p>
-
 <p>The spooler calls <strong>AddPortUI</strong> from within its <a href="addport" title="void AddPort(&#10;   [in, HBAType(&quot;HBA_WWN&quot;)] uint8          PortWWN[8],&#10;   [out, HBA_STATUS_QUALIFIERS] HBA_STATUS HBAStatus&#10;);">AddPort</a> function. The first three arguments received by <strong>AddPortUI</strong> are the arguments received by <a href="addport" title="void AddPort(&#10;   [in, HBAType(&quot;HBA_WWN&quot;)] uint8          PortWWN[8],&#10;   [out, HBA_STATUS_QUALIFIERS] HBA_STATUS HBAStatus&#10;);">AddPort</a>. (The <a href="addport" title="void AddPort(&#10;   [in, HBAType(&quot;HBA_WWN&quot;)] uint8          PortWWN[8],&#10;   [out, HBA_STATUS_QUALIFIERS] HBA_STATUS HBAStatus&#10;);">AddPort</a> function is described in the Microsoft Windows SDK documentation.)</p>
-
 <p>The function should perform the following operations:</p>
-
 <ol>
-<li><p>Call OpenPrinter, specifying a printer name with the following format:</p>
-
-<p>\\<em>ServerName</em>\,XcvMonitor<em>MonitorName</em></p>
-
-<p>where <em>ServerName</em> and <em>MonitorName</em> are the server and monitor names received as <strong>AddPortUI</strong> function arguments.</p>
-
-<p>The call to OpenPrinter requires a PRINTER_DEFAULTS structure, which is described in the Windows SDK documentation. The structure's <strong>DesiredAccess</strong> member must be set to SERVER_ACCESS_ADMINISTER. Its <strong>pDatatype</strong> and <strong>pDevMode</strong> members can be <strong>NULL</strong>.</p>
-
-<p>This call causes the print monitor server DLL's <a href="xcvopenport" title="BOOL XcvOpenPort(&#10;  LPCWSTR     pszObject,&#10;  ACCESS_MASK GrantedAccess,&#10;  PHANDLE     phXcv&#10;);">XcvOpenPort</a> function to be called.</p></li>
-<li><p>Obtain a port name from the user by displaying a dialog box.</p></li>
-<li><p>Call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a>, specifying the following input arguments:</p>
-
-<ul>
-<li><p>The handle received from OpenPrinter</p></li>
-<li><p>The port name received from the user</p></li>
-<li><p>A customized data name string, such as "PortExists"</p></li>
-</ul>
-
-<p>This call causes the server DLL's <a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a> function to be called. The <strong><a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a></strong> function should return a value that indicates whether the specified port name has already been used. If it has, the UI DLL should request another name from the user and call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a> again.</p></li>
-<li><p>After a valid new port name has been received, call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a> again, this time specifying the following input arguments</p>
-
-<ul>
-<li><p>The handle received from OpenPrinter</p></li>
-<li><p>The validated port name received from the user</p></li>
-<li><p>A data name string of "<a href="addport" title="void AddPort(&#10;   [in, HBAType(&quot;HBA_WWN&quot;)] uint8          PortWWN[8],&#10;   [out, HBA_STATUS_QUALIFIERS] HBA_STATUS HBAStatus&#10;);">AddPort</a>"</p></li>
-</ul>
-
-<p>This call causes the server DLL's <a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a> function to be called again.</p></li>
-<li><p>Obtain port configuration parameters from the user by displaying a dialog box.</p></li>
-<li><p>Call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a> one or more times, specifying customized data name strings, to send each configuration parameter to the server DLL. Each <strong>XcvData</strong> call causes the server's <a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a> function to be called.</p></li>
-<li><p>Call ClosePrinter, specifying the handle received from OpenPrinter. This causes the server DLL's <a href="xcvcloseport" title="BOOL XcvClosePort(&#10;  _In_ HANDLE hXcv&#10;);">XcvClosePort</a> function to be called.</p></li>
+<li>Call OpenPrinter, specifying a printer name with the following format:</li>
 </ol>
-
-<h2 id="see-also">See also</h2>
-
+<p>\\<em>ServerName</em>\,XcvMonitor<em>MonitorName</em></p>
+<p>where <em>ServerName</em> and <em>MonitorName</em> are the server and monitor names received as <strong>AddPortUI</strong> function arguments.</p>
+<p>The call to OpenPrinter requires a PRINTER_DEFAULTS structure, which is described in the Windows SDK documentation. The structure's <strong>DesiredAccess</strong> member must be set to SERVER_ACCESS_ADMINISTER. Its <strong>pDatatype</strong> and <strong>pDevMode</strong> members can be <strong>NULL</strong>.</p>
+<p>This call causes the print monitor server DLL's <a href="xcvopenport" title="BOOL XcvOpenPort(&#10;  LPCWSTR     pszObject,&#10;  ACCESS_MASK GrantedAccess,&#10;  PHANDLE     phXcv&#10;);">XcvOpenPort</a> function to be called.</p>
+<ol>
+<li>
+<p>Obtain a port name from the user by displaying a dialog box.</p>
+</li>
+<li>
+<p>Call <a href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a>, specifying the following input arguments:</p>
+<ul>
+<li>
+<p>The handle received from OpenPrinter</p>
+</li>
+<li>
+<p>The port name received from the user</p>
+</li>
+<li>
+<p>A customized data name string, such as &quot;PortExists&quot;</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>This call causes the server DLL's <a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a> function to be called. The <strong><a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a></strong> function should return a value that indicates whether the specified port name has already been used. If it has, the UI DLL should request another name from the user and call <a href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a> again.</p>
+<ol>
+<li>
+<p>After a valid new port name has been received, call <a href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a> again, this time specifying the following input arguments</p>
+<ul>
+<li>
+<p>The handle received from OpenPrinter</p>
+</li>
+<li>
+<p>The validated port name received from the user</p>
+</li>
+<li>
+<p>A data name string of &quot;<a href="addport" title="void AddPort(&#10;   [in, HBAType(&quot;HBA_WWN&quot;)] uint8          PortWWN[8],&#10;   [out, HBA_STATUS_QUALIFIERS] HBA_STATUS HBAStatus&#10;);">AddPort</a>&quot;</p>
+</li>
+</ul>
+</li>
+</ol>
+<p>This call causes the server DLL's <a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a> function to be called again.</p>
+<ol>
+<li>
+<p>Obtain port configuration parameters from the user by displaying a dialog box.</p>
+</li>
+<li>
+<p>Call <a href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a> one or more times, specifying customized data name strings, to send each configuration parameter to the server DLL. Each <strong>XcvData</strong> call causes the server's <a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a> function to be called.</p>
+</li>
+<li>
+<p>Call ClosePrinter, specifying the handle received from OpenPrinter. This causes the server DLL's <a href="xcvcloseport" title="BOOL XcvClosePort(&#10;  _In_ HANDLE hXcv&#10;);">XcvClosePort</a> function to be called.</p>
+</li>
+</ol>
+<h2>See also</h2>
 <p><a href="monitorui" title="typedef struct _MONITORUI {&#10;  DWORD dwMonitorUISize;&#10;  BOOL()(PCWSTR pszServer,HWND hWnd,PCWSTR pszMonitorNameIn,PWSTR *ppszPortNameOut) * pfnAddPortUI;&#10;  BOOL( )(PCWSTR pName,HWND hWnd,PCWSTR pPortName) *pfnConfigurePortUI;&#10;  BOOL( )(PCWSTR pszServer,HWND hWnd,PCWSTR pszPortName) *pfnDeletePortUI;&#10;} MONITORUI, *PMONITORUI;">MONITORUI</a></p>
-
 <p><a href="xcvcloseport" title="BOOL XcvClosePort(&#10;  _In_ HANDLE hXcv&#10;);">XcvClosePort</a></p>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a></p>
-
+<p><a href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a></p>
 <p><a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a></p>
-
 <p><a href="xcvopenport" title="BOOL XcvOpenPort(&#10;  LPCWSTR     pszObject,&#10;  ACCESS_MASK GrantedAccess,&#10;  PHANDLE     phXcv&#10;);">XcvOpenPort</a></p>
 <hr>
 <div class="ntdoc-description-links">

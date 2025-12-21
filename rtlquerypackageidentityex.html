@@ -78,10 +78,8 @@ RtlQueryPackageIdentityEx(
 <h1>NtDoc</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<p>Queries package identity information for a token. This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlquerypackageidentityex">documented in Windows Driver Kit</a>.</p>
-
-<h1 id="parameters">Parameters</h1>
-
+<p>Queries package identity information for a token. This function is <a href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-rtlquerypackageidentityex">documented in Windows Driver Kit</a>.</p>
+<h1>Parameters</h1>
 <ul>
 <li><code>TokenHandle</code> - a handle to a token or one of the supported pseudo-handles (see below). The handle must grant <code>TOKEN_QUERY</code> access.</li>
 <li><code>PackageFullName</code> - an optional pointer to user-allocated buffer that receives the full name of the package.</li>
@@ -91,37 +89,24 @@ RtlQueryPackageIdentityEx(
 <li><code>DynamicId</code> - an optional pointer to a variable that receives the dynamic ID of the application.</li>
 <li><code>Flags</code> - an optional pointer to a variable that receives package claim flags. To interpret this value, cast it to <code><a href="ps_pkg_claim" title="typedef struct _PS_PKG_CLAIM&#10;{&#10;    ULONG Flags;  // PSM_ACTIVATION_TOKEN_*&#10;    ULONG Origin; // PackageOrigin&#10;} PS_PKG_CLAIM, *PPS_PKG_CLAIM;">PS_PKG_CLAIM</a></code>.</li>
 </ul>
-
-<h1 id="pseudo-handles">Pseudo-handles</h1>
-
+<h1>Pseudo-handles</h1>
 <p>This function supports the following pseudo-handle values:</p>
-
 <ul>
 <li><code><a href="ntcurrentprocesstoken" title="#define NtCurrentProcessToken() ((HANDLE)(LONG_PTR)-4) // NtOpenProcessToken(NtCurrentProcess())">NtCurrentProcessToken</a></code> - performs the query on the primary token of the calling process.</li>
 <li><code><a href="ntcurrentthreadtoken" title="#define NtCurrentThreadToken() ((HANDLE)(LONG_PTR)-5) // NtOpenThreadToken(NtCurrentThread())">NtCurrentThreadToken</a></code> - performs the query on the impersonation token of the calling thread. The function fails if the thread is not impersonating.</li>
 <li><code><a href="ntcurrentthreadeffectivetoken" title="#define NtCurrentThreadEffectiveToken() ((HANDLE)(LONG_PTR)-6) // NtOpenThreadToken(NtCurrentThread()) + NtOpenProcessToken(NtCurrentProcess())">NtCurrentThreadEffectiveToken</a></code> - performs the query on the impersonation token of the calling thread, if present. Otherwise, the function uses the primary token of the calling process.</li>
 </ul>
-
-<h1 id="notable-return-values">Notable return values</h1>
-
+<h1>Notable return values</h1>
 <ul>
 <li><code>STATUS_NOT_FOUND</code> - the token doesn't have package identity attributes.</li>
 </ul>
-
-<h1 id="implementation-details">Implementation details</h1>
-
+<h1>Implementation details</h1>
 <p>This function calls <code><a href="ntquerysecurityattributestoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQuerySecurityAttributesToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_reads_opt_(NumberOfAttributes) PCUNICODE_STRING Attributes,&#10;    _In_ ULONG NumberOfAttributes,&#10;    _Out_writes_bytes_(Length) PVOID Buffer, // PTOKEN_SECURITY_ATTRIBUTES_INFORMATION&#10;    _In_ ULONG Length,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQuerySecurityAttributesToken</a></code> and reads the values of the <code>WIN://SYSAPPID</code> and <code>WIN://PKG</code> attributes.</p>
-
-<h1 id="remarks">Remarks</h1>
-
+<h1>Remarks</h1>
 <p>Alternatively to using <code><a href="ntquerysecurityattributestoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQuerySecurityAttributesToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_reads_opt_(NumberOfAttributes) PCUNICODE_STRING Attributes,&#10;    _In_ ULONG NumberOfAttributes,&#10;    _Out_writes_bytes_(Length) PVOID Buffer, // PTOKEN_SECURITY_ATTRIBUTES_INFORMATION&#10;    _In_ ULONG Length,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQuerySecurityAttributesToken</a></code>, you can also enumerate all security attributes via <code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code> with <code><a href="tokensecurityattributes" title="#define TokenSecurityAttributes 39 // q; s: TOKEN_SECURITY_ATTRIBUTES_[AND_OPERATION_]INFORMATION (requires SeTcbPrivilege)">TokenSecurityAttributes</a></code> and retrieve the values from there.</p>
-
-<h1 id="required-os-version">Required OS version</h1>
-
+<h1>Required OS version</h1>
 <p>This function was introduced in Windows 8.1.</p>
-
-<h1 id="see-also">See also</h1>
-
+<h1>See also</h1>
 <ul>
 <li><code><a href="rtlquerypackageclaims" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlQueryPackageClaims(&#10;    _In_ HANDLE TokenHandle,&#10;    _Out_writes_bytes_to_opt_(*PackageSize, *PackageSize) PWSTR PackageFullName,&#10;    _Inout_opt_ PSIZE_T PackageSize,&#10;    _Out_writes_bytes_to_opt_(*AppIdSize, *AppIdSize) PWSTR AppId,&#10;    _Inout_opt_ PSIZE_T AppIdSize,&#10;    _Out_opt_ PGUID DynamicId,&#10;    _Out_opt_ PPS_PKG_CLAIM PkgClaim,&#10;    _Out_opt_ PULONG64 AttributesPresent&#10;    );">RtlQueryPackageClaims</a></code></li>
 <li><code><a href="rtlquerypackageidentity" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlQueryPackageIdentity(&#10;    _In_ HANDLE TokenHandle,&#10;    _Out_writes_bytes_to_(*PackageSize, *PackageSize) PWSTR PackageFullName,&#10;    _Inout_ PSIZE_T PackageSize,&#10;    _Out_writes_bytes_to_opt_(*AppIdSize, *AppIdSize) PWSTR AppId,&#10;    _Inout_opt_ PSIZE_T AppIdSize,&#10;    _Out_opt_ PBOOLEAN Packaged&#10;    );">RtlQueryPackageIdentity</a></code></li>
@@ -137,66 +122,44 @@ RtlQueryPackageIdentityEx(
 </div>
 <div class="ntdoc-description">
 <h1>RtlQueryPackageIdentityEx function</h1>
-
 <h2>Description</h2>
-
 <p><strong>RtlQueryPackageIdentityEx</strong> returns the associated full package name. It can optionally also return the package relative application name, and whether an application is considered packaged.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>TokenObject</code></h3>
-
 <p>Handle to a token object (user mode) that was opened with TOKEN_QUERY access, or to a raw token object (kernel mode).</p>
-
 <h3><code>PackageFullName</code></h3>
-
 <p>Pointer to a wide character buffer that will receive the unique package key. The buffer will be null terminated upon success.</p>
-
 <h3><code>PackageSize</code></h3>
-
 <p>Pointer to the value that defines the size of the buffer that <em>PackageFullName</em> points to. On output, it will contain the written size including the terminating null.</p>
-
 <h3><code>AppId</code></h3>
-
 <p>Pointer to a wide character buffer that may receive the package relative application identifier. <em>AppId</em> is optional and can be <strong>NULL</strong>.</p>
-
 <h3><code>AppIdSize</code></h3>
-
 <p>Pointer to the value that defines the size of the buffer that <em>AppId</em> points to. On output, it will contain the written size including the terminating null. If <strong>AppId</strong> is not <strong>NULL</strong>, <strong>AppIdSize</strong> must point to a valid value; otherwise <strong>AppIdSize</strong> should set to <strong>NULL</strong>.</p>
-
 <h3><code>DynamicId</code></h3>
-
 <p>Pointer to a value that receives a dynamic ID for the application. <em>DynamicId</em> is optional and can be <strong>NULL</strong>.</p>
-
 <h3><code>Flags</code></h3>
-
 <p>Pointer to a value that receives a bitmask of values for the package attribute.</p>
-
 <h2>Return value</h2>
-
 <p><strong>RtlQueryPackageIdentityEx</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> upon successful completion; otherwise it returns a code such as one of the following.</p>
-
 <table>
 <thead>
 <tr>
-  <th>Error Code</th>
-  <th>Meaning</th>
+<th>Error Code</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>STATUS_INVALID_PARAMETER</td>
-  <td>A parameter contains an invalid value; for example, a size value was not provided for a non-NULL buffer. This is an error code.</td>
+<td>STATUS_INVALID_PARAMETER</td>
+<td>A parameter contains an invalid value; for example, a size value was not provided for a non-NULL buffer. This is an error code.</td>
 </tr>
 <tr>
-  <td>STATUS_NOT_FOUND</td>
-  <td>A package identity does not exist.</td>
+<td>STATUS_NOT_FOUND</td>
+<td>A package identity does not exist.</td>
 </tr>
 </tbody>
 </table>
-
 <h2>Remarks</h2>
-
 <h2>See also</h2>
 <hr>
 <div class="ntdoc-description-links">

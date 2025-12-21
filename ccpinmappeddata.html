@@ -67,91 +67,61 @@
 <h1>Windows Driver Kit DDI reference (nf-ntifs-ccpinmappeddata)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="ccpinmappeddata-function">CcPinMappedData function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>CcPinMappedData function</h1>
+<h2>Description</h2>
 <p>The <strong>CcPinMappedData</strong> routine pins the specified byte range of a cached file.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="fileobject-in"><code>FileObject</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>FileObject</code> [in]</h3>
 <p>Pointer to a file object for the cached file in which a range of data is to be pinned.</p>
-
-<h3 id="fileoffset-in"><code>FileOffset</code> [in]</h3>
-
+<h3><code>FileOffset</code> [in]</h3>
 <p>Pointer to a variable that specifies the starting byte offset within the cached file where the desired data resides.</p>
-
-<h3 id="length-in"><code>Length</code> [in]</h3>
-
+<h3><code>Length</code> [in]</h3>
 <p>Length in bytes of the data to be pinned.</p>
-
-<h3 id="flags-in"><code>Flags</code> [in]</h3>
-
+<h3><code>Flags</code> [in]</h3>
 <p>Bitmask of flags specifying how the pinning operation is to be performed. ORed combination of one or more of the following values:</p>
-
 <table>
 <thead>
 <tr>
-  <th>Flag</th>
-  <th>Meaning</th>
+<th>Flag</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>PIN_WAIT</td>
-  <td>The caller can be put into a wait state until the data has been pinned.</td>
+<td>PIN_WAIT</td>
+<td>The caller can be put into a wait state until the data has been pinned.</td>
 </tr>
 <tr>
-  <td>PIN_EXCLUSIVE</td>
-  <td>The buffer control block (BCB) is to be acquired exclusively. If this flag is set, PIN_WAIT must also be set.</td>
+<td>PIN_EXCLUSIVE</td>
+<td>The buffer control block (BCB) is to be acquired exclusively. If this flag is set, PIN_WAIT must also be set.</td>
 </tr>
 <tr>
-  <td>PIN_NO_READ</td>
-  <td>Only pages that are already resident in memory are to be pinned. If this flag is set, PIN_WAIT must also be set.</td>
+<td>PIN_NO_READ</td>
+<td>Only pages that are already resident in memory are to be pinned. If this flag is set, PIN_WAIT must also be set.</td>
 </tr>
 <tr>
-  <td>PIN_IF_BCB</td>
-  <td>The data is to be pinned only if a BCB already exists. Otherwise, the pin fails and <em>Bcb</em> is set to <strong>NULL</strong>.</td>
+<td>PIN_IF_BCB</td>
+<td>The data is to be pinned only if a BCB already exists. Otherwise, the pin fails and <em>Bcb</em> is set to <strong>NULL</strong>.</td>
 </tr>
 </tbody>
 </table>
-
-<h3 id="bcb-in-out"><code>Bcb</code> [in, out]</h3>
-
+<h3><code>Bcb</code> [in, out]</h3>
 <p>On the first call this returns a pointer to a buffer control block (BCB). This pointer must be supplied as input on all subsequent calls for this buffer.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>CcPinMappedData</strong> returns <strong>TRUE</strong> if the data for the cached file was pinned successfully, <strong>FALSE</strong> otherwise.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>A successful return from <strong>CcPinMappedData</strong> guarantees that the data previously mapped in a call to <a href="ccmapdata" title="BOOLEAN CcMapData(&#10;  [in]  PFILE_OBJECT   FileObject,&#10;  [in]  PLARGE_INTEGER FileOffset,&#10;  [in]  ULONG          Length,&#10;  [in]  ULONG          Flags,&#10;  [out] PVOID          *Bcb,&#10;  [out] PVOID          *Buffer&#10;);">CcMapData</a> is pinned in the cache and data in the specified range can be safely modified. If the caller subsequently modifies the data pinned by <strong>CcPinMappedData</strong>, it must also call <a href="ccsetdirtypinneddata" title="VOID CcSetDirtyPinnedData(&#10;  [in]           PVOID          BcbVoid,&#10;  [in, optional] PLARGE_INTEGER Lsn&#10;);">CcSetDirtyPinnedData</a> so that the modified data will eventually be written to disk.</p>
-
 <p><strong>CcPinMappedData</strong> cannot pin data across view boundaries in the cache manager. The cache manager manages files in the system in 256 KB-aligned views. (The cache manager's view size is specified by the system-defined constant <strong>VACB_MAPPING_GRANULARITY</strong>, which is set to 256 KB in <em>ntifs.h</em>.) Pinned regions cannot span more than one 256 KB view. Therefore, the largest region that can be pinned is 256 KB, beginning at a 256 KB-aligned offset in the file.</p>
-
 <p>Pinning a byte range in a cached file does not ensure that the pages remain resident in memory. As long as the pages are pinned, the byte range is guaranteed to stay mapped into the system cache virtual address space, but the memory manager can page out the physical pages as the system's memory demand requires.</p>
-
 <p>If any failure occurs, <strong>CcPinMappedData</strong> raises a status exception for that particular failure. For example, if a pool allocation failure occurs, <strong>CcPinMappedData</strong> raises a <strong>STATUS_INSUFFICIENT_RESOURCES</strong> exception; if an I/O error occurs, <strong>CcPinMappedData</strong> raises the status exception of the I/O error. Therefore, to gain control if a failure occurs, the driver should wrap the call to <strong>CcPinMappedData</strong> in a <strong>try-except</strong> or <strong>try-finally</strong> statement.</p>
-
 <p>To map data for a cached file, use the <a href="ccmapdata" title="BOOLEAN CcMapData(&#10;  [in]  PFILE_OBJECT   FileObject,&#10;  [in]  PLARGE_INTEGER FileOffset,&#10;  [in]  ULONG          Length,&#10;  [in]  ULONG          Flags,&#10;  [out] PVOID          *Bcb,&#10;  [out] PVOID          *Buffer&#10;);">CcMapData</a> routine. To cache a file, use <a href="ccinitializecachemap" title="VOID CcInitializeCacheMap(&#10;  [in] PFILE_OBJECT             FileObject,&#10;  [in] PCC_FILE_SIZES           FileSizes,&#10;  [in] BOOLEAN                  PinAccess,&#10;  [in] PCACHE_MANAGER_CALLBACKS Callbacks,&#10;  [in] PVOID                    LazyWriteContext&#10;);">CcInitializeCacheMap</a>.</p>
-
 <p>It is not necessary to call <a href="ccunpindata" title="VOID CcUnpinData(&#10;  [in] PVOID Bcb&#10;);">CcUnpinData</a> after calling <strong>CcPinMappedData</strong> since the pin reference is matched to <a href="ccmapdata" title="BOOLEAN CcMapData(&#10;  [in]  PFILE_OBJECT   FileObject,&#10;  [in]  PLARGE_INTEGER FileOffset,&#10;  [in]  ULONG          Length,&#10;  [in]  ULONG          Flags,&#10;  [out] PVOID          *Bcb,&#10;  [out] PVOID          *Buffer&#10;);">CcMapData</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="ccinitializecachemap" title="VOID CcInitializeCacheMap(&#10;  [in] PFILE_OBJECT             FileObject,&#10;  [in] PCC_FILE_SIZES           FileSizes,&#10;  [in] BOOLEAN                  PinAccess,&#10;  [in] PCACHE_MANAGER_CALLBACKS Callbacks,&#10;  [in] PVOID                    LazyWriteContext&#10;);">CcInitializeCacheMap</a></p>
-
 <p><a href="ccmapdata" title="BOOLEAN CcMapData(&#10;  [in]  PFILE_OBJECT   FileObject,&#10;  [in]  PLARGE_INTEGER FileOffset,&#10;  [in]  ULONG          Length,&#10;  [in]  ULONG          Flags,&#10;  [out] PVOID          *Bcb,&#10;  [out] PVOID          *Buffer&#10;);">CcMapData</a></p>
-
 <p><a href="ccpinread" title="BOOLEAN CcPinRead(&#10;  [in]  PFILE_OBJECT   FileObject,&#10;  [in]  PLARGE_INTEGER FileOffset,&#10;  [in]  ULONG          Length,&#10;  [in]  ULONG          Flags,&#10;  [out] PVOID          *Bcb,&#10;  [out] PVOID          *Buffer&#10;);">CcPinRead</a></p>
-
 <p><a href="ccpreparepinwrite" title="BOOLEAN CcPreparePinWrite(&#10;  [in]  PFILE_OBJECT   FileObject,&#10;  [in]  PLARGE_INTEGER FileOffset,&#10;  [in]  ULONG          Length,&#10;  [in]  BOOLEAN        Zero,&#10;  [in]  ULONG          Flags,&#10;  [out] PVOID          *Bcb,&#10;  [out] PVOID          *Buffer&#10;);">CcPreparePinWrite</a></p>
-
 <p><a href="ccsetdirtypinneddata" title="VOID CcSetDirtyPinnedData(&#10;  [in]           PVOID          BcbVoid,&#10;  [in, optional] PLARGE_INTEGER Lsn&#10;);">CcSetDirtyPinnedData</a></p>
-
 <p><a href="ccunpindata" title="VOID CcUnpinData(&#10;  [in] PVOID Bcb&#10;);">CcUnpinData</a></p>
 <hr>
 <div class="ntdoc-description-links">

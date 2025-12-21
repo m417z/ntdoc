@@ -66,78 +66,65 @@ VOID EvtUfxDeviceHostConnect(
 <h1>Windows Driver Kit DDI reference (nc-ufxclient-evt_ufx_device_host_connect)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="evt_ufx_device_host_connect-callback-function">EVT_UFX_DEVICE_HOST_CONNECT callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>EVT_UFX_DEVICE_HOST_CONNECT callback function</h1>
+<h2>Description</h2>
 <p>The client driver's implementation to initiate connection with the host.</p>
+<h2>Parameters</h2>
+<h3><code>unnamedParam1</code> [in]</h3>
+<p>The handle to a USB device object that the client driver received in a previous call to the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a> method.</p>
+<h2>Remarks</h2>
+<p>The client driver for the function host controller registers its <em>EVT_UFX_DEVICE_HOST_CONNECT</em> implementation with the USB function class extension (UFX) by calling the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a> method.</p>
+<p>The client driver must not initiate connection with the host until UFX invokes this event callback. The client driver shall indicate completion of this event by calling the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdeviceeventcomplete">UfxDeviceEventComplete</a> method.</p>
+<h3>Examples</h3>
+<pre lang="cpp"><code>EVT_UFX_DEVICE_HOST_CONNECT UfxDevice_EvtDeviceHostConnect;
 
-<h2 id="parameters">Parameters</h2>
+VOID
+UfxDevice_EvtDeviceHostConnect (
+    _In_ UFXDEVICE UfxDevice
+    )
+/*++
 
-<h3 id="unnamedparam1-in"><code>unnamedParam1</code> [in]</h3>
+Routine Description:
 
-<p>The handle to a USB device object that the client driver received in a previous call to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a> method.</p>
+    EvtDeviceHostConnect callback handler for UFXDEVICE object.
 
-<h2 id="remarks">Remarks</h2>
+Arguments:
 
-<p>The client driver for the function host controller registers its <em>EVT_UFX_DEVICE_HOST_CONNECT</em> implementation with the USB function class extension (UFX) by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a> method.</p>
+    UfxDevice - UFXDEVICE object representing the device.
 
-<p>The client driver must not initiate connection with the host until UFX invokes this event callback. The client driver shall indicate completion of this event by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdeviceeventcomplete">UfxDeviceEventComplete</a> method.</p>
+--*/
+{
+    PCONTROLLER_CONTEXT ControllerContext;
+    PUFXDEVICE_CONTEXT DeviceContext;
+    BOOLEAN EventComplete;
 
-<h3 id="examples">Examples</h3>
+    TraceEntry();
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">EVT_UFX_DEVICE_HOST_CONNECT</span><span class="w"> </span><span class="n">UfxDevice_EvtDeviceHostConnect</span><span class="p">;</span>
+    DeviceContext = UfxDeviceGetContext(UfxDevice);
+    ControllerContext = DeviceGetControllerContext(DeviceContext-&gt;FdoWdfDevice);
 
-<span class="n">VOID</span>
-<span class="nf">UfxDevice_EvtDeviceHostConnect</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">UFXDEVICE</span><span class="w"> </span><span class="n">UfxDevice</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="cm">/*++</span>
+    EventComplete = TRUE;
 
-<span class="cm">Routine Description:</span>
+    <a href="wdfspinlockacquire" title="VOID WdfSpinLockAcquire(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockAcquire</a>(ControllerContext-&gt;DpcLock);
 
-<span class="cm">    EvtDeviceHostConnect callback handler for UFXDEVICE object.</span>
+    //
+    // #### TODO: Insert code to set the run state on the controller ####
+    //
 
-<span class="cm">Arguments:</span>
+    <a href="wdfspinlockrelease" title="VOID WdfSpinLockRelease(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockRelease</a>(ControllerContext-&gt;DpcLock);
 
-<span class="cm">    UfxDevice - UFXDEVICE object representing the device.</span>
+    if (EventComplete) {
+        UfxDeviceEventComplete(UfxDevice, <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>);
+    }
 
-<span class="cm">--*/</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">PCONTROLLER_CONTEXT</span><span class="w"> </span><span class="n">ControllerContext</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PUFXDEVICE_CONTEXT</span><span class="w"> </span><span class="n">DeviceContext</span><span class="p">;</span>
-<span class="w">    </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">EventComplete</span><span class="p">;</span>
+    TraceExit();
+}
 
-<span class="w">    </span><span class="n">TraceEntry</span><span class="p">();</span>
-
-<span class="w">    </span><span class="n">DeviceContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UfxDeviceGetContext</span><span class="p">(</span><span class="n">UfxDevice</span><span class="p">);</span>
-<span class="w">    </span><span class="n">ControllerContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DeviceGetControllerContext</span><span class="p">(</span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">FdoWdfDevice</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">EventComplete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TRUE</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n"><a href="wdfspinlockacquire" title="VOID WdfSpinLockAcquire(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockAcquire</a></span><span class="p">(</span><span class="n">ControllerContext</span><span class="o">-&gt;</span><span class="n">DpcLock</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// #### TODO: Insert code to set the run state on the controller ####</span>
-<span class="w">    </span><span class="c1">//</span>
-
-<span class="w">    </span><span class="n"><a href="wdfspinlockrelease" title="VOID WdfSpinLockRelease(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockRelease</a></span><span class="p">(</span><span class="n">ControllerContext</span><span class="o">-&gt;</span><span class="n">DpcLock</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">EventComplete</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">UfxDeviceEventComplete</span><span class="p">(</span><span class="n">UfxDevice</span><span class="p">,</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">TraceExit</span><span class="p">();</span>
-<span class="p">}</span>
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <ul>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdeviceeventcomplete">UfxDeviceEventComplete</a></li>
+<li><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdevicecreate">UfxDeviceCreate</a></li>
+<li><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ufxclient/nf-ufxclient-ufxdeviceeventcomplete">UfxDeviceEventComplete</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

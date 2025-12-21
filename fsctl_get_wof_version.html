@@ -62,13 +62,10 @@
 <h1>Windows hardware development documentation (fsctl-get-wof-version)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="fsctl_get_wof_version-control-code">FSCTL_GET_WOF_VERSION control code</h1>
-
+<h1>FSCTL_GET_WOF_VERSION control code</h1>
 <p>The <strong>FSCTL_GET_WOF_VERSION</strong> I/O control code (IOCTL) is used to query the version of the driver used to support a particular provider.</p>
-
-<p>To perform this operation, call <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff566462(v=vs.85)"><strong>ZwFsControlFile</strong></a> with the following parameters.</p>
-
-<pre><code>BOOL
+<p>To perform this operation, call <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> or <a href="https://learn.microsoft.com/previous-versions/ff566462(v=vs.85)"><strong>ZwFsControlFile</strong></a> with the following parameters.</p>
+<pre lang="syntax"><code>BOOL
    WINAPI
    DeviceIoControl( (HANDLE)       hDevice,         // handle to device
                     (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>)        FSCTL_GET_WOF_VERSION, // dwIoControlCode
@@ -79,55 +76,58 @@
                     (LPDWORD)      lpBytesReturned, // number of bytes returned
                     (LPOVERLAPPED) lpOverlapped );  // OVERLAPPED structure
 </code></pre>
-
-<h2 id="parameters">Parameters</h2>
-
+<h2>Parameters</h2>
 <ul>
-<li><p><strong>hDevice</strong> [in]: A handle to the device. To obtain a device handle, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea"><strong>CreateFile</strong></a> function or similar API.</p></li>
-<li><p><strong>dwIoControlCode</strong> [in]: The control code for the operation. Use <strong>FSCTL_GET_WOF_VERSION</strong> for this operation.</p></li>
-<li><p><strong>lpInBuffer</strong>: The input buffer for the operation. This is a pointer to a <strong><a href="wof_external_info" title="typedef struct _WOF_EXTERNAL_INFO {&#10;  ULONG Version;&#10;  ULONG Provider;&#10;} WOF_EXTERNAL_INFO, *PWOF_EXTERNAL_INFO;">WOF_EXTERNAL_INFO</a></strong> structure.</p></li>
-<li><p><strong>nInBufferSize</strong> [in]: The size, in bytes, of the input buffer. This should be <strong>sizeof</strong>(<strong><a href="wof_external_info" title="typedef struct _WOF_EXTERNAL_INFO {&#10;  ULONG Version;&#10;  ULONG Provider;&#10;} WOF_EXTERNAL_INFO, *PWOF_EXTERNAL_INFO;">WOF_EXTERNAL_INFO</a></strong>).</p></li>
-<li><p><strong>lpOutBuffer</strong> [out]: The output buffer for the operation. This is a pointer to a <strong><a href="wof_version_info" title="typedef struct _WOF_VERSION_INFO {&#10;  ULONG WofVersion;&#10;} WOF_VERSION_INFO, *PWOF_VERSION_INFO;">WOF_VERSION_INFO</a></strong> structure.</p></li>
-<li><p><strong>nOutBufferSize</strong> [in]: The size, in bytes, of the output buffer. This should be <strong>sizeof</strong>(<strong><a href="wof_version_info" title="typedef struct _WOF_VERSION_INFO {&#10;  ULONG WofVersion;&#10;} WOF_VERSION_INFO, *PWOF_VERSION_INFO;">WOF_VERSION_INFO</a></strong>).</p></li>
-<li><p><strong>lpBytesReturned</strong> [out]: A pointer to a variable that receives the size of the data stored in the output buffer, in bytes.</p>
-
-<p>If the output buffer is too small, the call fails, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror"><strong>GetLastError</strong></a> returns <strong>ERROR_INSUFFICIENT_BUFFER</strong>, and <strong>lpBytesReturned</strong> is zero.</p>
-
-<p>If <strong>lpOverlapped</strong> is <strong>NULL</strong>, <em>lpBytesReturned</em> cannot be <strong>NULL</strong>. Even when an operation returns no output data and <strong>lpOutBuffer</strong> is <strong>NULL</strong>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> makes use of <strong>lpBytesReturned</strong>. After such an operation, the value of <strong>lpBytesReturned</strong> is meaningless.</p>
-
-<p>If <strong>lpOverlapped</strong> is not <strong>NULL</strong>, <strong>lpBytesReturned</strong> can be <strong>NULL</strong>. If this parameter is not <strong>NULL</strong> and the operation returns data, <strong>lpBytesReturned</strong> is meaningless until the overlapped operation has completed. To retrieve the number of bytes returned, call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-getoverlappedresult"><strong>GetOverlappedResult</strong></a>. If the <strong>hDevice</strong> parameter is associated with an I/O completion port, you can retrieve the number of bytes returned by calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-getqueuedcompletionstatus"><strong>GetQueuedCompletionStatus</strong></a>.</p></li>
-<li><p><strong>lpOverlapped</strong> [in]: A pointer to an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/minwinbase/ns-minwinbase-overlapped"><strong>OVERLAPPED</strong></a> structure.</p>
-
-<p>If <strong>hDevice</strong> was opened without specifying <strong>FILE_FLAG_OVERLAPPED</strong>, <strong>lpOverlapped</strong> is ignored.</p>
-
-<p>If <strong>hDevice</strong> was opened with the <strong>FILE_FLAG_OVERLAPPED</strong> flag, the operation is performed as an overlapped (asynchronous) operation. In this case, <strong>lpOverlapped</strong> must point to a valid <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/minwinbase/ns-minwinbase-overlapped"><strong>OVERLAPPED</strong></a> structure that contains a handle to an event object. Otherwise, the function fails in unpredictable ways.</p>
-
-<p>For overlapped operations, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> returns immediately, and the event object is signaled when the operation has been completed. Otherwise, the function does not return until the operation has been completed or an error occurs.</p></li>
+<li>
+<p><strong>hDevice</strong> [in]: A handle to the device. To obtain a device handle, call the <a href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea"><strong>CreateFile</strong></a> function or similar API.</p>
+</li>
+<li>
+<p><strong>dwIoControlCode</strong> [in]: The control code for the operation. Use <strong>FSCTL_GET_WOF_VERSION</strong> for this operation.</p>
+</li>
+<li>
+<p><strong>lpInBuffer</strong>: The input buffer for the operation. This is a pointer to a <strong><a href="wof_external_info" title="typedef struct _WOF_EXTERNAL_INFO {&#10;  ULONG Version;&#10;  ULONG Provider;&#10;} WOF_EXTERNAL_INFO, *PWOF_EXTERNAL_INFO;">WOF_EXTERNAL_INFO</a></strong> structure.</p>
+</li>
+<li>
+<p><strong>nInBufferSize</strong> [in]: The size, in bytes, of the input buffer. This should be <strong>sizeof</strong>(<strong><a href="wof_external_info" title="typedef struct _WOF_EXTERNAL_INFO {&#10;  ULONG Version;&#10;  ULONG Provider;&#10;} WOF_EXTERNAL_INFO, *PWOF_EXTERNAL_INFO;">WOF_EXTERNAL_INFO</a></strong>).</p>
+</li>
+<li>
+<p><strong>lpOutBuffer</strong> [out]: The output buffer for the operation. This is a pointer to a <strong><a href="wof_version_info" title="typedef struct _WOF_VERSION_INFO {&#10;  ULONG WofVersion;&#10;} WOF_VERSION_INFO, *PWOF_VERSION_INFO;">WOF_VERSION_INFO</a></strong> structure.</p>
+</li>
+<li>
+<p><strong>nOutBufferSize</strong> [in]: The size, in bytes, of the output buffer. This should be <strong>sizeof</strong>(<strong><a href="wof_version_info" title="typedef struct _WOF_VERSION_INFO {&#10;  ULONG WofVersion;&#10;} WOF_VERSION_INFO, *PWOF_VERSION_INFO;">WOF_VERSION_INFO</a></strong>).</p>
+</li>
+<li>
+<p><strong>lpBytesReturned</strong> [out]: A pointer to a variable that receives the size of the data stored in the output buffer, in bytes.</p>
+</li>
 </ul>
-
-<h2 id="status-block">Status block</h2>
-
-<p>If the operation completes successfully, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> returns a nonzero value.</p>
-
-<p>If the operation fails or is pending, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> returns zero. To get extended error information, call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror"><strong>GetLastError</strong></a>.</p>
-
-<h2 id="requirements">Requirements</h2>
-
+<p>If the output buffer is too small, the call fails, <a href="https://learn.microsoft.com/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror"><strong>GetLastError</strong></a> returns <strong>ERROR_INSUFFICIENT_BUFFER</strong>, and <strong>lpBytesReturned</strong> is zero.</p>
+<p>If <strong>lpOverlapped</strong> is <strong>NULL</strong>, <em>lpBytesReturned</em> cannot be <strong>NULL</strong>. Even when an operation returns no output data and <strong>lpOutBuffer</strong> is <strong>NULL</strong>, <a href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> makes use of <strong>lpBytesReturned</strong>. After such an operation, the value of <strong>lpBytesReturned</strong> is meaningless.</p>
+<p>If <strong>lpOverlapped</strong> is not <strong>NULL</strong>, <strong>lpBytesReturned</strong> can be <strong>NULL</strong>. If this parameter is not <strong>NULL</strong> and the operation returns data, <strong>lpBytesReturned</strong> is meaningless until the overlapped operation has completed. To retrieve the number of bytes returned, call <a href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-getoverlappedresult"><strong>GetOverlappedResult</strong></a>. If the <strong>hDevice</strong> parameter is associated with an I/O completion port, you can retrieve the number of bytes returned by calling <a href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-getqueuedcompletionstatus"><strong>GetQueuedCompletionStatus</strong></a>.</p>
+<ul>
+<li><strong>lpOverlapped</strong> [in]: A pointer to an <a href="https://learn.microsoft.com/windows/win32/api/minwinbase/ns-minwinbase-overlapped"><strong>OVERLAPPED</strong></a> structure.</li>
+</ul>
+<p>If <strong>hDevice</strong> was opened without specifying <strong>FILE_FLAG_OVERLAPPED</strong>, <strong>lpOverlapped</strong> is ignored.</p>
+<p>If <strong>hDevice</strong> was opened with the <strong>FILE_FLAG_OVERLAPPED</strong> flag, the operation is performed as an overlapped (asynchronous) operation. In this case, <strong>lpOverlapped</strong> must point to a valid <a href="https://learn.microsoft.com/windows/win32/api/minwinbase/ns-minwinbase-overlapped"><strong>OVERLAPPED</strong></a> structure that contains a handle to an event object. Otherwise, the function fails in unpredictable ways.</p>
+<p>For overlapped operations, <a href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> returns immediately, and the event object is signaled when the operation has been completed. Otherwise, the function does not return until the operation has been completed or an error occurs.</p>
+<h2>Status block</h2>
+<p>If the operation completes successfully, <a href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> returns a nonzero value.</p>
+<p>If the operation fails or is pending, <a href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> returns zero. To get extended error information, call <a href="https://learn.microsoft.com/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror"><strong>GetLastError</strong></a>.</p>
+<h2>Requirements</h2>
 <table>
 <thead>
 <tr>
-  <th>Requirement type</th>
-  <th>Requirement</th>
+<th>Requirement type</th>
+<th>Requirement</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>Minimum supported client</td>
-  <td>Windows 10</td>
+<td>Minimum supported client</td>
+<td>Windows 10</td>
 </tr>
 <tr>
-  <td>Header</td>
-  <td><em>Ntifs.h</em> (include <em>Ntifs.h</em> or <em>Fltkernel.h</em>)</td>
+<td>Header</td>
+<td><em>Ntifs.h</em> (include <em>Ntifs.h</em> or <em>Fltkernel.h</em>)</td>
 </tr>
 </tbody>
 </table>

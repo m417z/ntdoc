@@ -67,100 +67,71 @@
 <h1>Windows Driver Kit DDI reference (nf-acxstreams-acxrtstreamcreate)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p><strong>AcxRtStreamCreate</strong> creates an ACX RTStream audio stream that is used by the OS to stream audio data.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="device"><code>Device</code></h3>
-
-<p>A WDFDEVICE object (described in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/summary-of-framework-objects">Summary of Framework Objects</a>) that is associated with the specified ACXCIRCUIT and its stream.</p>
-
-<h3 id="circuit"><code>Circuit</code></h3>
-
+<h2>Parameters</h2>
+<h3><code>Device</code></h3>
+<p>A WDFDEVICE object (described in <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/summary-of-framework-objects">Summary of Framework Objects</a>) that is associated with the specified ACXCIRCUIT and its stream.</p>
+<h3><code>Circuit</code></h3>
 <p>The ACXCIRCUIT that this stream will be associated with.</p>
-
-<h3 id="attributes"><code>Attributes</code></h3>
-
+<h3><code>Attributes</code></h3>
 <p>Additional Attributes defined using a <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> that are used to set the various object's values: cleanup and destroy callbacks, context type, and to specify its parent object.</p>
-
-<h3 id="config"><code>Config</code></h3>
-
-<p>An ACXSTREAM_INIT structure that defines the initialization parameters of the stream. For more information about ACX Objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">ACX - Summary of ACX Objects</a>.</p>
-
-<h3 id="stream"><code>Stream</code></h3>
-
+<h3><code>Config</code></h3>
+<p>An ACXSTREAM_INIT structure that defines the initialization parameters of the stream. For more information about ACX Objects, see <a href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">ACX - Summary of ACX Objects</a>.</p>
+<h3><code>Stream</code></h3>
 <p>A pointer to a location that receives a handle to the new ACXSTREAM Object.</p>
-
-<p>An ACXSTREAM object represents an audio stream created by a circuit. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">ACX - Summary of ACX Objects</a>.</p>
-
-<h2 id="return-value">Return value</h2>
-
-<p>Returns <code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> if the call was successful. Otherwise, it returns an appropriate error code. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">Using NTSTATUS Values</a>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<p>An ACXSTREAM object represents an audio stream created by a circuit. For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">ACX - Summary of ACX Objects</a>.</p>
+<h2>Return value</h2>
+<p>Returns <code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> if the call was successful. Otherwise, it returns an appropriate error code. For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">Using NTSTATUS Values</a>.</p>
+<h2>Remarks</h2>
 <p>After the ACXSTREAM has been created, the driver can add one or more ACX elements to the stream. By default, ACX elements are connected in the same order of assembly. An ACXSTREAM is associated with only one ACXCIRCUIT. ACX supports two types of streams: basic ACX stream objects used by non-streaming circuits, and ACX RealTime (RT) stream objects used by streaming circuits.</p>
-
 <p>The ACXSTREAM created by AcxRtStreamCreate will allow the driver to receive control signals and state changes associated with a stream. The ACXSTREAM will also support streaming audio data to or from the OS. A driver that supports streaming audio data should use AcxRtStreamCreate to create an ACXSTREAM with support for streaming.</p>
-
 <p>For an endpoint that is made from multiple ACXCIRCUITs across multiple drivers, the ACXCIRCUIT that hosts the streaming pin would create an ACX RT Stream while the other ACXCIRCUITs in the endpoint would create non-RT ACX Streams.</p>
-
-<h3 id="example">Example</h3>
-
+<h3>Example</h3>
 <p>Example Rt stream creation is shown below.</p>
+<pre lang="cpp"><code>    //
+    // Init streaming callbacks.
+    //
+    <a href="acx_stream_callbacks" title="typedef struct _ACX_STREAM_CALLBACKS {&#10;  ULONG                                Size;&#10;  PFN_ACX_STREAM_PREPARE_HARDWARE      EvtAcxStreamPrepareHardware;&#10;  PFN_ACX_STREAM_RELEASE_HARDWARE      EvtAcxStreamReleaseHardware;&#10;  PFN_ACX_STREAM_RUN                   EvtAcxStreamRun;&#10;  PFN_ACX_STREAM_PAUSE                 EvtAcxStreamPause;&#10;  PFN_ACX_STREAM_ASSIGN_DRM_CONTENT_ID EvtAcxStreamAssignDrmContentId;&#10;} ACX_STREAM_CALLBACKS, *PACX_STREAM_CALLBACKS;">ACX_STREAM_CALLBACKS</a> streamCallbacks;
+    <a href="acx_stream_callbacks_init" title="VOID ACX_STREAM_CALLBACKS_INIT(&#10;  PACX_STREAM_CALLBACKS Callbacks&#10;);">ACX_STREAM_CALLBACKS_INIT</a>(&amp;streamCallbacks);
+    streamCallbacks.EvtAcxStreamPrepareHardware     = EvtStreamPrepareHardware;
+    streamCallbacks.EvtAcxStreamReleaseHardware     = EvtStreamReleaseHardware;
+    streamCallbacks.EvtAcxStreamRun                 = EvtStreamRun;
+    streamCallbacks.EvtAcxStreamPause               = EvtStreamPause;
+    streamCallbacks.EvtAcxStreamAssignDrmContentId  = EvtStreamAssignDrmContentId;
 
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Init streaming callbacks.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="n"><a href="acx_stream_callbacks" title="typedef struct _ACX_STREAM_CALLBACKS {&#10;  ULONG                                Size;&#10;  PFN_ACX_STREAM_PREPARE_HARDWARE      EvtAcxStreamPrepareHardware;&#10;  PFN_ACX_STREAM_RELEASE_HARDWARE      EvtAcxStreamReleaseHardware;&#10;  PFN_ACX_STREAM_RUN                   EvtAcxStreamRun;&#10;  PFN_ACX_STREAM_PAUSE                 EvtAcxStreamPause;&#10;  PFN_ACX_STREAM_ASSIGN_DRM_CONTENT_ID EvtAcxStreamAssignDrmContentId;&#10;} ACX_STREAM_CALLBACKS, *PACX_STREAM_CALLBACKS;">ACX_STREAM_CALLBACKS</a></span><span class="w"> </span><span class="n">streamCallbacks</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="acx_stream_callbacks_init" title="VOID ACX_STREAM_CALLBACKS_INIT(&#10;  PACX_STREAM_CALLBACKS Callbacks&#10;);">ACX_STREAM_CALLBACKS_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">streamCallbacks</span><span class="p">);</span>
-<span class="w">    </span><span class="n">streamCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamPrepareHardware</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamPrepareHardware</span><span class="p">;</span>
-<span class="w">    </span><span class="n">streamCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamReleaseHardware</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamReleaseHardware</span><span class="p">;</span>
-<span class="w">    </span><span class="n">streamCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamRun</span><span class="w">                 </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamRun</span><span class="p">;</span>
-<span class="w">    </span><span class="n">streamCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamPause</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamPause</span><span class="p">;</span>
-<span class="w">    </span><span class="n">streamCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamAssignDrmContentId</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamAssignDrmContentId</span><span class="p">;</span>
+    status = <a href="acxstreaminitassignacxstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxStreamCallbacks(&#10;  PACXSTREAM_INIT       StreamInit,&#10;  PACX_STREAM_CALLBACKS StreamCallbacks&#10;);">AcxStreamInitAssignAcxStreamCallbacks</a>(StreamInit, &amp;streamCallbacks);
 
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="acxstreaminitassignacxstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxStreamCallbacks(&#10;  PACXSTREAM_INIT       StreamInit,&#10;  PACX_STREAM_CALLBACKS StreamCallbacks&#10;);">AcxStreamInitAssignAcxStreamCallbacks</a></span><span class="p">(</span><span class="n">StreamInit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">streamCallbacks</span><span class="p">);</span>
+    //
+    // Init RT Streaming callbacks.
+    //
+    <a href="acx_rt_stream_callbacks" title="typedef struct _ACX_RT_STREAM_CALLBACKS {&#10;  ULONG                                    Size;&#10;  PFN_ACX_STREAM_GET_HW_LATENCY            EvtAcxStreamGetHwLatency;&#10;  PFN_ACX_STREAM_ALLOCATE_RTPACKETS        EvtAcxStreamAllocateRtPackets;&#10;  PFN_ACX_STREAM_FREE_RTPACKETS            EvtAcxStreamFreeRtPackets;&#10;  PFN_ACX_STREAM_SET_RENDER_PACKET         EvtAcxStreamSetRenderPacket;&#10;  PFN_ACX_STREAM_GET_CURRENT_PACKET        EvtAcxStreamGetCurrentPacket;&#10;  PFN_ACX_STREAM_GET_CAPTURE_PACKET        EvtAcxStreamGetCapturePacket;&#10;  PFN_ACX_STREAM_GET_PRESENTATION_POSITION EvtAcxStreamGetPresentationPosition;&#10;} ACX_RT_STREAM_CALLBACKS, *PACX_RT_STREAM_CALLBACKS;">ACX_RT_STREAM_CALLBACKS</a> rtCallbacks;
+    <a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a>(&amp;rtCallbacks);
+    rtCallbacks.EvtAcxStreamGetHwLatency = EvtStreamGetHwLatency;
+    rtCallbacks.EvtAcxStreamAllocateRtPackets = EvtStreamAllocateRtPackets;
+    rtCallbacks.EvtAcxStreamFreeRtPackets = EvtStreamFreeRtPackets;
+    rtCallbacks.EvtAcxStreamSetRenderPacket = EvtStreamSetRenderPacket;
+    rtCallbacks.EvtAcxStreamGetCurrentPacket = EvtStreamGetCurrentPacket;
+    rtCallbacks.EvtAcxStreamGetPresentationPosition = EvtStreamGetPresentationPosition;
 
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Init RT Streaming callbacks.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="n"><a href="acx_rt_stream_callbacks" title="typedef struct _ACX_RT_STREAM_CALLBACKS {&#10;  ULONG                                    Size;&#10;  PFN_ACX_STREAM_GET_HW_LATENCY            EvtAcxStreamGetHwLatency;&#10;  PFN_ACX_STREAM_ALLOCATE_RTPACKETS        EvtAcxStreamAllocateRtPackets;&#10;  PFN_ACX_STREAM_FREE_RTPACKETS            EvtAcxStreamFreeRtPackets;&#10;  PFN_ACX_STREAM_SET_RENDER_PACKET         EvtAcxStreamSetRenderPacket;&#10;  PFN_ACX_STREAM_GET_CURRENT_PACKET        EvtAcxStreamGetCurrentPacket;&#10;  PFN_ACX_STREAM_GET_CAPTURE_PACKET        EvtAcxStreamGetCapturePacket;&#10;  PFN_ACX_STREAM_GET_PRESENTATION_POSITION EvtAcxStreamGetPresentationPosition;&#10;} ACX_RT_STREAM_CALLBACKS, *PACX_RT_STREAM_CALLBACKS;">ACX_RT_STREAM_CALLBACKS</a></span><span class="w"> </span><span class="n">rtCallbacks</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">rtCallbacks</span><span class="p">);</span>
-<span class="w">    </span><span class="n">rtCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamGetHwLatency</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamGetHwLatency</span><span class="p">;</span>
-<span class="w">    </span><span class="n">rtCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamAllocateRtPackets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamAllocateRtPackets</span><span class="p">;</span>
-<span class="w">    </span><span class="n">rtCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamFreeRtPackets</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamFreeRtPackets</span><span class="p">;</span>
-<span class="w">    </span><span class="n">rtCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamSetRenderPacket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamSetRenderPacket</span><span class="p">;</span>
-<span class="w">    </span><span class="n">rtCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamGetCurrentPacket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamGetCurrentPacket</span><span class="p">;</span>
-<span class="w">    </span><span class="n">rtCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamGetPresentationPosition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamGetPresentationPosition</span><span class="p">;</span>
+    status = <a href="acxstreaminitassignacxrtstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxRtStreamCallbacks(&#10;  PACXSTREAM_INIT          StreamInit,&#10;  PACX_RT_STREAM_CALLBACKS RtStreamCallbacks&#10;);">AcxStreamInitAssignAcxRtStreamCallbacks</a>(StreamInit, &amp;rtCallbacks);
 
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="acxstreaminitassignacxrtstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxRtStreamCallbacks(&#10;  PACXSTREAM_INIT          StreamInit,&#10;  PACX_RT_STREAM_CALLBACKS RtStreamCallbacks&#10;);">AcxStreamInitAssignAcxRtStreamCallbacks</a></span><span class="p">(</span><span class="n">StreamInit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">rtCallbacks</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Create the stream.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="n"><a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a></span><span class="w"> </span><span class="n">attributes</span><span class="p">;</span>
-<span class="w">    </span><span class="n">ACXSTREAM</span><span class="w"> </span><span class="n">stream</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">attributes</span><span class="p">,</span><span class="w"> </span><span class="n">STREAM_CONTEXT</span><span class="p">);</span>
-<span class="w">    </span><span class="n">attributes</span><span class="p">.</span><span class="n">EvtCleanupCallback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamContextCleanup</span><span class="p">;</span>
-<span class="w">    </span><span class="n">attributes</span><span class="p">.</span><span class="n">EvtDestroyCallback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamDestroy</span><span class="p">;</span>
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AcxRtStreamCreate</span><span class="p">(</span><span class="n">Device</span><span class="p">,</span><span class="w"> </span><span class="n">Circuit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">attributes</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">StreamInit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">stream</span><span class="p">);</span>
+    //
+    // Create the stream.
+    //
+    <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> attributes;
+    ACXSTREAM stream;
+    <a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a>(&amp;attributes, STREAM_CONTEXT);
+    attributes.EvtCleanupCallback = EvtStreamContextCleanup;
+    attributes.EvtDestroyCallback = EvtStreamDestroy;
+    status = AcxRtStreamCreate(Device, Circuit, &amp;attributes, &amp;StreamInit, &amp;stream);
 </code></pre>
-</div>
-
-<h3 id="acx-requirements">ACX requirements</h3>
-
+<h3>ACX requirements</h3>
 <p><strong>Minimum ACX version:</strong> 1.0</p>
-
-<p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<p>For more information about ACX versions, see <a href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
+<h2>See also</h2>
 <ul>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/">acxstreams.h header</a></li>
+<li><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/">acxstreams.h header</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

@@ -64,84 +64,50 @@
 <h1>Windows Driver Kit DDI reference (nf-wdftimer-wdftimerstart)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wdftimerstart-function">WdfTimerStart function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WdfTimerStart function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfTimerStart</strong> method starts a timer's clock.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="timer-in"><code>Timer</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Timer</code> [in]</h3>
 <p>A handle to a framework timer object that was obtained by calling <a href="wdftimercreate" title="NTSTATUS WdfTimerCreate(&#10;  [in]  PWDF_TIMER_CONFIG      Config,&#10;  [in]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out] WDFTIMER               *Timer&#10;);">WdfTimerCreate</a>.</p>
-
-<h3 id="duetime-in"><code>DueTime</code> [in]</h3>
-
-<p>A time period, in system time units (100-nanosecond intervals). The framework calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function when the specified time period elapses. The time period value can be negative or positive as follows:</p>
-
+<h3><code>DueTime</code> [in]</h3>
+<p>A time period, in system time units (100-nanosecond intervals). The framework calls the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function when the specified time period elapses. The time period value can be negative or positive as follows:</p>
 <ul>
 <li>If the value is negative, the time period is relative to the current system time.</li>
 <li>If the value is positive, the time period specifies an absolute time (which is actually relative to January 1, 1601).</li>
 </ul>
-
 <blockquote>
-  <p>[!WARNING]
-  If you set the <strong>UseHighResolutionTimer</strong> member of <a href="wdf_timer_config" title="typedef struct _WDF_TIMER_CONFIG {&#10;  ULONG         Size;&#10;  PFN_WDF_TIMER EvtTimerFunc;&#10;  ULONG         Period;&#10;  BOOLEAN       AutomaticSerialization;&#10;  ULONG         TolerableDelay;&#10;  BOOLEAN       UseHighResolutionTimer;&#10;} WDF_TIMER_CONFIG, *PWDF_TIMER_CONFIG;">WDF_TIMER_CONFIG</a> to <strong>WdfTrue</strong>, you must call <strong>WdfTimerStart</strong> with the <em>DueTime</em> parameter set to a negative value. Otherwise, the call causes the system to crash.</p>
+<p>[!WARNING]
+If you set the <strong>UseHighResolutionTimer</strong> member of <a href="wdf_timer_config" title="typedef struct _WDF_TIMER_CONFIG {&#10;  ULONG         Size;&#10;  PFN_WDF_TIMER EvtTimerFunc;&#10;  ULONG         Period;&#10;  BOOLEAN       AutomaticSerialization;&#10;  ULONG         TolerableDelay;&#10;  BOOLEAN       UseHighResolutionTimer;&#10;} WDF_TIMER_CONFIG, *PWDF_TIMER_CONFIG;">WDF_TIMER_CONFIG</a> to <strong>WdfTrue</strong>, you must call <strong>WdfTimerStart</strong> with the <em>DueTime</em> parameter set to a negative value. Otherwise, the call causes the system to crash.</p>
 </blockquote>
-
 <p>Relative times are not affected by any changes to the system time that might occur within the specified time period. Absolute times do reflect system time changes.</p>
-
-<p>The framework provides <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfcore/">time conversion functions</a> that convert time values into system time units.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<p>The framework provides <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfcore/">time conversion functions</a> that convert time values into system time units.</p>
+<h2>Return value</h2>
 <p><strong>WdfTimerStart</strong> returns <strong>TRUE</strong> if the timer object was in the system's timer queue. Otherwise, this method returns <strong>FALSE</strong>. For more information, see the following Remarks section.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>Drivers must always call <strong>WdfTimerStart</strong> to start a timer after creating it, regardless of whether the timer is a periodic timer or not.</p>
-
-<p>After a driver calls <strong>WdfTimerStart</strong>, the framework calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function when the time that is specified for the <em>DueTime</em> parameter elapses. After this first call, the framework calls the callback function each time that the time period that is specified by the <strong>Period</strong> member of the driver's <a href="wdf_timer_config" title="typedef struct _WDF_TIMER_CONFIG {&#10;  ULONG         Size;&#10;  PFN_WDF_TIMER EvtTimerFunc;&#10;  ULONG         Period;&#10;  BOOLEAN       AutomaticSerialization;&#10;  ULONG         TolerableDelay;&#10;  BOOLEAN       UseHighResolutionTimer;&#10;} WDF_TIMER_CONFIG, *PWDF_TIMER_CONFIG;">WDF_TIMER_CONFIG</a> structure elapses.</p>
-
-<p>The expiration of the timer ultimately depends on the granularity of the system clock. The value specified for <em>DueTime</em> guarantees that the framework calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function on or after the given <em>DueTime</em>. However, <strong>WdfTimerStart</strong> cannot override the granularity of the system clock, whatever the value specified for <em>DueTime</em>.</p>
-
-<p>When a driver calls <strong>WdfTimerStart</strong>, its timer object is added to the system's queue of timer objects. If the timer is not a periodic timer, the system removes the timer object from the queue after the timer's "due time" has elapsed. If the timer is a periodic timer, the timer object remains in the queue until the driver calls <a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a>.</p>
-
-<p>A driver might call <strong>WdfTimerStart</strong> from its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function in order to restart a non-periodic timer after it expires.</p>
-
-<p><strong>WdfTimerStart</strong> returns <strong>TRUE</strong> if the driver has previously called <strong>WdfTimerStart</strong> and the timer object is still in the system's queue because the time period has not elapsed (or because it is a periodic timer). Before <strong>WdfTimerStart</strong> returns <strong>TRUE</strong>, the operating system resets the time period to the value that the driver specified in the new call to <strong>WdfTimerStart</strong>. The framework calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function only after the new time period elapses.</p>
-
+<p>After a driver calls <strong>WdfTimerStart</strong>, the framework calls the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function when the time that is specified for the <em>DueTime</em> parameter elapses. After this first call, the framework calls the callback function each time that the time period that is specified by the <strong>Period</strong> member of the driver's <a href="wdf_timer_config" title="typedef struct _WDF_TIMER_CONFIG {&#10;  ULONG         Size;&#10;  PFN_WDF_TIMER EvtTimerFunc;&#10;  ULONG         Period;&#10;  BOOLEAN       AutomaticSerialization;&#10;  ULONG         TolerableDelay;&#10;  BOOLEAN       UseHighResolutionTimer;&#10;} WDF_TIMER_CONFIG, *PWDF_TIMER_CONFIG;">WDF_TIMER_CONFIG</a> structure elapses.</p>
+<p>The expiration of the timer ultimately depends on the granularity of the system clock. The value specified for <em>DueTime</em> guarantees that the framework calls the driver's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function on or after the given <em>DueTime</em>. However, <strong>WdfTimerStart</strong> cannot override the granularity of the system clock, whatever the value specified for <em>DueTime</em>.</p>
+<p>When a driver calls <strong>WdfTimerStart</strong>, its timer object is added to the system's queue of timer objects. If the timer is not a periodic timer, the system removes the timer object from the queue after the timer's &quot;due time&quot; has elapsed. If the timer is a periodic timer, the timer object remains in the queue until the driver calls <a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a>.</p>
+<p>A driver might call <strong>WdfTimerStart</strong> from its <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function in order to restart a non-periodic timer after it expires.</p>
+<p><strong>WdfTimerStart</strong> returns <strong>TRUE</strong> if the driver has previously called <strong>WdfTimerStart</strong> and the timer object is still in the system's queue because the time period has not elapsed (or because it is a periodic timer). Before <strong>WdfTimerStart</strong> returns <strong>TRUE</strong>, the operating system resets the time period to the value that the driver specified in the new call to <strong>WdfTimerStart</strong>. The framework calls the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function only after the new time period elapses.</p>
 <p>To stop the timer's clock, the driver can call <a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a>.</p>
+<p>For more information about framework timer objects, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-timers">Using Timers</a>.</p>
+<h4>Examples</h4>
+<p>The following code example starts a timer. The framework will call the timer's <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function after 10 milliseconds.</p>
+<pre lang="cpp"><code>BOOLEAN inTimerQueue;
 
-<p>For more information about framework timer objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-timers">Using Timers</a>.</p>
-
-<h4 id="examples">Examples</h4>
-
-<p>The following code example starts a timer. The framework will call the timer's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a> callback function after 10 milliseconds.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">inTimerQueue</span><span class="p">;</span>
-
-<span class="n">inTimerQueue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfTimerStart</span><span class="p">(</span>
-<span class="w">                             </span><span class="n">timerHandle</span><span class="p">,</span>
-<span class="w">                             </span><span class="n"><a href="wdf_rel_timeout_in_ms" title="LONGLONG WDF_REL_TIMEOUT_IN_MS(&#10;  [in] ULONGLONG Time&#10;);">WDF_REL_TIMEOUT_IN_MS</a></span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
-<span class="w">                             </span><span class="p">);</span>
+inTimerQueue = WdfTimerStart(
+                             timerHandle,
+                             <a href="wdf_rel_timeout_in_ms" title="LONGLONG WDF_REL_TIMEOUT_IN_MS(&#10;  [in] ULONGLONG Time&#10;);">WDF_REL_TIMEOUT_IN_MS</a>(10)
+                             );
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a></p>
-
+<h2>See also</h2>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdftimer/nc-wdftimer-evt_wdf_timer">EvtTimerFunc</a></p>
 <p><a href="wdf_timer_config" title="typedef struct _WDF_TIMER_CONFIG {&#10;  ULONG         Size;&#10;  PFN_WDF_TIMER EvtTimerFunc;&#10;  ULONG         Period;&#10;  BOOLEAN       AutomaticSerialization;&#10;  ULONG         TolerableDelay;&#10;  BOOLEAN       UseHighResolutionTimer;&#10;} WDF_TIMER_CONFIG, *PWDF_TIMER_CONFIG;">WDF_TIMER_CONFIG</a></p>
-
 <p><a href="wdftimercreate" title="NTSTATUS WdfTimerCreate(&#10;  [in]  PWDF_TIMER_CONFIG      Config,&#10;  [in]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out] WDFTIMER               *Timer&#10;);">WdfTimerCreate</a></p>
-
 <p><a href="wdftimerstop" title="BOOLEAN WdfTimerStop(&#10;  [in] WDFTIMER Timer,&#10;  [in] BOOLEAN  Wait&#10;);">WdfTimerStop</a></p>
 <hr>
 <div class="ntdoc-description-links">

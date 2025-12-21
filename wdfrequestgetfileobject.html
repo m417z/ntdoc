@@ -63,62 +63,41 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfrequest-wdfrequestgetfileobject)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wdfrequestgetfileobject-function">WdfRequestGetFileObject function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WdfRequestGetFileObject function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfRequestGetFileObject</strong> method retrieves the framework file object that is associated with a specified I/O request.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="request-in"><code>Request</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Request</code> [in]</h3>
 <p>A handle to a framework request object.</p>
-
-<h2 id="return-value">Return value</h2>
-
-<p><strong>WdfRequestGetFileObject</strong> returns a handle to the framework file object, if the framework has created a file object for the specified request. Otherwise, this method returns <strong>NULL</strong>. (A driver typically tests for a <strong>NULL</strong> return value only if it sets the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/ne-wdfdevice-_wdf_fileobject_class">WdfFileObjectCanBeOptional</a> bit flag in the <a href="wdf_fileobject_config" title="typedef struct _WDF_FILEOBJECT_CONFIG {&#10;  ULONG                      Size;&#10;  PFN_WDF_DEVICE_FILE_CREATE EvtDeviceFileCreate;&#10;  PFN_WDF_FILE_CLOSE         EvtFileClose;&#10;  PFN_WDF_FILE_CLEANUP       EvtFileCleanup;&#10;  WDF_TRI_STATE              AutoForwardCleanupClose;&#10;  WDF_FILEOBJECT_CLASS       FileObjectClass;&#10;} WDF_FILEOBJECT_CONFIG, *PWDF_FILEOBJECT_CONFIG;">WDF_FILEOBJECT_CONFIG</a> structure.)</p>
-
+<h2>Return value</h2>
+<p><strong>WdfRequestGetFileObject</strong> returns a handle to the framework file object, if the framework has created a file object for the specified request. Otherwise, this method returns <strong>NULL</strong>. (A driver typically tests for a <strong>NULL</strong> return value only if it sets the <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/ne-wdfdevice-_wdf_fileobject_class">WdfFileObjectCanBeOptional</a> bit flag in the <a href="wdf_fileobject_config" title="typedef struct _WDF_FILEOBJECT_CONFIG {&#10;  ULONG                      Size;&#10;  PFN_WDF_DEVICE_FILE_CREATE EvtDeviceFileCreate;&#10;  PFN_WDF_FILE_CLOSE         EvtFileClose;&#10;  PFN_WDF_FILE_CLEANUP       EvtFileCleanup;&#10;  WDF_TRI_STATE              AutoForwardCleanupClose;&#10;  WDF_FILEOBJECT_CLASS       FileObjectClass;&#10;} WDF_FILEOBJECT_CONFIG, *PWDF_FILEOBJECT_CONFIG;">WDF_FILEOBJECT_CONFIG</a> structure.)</p>
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>The <strong>WdfRequestGetFileObject</strong> method returns <strong>NULL</strong> if either:</p>
-
 <ul>
 <li>Your driver has not called <a href="wdfdeviceinitsetfileobjectconfig" title="VOID WdfDeviceInitSetFileObjectConfig(&#10;  [in]           PWDFDEVICE_INIT        DeviceInit,&#10;  [in]           PWDF_FILEOBJECT_CONFIG FileObjectConfig,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES FileObjectAttributes&#10;);">WdfDeviceInitSetFileObjectConfig</a> and specified a <a href="wdf_fileobject_class" title="typedef enum _WDF_FILEOBJECT_CLASS {&#10;  WdfFileObjectInvalid = 0,&#10;  WdfFileObjectNotRequired = 1,&#10;  WdfFileObjectWdfCanUseFsContext = 2,&#10;  WdfFileObjectWdfCanUseFsContext2 = 3,&#10;  WdfFileObjectWdfCannotUseFsContexts = 4,&#10;  WdfFileObjectCanBeOptional = 0x80000000&#10;} WDF_FILEOBJECT_CLASS, *PWDF_FILEOBJECT_CLASS;">WDF_FILEOBJECT_CLASS</a> value that causes the framework to create file objects.</li>
-<li>Another driver sent a read, write, or I/O control request to your driver without first sending a request type of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/ne-wdfrequest-_wdf_request_type">WdfRequestTypeCreate</a>.</li>
+<li>Another driver sent a read, write, or I/O control request to your driver without first sending a request type of <a href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/ne-wdfrequest-_wdf_request_type">WdfRequestTypeCreate</a>.</li>
 </ul>
-
-<p>For more information about <strong>WdfRequestGetFileObject</strong> and framework file objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-file-objects">Framework File Objects</a>.</p>
-
-<h4 id="examples">Examples</h4>
-
+<p>For more information about <strong>WdfRequestGetFileObject</strong> and framework file objects, see <a href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-file-objects">Framework File Objects</a>.</p>
+<h4>Examples</h4>
 <p>The following code example obtains an I/O request's file object and then calls a driver-defined routine that obtains a pointer to the file object's context space.</p>
+<pre lang="cpp"><code>VOID
+MyEvtIoWrite(
+    IN WDFQUEUE  Queue,
+    IN WDFREQUEST  Request,
+    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  Length
+    )
+{
+    WDFFILEOBJECT  fileObject;
+    PFILE_OPEN_CONTEXT  pOpenContext;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="nf">MyEvtIoWrite</span><span class="p">(</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFQUEUE</span><span class="w">  </span><span class="n">Queue</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w">  </span><span class="n">Length</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">WDFFILEOBJECT</span><span class="w">  </span><span class="n">fileObject</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PFILE_OPEN_CONTEXT</span><span class="w">  </span><span class="n">pOpenContext</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">fileObject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfRequestGetFileObject</span><span class="p">(</span><span class="n">Request</span><span class="p">);</span>
-<span class="w">    </span><span class="n">pOpenContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetFileObjectContext</span><span class="p">(</span><span class="n">fileObject</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">OpenContext</span><span class="p">;</span>
-<span class="p">}</span>
+    fileObject = WdfRequestGetFileObject(Request);
+    pOpenContext = GetFileObjectContext(fileObject)-&gt;OpenContext;
+}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="wdf_fileobject_class" title="typedef enum _WDF_FILEOBJECT_CLASS {&#10;  WdfFileObjectInvalid = 0,&#10;  WdfFileObjectNotRequired = 1,&#10;  WdfFileObjectWdfCanUseFsContext = 2,&#10;  WdfFileObjectWdfCanUseFsContext2 = 3,&#10;  WdfFileObjectWdfCannotUseFsContexts = 4,&#10;  WdfFileObjectCanBeOptional = 0x80000000&#10;} WDF_FILEOBJECT_CLASS, *PWDF_FILEOBJECT_CLASS;">WDF_FILEOBJECT_CLASS</a></p>
-
 <p><a href="wdfdeviceinitsetfileobjectconfig" title="VOID WdfDeviceInitSetFileObjectConfig(&#10;  [in]           PWDFDEVICE_INIT        DeviceInit,&#10;  [in]           PWDF_FILEOBJECT_CONFIG FileObjectConfig,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES FileObjectAttributes&#10;);">WdfDeviceInitSetFileObjectConfig</a></p>
 <hr>
 <div class="ntdoc-description-links">

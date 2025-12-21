@@ -67,58 +67,35 @@ VOID IoWorkitemRoutine(
 <h1>Windows Driver Kit DDI reference (nc-wdm-io_workitem_routine)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>A <em>WorkItem</em> routine performs the processing for a work item that was queued by the <a href="ioqueueworkitem" title="VOID IoQueueWorkItem(&#10;  [in]           __drv_aliasesMem PIO_WORKITEM IoWorkItem,&#10;  [in]           PIO_WORKITEM_ROUTINE          WorkerRoutine,&#10;  [in]           WORK_QUEUE_TYPE               QueueType,&#10;  [in, optional] __drv_aliasesMem PVOID        Context&#10;);">IoQueueWorkItem</a> routine.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="deviceobject-in"><code>DeviceObject</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>DeviceObject</code> [in]</h3>
 <p>Pointer to one of the caller's device objects. This is the pointer that was passed as the <em>DeviceObject</em> parameter to <a href="ioallocateworkitem" title="PIO_WORKITEM IoAllocateWorkItem(&#10;  [in] PDEVICE_OBJECT DeviceObject&#10;);">IoAllocateWorkItem</a> when the work item was allocated, or as the <em>IoObject</em> parameter to <a href="ioinitializeworkitem" title="VOID IoInitializeWorkItem(&#10;  [in] PVOID        IoObject,&#10;  [in] PIO_WORKITEM IoWorkItem&#10;);">IoInitializeWorkItem</a> when the work item was initialized.</p>
-
-<h3 id="context-in-optional"><code>Context</code> [in, optional]</h3>
-
+<h3><code>Context</code> [in, optional]</h3>
 <p>Specifies driver-specific context information. This is the value that was passed as the <em>Context</em> parameter to <a href="ioqueueworkitem" title="VOID IoQueueWorkItem(&#10;  [in]           __drv_aliasesMem PIO_WORKITEM IoWorkItem,&#10;  [in]           PIO_WORKITEM_ROUTINE          WorkerRoutine,&#10;  [in]           WORK_QUEUE_TYPE               QueueType,&#10;  [in, optional] __drv_aliasesMem PVOID        Context&#10;);">IoQueueWorkItem</a> when the work item was queued.</p>
-
-<h2 id="remarks">Remarks</h2>
-
-<p>The driver queues a <em>WorkItem</em> routine by calling <a href="ioqueueworkitem" title="VOID IoQueueWorkItem(&#10;  [in]           __drv_aliasesMem PIO_WORKITEM IoWorkItem,&#10;  [in]           PIO_WORKITEM_ROUTINE          WorkerRoutine,&#10;  [in]           WORK_QUEUE_TYPE               QueueType,&#10;  [in, optional] __drv_aliasesMem PVOID        Context&#10;);">IoQueueWorkItem</a>, and a system worker thread subsequently executes the routine. A <em>WorkItem</em> routine must run for a limited amount of time; otherwise, the system can deadlock. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/system-worker-threads">System Worker Threads</a>.</p>
-
+<h2>Remarks</h2>
+<p>The driver queues a <em>WorkItem</em> routine by calling <a href="ioqueueworkitem" title="VOID IoQueueWorkItem(&#10;  [in]           __drv_aliasesMem PIO_WORKITEM IoWorkItem,&#10;  [in]           PIO_WORKITEM_ROUTINE          WorkerRoutine,&#10;  [in]           WORK_QUEUE_TYPE               QueueType,&#10;  [in, optional] __drv_aliasesMem PVOID        Context&#10;);">IoQueueWorkItem</a>, and a system worker thread subsequently executes the routine. A <em>WorkItem</em> routine must run for a limited amount of time; otherwise, the system can deadlock. For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/system-worker-threads">System Worker Threads</a>.</p>
 <p>A <em>WorkItem</em> routine runs at IRQL = PASSIVE_LEVEL and in a system thread context.</p>
-
-<h3 id="examples">Examples</h3>
-
-<p>To define a <em>WorkItem</em> callback routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-
+<h3>Examples</h3>
+<p>To define a <em>WorkItem</em> callback routine, you must first provide a function declaration that identifies the type of callback routine you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
 <p>For example, to define a <em>WorkItem</em> callback routine that is named <code>MyWorkItem</code>, use the IO_WORKITEM_ROUTINE type as shown in this code example:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">IO_WORKITEM_ROUTINE</span><span class="w"> </span><span class="n">MyWorkItem</span><span class="p">;</span>
+<pre lang="cpp"><code>IO_WORKITEM_ROUTINE MyWorkItem;
 </code></pre>
-</div>
-
 <p>Then, implement your callback routine as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">_Use_decl_annotations_</span>
-<span class="n">VOID</span>
-<span class="w">  </span><span class="n">MyWorkItem</span><span class="p">(</span>
-<span class="w">    </span><span class="n"><a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">PDEVICE_OBJECT</a></span><span class="w">  </span><span class="n">DeviceObject</span><span class="p">,</span>
-<span class="w">    </span><span class="n">PVOID</span><span class="w">  </span><span class="n">Context</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="w">  </span><span class="p">{</span>
-<span class="w">      </span><span class="c1">// Function body</span>
-<span class="w">  </span><span class="p">}</span>
+<pre lang="cpp"><code>_Use_decl_annotations_
+VOID
+  MyWorkItem(
+    <a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">PDEVICE_OBJECT</a>  DeviceObject,
+    PVOID  Context
+    )
+  {
+      // Function body
+  }
 </code></pre>
-</div>
-
-<p>The IO_WORKITEM_ROUTINE function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <code>_Use_decl_annotations_</code> annotation to your function definition. The <code>_Use_decl_annotations_</code> annotation ensures that the annotations that are applied to the IO_WORKITEM_ROUTINE function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess">IO_WORKITEM</a></p>
-
+<p>The IO_WORKITEM_ROUTINE function type is defined in the Wdm.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <code>_Use_decl_annotations_</code> annotation to your function definition. The <code>_Use_decl_annotations_</code> annotation ensures that the annotations that are applied to the IO_WORKITEM_ROUTINE function type in the header file are used. For more information about the requirements for function declarations, see <a href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-using-function-role-types-for-wdm-drivers">Declaring Functions by Using Function Role Types for WDM Drivers</a>. For information about <code>_Use_decl_annotations_</code>, see <a href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+<h2>See also</h2>
+<p><a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess">IO_WORKITEM</a></p>
 <p><a href="ioqueueworkitem" title="VOID IoQueueWorkItem(&#10;  [in]           __drv_aliasesMem PIO_WORKITEM IoWorkItem,&#10;  [in]           PIO_WORKITEM_ROUTINE          WorkerRoutine,&#10;  [in]           WORK_QUEUE_TYPE               QueueType,&#10;  [in, optional] __drv_aliasesMem PVOID        Context&#10;);">IoQueueWorkItem</a></p>
 <hr>
 <div class="ntdoc-description-links">

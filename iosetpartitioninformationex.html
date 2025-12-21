@@ -65,56 +65,31 @@
 <h1>Windows Driver Kit DDI reference (nf-ntddk-iosetpartitioninformationex)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="iosetpartitioninformationex-function">IoSetPartitionInformationEx function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>IoSetPartitionInformationEx function</h1>
+<h2>Description</h2>
 <p>For the disk represented by <em>DeviceObject</em>, the <strong>IoSetPartitionInformationEx</strong> routine initializes a partition table entry with the information specified in the <a href="set_partition_information_ex" title="typedef struct _SET_PARTITION_INFORMATION_EX {&#10;  PARTITION_STYLE PartitionStyle;&#10;  union {&#10;    SET_PARTITION_INFORMATION_MBR Mbr;&#10;    SET_PARTITION_INFORMATION_GPT Gpt;&#10;  } DUMMYUNIONNAME;&#10;} SET_PARTITION_INFORMATION_EX, *PSET_PARTITION_INFORMATION_EX;">SET_PARTITION_INFORMATION_EX</a> structure.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="deviceobject-in"><code>DeviceObject</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>DeviceObject</code> [in]</h3>
 <p>Pointer to the device object representing the device on which the partition type is to be set.</p>
-
-<h3 id="partitionnumber-in"><code>PartitionNumber</code> [in]</h3>
-
+<h3><code>PartitionNumber</code> [in]</h3>
 <p>Specifies the partition number on the device whose partition type is to be set.</p>
-
-<h3 id="partitioninfo-in"><code>PartitionInfo</code> [in]</h3>
-
+<h3><code>PartitionInfo</code> [in]</h3>
 <p>A structure whose <em>PartitionType</em> member specifies the type for the partition. For the currently defined <em>PartitionType</em> values <a href="partition_information" title="typedef struct _PARTITION_INFORMATION {&#10;  LARGE_INTEGER StartingOffset;&#10;  LARGE_INTEGER PartitionLength;&#10;  ULONG         HiddenSectors;&#10;  ULONG         PartitionNumber;&#10;  UCHAR         PartitionType;&#10;  BOOLEAN       BootIndicator;&#10;  BOOLEAN       RecognizedPartition;&#10;  BOOLEAN       RewritePartition;&#10;} PARTITION_INFORMATION, *PPARTITION_INFORMATION;">PARTITION_INFORMATION</a>.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>If <strong>IoSetPartitionInformationEx</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, the disk driver updates its notion of the partition type for this partition in its device extension.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p><strong>IoSetPartitionInformationEx</strong> must only be used by disk drivers. Other drivers should use the <a href="ioctl_disk_set_partition_info_ex" title="// CTL_CODE(0x0007, 0x013, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_DISK_SET_PARTITION_INFO_EX 0x0007C04C">IOCTL_DISK_SET_PARTITION_INFO_EX</a> disk I/O request instead.</p>
-
 <p>This routine is called when a disk device driver is requested to set partition information in a partition table entry by an <a href="irp_mj_device_control" title="#define IRP_MJ_DEVICE_CONTROL 0x0e">IRP_MJ_DEVICE_CONTROL</a> request. This request is generally issued by the format utility, which performs I/O control functions on the partition. The driver passes a pointer to the device object representing the physical disk and the number of the partition associated with the device object that the format utility has open. Since the HAL routines that underlie <strong>IoSetPartitionInformationEx</strong> were developed before support for dynamic partitioning was implemented, they do not distinguish between the <em>partitionordinal</em> (that is the order of a partition on a disk) and the <em>partition number</em> (the partition number assigned to a partition in order to identify it to the system). Drivers must call <strong>IoSetPartitionInformationEx</strong> using the <em>ordinal</em> number of the partition and not the actual partition number.</p>
-
 <p>If the partition is a Master Boot Record (MBR) type partition, <strong>IoSetPartitionInformationEx</strong> is limited to setting the partition style, and the partition style, which is represented as an unsigned character. See SET_PARTITION_INFORMATION_MBR for further information about these values.</p>
-
-<p>If the partition is a GUID Partition Table (GPT) partition, <strong>IoSetPartitionInformationEx</strong> sets the following values: the partition style, the partition type, represented by a GUID instead of an integer as was the case with MBR partitions; a partition ID, also represented by a GUID; a set of attributes (see the Extensible Firmware Interface for a description of these attributes); and a Unicode name for the partition. See <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff566196(v=vs.85)">SET_PARTITION_INFORMATION_GPT</a> for further information about these values.</p>
-
+<p>If the partition is a GUID Partition Table (GPT) partition, <strong>IoSetPartitionInformationEx</strong> sets the following values: the partition style, the partition type, represented by a GUID instead of an integer as was the case with MBR partitions; a partition ID, also represented by a GUID; a set of attributes (see the Extensible Firmware Interface for a description of these attributes); and a Unicode name for the partition. See <a href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff566196(v=vs.85)">SET_PARTITION_INFORMATION_GPT</a> for further information about these values.</p>
 <p>This routine is synchronous and must be called by the disk driver's Dispatch routine or by a driver thread. Thus, all user and file system threads must be prepared to enter a wait state when issuing the device control request to set the partition type for the device.</p>
-
 <p>This routine operates under the assumption that the partition number passed in by the disk driver actually exists.</p>
-
 <p>This routine must be called at IRQL = PASSIVE_LEVEL because it uses a kernel event object to synchronize I/O completion on the device. The event cannot be set to the Signaled state without queuing and executing the I/O system's special kernel APC routine for I/O completion.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="ioreadpartitiontable" title="NTSTATUS IoReadPartitionTable(&#10;  [in]  PDEVICE_OBJECT            DeviceObject,&#10;  [in]  ULONG                     SectorSize,&#10;  [in]  BOOLEAN                   ReturnRecognizedPartitions,&#10;  [out] _DRIVE_LAYOUT_INFORMATION **PartitionBuffer&#10;);">IoReadPartitionTable</a></p>
-
 <p><a href="iosetpartitioninformation" title="NTSTATUS IoSetPartitionInformation(&#10;  [in] PDEVICE_OBJECT DeviceObject,&#10;  [in] ULONG          SectorSize,&#10;  [in] ULONG          PartitionNumber,&#10;  [in] ULONG          PartitionType&#10;);">IoSetPartitionInformation</a></p>
-
 <p><a href="iowritepartitiontable" title="NTSTATUS IoWritePartitionTable(&#10;  [in] PDEVICE_OBJECT            DeviceObject,&#10;  [in] ULONG                     SectorSize,&#10;  [in] ULONG                     SectorsPerTrack,&#10;  [in] ULONG                     NumberOfHeads,&#10;  [in] _DRIVE_LAYOUT_INFORMATION *PartitionBuffer&#10;);">IoWritePartitionTable</a></p>
-
 <p><a href="set_partition_information" title="typedef struct _SET_PARTITION_INFORMATION {&#10;  UCHAR PartitionType;&#10;} SET_PARTITION_INFORMATION, *PSET_PARTITION_INFORMATION;">SET_PARTITION_INFORMATION</a></p>
-
 <p><a href="set_partition_information_ex" title="typedef struct _SET_PARTITION_INFORMATION_EX {&#10;  PARTITION_STYLE PartitionStyle;&#10;  union {&#10;    SET_PARTITION_INFORMATION_MBR Mbr;&#10;    SET_PARTITION_INFORMATION_GPT Gpt;&#10;  } DUMMYUNIONNAME;&#10;} SET_PARTITION_INFORMATION_EX, *PSET_PARTITION_INFORMATION_EX;">SET_PARTITION_INFORMATION_EX</a></p>
 <hr>
 <div class="ntdoc-description-links">

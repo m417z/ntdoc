@@ -65,65 +65,38 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-exinitializeworkitem)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p><strong>ExInitializeWorkItem</strong> initializes a work-queue item with a caller-supplied context and callback routine to be queued for execution when a system worker thread is given control.</p>
-
 <blockquote>
-  <p>[!WARNING]
-  Use this routine with extreme caution. See the <strong>Remarks</strong> section below.</p>
+<p>[!WARNING]
+Use this routine with extreme caution. See the <strong>Remarks</strong> section below.</p>
 </blockquote>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="item-in"><code>Item</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Item</code> [in]</h3>
 <p>Pointer to a caller-allocated <a href="work_queue_item" title="typedef struct _WORK_QUEUE_ITEM {&#10;  LIST_ENTRY             List;&#10;  PWORKER_THREAD_ROUTINE WorkerRoutine;&#10;  __volatile PVOID       Parameter;&#10;} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;">WORK_QUEUE_ITEM</a> structure to be initialized. This structure must be allocated from nonpaged pool. The callback routine specified in the <em>Routine</em> parameter is responsible for freeing this work item when it is no longer needed by calling <a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a> or <a href="exfreepoolwithtag" title="VOID ExFreePoolWithTag(&#10;  [in] PVOID P,&#10;  [in] ULONG Tag&#10;);">ExFreePoolWithTag</a>.</p>
-
-<h3 id="routine-in"><code>Routine</code> [in]</h3>
-
+<h3><code>Routine</code> [in]</h3>
 <p>Pointer to a caller-defined routine that will be called to process the work item. This routine will be called in the context of a system thread at IRQL PASSIVE_LEVEL. This routine is declared as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">VOID</span>
-<span class="p">(</span><span class="o">*</span><span class="n">PWORKER_THREAD_ROUTINE</span><span class="p">)(</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Parameter</span>
-<span class="w">    </span><span class="p">);</span>
+<pre lang="cpp"><code>VOID
+(*PWORKER_THREAD_ROUTINE)(
+    IN PVOID Parameter
+    );
 </code></pre>
-</div>
-
-<h4 id="parameter">Parameter</h4>
-
+<h4>Parameter</h4>
 <p>Context information pointer that was passed in the <em>Context</em> parameter.</p>
-
-<h3 id="context-in"><code>Context</code> [in]</h3>
-
+<h3><code>Context</code> [in]</h3>
 <p>Pointer to caller-supplied context information to be passed to the callback routine specified in the <em>Routine</em> parameter.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p><strong>ExInitializeWorkItem</strong> initializes the work item with the specified callback routine and context pointer and <strong>NULL</strong> list pointers.</p>
-
 <p>To add the work item to a system work queue, call <a href="exqueueworkitem" title="VOID ExQueueWorkItem(&#10;  [in, out] __drv_aliasesMem PWORK_QUEUE_ITEM WorkItem,&#10;  [in]      WORK_QUEUE_TYPE                   QueueType&#10;);">ExQueueWorkItem</a>.</p>
-
-<p>Work items are a limited resource, and drivers should only allocate them as needed. For example, do not allocate a work item in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a> for the driver's dedicated use.</p>
-
+<p>Work items are a limited resource, and drivers should only allocate them as needed. For example, do not allocate a work item in <a href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a> for the driver's dedicated use.</p>
 <p><strong>ExInitializeWorkItem</strong> and <a href="exqueueworkitem" title="VOID ExQueueWorkItem(&#10;  [in, out] __drv_aliasesMem PWORK_QUEUE_ITEM WorkItem,&#10;  [in]      WORK_QUEUE_TYPE                   QueueType&#10;);">ExQueueWorkItem</a> can only be used in cases where the specified work item is not associated with any device object or device stack. In all other cases, drivers should use <a href="ioallocateworkitem" title="PIO_WORKITEM IoAllocateWorkItem(&#10;  [in] PDEVICE_OBJECT DeviceObject&#10;);">IoAllocateWorkItem</a>, <a href="iofreeworkitem" title="VOID IoFreeWorkItem(&#10;  [in] PIO_WORKITEM IoWorkItem&#10;);">IoFreeWorkItem</a>, and <a href="ioqueueworkitem" title="VOID IoQueueWorkItem(&#10;  [in]           __drv_aliasesMem PIO_WORKITEM IoWorkItem,&#10;  [in]           PIO_WORKITEM_ROUTINE          WorkerRoutine,&#10;  [in]           WORK_QUEUE_TYPE               QueueType,&#10;  [in, optional] __drv_aliasesMem PVOID        Context&#10;);">IoQueueWorkItem</a>, because only these routines ensure that the device object associated with the specified work item remains available until the work item has been processed.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a></p>
-
 <p><a href="exfreepoolwithtag" title="VOID ExFreePoolWithTag(&#10;  [in] PVOID P,&#10;  [in] ULONG Tag&#10;);">ExFreePoolWithTag</a></p>
-
 <p><a href="exqueueworkitem" title="VOID ExQueueWorkItem(&#10;  [in, out] __drv_aliasesMem PWORK_QUEUE_ITEM WorkItem,&#10;  [in]      WORK_QUEUE_TYPE                   QueueType&#10;);">ExQueueWorkItem</a></p>
-
 <p><a href="ioallocateworkitem" title="PIO_WORKITEM IoAllocateWorkItem(&#10;  [in] PDEVICE_OBJECT DeviceObject&#10;);">IoAllocateWorkItem</a></p>
-
 <p><a href="iofreeworkitem" title="VOID IoFreeWorkItem(&#10;  [in] PIO_WORKITEM IoWorkItem&#10;);">IoFreeWorkItem</a></p>
-
 <p><a href="ioqueueworkitem" title="VOID IoQueueWorkItem(&#10;  [in]           __drv_aliasesMem PIO_WORKITEM IoWorkItem,&#10;  [in]           PIO_WORKITEM_ROUTINE          WorkerRoutine,&#10;  [in]           WORK_QUEUE_TYPE               QueueType,&#10;  [in, optional] __drv_aliasesMem PVOID        Context&#10;);">IoQueueWorkItem</a></p>
-
 <p><strong><a href="work_queue_item" title="typedef struct _WORK_QUEUE_ITEM {&#10;  LIST_ENTRY             List;&#10;  PWORKER_THREAD_ROUTINE WorkerRoutine;&#10;  __volatile PVOID       Parameter;&#10;} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;">WORK_QUEUE_ITEM</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

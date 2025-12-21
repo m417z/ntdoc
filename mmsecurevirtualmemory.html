@@ -65,63 +65,56 @@
 <h1>Windows Driver Kit DDI reference (nf-ntddk-mmsecurevirtualmemory)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>MmSecureVirtualMemory</strong> routine secures a user-space memory address range so that it cannot be freed and its page protection cannot be made more restrictive.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="address-in"><code>Address</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Address</code> [in]</h3>
 <p>The beginning of the user virtual address range to secure.</p>
-
-<h3 id="size-in"><code>Size</code> [in]</h3>
-
+<h3><code>Size</code> [in]</h3>
 <p>The size, in bytes, of the virtual address range to secure.</p>
-
-<h3 id="probemode-in"><code>ProbeMode</code> [in]</h3>
-
+<h3><code>ProbeMode</code> [in]</h3>
 <p>Specifies the most restrictive page protection that is allowed. Use <a href="page_readwrite" title="#define PAGE_READWRITE 0x04 // Enables read-only or read/write access to the committed region of pages.">PAGE_READWRITE</a> to specify that the address range must remain both readable and writable, or use <a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a> to specify that the address range must only remain readable.</p>
-
 <table>
 <thead>
 <tr>
-  <th>ProbeMode</th>
-  <th>Meaning</th>
+<th>ProbeMode</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><a href="page_readwrite" title="#define PAGE_READWRITE 0x04 // Enables read-only or read/write access to the committed region of pages.">PAGE_READWRITE</a></td>
-  <td>Protection cannot be changed to <a href="page_noaccess" title="#define PAGE_NOACCESS 0x01 // Disables all access to the committed region of pages. An attempt to read from, write to, or execute the committed region results in an access violation.">PAGE_NOACCESS</a> or <a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a>. All other protection changes are allowed.</td>
+<td><a href="page_readwrite" title="#define PAGE_READWRITE 0x04 // Enables read-only or read/write access to the committed region of pages.">PAGE_READWRITE</a></td>
+<td>Protection cannot be changed to <a href="page_noaccess" title="#define PAGE_NOACCESS 0x01 // Disables all access to the committed region of pages. An attempt to read from, write to, or execute the committed region results in an access violation.">PAGE_NOACCESS</a> or <a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a>. All other protection changes are allowed.</td>
 </tr>
 <tr>
-  <td><a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a></td>
-  <td>Protection cannot be changed to <a href="page_noaccess" title="#define PAGE_NOACCESS 0x01 // Disables all access to the committed region of pages. An attempt to read from, write to, or execute the committed region results in an access violation.">PAGE_NOACCESS</a>. All other protection changes are allowed.</td>
+<td><a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a></td>
+<td>Protection cannot be changed to <a href="page_noaccess" title="#define PAGE_NOACCESS 0x01 // Disables all access to the committed region of pages. An attempt to read from, write to, or execute the committed region results in an access violation.">PAGE_NOACCESS</a>. All other protection changes are allowed.</td>
 </tr>
 </tbody>
 </table>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>On success, <strong>MmSecureVirtualMemory</strong> returns an opaque pointer value that the driver passes to the <a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a> routine to unsecure the memory address range. If the routine is unable to secure the memory address range, it returns <strong>NULL</strong>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p><strong>MmSecureVirtualMemory</strong> can be used to avoid certain race conditions on user-mode buffers. For example, if a driver checks to see if the buffer is writable, but then the originating user-mode process changes the buffer to be read-only before the driver can write to the buffer, then a race condition can result. The driver can use <strong>MmSecureVirtualMemory</strong> with <a href="page_readwrite" title="#define PAGE_READWRITE 0x04 // Enables read-only or read/write access to the committed region of pages.">PAGE_READWRITE</a> probe mode to guarantee that the buffer will remain writable until the driver calls <strong><a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a></strong>. The routine also protects against the originating user-mode process freeing the buffer. Here are a few guidelines about calling these routines:</p>
-
 <ul>
-<li><p>Calling <strong>MmSecureVirtualMemory</strong> with <a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a> does not guarantee that the buffer will remain read-only. The read-only probe mode prevents the user from changing the protection of the buffer to <a href="page_noaccess" title="#define PAGE_NOACCESS 0x01 // Disables all access to the committed region of pages. An attempt to read from, write to, or execute the committed region results in an access violation.">PAGE_NOACCESS</a>. It does <em>not</em> prevent changing the protection to <a href="page_readwrite" title="#define PAGE_READWRITE 0x04 // Enables read-only or read/write access to the committed region of pages.">PAGE_READWRITE</a> (or <a href="page_writecopy" title="#define PAGE_WRITECOPY 0x08 // Enables read-only or copy-on-write access to a mapped view of a file mapping object.">PAGE_WRITECOPY</a>, for mapped views).</p></li>
-<li><p>If a driver calls <strong>MmSecureVirtualMemory</strong> and does not call <a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a>, the memory is automatically unsecured when the process terminates.</p></li>
-<li><p>If the driver calls <a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a>, it must call it in the context of the process in which the memory was originally secured, and before that process terminates.</p></li>
-<li><p>Typically drivers need to reference the process when they secure the memory, then later call <a href="kestackattachprocess" title="VOID KeStackAttachProcess(&#10;        PRKPROCESS   PROCESS,&#10;  [out] PRKAPC_STATE ApcState&#10;);">KeStackAttachProcess</a> to switch to the context of that process before calling <a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a>.</p></li>
-<li><p>To detect process termination drivers can use <a href="pssetcreateprocessnotifyroutine" title="NTSTATUS PsSetCreateProcessNotifyRoutine(&#10;  [in] PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,&#10;  [in] BOOLEAN                        Remove&#10;);">PsSetCreateProcessNotifyRoutine</a>. Alternatively, the process can submit an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with a cancel routine that is invoked by the I/O manager when the process is exiting. In the cancel routine the driver can attach to the process and call <a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a>.</p></li>
+<li>
+<p>Calling <strong>MmSecureVirtualMemory</strong> with <a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a> does not guarantee that the buffer will remain read-only. The read-only probe mode prevents the user from changing the protection of the buffer to <a href="page_noaccess" title="#define PAGE_NOACCESS 0x01 // Disables all access to the committed region of pages. An attempt to read from, write to, or execute the committed region results in an access violation.">PAGE_NOACCESS</a>. It does <em>not</em> prevent changing the protection to <a href="page_readwrite" title="#define PAGE_READWRITE 0x04 // Enables read-only or read/write access to the committed region of pages.">PAGE_READWRITE</a> (or <a href="page_writecopy" title="#define PAGE_WRITECOPY 0x08 // Enables read-only or copy-on-write access to a mapped view of a file mapping object.">PAGE_WRITECOPY</a>, for mapped views).</p>
+</li>
+<li>
+<p>If a driver calls <strong>MmSecureVirtualMemory</strong> and does not call <a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a>, the memory is automatically unsecured when the process terminates.</p>
+</li>
+<li>
+<p>If the driver calls <a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a>, it must call it in the context of the process in which the memory was originally secured, and before that process terminates.</p>
+</li>
+<li>
+<p>Typically drivers need to reference the process when they secure the memory, then later call <a href="kestackattachprocess" title="VOID KeStackAttachProcess(&#10;        PRKPROCESS   PROCESS,&#10;  [out] PRKAPC_STATE ApcState&#10;);">KeStackAttachProcess</a> to switch to the context of that process before calling <a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a>.</p>
+</li>
+<li>
+<p>To detect process termination drivers can use <a href="pssetcreateprocessnotifyroutine" title="NTSTATUS PsSetCreateProcessNotifyRoutine(&#10;  [in] PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,&#10;  [in] BOOLEAN                        Remove&#10;);">PsSetCreateProcessNotifyRoutine</a>. Alternatively, the process can submit an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with a cancel routine that is invoked by the I/O manager when the process is exiting. In the cancel routine the driver can attach to the process and call <a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a>.</p>
+</li>
 </ul>
-
-<p>While <strong>MmSecureVirtualMemory</strong> can be used to guarantee that reading or writing user memory will not raise an exception due to insufficient page permissions, it does not protect against other types of exceptions. For example, it does not protect against exceptions raised when the system finds a bad disk block in the page file. Therefore, drivers must still wrap all user memory accesses in a <strong>try/except</strong> block. Because of this, we recommend that drivers do not use this function. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/handling-exceptions">Handling Exceptions</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<p>While <strong>MmSecureVirtualMemory</strong> can be used to guarantee that reading or writing user memory will not raise an exception due to insufficient page permissions, it does not protect against other types of exceptions. For example, it does not protect against exceptions raised when the system finds a bad disk block in the page file. Therefore, drivers must still wrap all user memory accesses in a <strong>try/except</strong> block. Because of this, we recommend that drivers do not use this function. For more information, see <a href="https://learn.microsoft.com/windows-hardware/drivers/kernel/handling-exceptions">Handling Exceptions</a>.</p>
+<h2>See also</h2>
 <p><a href="mmunsecurevirtualmemory" title="VOID MmUnsecureVirtualMemory(&#10;  [in] HANDLE SecureHandle&#10;);">MmUnsecureVirtualMemory</a></p>
 <hr>
 <div class="ntdoc-description-links">

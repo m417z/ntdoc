@@ -63,60 +63,40 @@
 <h1>Windows Driver Kit DDI reference (ns-wdm-ke_srcu_lock)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>KE_SRCU_LOCK</strong> structure represents the lock context used in SRCU (Sleepable Read-Copy-Update) read-side critical sections.</p>
-
-<h2 id="members">Members</h2>
-
-<h3 id="placeholder2"><code>Placeholder[2]</code></h3>
-
+<h2>Members</h2>
+<h3><code>Placeholder[2]</code></h3>
 <p>An array of two <code><a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a></code> values that serve as opaque storage for the SRCU lock context. The contents of this field are implementation-specific and should not be accessed or modified by drivers.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>This structure is returned by <strong><a href="kesrcureadlock" title="VOID KeSrcuReadLock(&#10;  [in]  PKE_SRCU      Rcu,&#10;  [out] PKE_SRCU_LOCK Lock&#10;);">KeSrcuReadLock</a></strong> and <strong><a href="kercureadlock" title="VOID KeRcuReadLock();">KeRcuReadLock</a></strong> functions and must be passed to the corresponding unlock functions.</p>
-
 <p>This structure is opaque to drivers. Drivers should never:</p>
-
 <ul>
 <li>Access or modify the <code>Placeholder</code> field directly.</li>
 <li>Make assumptions about the structure's internal layout.</li>
 <li>Copy or serialize the structure contents.</li>
 <li>Use the structure across different SRCU partitions.</li>
 </ul>
-
 <p>The structure is typically used in the following pattern:</p>
+<pre lang="c"><code>PSRCU_PARTITION SrcuPartition = <a href="kesrcuallocate" title="PKE_SRCU KeSrcuAllocate(&#10;  [in] ULONG Tag&#10;);">KeSrcuAllocate</a>();
+KE_SRCU_LOCK LockContext;
 
-<div class="codehilite">
-<pre><span></span><code><span class="n">PSRCU_PARTITION</span><span class="w"> </span><span class="n">SrcuPartition</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="kesrcuallocate" title="PKE_SRCU KeSrcuAllocate(&#10;  [in] ULONG Tag&#10;);">KeSrcuAllocate</a></span><span class="p">();</span>
-<span class="n">KE_SRCU_LOCK</span><span class="w"> </span><span class="n">LockContext</span><span class="p">;</span>
+// Enter read-side critical section
+LockContext = <a href="kesrcureadlock" title="VOID KeSrcuReadLock(&#10;  [in]  PKE_SRCU      Rcu,&#10;  [out] PKE_SRCU_LOCK Lock&#10;);">KeSrcuReadLock</a>(SrcuPartition);
 
-<span class="c1">// Enter read-side critical section</span>
-<span class="n">LockContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="kesrcureadlock" title="VOID KeSrcuReadLock(&#10;  [in]  PKE_SRCU      Rcu,&#10;  [out] PKE_SRCU_LOCK Lock&#10;);">KeSrcuReadLock</a></span><span class="p">(</span><span class="n">SrcuPartition</span><span class="p">);</span>
+// Access RCU-protected data safely
+// ...
 
-<span class="c1">// Access RCU-protected data safely</span>
-<span class="c1">// ...</span>
-
-<span class="c1">// Exit read-side critical section</span>
-<span class="n"><a href="kesrcureadunlock" title="VOID KeSrcuReadUnlock(&#10;  [in] PKE_SRCU      Rcu,&#10;  [in] PKE_SRCU_LOCK Lock&#10;);">KeSrcuReadUnlock</a></span><span class="p">(</span><span class="n">SrcuPartition</span><span class="p">,</span><span class="w"> </span><span class="n">LockContext</span><span class="p">);</span>
+// Exit read-side critical section
+<a href="kesrcureadunlock" title="VOID KeSrcuReadUnlock(&#10;  [in] PKE_SRCU      Rcu,&#10;  [in] PKE_SRCU_LOCK Lock&#10;);">KeSrcuReadUnlock</a>(SrcuPartition, LockContext);
 </code></pre>
-</div>
-
 <p>The lock context returned by the read lock function must be passed to the corresponding unlock function to properly exit the critical section. Using an incorrect or uninitialized lock context may result in system instability.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><strong><a href="kesrcureadlock" title="VOID KeSrcuReadLock(&#10;  [in]  PKE_SRCU      Rcu,&#10;  [out] PKE_SRCU_LOCK Lock&#10;);">KeSrcuReadLock</a></strong></p>
-
 <p><strong><a href="kesrcureadunlock" title="VOID KeSrcuReadUnlock(&#10;  [in] PKE_SRCU      Rcu,&#10;  [in] PKE_SRCU_LOCK Lock&#10;);">KeSrcuReadUnlock</a></strong></p>
-
 <p><strong><a href="kercureadlock" title="VOID KeRcuReadLock();">KeRcuReadLock</a></strong></p>
-
 <p><strong><a href="kercureadunlock" title="VOID KeRcuReadUnlock();">KeRcuReadUnlock</a></strong></p>
-
 <p><strong><a href="kesrcuallocate" title="PKE_SRCU KeSrcuAllocate(&#10;  [in] ULONG Tag&#10;);">KeSrcuAllocate</a></strong></p>
-
 <p><strong><a href="kesrcusynchronize" title="VOID KeSrcuSynchronize(&#10;  [in] PKE_SRCU Rcu&#10;);">KeSrcuSynchronize</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

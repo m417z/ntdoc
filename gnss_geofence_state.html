@@ -65,65 +65,52 @@
 <h1>Windows Driver Kit DDI reference (ne-gnssdriver-gnss_geofence_state)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="gnss_geofence_state-enumeration">GNSS_GEOFENCE_STATE enumeration</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>GNSS_GEOFENCE_STATE enumeration</h1>
+<h2>Description</h2>
 <p>GNSS_GEOFENCE_STATE enumerates the various states of a single geofence.</p>
-
-<h2 id="constants">Constants</h2>
-
-<h3 id="gnss_geofencestate_unknown"><code>GNSS_GeofenceState_Unknown</code></h3>
-
+<h2>Constants</h2>
+<h3><code>GNSS_GeofenceState_Unknown</code></h3>
 <p>The state of the geofence is unknown.</p>
-
-<h3 id="gnss_geofencestate_entered"><code>GNSS_GeofenceState_Entered</code></h3>
-
+<h3><code>GNSS_GeofenceState_Entered</code></h3>
 <p>The geofence has been entered.</p>
-
-<h3 id="gnss_geofencestate_exited"><code>GNSS_GeofenceState_Exited</code></h3>
-
+<h3><code>GNSS_GeofenceState_Exited</code></h3>
 <p>The geofence has been exited.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>The following bitmasks are used by the HLOS to request state-change alerts for geofences:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">#define GNSS_GEOFENCEALERTTYPE_ENTRY  GNSS_GeofenceState_Entered    </span><span class="c1">// Enter Geofence</span>
-<span class="cp">#define GNSS_GEOFENCEALERTTYPE_EXIT   GNSS_GeofenceState_Exited     </span><span class="c1">// Exit Geofence</span>
+<pre lang="cpp"><code>#define GNSS_GEOFENCEALERTTYPE_ENTRY  GNSS_GeofenceState_Entered    // Enter Geofence
+#define GNSS_GEOFENCEALERTTYPE_EXIT   GNSS_GeofenceState_Exited     // Exit Geofence
 </code></pre>
-</div>
-
 <p>An entry alert is raised when the previous state of the geofence was unknown or exited and the device has now entered the geofence.</p>
-
 <p>An exit alert is raised when the previous state of the geofence was entered and the device has now exited the geofence. If the previous state of the geofence was unknown, and the device is currently outside of the geofence, no exit alert will be generated.</p>
-
 <p>The location platform only sends an exit trigger to apps when the previous known state for a fence is inside the fence. This is a design decision to avoid chattiness of exit events on geofence configuration (For example, when not expecting a user configuring an exit fence from home to need to be notified that they are outside of home if they configure the notification when they are already outside of the home). Nevertheless, the location platform could handle where the GNSS driver sends exit events, but it is not recommend because then the interaction between the GNSS adapter and the GNSS driver will become very verbose. Given that the chances of the user entering a geofence are much smaller than the user being outside a geofences, this behavior reduces the required interaction between the GNSS driver and the GNSS adapter. For example, in the case of 100 geofences pushed to the GNSS driver, and a user was outside all of them, without this behavior the will need to send to the GNSS adapter 100 exit notifications. The likelihood of something similar to this happening for entry events is very small.</p>
-
 <p>The geofence state transition and the associated alerts are shown below. For simplicity, the hysteresis and geofence boundary conditions are implied.</p>
-
 <p><img src="https://learn.microsoft.com/windows-hardware/drivers/ddi/gnssdriver/images/geofence-entry-exit.png" alt="GNSS geofence state diagram." /></p>
-
 <p>The key aspects of this state diagram are:</p>
-
 <ul>
-<li><p>No alert is to be raised when transitioning from GNSS_GeofenceState_Unknown to GNSS_GeofenceState_Exited state.</p></li>
-<li><p>When the GNSS engine is unable to track any geofences at all, a single global tracking status alert needs to be raised, as opposed to one alert for each geofence. The GNSS engine could maintain the last know state for each fence instead of transitioning to GNSS_GeofenceState_Unknown state, so that when it is able to track again, the needed geofence alerts can be raised based on the new entry/exit detection.</p>
-
+<li>
+<p>No alert is to be raised when transitioning from GNSS_GeofenceState_Unknown to GNSS_GeofenceState_Exited state.</p>
+</li>
+<li>
+<p>When the GNSS engine is unable to track any geofences at all, a single global tracking status alert needs to be raised, as opposed to one alert for each geofence. The GNSS engine could maintain the last know state for each fence instead of transitioning to GNSS_GeofenceState_Unknown state, so that when it is able to track again, the needed geofence alerts can be raised based on the new entry/exit detection.</p>
+</li>
+</ul>
 <p>Maintaining this last known state is not currently necessary though, because once the GNSS driver raises the event with gnss_geofences_tracking_status as FAILURE, the location platform in the HLOS will start doing the geofences tracking. During this time, the GNSS engine should continue to check, in a power optimized way, if geofences can be tracked again. The IHV can use optimizations to make this detection at low power. Common techniques for optimization include the following:</p>
-
 <ul>
-<li><p>Progressive back-off</p></li>
-<li><p>Waiting for low-cost signals that are indicative of device movements such as accelerator data or cellular/WiFi change notifications.</p></li>
-<li><p>Requesting a low-accuracy distance tracking session from the HLOS using the public Geolocation WinRT APIs.</p></li>
-<li><p>Low power checks for satellite signal.</p></li>
+<li>
+<p>Progressive back-off</p>
+</li>
+<li>
+<p>Waiting for low-cost signals that are indicative of device movements such as accelerator data or cellular/WiFi change notifications.</p>
+</li>
+<li>
+<p>Requesting a low-accuracy distance tracking session from the HLOS using the public Geolocation WinRT APIs.</p>
+</li>
+<li>
+<p>Low power checks for satellite signal.</p>
+</li>
 </ul>
-
 <p>When GNSS engine is able to track geofences again, it communicates so by setting the gnss_geofence_tracking_status as SUCCESS to GNSS adapter/HLOS</p>
-
-<p>The GNSS adapter will issue GNSS_ResetGeofenceTracking commands and re-add currently active geofences with current entry/exit criteria of each geofence. This needs to be done in case the set of geofences to be tracked has changed or in the state for any geofence has changed.</p></li>
-</ul>
+<p>The GNSS adapter will issue GNSS_ResetGeofenceTracking commands and re-add currently active geofences with current entry/exit criteria of each geofence. This needs to be done in case the set of geofences to be tracked has changed or in the state for any geofence has changed.</p>
 <hr>
 <div class="ntdoc-description-links">
 <p>
