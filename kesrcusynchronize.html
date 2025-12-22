@@ -69,34 +69,20 @@
 <h3><code>Rcu</code> [in]</h3>
 <p>A pointer to the SRCU instance that was previously allocated by <strong><a href="kesrcuallocate" title="PKE_SRCU KeSrcuAllocate(&#10;  [in] ULONG Tag&#10;);">KeSrcuAllocate</a></strong>.</p>
 <h2>Remarks</h2>
-<p><strong>KeSrcuSynchronize</strong> implements the "synchronize" operation for SRCU, which starts a grace period and waits for all currently active readers to exit their critical sections. This function is essential for safe memory reclamation and data structure updates.</p>
+<p><strong>KeSrcuSynchronize</strong> implements the &quot;synchronize&quot; operation for SRCU, which starts a grace period and waits for all currently active readers to exit their critical sections. This function is essential for safe memory reclamation and data structure updates.</p>
 <p>The grace period semantics are as follows:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The function waits only for readers that were active when the call was made.</li>
+<li>New readers that enter after the call begins are not included in the wait.</li>
+<li>The function might block until all target readers call <strong><a href="kesrcureadunlock" title="VOID KeSrcuReadUnlock(&#10;  [in] PKE_SRCU      Rcu,&#10;  [in] PKE_SRCU_LOCK Lock&#10;);">KeSrcuReadUnlock</a></strong>.</li>
+<li>Multiple synchronize operations can be in progress simultaneously.</li>
 </ul>
 <p>Call this function only at IRQL &lt; DISPATCH_LEVEL since it may block. This function can sleep, making it suitable for pageable code. Don't call this function from within an SRCU read-side critical section.</p>
 <p>The typical writer pattern is as follows:</p>
 <ol>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Remove data structure from global visibility.</li>
+<li>Call <strong>KeSrcuSynchronize</strong> to wait for existing readers.</li>
+<li>Safely deallocate or modify the data structure.</li>
 </ol>
 <p>The function ensures that no readers are accessing the data when it returns, making it safe to perform updates or memory reclamation.</p>
 <h2>See also</h2>

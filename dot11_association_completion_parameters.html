@@ -121,12 +121,8 @@
 <p>This offset is relative to the start of the buffer that contains the DOT11_ASSOCIATION_COMPLETION_PARAMETERS structure.</p>
 <p>The Association Request frame that is returned by the miniport driver depends on the setting of the IEEE 802.11 <strong>dot11DesiredBSSType</strong> MIB object:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>If the <strong>dot11DesiredBSSType</strong> MIB object is set to dot11_BSS_type_infrastructure, the frame is either the 802.11 Association Request frame (if <strong>bReAssocReq</strong> is <strong>FALSE</strong>) or Reassociation Request frame (if <strong>bReAssocReq</strong> is <strong>TRUE</strong>) that was sent to the AP.The miniport driver must return an 802.11 Probe Request frame that is either sent by the association initiator or created by the driver based on information that was exchanged during the association operation.</li>
+<li>If the <strong>dot11DesiredBSSType</strong> MIB object is set to dot11_BSS_type_independent, the miniport driver must set the <strong>uAssocReqOffset</strong> member to zero.</li>
 </ul>
 <p>The miniport driver must set the <strong>uAssocReqOffset</strong> and <strong>uAssocReqSize</strong> members to zero if it was unable to send a request frame during the association operation. For example, if the AP failed the 802.11 Authentication frame that was sent by the 802.11 station, the miniport driver must set <strong>uAssocReqOffset</strong> and <strong>uAssocReqSize</strong> to zero.</p>
 <h3><code>uAssocReqSize</code></h3>
@@ -138,13 +134,13 @@
 <p>The association response frame that is returned by the miniport driver depends on the setting of the IEEE 802.11 <strong>dot11DesiredBSSType</strong> MIB object:</p>
 <ul>
 <li>
-
+<p>If the <strong>dot11DesiredBSSType</strong> MIB object is set to dot11_BSS_type_infrastructure, the frame is either the 802.11 Association Response frame (if <strong>bReAssocReq</strong> is <strong>TRUE</strong>) or Reassociation Response frame (if <strong>bReAssocReq</strong> is <strong>FALSE</strong>) that was received from the AP. The miniport driver must return an 802.11 Probe Response frame that is either sent to the association initiator or created by the driver based on information exchanged during the association operation.</p>
 </li>
 <li>
-
+<p>If the <strong>dot11DesiredBSSType</strong> MIB object is set to dot11_BSS_type_independent, the miniport driver must set the <strong>uAssocRespOffset</strong> member to zero.</p>
 </li>
 <li>
-
+<p>The miniport driver must set the <strong>uAssocRespOffset</strong> and <strong>uAssocRespSize</strong> members to zero if it did not receive a response frame during the association operation.</p>
 </li>
 </ul>
 <h3><code>uAssocRespSize</code></h3>
@@ -180,12 +176,8 @@ If the authentication algorithm used on the association was Wi-Fi Protected Acce
 <p>For more information about this MIB object, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-dot11-active-phy-list">OID_DOT11_ACTIVE_PHY_LIST</a>.</p>
 <p>Entries in the active PHY list can be one of the following values:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>A PHY ID that is specified by the ExtSTA <strong>msDot11DesiredPhyList</strong> MIB object. For more information about this MIB object, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-dot11-desired-phy-list">OID_DOT11_DESIRED_PHY_LIST</a>.</li>
+<li>DOT11_PHY_ID_ANY. The miniport driver can set an entry to this value if the <strong>msDot11ActivePhyList</strong> MIB object specifies all of the PHY IDs that are specified by the <strong>msDot11DesiredPhyList</strong> MIB object. An entry with the value of DOT11_PHY_ID_ANY must be the only entry in the active PHY list.</li>
 </ul>
 <p>The offset of the active PHY list is relative to the start of the buffer that contains the DOT11_ASSOCIATION_COMPLETION_PARAMETERS structure.</p>
 <p>The miniport driver must set the <strong>uActivePhyListOffset</strong> and <strong>uActivePhyListSize</strong> members to zero if <strong>uStatus</strong> is not set to DOT11_ASSOCIATION_STATUS_SUCCESS.</p>
@@ -195,26 +187,16 @@ If the authentication algorithm used on the association was Wi-Fi Protected Acce
 <p>A Boolean value that, if set to <strong>TRUE</strong>, specifies that the 802.11 station has associated with an AP that supports distribution system (DS) services for ISO Layer 2 bridging on any station in the BSS network, including mobile stations and APs. The determination of this support is specific to the implementation by the IHV.</p>
 <p>A miniport driver must set the <strong>bFourAddressSupported</strong> member to <strong>FALSE</strong> if any of the following are true:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The IEEE 802.11 <strong>dot11DesiredBSSType</strong> MIB object is set to <strong>dot11_BSS_type_independent</strong>.</li>
+<li>The 802.11 station did not associate with an AP that supports DS services or cannot determine whether the AP supports DS services.</li>
+<li>The <strong>uStatus</strong> member is not set to DOT11_ASSOCIATION_STATUS_SUCCESS.</li>
 </ul>
 <h3><code>bPortAuthorized</code></h3>
 <p>A Boolean value that, if set to <strong>TRUE</strong>, specifies that the 802.11 station has successfully performed port authorization during the association operation. Port authorization could be based on either the IEEE 802.1X/802.11i standards or a proprietary algorithm that is developed by the IHV.</p>
 <p>The miniport driver must set <strong>bPortAuthorized</strong> to <strong>FALSE</strong> if any of the following are true:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The 802.11 station does not perform port authorization.</li>
+<li>The <strong>uStatus</strong> member is not set to DOT11_ASSOCIATION_STATUS_SUCCESS.</li>
 </ul>
 <p>For more information about port authorization, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/port-based-network-access">Port-Based Network Access</a>.</p>
 <h3><code>ucActiveQoSProtocol</code></h3>
@@ -246,50 +228,44 @@ The miniport driver must set <strong>DSInfo</strong> to <strong>DOT11_DS_UNKNOWN
 <h3><code>MulticastMgmtCipher</code></h3>
 <p>The multicast cipher algorithm the NIC chooses (negotiates) for the association for management frame protection (MFP). If MFP is negotiated, this member should be DOT11_CIPHER_ALGO_BIP. If MFP is not negotiated, this field should be DOT11_CIPHER_ALGO_NONE.</p>
 <h3><code>uAssocComebackTime</code></h3>
-<p>When a (re)association fails with 802.11 reason code 30 ("Association request rejected temporarily, try again later.") this member indicates the value of the association comeback time requested by the access point (AP). The 802.11 disassociation reason code is present in the lowest 16 bits of <strong>uStatus</strong> when responding to an association request.</p>
+<p>When a (re)association fails with 802.11 reason code 30 (&quot;Association request rejected temporarily, try again later.&quot;) this member indicates the value of the association comeback time requested by the access point (AP). The 802.11 disassociation reason code is present in the lowest 16 bits of <strong>uStatus</strong> when responding to an association request.</p>
 <p>Windows' auto-connection service will add the AP to a blocked list and not attempt to reconnect for at least the indicated comeback time. The NIC will behave like a regular failed authentication until the next connection sequence is begun. After the indicated timeout(comeback) elapses and the connection process is stopped Windows may either find a better alternate connection or comeback to this connection. This value set in this member should use the time units defined in the 802.11 specification. For example, TU.</p>
 <h2>Syntax</h2>
 <pre><code>typedef struct DOT11_ASSOCIATION_COMPLETION_PARAMETERS {
-<a href="ndis_object_header" title="typedef struct _NDIS_OBJECT_HEADER {&#10;  UCHAR  Type;&#10;  UCHAR  Revision;&#10;  USHORT Size;&#10;} NDIS_OBJECT_HEADER, *PNDIS_OBJECT_HEADER;">NDIS_OBJECT_HEADER</a>     Header;
-<a href="dot11_mac_address" title="typedef struct _DOT11_MAC_ADDRESS {&#10;  UCHAR ucDot11MacAddress[6];&#10;} DOT11_MAC_ADDRESS, *PDOT11_MAC_ADDRESS;">DOT11_MAC_ADDRESS</a>      MacAddr;
-DOT11_ASSOC_STATUS     uStatus;
-BOOLEAN                bReAssocReq;
-BOOLEAN                bReAssocResp;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocReqOffset;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocReqSize;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocRespOffset;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocRespSize;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uBeaconOffset;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uBeaconSize;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uIHVDataOffset;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uIHVDataSize;
-<a href="dot11_auth_algorithm" title="typedef enum _DOT11_AUTH_ALGORITHM {&#10;  DOT11_AUTH_ALGO_80211_OPEN = 1,&#10;  DOT11_AUTH_ALGO_80211_SHARED_KEY = 2,&#10;  DOT11_AUTH_ALGO_WPA = 3,&#10;  DOT11_AUTH_ALGO_WPA_PSK = 4,&#10;  DOT11_AUTH_ALGO_WPA_NONE = 5,&#10;  DOT11_AUTH_ALGO_RSNA = 6,&#10;  DOT11_AUTH_ALGO_RSNA_PSK = 7,&#10;  DOT11_AUTH_ALGO_WPA3 = 8,&#10;  DOT11_AUTH_ALGO_WPA3_ENT_192 = DOT11_AUTH_ALGO_WPA3,&#10;  DOT11_AUTH_ALGO_WPA3_SAE = 9,&#10;  DOT11_AUTH_ALGO_OWE = 10,&#10;  DOT11_AUTH_ALGO_WPA3_ENT = 11,&#10;  DOT11_AUTH_ALGO_IHV_START = 0x80000000,&#10;  DOT11_AUTH_ALGO_IHV_END = 0xffffffff&#10;} DOT11_AUTH_ALGORITHM, *PDOT11_AUTH_ALGORITHM;">DOT11_AUTH_ALGORITHM</a>   AuthAlgo;
-<a href="dot11_cipher_algorithm" title="typedef enum _DOT11_CIPHER_ALGORITHM {&#10;  DOT11_CIPHER_ALGO_NONE = 0x00,&#10;  DOT11_CIPHER_ALGO_WEP40 = 0x01,&#10;  DOT11_CIPHER_ALGO_TKIP = 0x02,&#10;  DOT11_CIPHER_ALGO_CCMP = 0x04,&#10;  DOT11_CIPHER_ALGO_WEP104 = 0x05,&#10;  DOT11_CIPHER_ALGO_BIP = 0x06,&#10;  DOT11_CIPHER_ALGO_GCMP = 0x08,&#10;  DOT11_CIPHER_ALGO_GCMP_256 = 0x09,&#10;  DOT11_CIPHER_ALGO_CCMP_256 = 0x0a,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_128 = 0x0b,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_256 = 0x0c,&#10;  DOT11_CIPHER_ALGO_BIP_CMAC_256 = 0x0d,&#10;  DOT11_CIPHER_ALGO_WPA_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_RSN_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_WEP = 0x101,&#10;  DOT11_CIPHER_ALGO_IHV_START = 0x80000000,&#10;  DOT11_CIPHER_ALGO_IHV_END = 0xffffffff&#10;} DOT11_CIPHER_ALGORITHM, *PDOT11_CIPHER_ALGORITHM;">DOT11_CIPHER_ALGORITHM</a> UnicastCipher;
-<a href="dot11_cipher_algorithm" title="typedef enum _DOT11_CIPHER_ALGORITHM {&#10;  DOT11_CIPHER_ALGO_NONE = 0x00,&#10;  DOT11_CIPHER_ALGO_WEP40 = 0x01,&#10;  DOT11_CIPHER_ALGO_TKIP = 0x02,&#10;  DOT11_CIPHER_ALGO_CCMP = 0x04,&#10;  DOT11_CIPHER_ALGO_WEP104 = 0x05,&#10;  DOT11_CIPHER_ALGO_BIP = 0x06,&#10;  DOT11_CIPHER_ALGO_GCMP = 0x08,&#10;  DOT11_CIPHER_ALGO_GCMP_256 = 0x09,&#10;  DOT11_CIPHER_ALGO_CCMP_256 = 0x0a,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_128 = 0x0b,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_256 = 0x0c,&#10;  DOT11_CIPHER_ALGO_BIP_CMAC_256 = 0x0d,&#10;  DOT11_CIPHER_ALGO_WPA_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_RSN_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_WEP = 0x101,&#10;  DOT11_CIPHER_ALGO_IHV_START = 0x80000000,&#10;  DOT11_CIPHER_ALGO_IHV_END = 0xffffffff&#10;} DOT11_CIPHER_ALGORITHM, *PDOT11_CIPHER_ALGORITHM;">DOT11_CIPHER_ALGORITHM</a> MulticastCipher;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uActivePhyListOffset;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uActivePhyListSize;
-BOOLEAN                bFourAddressSupported;
-BOOLEAN                bPortAuthorized;
-<a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>                  ucActiveQoSProtocol;
-DOT11_DS_INFO          DSInfo;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uEncapTableOffset;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uEncapTableSize;
-<a href="dot11_cipher_algorithm" title="typedef enum _DOT11_CIPHER_ALGORITHM {&#10;  DOT11_CIPHER_ALGO_NONE = 0x00,&#10;  DOT11_CIPHER_ALGO_WEP40 = 0x01,&#10;  DOT11_CIPHER_ALGO_TKIP = 0x02,&#10;  DOT11_CIPHER_ALGO_CCMP = 0x04,&#10;  DOT11_CIPHER_ALGO_WEP104 = 0x05,&#10;  DOT11_CIPHER_ALGO_BIP = 0x06,&#10;  DOT11_CIPHER_ALGO_GCMP = 0x08,&#10;  DOT11_CIPHER_ALGO_GCMP_256 = 0x09,&#10;  DOT11_CIPHER_ALGO_CCMP_256 = 0x0a,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_128 = 0x0b,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_256 = 0x0c,&#10;  DOT11_CIPHER_ALGO_BIP_CMAC_256 = 0x0d,&#10;  DOT11_CIPHER_ALGO_WPA_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_RSN_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_WEP = 0x101,&#10;  DOT11_CIPHER_ALGO_IHV_START = 0x80000000,&#10;  DOT11_CIPHER_ALGO_IHV_END = 0xffffffff&#10;} DOT11_CIPHER_ALGORITHM, *PDOT11_CIPHER_ALGORITHM;">DOT11_CIPHER_ALGORITHM</a> MulticastMgmtCipher;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocComebackTime;
+  <a href="ndis_object_header" title="typedef struct _NDIS_OBJECT_HEADER {&#10;  UCHAR  Type;&#10;  UCHAR  Revision;&#10;  USHORT Size;&#10;} NDIS_OBJECT_HEADER, *PNDIS_OBJECT_HEADER;">NDIS_OBJECT_HEADER</a>     Header;
+  <a href="dot11_mac_address" title="typedef struct _DOT11_MAC_ADDRESS {&#10;  UCHAR ucDot11MacAddress[6];&#10;} DOT11_MAC_ADDRESS, *PDOT11_MAC_ADDRESS;">DOT11_MAC_ADDRESS</a>      MacAddr;
+  DOT11_ASSOC_STATUS     uStatus;
+  BOOLEAN                bReAssocReq;
+  BOOLEAN                bReAssocResp;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocReqOffset;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocReqSize;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocRespOffset;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocRespSize;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uBeaconOffset;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uBeaconSize;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uIHVDataOffset;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uIHVDataSize;
+  <a href="dot11_auth_algorithm" title="typedef enum _DOT11_AUTH_ALGORITHM {&#10;  DOT11_AUTH_ALGO_80211_OPEN = 1,&#10;  DOT11_AUTH_ALGO_80211_SHARED_KEY = 2,&#10;  DOT11_AUTH_ALGO_WPA = 3,&#10;  DOT11_AUTH_ALGO_WPA_PSK = 4,&#10;  DOT11_AUTH_ALGO_WPA_NONE = 5,&#10;  DOT11_AUTH_ALGO_RSNA = 6,&#10;  DOT11_AUTH_ALGO_RSNA_PSK = 7,&#10;  DOT11_AUTH_ALGO_WPA3 = 8,&#10;  DOT11_AUTH_ALGO_WPA3_ENT_192 = DOT11_AUTH_ALGO_WPA3,&#10;  DOT11_AUTH_ALGO_WPA3_SAE = 9,&#10;  DOT11_AUTH_ALGO_OWE = 10,&#10;  DOT11_AUTH_ALGO_WPA3_ENT = 11,&#10;  DOT11_AUTH_ALGO_IHV_START = 0x80000000,&#10;  DOT11_AUTH_ALGO_IHV_END = 0xffffffff&#10;} DOT11_AUTH_ALGORITHM, *PDOT11_AUTH_ALGORITHM;">DOT11_AUTH_ALGORITHM</a>   AuthAlgo;
+  <a href="dot11_cipher_algorithm" title="typedef enum _DOT11_CIPHER_ALGORITHM {&#10;  DOT11_CIPHER_ALGO_NONE = 0x00,&#10;  DOT11_CIPHER_ALGO_WEP40 = 0x01,&#10;  DOT11_CIPHER_ALGO_TKIP = 0x02,&#10;  DOT11_CIPHER_ALGO_CCMP = 0x04,&#10;  DOT11_CIPHER_ALGO_WEP104 = 0x05,&#10;  DOT11_CIPHER_ALGO_BIP = 0x06,&#10;  DOT11_CIPHER_ALGO_GCMP = 0x08,&#10;  DOT11_CIPHER_ALGO_GCMP_256 = 0x09,&#10;  DOT11_CIPHER_ALGO_CCMP_256 = 0x0a,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_128 = 0x0b,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_256 = 0x0c,&#10;  DOT11_CIPHER_ALGO_BIP_CMAC_256 = 0x0d,&#10;  DOT11_CIPHER_ALGO_WPA_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_RSN_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_WEP = 0x101,&#10;  DOT11_CIPHER_ALGO_IHV_START = 0x80000000,&#10;  DOT11_CIPHER_ALGO_IHV_END = 0xffffffff&#10;} DOT11_CIPHER_ALGORITHM, *PDOT11_CIPHER_ALGORITHM;">DOT11_CIPHER_ALGORITHM</a> UnicastCipher;
+  <a href="dot11_cipher_algorithm" title="typedef enum _DOT11_CIPHER_ALGORITHM {&#10;  DOT11_CIPHER_ALGO_NONE = 0x00,&#10;  DOT11_CIPHER_ALGO_WEP40 = 0x01,&#10;  DOT11_CIPHER_ALGO_TKIP = 0x02,&#10;  DOT11_CIPHER_ALGO_CCMP = 0x04,&#10;  DOT11_CIPHER_ALGO_WEP104 = 0x05,&#10;  DOT11_CIPHER_ALGO_BIP = 0x06,&#10;  DOT11_CIPHER_ALGO_GCMP = 0x08,&#10;  DOT11_CIPHER_ALGO_GCMP_256 = 0x09,&#10;  DOT11_CIPHER_ALGO_CCMP_256 = 0x0a,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_128 = 0x0b,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_256 = 0x0c,&#10;  DOT11_CIPHER_ALGO_BIP_CMAC_256 = 0x0d,&#10;  DOT11_CIPHER_ALGO_WPA_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_RSN_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_WEP = 0x101,&#10;  DOT11_CIPHER_ALGO_IHV_START = 0x80000000,&#10;  DOT11_CIPHER_ALGO_IHV_END = 0xffffffff&#10;} DOT11_CIPHER_ALGORITHM, *PDOT11_CIPHER_ALGORITHM;">DOT11_CIPHER_ALGORITHM</a> MulticastCipher;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uActivePhyListOffset;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uActivePhyListSize;
+  BOOLEAN                bFourAddressSupported;
+  BOOLEAN                bPortAuthorized;
+  <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>                  ucActiveQoSProtocol;
+  DOT11_DS_INFO          DSInfo;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uEncapTableOffset;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uEncapTableSize;
+  <a href="dot11_cipher_algorithm" title="typedef enum _DOT11_CIPHER_ALGORITHM {&#10;  DOT11_CIPHER_ALGO_NONE = 0x00,&#10;  DOT11_CIPHER_ALGO_WEP40 = 0x01,&#10;  DOT11_CIPHER_ALGO_TKIP = 0x02,&#10;  DOT11_CIPHER_ALGO_CCMP = 0x04,&#10;  DOT11_CIPHER_ALGO_WEP104 = 0x05,&#10;  DOT11_CIPHER_ALGO_BIP = 0x06,&#10;  DOT11_CIPHER_ALGO_GCMP = 0x08,&#10;  DOT11_CIPHER_ALGO_GCMP_256 = 0x09,&#10;  DOT11_CIPHER_ALGO_CCMP_256 = 0x0a,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_128 = 0x0b,&#10;  DOT11_CIPHER_ALGO_BIP_GMAC_256 = 0x0c,&#10;  DOT11_CIPHER_ALGO_BIP_CMAC_256 = 0x0d,&#10;  DOT11_CIPHER_ALGO_WPA_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_RSN_USE_GROUP = 0x100,&#10;  DOT11_CIPHER_ALGO_WEP = 0x101,&#10;  DOT11_CIPHER_ALGO_IHV_START = 0x80000000,&#10;  DOT11_CIPHER_ALGO_IHV_END = 0xffffffff&#10;} DOT11_CIPHER_ALGORITHM, *PDOT11_CIPHER_ALGORITHM;">DOT11_CIPHER_ALGORITHM</a> MulticastMgmtCipher;
+  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                  uAssocComebackTime;
 } DOT11_ASSOCIATION_COMPLETION_PARAMETERS, *PDOT11_ASSOCIATION_COMPLETION_PARAMETERS;
 </code></pre>
 <h2>Remarks</h2>
 <p>The miniport driver must set the <strong>uEncapTableOffset</strong> and <strong>uEncapTableSize</strong> members to zero if any of the following are true:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The BSS association does not require changes to the operating system's default list of EtherType encapsulations.</li>
+<li>The <strong>uStatus</strong> member is not set to DOT11_ASSOCIATION_STATUS_SUCCESS.</li>
+<li>The Extensible Station (ExtSTA) <strong>dot11DesiredBSSType</strong> management information base (MIB) object is set to <strong>dot11_BSS_type_independent</strong>.</li>
 </ul>
 <p>For more information about the IEEE 802.11 <strong>dot11DesiredBSSType</strong> MIB object, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-dot11-desired-bss-type">OID_DOT11_DESIRED_BSS_TYPE</a>.</p>
 <p>For more information about the association operation, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/association-operations">Association Operations</a>.</p>

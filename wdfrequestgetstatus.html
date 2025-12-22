@@ -76,12 +76,8 @@
 <h2>Remarks</h2>
 <p>The <strong>WdfRequestGetStatus</strong> method returns one of the following:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>If a driver's call to <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> succeeds, <strong>WdfRequestGetStatus</strong> returns the status value that is set by the driver that calls <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> to complete the specified request. The driver typically calls <strong>WdfRequestGetStatus</strong> from within a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function.</li>
+<li>If a driver's call to <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> fails, <strong>WdfRequestGetStatus</strong> returns a status value that the framework has set to describe the failure. The driver can call <strong>WdfRequestGetStatus</strong> immediately after calling <strong><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></strong>.</li>
 </ul>
 <p>If the driver sets the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/ne-wdfrequest-_wdf_request_send_options_flags">WDF_REQUEST_SEND_OPTION_SYNCHRONOUS</a> flag for a request when calling <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>, the driver can call <strong>WdfRequestGetStatus</strong> immediately after calling <strong><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></strong>, whether the call to <strong><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></strong> succeeds or fails.</p>
 <p>For more information about request completion, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">Completing I/O Requests</a>.</p>
@@ -89,31 +85,34 @@
 <p>The following code example is from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">KbFiltr</a> sample driver. This example sends an I/O request to an I/O target. If <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> fails, the example uses the <strong>WdfRequestGetStatus</strong> return value as input to <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>.</p>
 <pre><code>VOID
 KbFilter_ForwardRequest(
-IN WDFREQUEST Request,
-IN WDFIOTARGET Target
-)
+    IN WDFREQUEST Request,
+    IN WDFIOTARGET Target
+    )
 {
-<a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a> options;
-BOOLEAN ret;
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
-<a href="wdf_request_send_options_init" title="VOID WDF_REQUEST_SEND_OPTIONS_INIT(&#10;  [out] PWDF_REQUEST_SEND_OPTIONS Options,&#10;  [in]  ULONG                     Flags&#10;);">WDF_REQUEST_SEND_OPTIONS_INIT</a>(
-&amp;options,
-WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET
-);
-ret = <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>(
-Request,
-Target,
-&amp;options
-);
-if (ret == FALSE) {
-status = WdfRequestGetStatus (Request);
-DebugPrint(("<a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> failed: 0x%x\n", status));
-<a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
-Request,
-status
-);
-}
-return;
+    <a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a> options;
+    BOOLEAN ret;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
+
+    <a href="wdf_request_send_options_init" title="VOID WDF_REQUEST_SEND_OPTIONS_INIT(&#10;  [out] PWDF_REQUEST_SEND_OPTIONS Options,&#10;  [in]  ULONG                     Flags&#10;);">WDF_REQUEST_SEND_OPTIONS_INIT</a>(
+                                  &amp;options,
+                                  WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET
+                                  );
+
+    ret = <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>(
+                         Request,
+                         Target,
+                         &amp;options
+                         );
+
+    if (ret == FALSE) {
+        status = WdfRequestGetStatus (Request);
+        DebugPrint((&quot;<a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> failed: 0x%x\n&quot;, status));
+        <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
+                           Request,
+                           status
+                           );
+    }
+    return;
 }
 </code></pre>
 <h2>See also</h2>

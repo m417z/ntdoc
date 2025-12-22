@@ -73,24 +73,24 @@
 <p>Reserved for future use.</p>
 <p>Toggles the error reporting for the FPGA device and its parent bridge.</p>
 <h2>Parameters</h2>
-<h3><code>Context</code> [_In_reads_opt_(_Inexpressible_("varies"))]</h3>
+<h3><code>Context</code> [<em>In_reads_opt</em>(<em>Inexpressible</em>(&quot;varies&quot;))]</h3>
 <p>The handle to the bus extension.</p>
-<h3><code>UncorrectableMask</code> [_In_]</h3>
+<h3><code>UncorrectableMask</code> [<em>In</em>]</h3>
 <p>A bitwise mask of flags defined in <strong><a href="pci_express_uncorrectable_error_mask" title="typedef union _PCI_EXPRESS_UNCORRECTABLE_ERROR_MASK {&#10;  struct {&#10;    ULONG Undefined : 1;&#10;    ULONG Reserved1 : 3;&#10;    ULONG DataLinkProtocolError : 1;&#10;    ULONG SurpriseDownError : 1;&#10;    ULONG Reserved2 : 6;&#10;    ULONG PoisonedTLP : 1;&#10;    ULONG FlowControlProtocolError : 1;&#10;    ULONG CompletionTimeout : 1;&#10;    ULONG CompleterAbort : 1;&#10;    ULONG UnexpectedCompletion : 1;&#10;    ULONG ReceiverOverflow : 1;&#10;    ULONG MalformedTLP : 1;&#10;    ULONG ECRCError : 1;&#10;    ULONG UnsupportedRequestError : 1;&#10;    ULONG AcsViolation : 1;&#10;    ULONG UncorrectableInternalError : 1;&#10;    ULONG MCBlockedTlp : 1;&#10;    ULONG AtomicOpEgressBlocked : 1;&#10;...">PCI_EXPRESS_UNCORRECTABLE_ERROR_MASK</a></strong> that indicates the uncorrectable masks to be toggled.</p>
-<h3><code>CorrectableMask</code> [_In_]</h3>
+<h3><code>CorrectableMask</code> [<em>In</em>]</h3>
 <p>A bitwise mask of flags defined in <strong><a href="ppci_correctable_error_mask" title="typedef union _PCI_EXPRESS_CORRECTABLE_ERROR_MASK {&#10;  struct {&#10;    ULONG ReceiverError : 1;&#10;    ULONG Reserved1 : 5;&#10;    ULONG BadTLP : 1;&#10;    ULONG BadDLLP : 1;&#10;    ULONG ReplayNumRollover : 1;&#10;    ULONG Reserved2 : 3;&#10;    ULONG ReplayTimerTimeout : 1;&#10;    ULONG AdvisoryNonFatalError : 1;&#10;    ULONG CorrectedInternalError : 1;&#10;    ULONG HeaderLogOverflow : 1;&#10;    ULONG Reserved3 : 16;&#10;  } DUMMYSTRUCTNAME;&#10;  ULONG  AsULONG;&#10;} PCI_EXPRESS_CORRECTABLE_ERROR_MASK, *PPCI_CORRECTABLE_ERROR_MASK;">PCI_EXPRESS_CORRECTABLE_ERROR_MASK</a></strong> that indicates the correctable masks to be toggled.</p>
-<h3><code>DisableErrorReporting</code> [_In_]</h3>
+<h3><code>DisableErrorReporting</code> [<em>In</em>]</h3>
 <p>A flag indicates whether the error reporting is being disabled or enabled.</p>
 <h2>Return value</h2>
 <p>Return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, return an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Values error code. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS Values</a>.</p>
 <h2>Remarks</h2>
-<p>A device driver that successfully queries for the GUID_PCI_FPGA_CONTROL_INTERFACE interface receives a pointer to a <strong><a href="fpga_control_interface" title="typedef struct _FPGA_CONTROL_INTERFACE {&#10;  USHORT                        Size;&#10;  USHORT                        Version;&#10;  PVOID                         Context;&#10;  PINTERFACE_REFERENCE          InterfaceReference;&#10;  PINTERFACE_DEREFERENCE        InterfaceDereference;&#10;  PFPGA_BUS_SCAN                BusScan;&#10;  PFPGA_CONTROL_LINK            ControlLink;&#10;  PFPGA_CONTROL_CONFIG_SPACE    ControlConfigSpace;&#10;  PFPGA_CONTROL_ERROR_REPORTING ControlErrorReporting;&#10;} FPGA_CONTROL_INTERFACE, *PFPGA_CONTROL_INTERFACE;">FPGA_CONTROL_INTERFACE</a></strong> structure in which the driver sets the <strong>ControlErrorReporting</strong> member to a pointer to its implementation of the _FPGA_CONTROL_CONFIG_SPACE_ callback function.</p>
+<p>A device driver that successfully queries for the GUID_PCI_FPGA_CONTROL_INTERFACE interface receives a pointer to a <strong><a href="fpga_control_interface" title="typedef struct _FPGA_CONTROL_INTERFACE {&#10;  USHORT                        Size;&#10;  USHORT                        Version;&#10;  PVOID                         Context;&#10;  PINTERFACE_REFERENCE          InterfaceReference;&#10;  PINTERFACE_DEREFERENCE        InterfaceDereference;&#10;  PFPGA_BUS_SCAN                BusScan;&#10;  PFPGA_CONTROL_LINK            ControlLink;&#10;  PFPGA_CONTROL_CONFIG_SPACE    ControlConfigSpace;&#10;  PFPGA_CONTROL_ERROR_REPORTING ControlErrorReporting;&#10;} FPGA_CONTROL_INTERFACE, *PFPGA_CONTROL_INTERFACE;">FPGA_CONTROL_INTERFACE</a></strong> structure in which the driver sets the <strong>ControlErrorReporting</strong> member to a pointer to its implementation of the <em><a href="fpga_control_config_space" title="FPGA_CONTROL_CONFIG_SPACE FpgaControlConfigSpace;&#10;&#10;NTSTATUS FpgaControlConfigSpace(&#10;  [_In_reads_opt_(_Inexpressible_(&quot;varies&quot;))] PVOID Context,&#10;  [_In_]                                      BOOLEAN Enable&#10;)&#10;{...}">FPGA_CONTROL_CONFIG_SPACE</a></em> callback function.</p>
 <ul>
 <li>
-
+<p>This callback function expects that the FPGA device is in D0 state and its configuration space has not been locked.</p>
 </li>
 <li>
-
+<p>When <em>DisableErrorReporting</em> is set to TRUE, each set bit in the given masks is set in the AER capability of the FPGA device. When <em>DisableErrorReporting</em> is set to FALSE, the original AER masks will be restored.</p>
 </li>
 </ul>
 <h2>See also</h2>

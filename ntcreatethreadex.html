@@ -114,79 +114,35 @@ ZwCreateThreadEx(
 <p>Creates a new thread in the specified process.</p>
 <h1>Parameters</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><code>ThreadHandle</code> - a pointer to a variable that receives a handle to the new thread.</li>
+<li><code>DesiredAccess</code> - the thread access mask to provide on the returned handle. This value is usually <code><a href="thread_all_access" title="#define THREAD_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | SPECIFIC_RIGHTS_ALL)">THREAD_ALL_ACCESS</a></code>.</li>
+<li><code>ObjectAttributes</code> - an optional pointer to an <code><a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a></code> structure that specifies attributes for the new object/handle, such as the security descriptor and handle inheritance.</li>
+<li><code>ProcessHandle</code> - a handle to the process where the thread should be created. This can either be the <code><a href="ntcurrentprocess" title="#define NtCurrentProcess() ((HANDLE)(LONG_PTR)-1)">NtCurrentProcess</a></code> pseudo-handle or a handle with <code><a href="process_create_thread" title="#define PROCESS_CREATE_THREAD 0x0002">PROCESS_CREATE_THREAD</a></code> access.</li>
+<li><code>StartRoutine</code> - the function to execute on the new thread.</li>
+<li><code>Argument</code> - a user-provided argument to pass to the thread start routine.</li>
+<li><code>CreateFlags</code> - a bit mask that control the properties of the new thread or its creation. See below.</li>
+<li><code>ZeroBits</code> - the number of high-order address bits that must be zero in the base address of the thread's stack. Note that when the value is larger than 32, it becomes a bit mask.</li>
+<li><code>StackSize</code> - the initial size of the stack, in bytes. The system rounds this value up to the nearest page. If this parameter is zero, the new thread uses the default size for the executable.</li>
+<li><code>MaximumStackSize</code> - the maximum size of the stack, in bytes. The system rounds this value up to the nearest page. If this parameter is zero, the new thread uses the default size for the executable.</li>
+<li><code>AttributeList</code> - an optional pointer to a buffer that defines a list of <code><a href="ps_attribute" title="typedef struct _PS_ATTRIBUTE&#10;{&#10;    ULONG_PTR Attribute;&#10;    SIZE_T Size;&#10;    union&#10;    {&#10;        ULONG_PTR Value;&#10;        PVOID ValuePtr;&#10;    };&#10;    PSIZE_T ReturnLength;&#10;} PS_ATTRIBUTE, *PPS_ATTRIBUTE;">PS_ATTRIBUTE</a></code> structures that control various aspects of thread creation and allow retrieving information about the new thread.</li>
 </ul>
 <h1>Creation flags</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><code><a href="thread_create_flags_create_suspended" title="#define THREAD_CREATE_FLAGS_CREATE_SUSPENDED 0x00000001 // NtCreateUserProcess &amp; NtCreateThreadEx">THREAD_CREATE_FLAGS_CREATE_SUSPENDED</a></code> - create the thread in a suspended state instead of allowing it to execute immediately.</li>
+<li><code><a href="thread_create_flags_skip_thread_attach" title="#define THREAD_CREATE_FLAGS_SKIP_THREAD_ATTACH 0x00000002 // NtCreateThreadEx only">THREAD_CREATE_FLAGS_SKIP_THREAD_ATTACH</a></code> - the thread should skip calling loaded modules with <code>DLL_THREAD_ATTACH</code> reason.</li>
+<li><code><a href="thread_create_flags_hide_from_debugger" title="#define THREAD_CREATE_FLAGS_HIDE_FROM_DEBUGGER 0x00000004 // NtCreateThreadEx only">THREAD_CREATE_FLAGS_HIDE_FROM_DEBUGGER</a></code> - suppress generation of debug events on the thread.</li>
+<li><code><a href="thread_create_flags_loader_worker" title="#define THREAD_CREATE_FLAGS_LOADER_WORKER 0x00000010 // NtCreateThreadEx only // since THRESHOLD">THREAD_CREATE_FLAGS_LOADER_WORKER</a></code> - set the corresponding flag in <code><a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a></code>.</li>
+<li><code><a href="thread_create_flags_skip_loader_init" title="#define THREAD_CREATE_FLAGS_SKIP_LOADER_INIT 0x00000020 // NtCreateThreadEx only // since REDSTONE2">THREAD_CREATE_FLAGS_SKIP_LOADER_INIT</a></code> - set the corresponding flag in <code><a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a></code>.</li>
+<li><code><a href="thread_create_flags_bypass_process_freeze" title="#define THREAD_CREATE_FLAGS_BYPASS_PROCESS_FREEZE 0x00000040 // NtCreateThreadEx only // since 19H1">THREAD_CREATE_FLAGS_BYPASS_PROCESS_FREEZE</a></code> - the thread should not be suspended when the system suspends or freezes the process.</li>
 </ul>
 <p>Check the corresponding pages for more details.</p>
 <h1>Supported attributes</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><code><a href="ps_attribute_client_id" title="#define PS_ATTRIBUTE_CLIENT_ID \&#10;    PsAttributeValue(PsAttributeClientId, TRUE, FALSE, FALSE)">PS_ATTRIBUTE_CLIENT_ID</a></code> - allows retrieving the <code><a href="client_id" title="typedef struct _CLIENT_ID&#10;{&#10;    HANDLE UniqueProcess;&#10;    HANDLE UniqueThread;&#10;} CLIENT_ID, *PCLIENT_ID;">CLIENT_ID</a></code> of the new thread.</li>
+<li><code><a href="ps_attribute_teb_address" title="#define PS_ATTRIBUTE_TEB_ADDRESS \&#10;    PsAttributeValue(PsAttributeTebAddress, TRUE, FALSE, FALSE)">PS_ATTRIBUTE_TEB_ADDRESS</a></code> - allows retrieving the <code><a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a></code> address of the new thread.</li>
+<li><code><a href="ps_attribute_ideal_processor" title="#define PS_ATTRIBUTE_IDEAL_PROCESSOR \&#10;    PsAttributeValue(PsAttributeIdealProcessor, TRUE, TRUE, FALSE)">PS_ATTRIBUTE_IDEAL_PROCESSOR</a></code> - allows specifying the ideal processor for new thread.</li>
+<li><code><a href="ps_attribute_ums_thread" title="#define PS_ATTRIBUTE_UMS_THREAD \&#10;    PsAttributeValue(PsAttributeUmsThread, TRUE, TRUE, FALSE)">PS_ATTRIBUTE_UMS_THREAD</a></code> - controls user-mode thread scheduling.</li>
+<li><code><a href="ps_attribute_enable_optional_xstate_features" title="#define PS_ATTRIBUTE_ENABLE_OPTIONAL_XSTATE_FEATURES \&#10;    PsAttributeValue(PsAttributeEnableOptionalXStateFeatures, TRUE, TRUE, FALSE)">PS_ATTRIBUTE_ENABLE_OPTIONAL_XSTATE_FEATURES</a></code> - controls extended thread context features.</li>
 </ul>
 <p>Check the corresponding pages for more details.</p>
 <h1>Remarks</h1>
@@ -194,30 +150,16 @@ ZwCreateThreadEx(
 <p>For the legacy equivalent of this function, see <code><a href="ntcreatethread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateThread(&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ HANDLE ProcessHandle,&#10;    _Out_ PCLIENT_ID ClientId,&#10;    _In_ PCONTEXT ThreadContext,&#10;    _In_ PINITIAL_TEB InitialTeb,&#10;    _In_ BOOLEAN CreateSuspended&#10;    );">NtCreateThread</a></code>.</p>
 <h1>Related Win32 API</h1>
 <ul>
-<li>
-
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createremotethreadex"><code>CreateRemoteThreadEx</code></a></li>
 </ul>
 <h1>See also</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><code><a href="ntcreatethread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateThread(&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ HANDLE ProcessHandle,&#10;    _Out_ PCLIENT_ID ClientId,&#10;    _In_ PCONTEXT ThreadContext,&#10;    _In_ PINITIAL_TEB InitialTeb,&#10;    _In_ BOOLEAN CreateSuspended&#10;    );">NtCreateThread</a></code></li>
+<li><code><a href="rtlcreateuserthread" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlCreateUserThread(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_opt_ PSECURITY_DESCRIPTOR ThreadSecurityDescriptor,&#10;    _In_ BOOLEAN CreateSuspended,&#10;    _In_opt_ ULONG ZeroBits,&#10;    _In_opt_ SIZE_T MaximumStackSize,&#10;    _In_opt_ SIZE_T CommittedStackSize,&#10;    _In_ PUSER_THREAD_START_ROUTINE StartAddress,&#10;    _In_opt_ PVOID Parameter,&#10;    _Out_opt_ PHANDLE ThreadHandle,&#10;    _Out_opt_ PCLIENT_ID ClientId&#10;    );">RtlCreateUserThread</a></code></li>
+<li><code><a href="ntresumethread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtResumeThread(&#10;    _In_ HANDLE ThreadHandle,&#10;    _Out_opt_ PULONG PreviousSuspendCount&#10;    );">NtResumeThread</a></code></li>
+<li><code><a href="ntopenthread" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThread(&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PCLIENT_ID ClientId&#10;    );">NtOpenThread</a></code></li>
+<li><code><a href="ntopenprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenProcess(&#10;    _Out_ PHANDLE ProcessHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PCLIENT_ID ClientId&#10;    );">NtOpenProcess</a></code></li>
+<li><code><a href="ntcreateuserprocess" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateUserProcess(&#10;    _Out_ PHANDLE ProcessHandle,&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK ProcessDesiredAccess,&#10;    _In_ ACCESS_MASK ThreadDesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ProcessObjectAttributes,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ThreadObjectAttributes,&#10;    _In_ ULONG ProcessFlags, // PROCESS_CREATE_FLAGS_*&#10;    _In_ ULONG ThreadFlags, // THREAD_CREATE_FLAGS_*&#10;    _In_opt_ PRTL_USER_PROCESS_PARAMETERS ProcessParameters,&#10;    _Inout_ PPS_CREATE_INFO CreateInfo,&#10;    _In_opt_ PPS_ATTRIBUTE_LIST AttributeList&#10;    );">NtCreateUserProcess</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/ntcreatethreadex.md">Edit description on GitHub</a>

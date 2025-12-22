@@ -79,66 +79,79 @@ VOID EvtAcxObjectProcessRequest(
 <h3>Example</h3>
 <p>Example usage is shown below.</p>
 <pre><code>EVT_ACX_OBJECT_PROCESS_REQUEST      C_EvtAckMessageCallback;
+
 ...
+
 VOID
 C_EvtAckMessageCallback(
-_In_    WDFOBJECT   Object,
-_In_    WDFREQUEST  Request
-)
+    _In_    WDFOBJECT   Object,
+    _In_    WDFREQUEST  Request
+    )
 {
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>                        status      = STATUS_NOT_SUPPORTED;
-ACXCIRCUIT                      This        = (ACXCIRCUIT)Object;
-CAPTURE_CTRL_CIRCUIT_CONTEXT *  ctrlCtx     = GetCaptureCtrlCircuitContext(This);;
-CAPTURE_DEVICE_CONTEXT *        ctx         = GetCaptureDeviceContext(ctrlCtx-&gt;Device);
-PAPX_ACK_MESSAGE                args        = nullptr;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                           argsCb      = sizeof(APX_ACK_MESSAGE);
-<a href="list_entry" title="typedef struct _LIST_ENTRY LIST_ENTRY, *PLIST_ENTRY;">PLIST_ENTRY</a>                     le          = nullptr;
-PAPX_SYNC_MESSAGE               message     = nullptr;
-<a href="acx_request_parameters" title="typedef struct _ACX_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MajorFunction;&#10;  UCHAR            MinorFunction;&#10;  ACX_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      GUID              Set;&#10;      ULONG             Id;&#10;      ACX_PROPERTY_VERB Verb;&#10;      ACX_ITEM_TYPE     ItemType;&#10;      ULONG             ItemId;&#10;      PVOID             Control;&#10;      ULONG             ControlCb;&#10;      PVOID             Value;&#10;      ULONG             ValueCb;&#10;    } Property;&#10;    struct {&#10;      GUID            Set;&#10;      ULONG           Id;&#10;...">ACX_REQUEST_PARAMETERS</a>          params;
-PAGED_CODE();
-//
-// Get request parameters.
-//
-<a href="acx_request_parameters_init" title="VOID ACX_REQUEST_PARAMETERS_INIT(&#10;  PACX_REQUEST_PARAMETERS Parameters&#10;);">ACX_REQUEST_PARAMETERS_INIT</a>(&amp;params);
-<a href="acxrequestgetparameters" title="VOID AcxRequestGetParameters(&#10;  WDFREQUEST              Request,&#10;  PACX_REQUEST_PARAMETERS Parameters&#10;);">AcxRequestGetParameters</a>(Request, &amp;params);
-<a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(params.Type == AcxRequestTypeMethod);
-<a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(params.Parameters.Method.Verb == AcxMethodVerbSend);
-<a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(params.Parameters.Method.ArgsCb &gt;= argsCb);
-args = (PAPX_ACK_MESSAGE)params.Parameters.Method.Args;
-argsCb = params.Parameters.Method.ArgsCb; // use real value.
-if (args-&gt;Size != argsCb)
-{
-status = STATUS_INVALID_PARAMETER;
-<a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
-goto exit;
-}
-//
-// Find the message to ack.
-//
-<a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a>(&amp;ctx-&gt;Lock, Executive, KernelMode, FALSE, NULL);
-for (le = ctx-&gt;ApxPendingMessages.Flink; le != &amp;ctx-&gt;ApxPendingMessages; le = le-&gt;Flink)
-{
-message = <a href="containing_record" title="#define CONTAINING_RECORD(address, type, field) \&#10;    ((type *)((ULONG_PTR)(address) - UFIELD_OFFSET(type, field)))">CONTAINING_RECORD</a>(le, APX_SYNC_MESSAGE, ListEntry);
-if (message-&gt;MessageId == args-&gt;MessageId)
-{
-message-&gt;Result = args-&gt;Result;
-<a href="kesetevent" title="LONG KeSetEvent(&#10;  [in, out] PRKEVENT  Event,&#10;  [in]      KPRIORITY Increment,&#10;  [in]      BOOLEAN   Wait&#10;);">KeSetEvent</a>(&amp;message-&gt;Event, 0, FALSE);
-break;
-}
-message = nullptr;
-}
-<a href="kereleasemutex" title="LONG KeReleaseMutex(&#10;  [in, out] PRKMUTEX Mutex,&#10;  [in]      BOOLEAN  Wait&#10;);">KeReleaseMutex</a>(&amp;ctx-&gt;Lock, FALSE);
-if (message)
-{
-status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-}
-else
-{
-// The pending message must have timeout out and thus got cancelled.
-status = STATUS_CANCELLED;
-}
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>                        status      = STATUS_NOT_SUPPORTED;
+    ACXCIRCUIT                      This        = (ACXCIRCUIT)Object;
+    CAPTURE_CTRL_CIRCUIT_CONTEXT *  ctrlCtx     = GetCaptureCtrlCircuitContext(This);;
+    CAPTURE_DEVICE_CONTEXT *        ctx         = GetCaptureDeviceContext(ctrlCtx-&gt;Device);
+    PAPX_ACK_MESSAGE                args        = nullptr;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                           argsCb      = sizeof(APX_ACK_MESSAGE);
+    <a href="list_entry" title="typedef struct _LIST_ENTRY LIST_ENTRY, *PLIST_ENTRY;">PLIST_ENTRY</a>                     le          = nullptr;
+    PAPX_SYNC_MESSAGE               message     = nullptr;
+    <a href="acx_request_parameters" title="typedef struct _ACX_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MajorFunction;&#10;  UCHAR            MinorFunction;&#10;  ACX_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      GUID              Set;&#10;      ULONG             Id;&#10;      ACX_PROPERTY_VERB Verb;&#10;      ACX_ITEM_TYPE     ItemType;&#10;      ULONG             ItemId;&#10;      PVOID             Control;&#10;      ULONG             ControlCb;&#10;      PVOID             Value;&#10;      ULONG             ValueCb;&#10;    } Property;&#10;    struct {&#10;      GUID            Set;&#10;      ULONG           Id;&#10;...">ACX_REQUEST_PARAMETERS</a>          params;
+
+    PAGED_CODE();
+
+    //
+    // Get request parameters.
+    //
+    <a href="acx_request_parameters_init" title="VOID ACX_REQUEST_PARAMETERS_INIT(&#10;  PACX_REQUEST_PARAMETERS Parameters&#10;);">ACX_REQUEST_PARAMETERS_INIT</a>(&amp;params);
+    <a href="acxrequestgetparameters" title="VOID AcxRequestGetParameters(&#10;  WDFREQUEST              Request,&#10;  PACX_REQUEST_PARAMETERS Parameters&#10;);">AcxRequestGetParameters</a>(Request, &amp;params);
+
+    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(params.Type == AcxRequestTypeMethod);
+    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(params.Parameters.Method.Verb == AcxMethodVerbSend);
+    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(params.Parameters.Method.ArgsCb &gt;= argsCb);
+
+    args = (PAPX_ACK_MESSAGE)params.Parameters.Method.Args;
+    argsCb = params.Parameters.Method.ArgsCb; // use real value.
+
+    if (args-&gt;Size != argsCb)
+    {
+        status = STATUS_INVALID_PARAMETER;
+        <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
+        goto exit;
+    }
+
+    //
+    // Find the message to ack.
+    //
+    <a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a>(&amp;ctx-&gt;Lock, Executive, KernelMode, FALSE, NULL);
+
+    for (le = ctx-&gt;ApxPendingMessages.Flink; le != &amp;ctx-&gt;ApxPendingMessages; le = le-&gt;Flink)
+    {
+        message = <a href="containing_record" title="#define CONTAINING_RECORD(address, type, field) \&#10;    ((type *)((ULONG_PTR)(address) - UFIELD_OFFSET(type, field)))">CONTAINING_RECORD</a>(le, APX_SYNC_MESSAGE, ListEntry);
+        if (message-&gt;MessageId == args-&gt;MessageId)
+        {
+            message-&gt;Result = args-&gt;Result;
+            <a href="kesetevent" title="LONG KeSetEvent(&#10;  [in, out] PRKEVENT  Event,&#10;  [in]      KPRIORITY Increment,&#10;  [in]      BOOLEAN   Wait&#10;);">KeSetEvent</a>(&amp;message-&gt;Event, 0, FALSE);
+            break;
+        }
+
+        message = nullptr;
+    }
+
+    <a href="kereleasemutex" title="LONG KeReleaseMutex(&#10;  [in, out] PRKMUTEX Mutex,&#10;  [in]      BOOLEAN  Wait&#10;);">KeReleaseMutex</a>(&amp;ctx-&gt;Lock, FALSE);
+
+    if (message)
+    {
+        status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+    }
+    else
+    {
+        // The pending message must have timeout out and thus got cancelled.
+        status = STATUS_CANCELLED;
+    }
+
 exit:
-<a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(Request, status);
+    <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(Request, status);
 }
 </code></pre>
 <h3>ACX requirements</h3>
@@ -146,9 +159,7 @@ exit:
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
 <h2>See also</h2>
 <ul>
-<li>
-
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxrequest/">acxrequest.h header</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

@@ -126,32 +126,32 @@
 <p>Otherwise, if an application has not called to get a message, <em>FltMgr</em> puts the minifilter into a wait state as follows:</p>
 <ul>
 <li>
-
+<p>If <strong>Timeout</strong> points to a nonzero value and the application calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fltuser/nf-fltuser-filtergetmessage"><strong>FilterGetMessage</strong></a> before the <strong>Timeout</strong> interval expires, the message is delivered.</p>
 </li>
 <li>
-
+<p>If <strong>Timeout</strong> points to a nonzero value and the application doesn't call <strong>FilterGetMessage</strong> before the <strong>Timeout</strong> interval expires, the message isn't delivered and <strong>FltSendMessage</strong> returns STATUS_TIMEOUT as a success code.</p>
 </li>
 <li>
-
+<p>If <strong>Timeout</strong> points to zero (<code>*Timeout == 0</code>), <strong>FltSendMessage</strong> returns without waiting.</p>
 </li>
 <li>
-
+<p>If <strong>Timeout</strong> is NULL (<code>Timeout == NULL</code>), the minifilter is put into a wait state indefinitely. When the application calls <strong>FilterGetMessage</strong>, the message is delivered.</p>
 </li>
 </ul>
 <p>After the message is delivered, if <strong>ReplyBuffer</strong> is NULL, <strong>FltSendMessage</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
 <p>Otherwise, if <strong>ReplyBuffer</strong> isn't NULL, the minifilter is put into a wait state as follows:</p>
 <ul>
 <li>
-
+<p>If <strong>Timeout</strong> is nonzero and the application calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fltuser/nf-fltuser-filterreplymessage"><strong>FilterReplyMessage</strong></a> before the <strong>Timeout</strong> interval expires, the minifilter receives the reply, and <strong>FltSendMessage</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
 </li>
 <li>
-
+<p>If <strong>Timeout</strong> is nonzero and the minifilter doesn't receive a reply before the <strong>Timeout</strong> interval expires, <strong>FltSendMessage</strong> returns STATUS_TIMEOUT as a success code.</p>
 </li>
 <li>
-
+<p>If <strong>Timeout</strong> points to zero (<code>*Timeout == 0</code>), <strong>FltSendMessage</strong> returns without waiting.</p>
 </li>
 <li>
-
+<p>If <strong>Timeout</strong> is zero when the minifilter is waiting for the reply, the minifilter is put into a wait state indefinitely. When the application calls <strong>FilterReplyMessage</strong>, the minifilter receives the reply, and <strong>FltSendMessage</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
 </li>
 </ul>
 <h3>Padding and Buffer Size</h3>
@@ -159,8 +159,8 @@
 <p>For example, say a minifilter declares the following structure in which to receive a reply, and passes a pointer to it in <strong>ReplyBuffer</strong>:</p>
 <pre><code>typedef struct _REPLY_STRUCT
 {
-<a href="filter_reply_header" title="typedef struct _FILTER_REPLY_HEADER {&#10;  NTSTATUS  Status;&#10;  ULONGLONG MessageId;&#10;} FILTER_REPLY_HEADER, *PFILTER_REPLY_HEADER;">FILTER_REPLY_HEADER</a> Header;
-REPLY_DATA Data;  // The structure to be sent to the minifilter with the reply.
+    <a href="filter_reply_header" title="typedef struct _FILTER_REPLY_HEADER {&#10;  NTSTATUS  Status;&#10;  ULONGLONG MessageId;&#10;} FILTER_REPLY_HEADER, *PFILTER_REPLY_HEADER;">FILTER_REPLY_HEADER</a> Header;
+    REPLY_DATA Data;  // The structure to be sent to the minifilter with the reply.
 } REPLY_STRUCT, *PREPLY_STRUCT;
 </code></pre>
 <p><strong>ReplyBuffer</strong> must be allocated with sufficient space to hold the entire structure including any padding. Therefore, ReplyLength should be set to <code>sizeof(REPLY_STRUCT)</code>, not <code>sizeof(<a href="filter_reply_header" title="typedef struct _FILTER_REPLY_HEADER {&#10;  NTSTATUS  Status;&#10;  ULONGLONG MessageId;&#10;} FILTER_REPLY_HEADER, *PFILTER_REPLY_HEADER;">FILTER_REPLY_HEADER</a>) + sizeof(REPLY_DATA)</code>.</p>

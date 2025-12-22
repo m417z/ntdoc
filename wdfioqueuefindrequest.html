@@ -117,18 +117,10 @@
 <p>Every call to <strong>WdfIoQueueFindRequest</strong> that returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> increments the reference count of the request object whose handle is returned in <em>OutRequest</em>. Therefore, your driver must call <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a> after you have finished using the handle.</p>
 <p>Calling <strong>WdfIoQueueFindRequest</strong> does <em>not</em> grant the driver <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/request-ownership">ownership</a> of any requests. If you want your driver to obtain ownership of a request so that it can process the request, the driver must call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/kmdf-wdfioqueueretrievefoundrequest">WdfIoQueueRetrieveFoundRequest</a>. In fact, the driver can do only the following with the handle that it receives for the <em>OutRequest</em> parameter:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Use it as the <em>FoundRequest</em> parameter in a subsequent call to <strong>WdfIoQueueFindRequest</strong>.</li>
+<li>Use it as the <em>FoundRequest</em> parameter in a subsequent call to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/kmdf-wdfioqueueretrievefoundrequest">WdfIoQueueRetrieveFoundRequest</a>.</li>
+<li>Use it as the input parameter in a subsequent call to <a href="wdfobjectgettypedcontext" title="PVOID WdfObjectGetTypedContext(&#10;    Handle,&#10;    Type&#10;);">WdfObjectGetTypedContext</a> or a driver-defined method for accessing the object's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-object-context-space">context space</a>.</li>
+<li>Use it as the input parameter to <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>.</li>
 </ul>
 <p>If a call to <strong>WdfIoQueueFindRequest</strong> returns STATUS_NOT_FOUND, a request that was previously in the queue has been removed. The request might have been canceled. A call to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/kmdf-wdfioqueueretrievefoundrequest">WdfIoQueueRetrieveFoundRequest</a> can also return STATUS_NOT_FOUND.</p>
 <p>For more information about the <strong>WdfIoQueueFindRequest</strong> method, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/managing-i-o-queues">Managing I/O Queues</a>.</p>
@@ -137,86 +129,90 @@
 <p>The following code example is from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">PCIDRV</a> sample driver. This example searches an I/O queue for a request that contains a specified I/O function code. If a matching request is found, the example calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/kmdf-wdfioqueueretrievefoundrequest">WdfIoQueueRetrieveFoundRequest</a>.</p>
 <pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NICGetIoctlRequest(
-IN WDFQUEUE Queue,
-IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FunctionCode,
-OUT WDFREQUEST*  Request
-)
+    IN WDFQUEUE Queue,
+    IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FunctionCode,
+    OUT WDFREQUEST*  Request
+    )
 {
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = STATUS_UNSUCCESSFUL;
-<a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
-WDFREQUEST  tagRequest;
-WDFREQUEST  prevTagRequest;
-<a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
-*Request = NULL;
-prevTagRequest = tagRequest = NULL;
-do {
-<a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
-status = WdfIoQueueFindRequest(
-Queue,
-prevTagRequest,
-NULL,
-&amp;params,
-&amp;tagRequest
-);
-if (prevTagRequest) {
-<a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(prevTagRequest);
-}
-if (status == STATUS_NO_MORE_ENTRIES) {
-status = STATUS_UNSUCCESSFUL;
-break;
-}
-if (status == STATUS_NOT_FOUND) {
-//
-// The prevTagRequest request has disappeared from the
-// queue. There might be other requests that match
-// the criteria, so restart the search.
-//
-prevTagRequest = tagRequest = NULL;
-continue;
-}
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-status = STATUS_UNSUCCESSFUL;
-break;
-}
-if (FunctionCode == params.Parameters.DeviceIoControl.IoControlCode){
-//
-// Found a match. Retrieve the request from the queue.
-//
-status = <a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a>(
-Queue,
-tagRequest,
-Request
-);
-<a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(tagRequest);
-if (status == STATUS_NOT_FOUND) {
-//
-// The tagRequest request has disappeared from the
-// queue. There might be other requests that match
-// the criteria, so restart the search.
-//
-prevTagRequest = tagRequest = NULL;
-continue;
-}
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-status = STATUS_UNSUCCESSFUL;
-break;
-}
-//
-//  Found a request.
-//
-<a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(*Request == tagRequest);
-status =  <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-break;
-} else {
-//
-// This request is not the correct one. Drop the reference
-// on the tagRequest after the driver obtains the next request.
-//
-prevTagRequest = tagRequest;
-continue;
-}
-} while (TRUE);
-return status;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = STATUS_UNSUCCESSFUL;
+    <a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
+    WDFREQUEST  tagRequest;
+    WDFREQUEST  prevTagRequest;
+
+    <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
+
+    *Request = NULL;
+    prevTagRequest = tagRequest = NULL;
+
+    do {
+        <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
+        status = WdfIoQueueFindRequest(
+                                       Queue,
+                                       prevTagRequest,
+                                       NULL,
+                                       &amp;params,
+                                       &amp;tagRequest
+                                       );
+        if (prevTagRequest) {
+            <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(prevTagRequest);
+        }
+        if (status == STATUS_NO_MORE_ENTRIES) {
+            status = STATUS_UNSUCCESSFUL;
+            break;
+        }
+        if (status == STATUS_NOT_FOUND) {
+            //
+            // The prevTagRequest request has disappeared from the
+            // queue. There might be other requests that match
+            // the criteria, so restart the search.
+            //
+            prevTagRequest = tagRequest = NULL;
+            continue;
+        }
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+            status = STATUS_UNSUCCESSFUL;
+            break;
+        }
+        if (FunctionCode == params.Parameters.DeviceIoControl.IoControlCode){
+            //
+            // Found a match. Retrieve the request from the queue.
+            //
+            status = <a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a>(
+                                                    Queue,
+                                                    tagRequest,
+                                                    Request
+                                                    );
+            <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(tagRequest);
+            if (status == STATUS_NOT_FOUND) {
+                //
+                // The tagRequest request has disappeared from the
+                // queue. There might be other requests that match
+                // the criteria, so restart the search.
+                //
+                prevTagRequest = tagRequest = NULL;
+                continue;
+            }
+            if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+                status = STATUS_UNSUCCESSFUL;
+                break;
+            }
+            //
+            //  Found a request.
+            //
+            <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(*Request == tagRequest);
+            status =  <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+            break;
+        } else {
+            //
+            // This request is not the correct one. Drop the reference
+            // on the tagRequest after the driver obtains the next request.
+            //
+            prevTagRequest = tagRequest;
+            continue;
+        }
+    } while (TRUE);
+    return status;
+
 }
 </code></pre>
 <p><strong>Example 2</strong></p>
@@ -225,6 +221,7 @@ return status;
 // Type declaration for the driver's search-specific subroutines.
 //
 typedef BOOLEAN (*PFN_CALLBACK_COMPARE)(WDFREQUEST, <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>);
+
 //
 // General-purpose search routine. One of the routine's
 // parameters is the address of a search-specific
@@ -233,93 +230,101 @@ typedef BOOLEAN (*PFN_CALLBACK_COMPARE)(WDFREQUEST, <a href="ulong" title="typed
 //
 WDFREQUEST
 FindRequestWithMatchingData(
-__in WDFQUEUE Queue,
-__in PFN_CALLBACK_COMPARE CallbackCompare,
-__in <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Data
-)
+    __in WDFQUEUE Queue,
+    __in PFN_CALLBACK_COMPARE CallbackCompare,
+    __in <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Data
+    )
 {
-WDFREQUEST  prevTagRequest = NULL;
-WDFREQUEST  tagRequest = NULL;
-WDFREQUEST  outRequest = NULL;
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = STATUS_INVALID_DEVICE_REQUEST;
-PAGED_CODE();
-do {
-status = WdfIoQueueFindRequest(Queue,
-prevTagRequest,
-NULL,
-NULL,
-&amp;tagRequest);
-if (prevTagRequest) {
-//
-// WdfIoQueueFindRequest incremented the
-// reference count of the prevTagRequest object,
-// so we decrement the count here.
-//
-<a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(prevTagRequest);
-}
-if (status == STATUS_NO_MORE_ENTRIES) {
-<a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>(("WdfIoQueueFindRequest returned status 0x%x\n", status));
-break;
-}
-if (status == STATUS_NOT_FOUND) {
-//
-// The prevTagRequest object is no longer
-// in the queue.
-//
-prevTagRequest = tagRequest = NULL;
-continue;
-}
-if ( !<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-<a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>(("WdfIoQueueFindRequest failed 0x%x\n", status));
-break;
-}
-//
-// We have a handle to the next request that is
-// in the queue. Now we call the subroutine
-// that determines if this request matches our
-// search criteria.
-//
-if (CallbackCompare(tagRequest, Data)) {
-//
-// We found a match. Get the request handle.
-//
-status = <a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a>(Queue,
-tagRequest,
-&amp;outRequest);
-//
-// <a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a> incremented the
-// reference count of the TagRequest object,
-// so we decrement the count here.
-//
-<a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(tagRequest);
-if (status == STATUS_NOT_FOUND) {
-//
-// The TagRequest object is no longer
-// in the queue. But other requests might
-// match our criteria, so we restart the search.
-//
-prevTagRequest = tagRequest = NULL;
-continue;
-}
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-<a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>(("<a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a> failed 0x%x\n",
-status));
-}
-//
-// We found the request we were looking for.
-//
-break;
-} else {
-//
-// The request did not match our criteria.
-// Get another request.
-//
-prevTagRequest = tagRequest;
-continue;
-}
-} while(TRUE);
-return outRequest;
-}
+    WDFREQUEST  prevTagRequest = NULL;
+    WDFREQUEST  tagRequest = NULL;
+    WDFREQUEST  outRequest = NULL;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = STATUS_INVALID_DEVICE_REQUEST;
+
+    PAGED_CODE();
+
+    do {
+        status = WdfIoQueueFindRequest(Queue,
+                                       prevTagRequest,
+                                       NULL,
+                                       NULL,
+                                       &amp;tagRequest);
+        if (prevTagRequest) {
+            //
+            // WdfIoQueueFindRequest incremented the
+            // reference count of the prevTagRequest object,
+            // so we decrement the count here.
+            //
+            <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(prevTagRequest);
+        }
+        if (status == STATUS_NO_MORE_ENTRIES) {
+            <a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>((&quot;WdfIoQueueFindRequest returned status 0x%x\n&quot;, status));
+            break;
+        }
+        if (status == STATUS_NOT_FOUND) {
+            //
+            // The prevTagRequest object is no longer
+            // in the queue.
+            //
+            prevTagRequest = tagRequest = NULL;
+            continue;
+        }
+        if ( !<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+            <a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>((&quot;WdfIoQueueFindRequest failed 0x%x\n&quot;, status));
+            break;
+        }
+
+        //
+        // We have a handle to the next request that is
+        // in the queue. Now we call the subroutine
+        // that determines if this request matches our
+        // search criteria.
+        //
+        if (CallbackCompare(tagRequest, Data)) {
+            //
+            // We found a match. Get the request handle.
+            //
+            status = <a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a>(Queue,
+                                                    tagRequest,
+                                                    &amp;outRequest);
+            //
+            // <a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a> incremented the
+            // reference count of the TagRequest object,
+            // so we decrement the count here.
+            //
+            <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(tagRequest);
+
+            if (status == STATUS_NOT_FOUND) {
+                //
+                // The TagRequest object is no longer
+                // in the queue. But other requests might
+                // match our criteria, so we restart the search.
+                //
+                prevTagRequest = tagRequest = NULL;
+                continue;
+            }
+
+            if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+                <a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>((&quot;<a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a> failed 0x%x\n&quot;,
+                          status));
+            }
+
+            //
+            // We found the request we were looking for.
+            //
+            break;
+
+        } else {
+            //
+            // The request did not match our criteria.
+            // Get another request.
+            //
+            prevTagRequest = tagRequest;
+            continue;
+        }
+    } while(TRUE);
+    return outRequest;
+ }
+
 /
 // An example of a driver's search-specific subroutine.
 // Your driver can have multiple subroutines to handle
@@ -327,36 +332,39 @@ return outRequest;
 //
 BOOLEAN
 CallbackCheckForInfo1(
-__in WDFREQUEST Request,
-__in <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DataToBeMatched
-)
+    __in WDFREQUEST Request,
+    __in <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DataToBeMatched
+    )
 {
-PREQUEST_CONTEXT reqContext;
-PAGED_CODE();
-//
-// Retrieve information that the driver has stored
-// in the request object's context space.
-//
-reqContext = GetRequestContext(Request);
-if (reqContext-&gt;ContextInfo1 == DataToBeMatched) {
-return TRUE;
+    PREQUEST_CONTEXT reqContext;
+
+    PAGED_CODE();
+
+    //
+    // Retrieve information that the driver has stored
+    // in the request object's context space.
+    //
+    reqContext = GetRequestContext(Request);
+    if (reqContext-&gt;ContextInfo1 == DataToBeMatched) {
+        return TRUE;
+    }
+    else {
+        return FALSE;
+    }
 }
-else {
-return FALSE;
-}
-}
+
 //
 // This code shows a call to the FindRequestWithMatchingData routine.
 //
 WDFREQUEST  matchedRequest = NULL;
 ...
 matchedRequest = FindRequestWithMatchingData(readQueue,
-CallbackCheckForInfo1,
-INFO_VALUE);
+                                             CallbackCheckForInfo1,
+                                             INFO_VALUE);
 if (matchedRequest != NULL) {
-//
-// Found a request with a context value of INFO_VALIUE.
-//
+    //
+    // Found a request with a context value of INFO_VALIUE.
+    //
 ...
 }
 ...

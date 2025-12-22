@@ -81,22 +81,14 @@
 <p>IOMMU domain attach and detach is extremely fast, but is nonetheless not currently atomic. This means that a transaction issued over PCIe isn't guaranteed to be translated correctly while swapping to a domain with different mappings.</p>
 <p>To handle this situation, <em>Dxgkrnl</em> calls the following KMD DDI pair:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><strong>DxgkDdiBeginExclusiveAccess</strong> to notify KMD that an IOMMU domain switch is about to occur.</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_endexclusiveaccess"><strong>DxgkDdiEndExclusiveAccess</strong></a> after the IOMMU domain switch is complete.</li>
 </ul>
 <p>The driver must ensure that its hardware is silent whenever the device is switched to a new IOMMU domain. That is, the driver must ensure that it doesn't read or write to system memory from the device between these two calls.</p>
 <p>Between these two calls, <em>Dxgkrnl</em> guarantees the following:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The scheduler will be suspended. All active workloads will be flushed, and no new workloads will be sent to or scheduled on the hardware.</li>
+<li>No other DDI calls will be made.</li>
 </ul>
 <p>As part of these calls, the driver may choose to disable and suppress interrupts (including vsync interrupts) for the duration of the exclusive access, even without explicit notification from the OS.</p>
 <h2>See also</h2>

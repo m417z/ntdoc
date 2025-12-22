@@ -167,26 +167,27 @@
 <h2>Syntax</h2>
 <pre><code>typedef struct _FILE_RENAME_INFORMATION {
 #if (_WIN32_WINNT &gt;= _WIN32_WINNT_WIN10_RS1)
-union {
-BOOLEAN ReplaceIfExists;  // FileRenameInformation
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;              // FileRenameInformationEx
-} DUMMYUNIONNAME;
+    union {
+        BOOLEAN ReplaceIfExists;  // FileRenameInformation
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;              // FileRenameInformationEx
+    } DUMMYUNIONNAME;
 #else
-BOOLEAN ReplaceIfExists;
+    BOOLEAN ReplaceIfExists;
 #endif
-HANDLE RootDirectory;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FileNameLength;
-WCHAR FileName[1];
+    HANDLE RootDirectory;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FileNameLength;
+    WCHAR FileName[1];
 } FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
+
 </code></pre>
 <h2>Remarks</h2>
 <p>The <strong>FILE_RENAME_INFORMATION</strong> structure is used to rename a file. This operation can be performed in either of the following ways:</p>
 <ul>
 <li>
-
+<p>Call <strong><a href="fltsetinformationfile" title="NTSTATUS FLTAPI FltSetInformationFile(&#10;  [in] PFLT_INSTANCE          Instance,&#10;  [in] PFILE_OBJECT           FileObject,&#10;  [in] PVOID                  FileInformation,&#10;  [in] ULONG                  Length,&#10;  [in] FILE_INFORMATION_CLASS FileInformationClass&#10;);">FltSetInformationFile</a></strong> or <strong><a href="ntsetinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_reads_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass&#10;    );">ZwSetInformationFile</a></strong>, passing <strong>FileRenameInformation</strong> as the value of <strong>FileInformationClass</strong> and passing a caller-allocated buffer formatted as a <strong>FILE_RENAME_INFORMATION</strong> structure for the value of <strong>FileInformation</strong>. The <strong>FileHandle</strong> parameter specifies the file to be renamed.</p>
 </li>
 <li>
-
+<p>Create an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with major function code <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-set-information"><strong>IRP_MJ_SET_INFORMATION</strong></a>.</p>
 </li>
 </ul>
 <p>File system minifilters must use <strong><a href="fltsetinformationfile" title="NTSTATUS FLTAPI FltSetInformationFile(&#10;  [in] PFLT_INSTANCE          Instance,&#10;  [in] PFILE_OBJECT           FileObject,&#10;  [in] PVOID                  FileInformation,&#10;  [in] ULONG                  Length,&#10;  [in] FILE_INFORMATION_CLASS FileInformationClass&#10;);">FltSetInformationFile</a></strong>, not <strong><a href="ntsetinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_reads_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass&#10;    );">ZwSetInformationFile</a></strong>, to rename a file.</p>
@@ -194,64 +195,64 @@ WCHAR FileName[1];
 <p>The file name string in the <strong>FileName</strong> member must be specified in one of the following forms.</p>
 <ul>
 <li>
-
+<p>A simple file name. (The <strong>RootDirectory</strong> member is NULL.) In this case, the file is simply renamed within the same directory. That is, the rename operation changes the name of the file but not its location.</p>
 </li>
 <li>
-
+<p>A fully qualified file name. (The <strong>RootDirectory</strong> member is NULL.) In this case, the rename operation changes the name and location of the file.</p>
 </li>
 <li>
-
+<p>A relative file name. In this case, the <strong>RootDirectory</strong> member contains a handle to the target directory for the rename operation. The file name itself must be a simple file name.</p>
 </li>
 </ul>
 <p>General rules for rename operations:</p>
 <ul>
 <li>
-
+<p>A file or directory can only be renamed within a volume. In other words, a rename operation cannot cause a file or directory to be moved to a different volume.</p>
 </li>
 <li>
-
+<p>A volume's root directory cannot be renamed.</p>
 </li>
 <li>
-
+<p>If <strong>ReplaceIfExists</strong> is set to FALSE, and the target exists, the rename operation will fail.</p>
 </li>
 <li>
-
+<p>Even if <strong>ReplaceIfExists</strong> is set to TRUE, the rename operation will still fail if a file with the same name already exists and is a directory, a read-only file, or a currently executing file.</p>
 </li>
 <li>
-
+<p>A volume's files and directories cannot be renamed if the volume is a read-only volume, such as a CDFS volume or a read-only NTFS volume.</p>
 </li>
 </ul>
 <p>Special rules for renaming open files:</p>
 <ul>
 <li>
-
+<p>A file cannot be renamed if it has any open handles, unless it is only open because of a batch opportunistic lock (oplock) and the batch oplock can be broken immediately.</p>
 </li>
 <li>
-
+<p>A file cannot be renamed if a file with the same name exists and has open handles (except in the batch-oplock case described earlier).</p>
 </li>
 <li>
-
+<p>A directory cannot be renamed if it or any of its subdirectories contains a file that has open handles (except in the batch-oplock case described earlier).</p>
 </li>
 </ul>
 <p>Special rules for renaming NTFS data streams:</p>
 <ul>
 <li>
-
+<p>The default directory stream cannot be renamed.</p>
 </li>
 <li>
-
+<p>The new name for the stream must begin with a colon (:).</p>
 </li>
 <li>
-
+<p>A data stream can only be renamed <em>within</em> the same file. In other words, a rename operation cannot cause a data stream to be moved to a different file.</p>
 </li>
 <li>
-
+<p>A data stream on a directory cannot be renamed to the default data stream.</p>
 </li>
 <li>
-
+<p>If <strong>ReplaceIfExists</strong> is set to TRUE, the rename operation will succeed only if a stream with the same name does not exist or is a zero-length data stream.</p>
 </li>
 <li>
-
+<p>&quot;Renaming&quot; the default data stream is allowed, but this is not a true rename, because it leaves behind a zero-length default data stream.</p>
 </li>
 </ul>
 <p>The size of the <strong>FileInformation</strong> buffer passed to <strong><a href="ntsetinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_reads_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass&#10;    );">ZwSetInformationFile</a></strong> or <strong><a href="fltsetinformationfile" title="NTSTATUS FLTAPI FltSetInformationFile(&#10;  [in] PFLT_INSTANCE          Instance,&#10;  [in] PFILE_OBJECT           FileObject,&#10;  [in] PVOID                  FileInformation,&#10;  [in] ULONG                  Length,&#10;  [in] FILE_INFORMATION_CLASS FileInformationClass&#10;);">FltSetInformationFile</a></strong> must be &gt;= <strong>sizeof</strong>(FILE_RENAME_INFORMATION) plus the size in bytes of the <strong>FileName</strong> string.</p>
@@ -284,30 +285,16 @@ WCHAR FileName[1];
 <p>UNICODE string specifying destination file name. If <code>RootDirectory</code> is <em>NULL</em>, it must contains full system path, or only destination file name for in-place rename operation.</p>
 <h1>Documented by</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Tomasz Nowak</li>
+<li>Bo Branten</li>
 </ul>
 <h1>See also</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><code><a href="file_information_class" title="typedef enum _FILE_INFORMATION_CLASS&#10;{&#10;    FileDirectoryInformation = 1,                   // q: FILE_DIRECTORY_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileFullDirectoryInformation,                   // q: FILE_FULL_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBothDirectoryInformation,                   // q: FILE_BOTH_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBasicInformation,                           // qs: FILE_BASIC_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileStandardInformation,                        // q: FILE_STANDARD_INFORMATION, FILE_STANDARD_INFORMATION_EX&#10;    FileInternalInformation,                        // q: FILE_INTERNAL_INFORMATION&#10;    FileEaInformation,                              // q: FILE_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileAccessInformation,                          // q: FILE_ACCESS_INFORMATION&#10;    FileNameInformation,                            // q: FILE_NAME_INFORMATION&#10;    FileRenameInformation,                          // s: FILE_RENAME_INFORMATION (requires DELETE) // 10&#10;    FileLinkInformation,                            // s: FILE_LINK_INFORMATION&#10;    FileNamesInformation,                           // q: FILE_NAMES_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileDispositionInformation,                     // s: FILE_DISPOSITION_INFORMATION (requires DELETE)&#10;    FilePositionInformation,                        // qs: FILE_POSITION_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileFullEaInformation,                          // q: FILE_FULL_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileModeInformation,                            // qs: FILE_MODE_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileAlignmentInformation,                       // q: FILE_ALIGNMENT_INFORMATION&#10;    FileAllInformation,                             // q: FILE_ALL_INFORMATION&#10;...">FILE_INFORMATION_CLASS</a></code></li>
+<li><code><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></code></li>
+<li><code><a href="ntnotifychangedirectoryfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtNotifyChangeDirectoryFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID Buffer, // FILE_NOTIFY_INFORMATION&#10;    _In_ ULONG Length,&#10;    _In_ ULONG CompletionFilter,&#10;    _In_ BOOLEAN WatchTree&#10;    );">NtNotifyChangeDirectoryFile</a></code></li>
+<li><code><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></code></li>
+<li><code><a href="ntsetinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_reads_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass&#10;    );">NtSetInformationFile</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/file_rename_information.md">Edit description on GitHub</a>

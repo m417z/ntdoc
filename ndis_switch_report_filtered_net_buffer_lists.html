@@ -99,22 +99,18 @@ of the extension's INF file.</p>
 <p>The extension can exclude the delivery of a packet in the following ways:</p>
 <ul>
 <li>
-
+<p>The extension completes the packet instead of forwarding it on through the extensible switch driver stack. For example, the extension can call <a href="ndisfsendnetbufferlistscomplete" title="VOID NdisFSendNetBufferListsComplete(&#10;  [in] NDIS_HANDLE      NdisFilterHandle,&#10;       PNET_BUFFER_LIST NetBufferList,&#10;  [in] ULONG            SendCompleteFlags&#10;);">NdisFSendNetBufferListsComplete</a> to drop a packet that it inspected when NDIS calls its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_send_net_buffer_lists">FilterSendNetBufferLists</a> function.</p>
 </li>
-<li><p>The extension changes the destination ports for a packet. For example, the extension must call <em>ReportFilteredNetBufferLists</em> if it sets the <strong>IsExcluded</strong> member to <strong>TRUE</strong> in the <a href="ndis_switch_port_destination" title="typedef struct _NDIS_SWITCH_PORT_DESTINATION {&#10;  NDIS_SWITCH_PORT_ID   PortId;&#10;  NDIS_SWITCH_NIC_INDEX NicIndex;&#10;  USHORT                IsExcluded : 1;&#10;  USHORT                PreserveVLAN : 1;&#10;  USHORT                PreservePriority : 1;&#10;  USHORT                Reserved : 13;&#10;} NDIS_SWITCH_PORT_DESTINATION, *PNDIS_SWITCH_PORT_DESTINATION;">NDIS_SWITCH_PORT_DESTINATION</a> structure for a destination port of the packet.</p>
-<p>For more information on how to exclude packet delivery to extensible switch ports, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/excluding-packet-delivery-to-extensible-switch-destination-ports">Excluding Packet Delivery to Extensible Switch Destination Ports</a>.</p></li>
+<li>
+<p>The extension changes the destination ports for a packet. For example, the extension must call <em>ReportFilteredNetBufferLists</em> if it sets the <strong>IsExcluded</strong> member to <strong>TRUE</strong> in the <a href="ndis_switch_port_destination" title="typedef struct _NDIS_SWITCH_PORT_DESTINATION {&#10;  NDIS_SWITCH_PORT_ID   PortId;&#10;  NDIS_SWITCH_NIC_INDEX NicIndex;&#10;  USHORT                IsExcluded : 1;&#10;  USHORT                PreserveVLAN : 1;&#10;  USHORT                PreservePriority : 1;&#10;  USHORT                Reserved : 13;&#10;} NDIS_SWITCH_PORT_DESTINATION, *PNDIS_SWITCH_PORT_DESTINATION;">NDIS_SWITCH_PORT_DESTINATION</a> structure for a destination port of the packet.</p>
+<p>For more information on how to exclude packet delivery to extensible switch ports, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/excluding-packet-delivery-to-extensible-switch-destination-ports">Excluding Packet Delivery to Extensible Switch Destination Ports</a>.</p>
+</li>
 </ul>
 <p>The extension must follow these guidelines when it calls <em>ReportFilteredNetBufferLists</em>:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The <em>NetBufferLists</em> parameter specified a linked-list of <a href="net_buffer_list" title="typedef struct _NET_BUFFER_LIST {&#10;  union {&#10;    struct {&#10;      NET_BUFFER_LIST *Next;&#10;      NET_BUFFER      *FirstNetBuffer;&#10;    };&#10;    SLIST_HEADER           Link;&#10;    NET_BUFFER_LIST_HEADER NetBufferListHeader;&#10;  };&#10;  NET_BUFFER_LIST_CONTEXT *Context;&#10;  NET_BUFFER_LIST         *ParentNetBufferList;&#10;  NDIS_HANDLE             NdisPoolHandle;&#10;  PVOID                   NdisReserved[2];&#10;  PVOID                   ProtocolReserved[4];&#10;  PVOID                   MiniportReserved[2];&#10;  PVOID                   Scratch;&#10;  NDIS_HANDLE             SourceHandle;&#10;  ULONG                   NblFlags;&#10;  LONG                    ChildRefCount;&#10;  ULONG                   Flags;&#10;...">NET_BUFFER_LIST</a> structures. All of the packets specified by these structures must have been received from or sent to the same port, and were dropped or excluded for the same reason.</li>
+<li>If the packet is being dropped due to policy based on the source port, the NDIS_SWITCH_REPORT_FILTERED_NBL_FLAGS_IS_INCOMING flag must be specified. The extension must also set the <em>PortId</em> parameter to the identifier of the port from which the packet was received.</li>
+<li>If the packet is being dropped due to policy based on the destination port, the NDIS_SWITCH_REPORT_FILTERED_NBL_FLAGS_IS_INCOMING flag must not be specified. The extension must also set the <em>PortId</em> parameter to the identifier of the port to which the packet was to be sent.</li>
 </ul>
 <h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_attach">FilterAttach</a></p>

@@ -158,76 +158,40 @@ from the Device Manager or another source. For examples of intermediate driver p
 <h4>NetEventInhibitBindsAbove</h4>
 <p>A synchronous event that prevents other filters and protocols from binding to the miniport adapter. Any filters or protocols that were previously bound will be unbound before the event completes. The usage rules are below.</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Avoid leaving the miniport adapter in the inhibit state, for longer than 1000 milliseconds.</li>
+<li>This event can only be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> begins and must not be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> returns.</li>
+<li>This event can only be issued when the miniport adapter is in a D0 state.</li>
+<li>Because this event is blocking, it should not be issued by any context that would cause a deadlock.</li>
+<li>Locks must not be held while issuing this event.</li>
+<li>This event must be issued at PASSIVE_LEVEL.</li>
 </ul>
 <p>This event is available starting with NDIS version 6.50
 and must be used with V2 or later version of <strong>NET_PNP_EVENT</strong>. This event can optionally be issued by a miniport driver. Protocols and filters cannot receive this event or issue it.</p>
 <h4>NetEventAllowBindsAbove</h4>
 <p>An asynchronous event that reverses the effects of NetEventInhibitBindsAbove. The usage rules are below.</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>This event can only be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> begins and must not be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> returns.</li>
+<li>This event can only be issued when the miniport adapter is in a D0 state.</li>
+<li>Locks must not be held while issuing this event.</li>
+<li>This event must be issued at PASSIVE_LEVEL.</li>
 </ul>
 <p>This event is available starting with NDIS version 6.50 and must be used with V2 or later version of <strong>NET_PNP_EVENT</strong>. This event can optionally be issued by a miniport driver. Protocols and filters cannot receive this event or issue it.</p>
 <h4>NetEventRequirePause</h4>
 <p>A synchronous event that indicates the protocols and filters including the miniport adapter must be paused. The protocols and filters and the miniport adapter are guaranteed to be paused when the <a href="ndismnetpnpevent" title="NDIS_STATUS NdisMNetPnPEvent(&#10;  [in] NDIS_HANDLE                 MiniportAdapterHandle,&#10;       PNET_PNP_EVENT_NOTIFICATION NetPnPEventNotification&#10;);">NdisMNetPnPEvent</a> routine returns. The usage rules are below.</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Avoid delaying between NetEventAllowStart and NetEventRequirePause events for longer than 1000 milliseconds to prevent delay in user applications.</li>
+<li>This event can only be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> begins and must not be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> returns.</li>
+<li>There is no guarantee that NDIS will call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_pause">MiniportPause</a> after this event is issued. In particular, if your miniport adapter is already paused, NDIS won't introduce an extra start-pause loop. This means that the amount of times <em>MiniportPause</em> called is not greater than, less than, or equal to the amount this event is issued.</li>
+<li>Because this event is blocking, it should not be issued by any context that would cause a deadlock.</li>
+<li>Locks must not be held while issuing this event.</li>
 </ul>
 <p>This event is available starting with NDIS version 6.50 and must be used with V2 or later version of <strong>NET_PNP_EVENT</strong>. This event can optionally be issued by a miniport driver. Protocols and filters cannot receive this event or issue it.</p>
 <h4>NetEventAllowStart</h4>
 <p>An asynchronous event that indicates the protocols and filters including the miniport adapter does not need to be paused. The usage rules are below. There is no guaranteed pause state for any driver in the protocols and filters after the <a href="ndismnetpnpevent" title="NDIS_STATUS NdisMNetPnPEvent(&#10;  [in] NDIS_HANDLE                 MiniportAdapterHandle,&#10;       PNET_PNP_EVENT_NOTIFICATION NetPnPEventNotification&#10;);">NdisMNetPnPEvent</a> routine returns.</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>This event can only be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> begins and must not be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> returns.</li>
+<li>Because this event is blocking, it should not be issued by any context that would cause a deadlock.</li>
+<li>Locks must not be held while issuing this event.</li>
 </ul>
 <p>This event is available starting with NDIS version 6.50 and must be used with V2 or later version of <strong>NET_PNP_EVENT</strong>. This event can optionally be issued by a miniport driver. Protocols and filters cannot receive this event or issue it.</p>
 <h3><code>Buffer</code></h3>
@@ -443,32 +407,18 @@ receiving network data.</p>
 <h5>- NetEvent.NetEventAllowBindsAbove</h5>
 <p>An asynchronous event that reverses the effects of NetEventInhibitBindsAbove. The usage rules are below.</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>This event can only be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> begins and must not be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> returns.</li>
+<li>This event can only be issued when the miniport adapter is in a D0 state.</li>
+<li>Locks must not be held while issuing this event.</li>
+<li>This event must be issued at PASSIVE_LEVEL.</li>
 </ul>
 <p>This event is available starting with NDIS version 6.50 and must be used with V2 or later version of <strong>NET_PNP_EVENT</strong>. This event can optionally be issued by a miniport driver. Protocols and filters cannot receive this event or issue it.</p>
 <h5>- NetEvent.NetEventAllowStart</h5>
 <p>An asynchronous event that indicates the protocols and filters including the miniport adapter does not need to be paused. The usage rules are below. There is no guaranteed pause state for any driver in the protocols and filters after the <a href="ndismnetpnpevent" title="NDIS_STATUS NdisMNetPnPEvent(&#10;  [in] NDIS_HANDLE                 MiniportAdapterHandle,&#10;       PNET_PNP_EVENT_NOTIFICATION NetPnPEventNotification&#10;);">NdisMNetPnPEvent</a> routine returns.</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>This event can only be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> begins and must not be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> returns.</li>
+<li>Because this event is blocking, it should not be issued by any context that would cause a deadlock.</li>
+<li>Locks must not be held while issuing this event.</li>
 </ul>
 <p>This event is available starting with NDIS version 6.50 and must be used with V2 or later version of <strong>NET_PNP_EVENT</strong>. This event can optionally be issued by a miniport driver. Protocols and filters cannot receive this event or issue it.</p>
 <h5>- NetEvent.NetEventBindFailed</h5>
@@ -503,24 +453,12 @@ from the Device Manager or another source. For examples of intermediate driver p
 <h5>- NetEvent.NetEventInhibitBindsAbove</h5>
 <p>A synchronous event that prevents other filters and protocols from binding to the miniport adapter. Any filters or protocols that were previously bound will be unbound before the event completes. The usage rules are below.</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Avoid leaving the miniport adapter in the inhibit state, for longer than 1000 milliseconds.</li>
+<li>This event can only be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> begins and must not be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> returns.</li>
+<li>This event can only be issued when the miniport adapter is in a D0 state.</li>
+<li>Because this event is blocking, it should not be issued by any context that would cause a deadlock.</li>
+<li>Locks must not be held while issuing this event.</li>
+<li>This event must be issued at PASSIVE_LEVEL.</li>
 </ul>
 <p>This event is available starting with NDIS version 6.50
 and must be used with V2 or later version of <strong>NET_PNP_EVENT</strong>. This event can optionally be issued by a miniport driver. Protocols and filters cannot receive this event or issue it.</p>
@@ -565,21 +503,11 @@ NetEventIMReEnableDevice.</p>
 <h5>- NetEvent.NetEventRequirePause</h5>
 <p>A synchronous event that indicates the protocols and filters including the miniport adapter must be paused. The protocols and filters and the miniport adapter are guaranteed to be paused when the <a href="ndismnetpnpevent" title="NDIS_STATUS NdisMNetPnPEvent(&#10;  [in] NDIS_HANDLE                 MiniportAdapterHandle,&#10;       PNET_PNP_EVENT_NOTIFICATION NetPnPEventNotification&#10;);">NdisMNetPnPEvent</a> routine returns. The usage rules are below.</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Avoid delaying between NetEventAllowStart and NetEventRequirePause events for longer than 1000 milliseconds to prevent delay in user applications.</li>
+<li>This event can only be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> begins and must not be issued after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_halt">MiniportHaltEx</a> returns.</li>
+<li>There is no guarantee that NDIS will call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_pause">MiniportPause</a> after this event is issued. In particular, if your miniport adapter is already paused, NDIS won't introduce an extra start-pause loop. This means that the amount of times <em>MiniportPause</em> called is not greater than, less than, or equal to the amount this event is issued.</li>
+<li>Because this event is blocking, it should not be issued by any context that would cause a deadlock.</li>
+<li>Locks must not be held while issuing this event.</li>
 </ul>
 <p>This event is available starting with NDIS version 6.50 and must be used with V2 or later version of <strong>NET_PNP_EVENT</strong>. This event can optionally be issued by a miniport driver. Protocols and filters cannot receive this event or issue it.</p>
 <h5>- NetEvent.NetEventRestart</h5>
@@ -614,21 +542,17 @@ filter driver does not have to save this pointer because the driver must complet
 <em>FilterNetPnPEvent</em> synchronously.</p>
 <p>Starting with NDIS 6.30, the protocol or filter driver must follow these guidelines when NDIS calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_net_pnp_event">ProtocolNetPnPEvent</a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_net_pnp_event">FilterNetPnPEvent</a> functions:</p>
 <ul>
-<li><p>If the <strong>NetEvent</strong> member of the <strong>NET_PNP_EVENT</strong> structure is set to <strong>NetEventSetPower</strong>, the driver must stop generating new I/O requests. Also, the driver must not wait for the completion of any pending I/O requests.</p>
+<li>
+<p>If the <strong>NetEvent</strong> member of the <strong>NET_PNP_EVENT</strong> structure is set to <strong>NetEventSetPower</strong>, the driver must stop generating new I/O requests. Also, the driver must not wait for the completion of any pending I/O requests.</p>
 <p>After the protocol or filter driver returns from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_net_pnp_event">ProtocolNetPnPEvent</a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_net_pnp_event">FilterNetPnPEvent</a>, NDIS will not pause and restart these drivers during power-state transitions if the following conditions are true:</p>
 <ul>
-<li>
-
+<li>The underlying miniport driver sets the <strong>NDIS_MINIPORT_ATTRIBUTES_NO_PAUSE_ON_SUSPEND</strong> flag in the <a href="ndis_miniport_adapter_registration_attributes" title="typedef struct _NDIS_MINIPORT_ADAPTER_REGISTRATION_ATTRIBUTES {&#10;  NDIS_OBJECT_HEADER  Header;&#10;  NDIS_HANDLE         MiniportAdapterContext;&#10;  ULONG               AttributeFlags;&#10;  UINT                CheckForHangTimeInSeconds;&#10;  NDIS_INTERFACE_TYPE InterfaceType;&#10;} NDIS_MINIPORT_ADAPTER_REGISTRATION_ATTRIBUTES, *PNDIS_MINIPORT_ADAPTER_REGISTRATION_ATTRIBUTES;">NDIS_MINIPORT_ADAPTER_REGISTRATION_ATTRIBUTES</a> structure. The driver passes a pointer to this structure in its call to the <a href="ndismsetminiportattributes" title="NDIS_STATUS NdisMSetMiniportAttributes(&#10;       NDIS_HANDLE                       NdisMiniportHandle,&#10;  [in] PNDIS_MINIPORT_ADAPTER_ATTRIBUTES MiniportAttributes&#10;);">NdisMSetMiniportAttributes</a> function.</li>
+<li>All filter drivers that are attached to the miniport driver support NDIS 6.30 or later versions of NDIS.</li>
+<li>All protocol drivers that are bound to the miniport driver support NDIS 6.30 or later versions of NDIS.</li>
+</ul>
 </li>
 <li>
-
-</li>
-<li>
-
-</li>
-</ul></li>
-<li>
-
+<p>If the <strong>NetEvent</strong> member of the <strong>NET_PNP_EVENT</strong> structure is set to <strong>NetEventSetPower</strong> or <strong>NetEventQueryPower</strong>, the driver must not wait for the completion of any pending I/O requests.</p>
 </li>
 </ul>
 <p>The

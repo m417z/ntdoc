@@ -82,38 +82,45 @@
 <p>The following code example searches for port resource descriptors in a device's resource lists. For each port resource that the example finds, it checks to see if the port address is within a certain range. If the port address is outside of the range, the example removes the descriptor from both the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/raw-and-translated-resources">raw and translated resource lists</a>.</p>
 <pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 MyEvtDeviceRemoveAddedResources(
-WDFDEVICE Device,
-WDFCMRESLIST ResourcesRaw,
-WDFCMRESLIST ResourcesTranslated
-)
+    WDFDEVICE Device,
+    WDFCMRESLIST ResourcesRaw,
+    WDFCMRESLIST ResourcesTranslated
+    )
 {
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> i, count;
-pDevExt = DeviceGetExtension(Device);
-count = <a href="wdfcmresourcelistgetcount" title="ULONG WdfCmResourceListGetCount(&#10;  [in] WDFCMRESLIST List&#10;);">WdfCmResourceListGetCount</a>(ResourcesRaw);
-for (i = 0; i &lt; count; i++) {
-<a href="cm_partial_resource_descriptor" title="typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  USHORT Flags;&#10;  union {&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Generic;&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Port;&#10;    struct {&#10;#if ...&#10;      USHORT    Level;&#10;      USHORT    Group;&#10;#else&#10;      ULONG     Level;&#10;#endif&#10;...">PCM_PARTIAL_RESOURCE_DESCRIPTOR</a> descriptor;
-descriptor = <a href="wdfcmresourcelistgetdescriptor" title="PCM_PARTIAL_RESOURCE_DESCRIPTOR WdfCmResourceListGetDescriptor(&#10;  [in] WDFCMRESLIST List,&#10;  [in] ULONG        Index&#10;);">WdfCmResourceListGetDescriptor</a>(
-ResourcesRaw,
-i
-);
-if (descriptor-&gt;Type != CmResourceTypePort) {
-continue;
-}
-if (descriptor-&gt;u.Port.Start.QuadPart &lt; pDevExt-&gt;Ranges[0].MinAddress ||
-descriptor-&gt;u.Port.Start.QuadPart &gt; pDevExt-&gt;Ranges[0].MaxAddress)
-{
-WdfCmResourceListRemoveByDescriptor(
-ResourcesRaw,
-descriptor
-);
-// The descriptor may not be the same in the raw and translated resource lists, so use an index for the second removal
-<a href="wdfcmresourcelistremove" title="VOID WdfCmResourceListRemove(&#10;  [in] WDFCMRESLIST List,&#10;  [in] ULONG        Index&#10;);">WdfCmResourceListRemove</a>(
-ResourcesTranslated,
-i
-);
-break;
-}
-}
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> i, count;
+
+    pDevExt = DeviceGetExtension(Device);
+    count = <a href="wdfcmresourcelistgetcount" title="ULONG WdfCmResourceListGetCount(&#10;  [in] WDFCMRESLIST List&#10;);">WdfCmResourceListGetCount</a>(ResourcesRaw);
+
+    for (i = 0; i &lt; count; i++) {
+        <a href="cm_partial_resource_descriptor" title="typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  USHORT Flags;&#10;  union {&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Generic;&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Port;&#10;    struct {&#10;#if ...&#10;      USHORT    Level;&#10;      USHORT    Group;&#10;#else&#10;      ULONG     Level;&#10;#endif&#10;...">PCM_PARTIAL_RESOURCE_DESCRIPTOR</a> descriptor;
+
+        descriptor = <a href="wdfcmresourcelistgetdescriptor" title="PCM_PARTIAL_RESOURCE_DESCRIPTOR WdfCmResourceListGetDescriptor(&#10;  [in] WDFCMRESLIST List,&#10;  [in] ULONG        Index&#10;);">WdfCmResourceListGetDescriptor</a>(
+                                                    ResourcesRaw,
+                                                    i
+                                                    );
+
+        if (descriptor-&gt;Type != CmResourceTypePort) {
+            continue;
+        }
+
+        if (descriptor-&gt;u.Port.Start.QuadPart &lt; pDevExt-&gt;Ranges[0].MinAddress ||
+             descriptor-&gt;u.Port.Start.QuadPart &gt; pDevExt-&gt;Ranges[0].MaxAddress)
+        {
+            WdfCmResourceListRemoveByDescriptor(
+                                                ResourcesRaw,
+                                                descriptor
+                                                );
+
+            // The descriptor may not be the same in the raw and translated resource lists, so use an index for the second removal
+
+            <a href="wdfcmresourcelistremove" title="VOID WdfCmResourceListRemove(&#10;  [in] WDFCMRESLIST List,&#10;  [in] ULONG        Index&#10;);">WdfCmResourceListRemove</a>(
+                                                ResourcesTranslated,
+                                                i
+                                                );
+            break;
+        }
+    }
 }
 </code></pre>
 <h2>See also</h2>

@@ -109,27 +109,38 @@
 <p>If a driver contains a handler for an <strong><a href="irp_mn_filter_resource_requirements" title="#define IRP_MN_FILTER_RESOURCE_REQUIREMENTS 0x0D">IRP_MN_FILTER_RESOURCE_REQUIREMENTS</a></strong> <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>, the handler typically walks the resource list that is pointed to by the <strong>IoStatus.Information</strong> field in the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>. The following code example contains a function—named FilterResources—that is called in the handler to walk the list. This function either verifies that a particular resource is specified in the list, or changes the resource requirements in the list without changing the size of the list. (A function that changes the size of the list would need to allocate a buffer for the updated list, write the list to this buffer, update the <strong>IoStatus.Information</strong> field in the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> to point to the updated list, and free the buffer that contains the original list.)</p>
 <p>The FilterResources function returns <strong>TRUE</strong> (probably from the <strong>switch</strong> statement, although the details are omitted to simplify the code example) if it finds the resource that it is looking for in the list, or if it makes a change to the list that does not change the size of the list. Otherwise, it returns <strong>FALSE</strong>.</p>
 <pre><code>/* Modify the resource list in place (without changing its size). */
+
 BOOLEAN FilterResources(PIO_RESOURCE_REQUIREMENTS_LIST reqlist)
 {
-<a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">PIO_RESOURCE_LIST</a> list;
-list = reqlist-&gt;List;
-for (int ix = 0; ix &lt; reqlist-&gt;AlternativeLists; ++ix)
-{
-/* Process resources in <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">IO_RESOURCE_LIST</a> block number ix. */
-for (int jx = 0; jx &lt; list-&gt;Count; ++jx)
-{
-<a href="io_resource_descriptor" title="typedef struct _IO_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Option;&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  UCHAR  Spare1;&#10;  USHORT Flags;&#10;  USHORT Spare2;&#10;  union {&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Port;&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Memory;&#10;...">PIO_RESOURCE_DESCRIPTOR</a> desc;
-desc = list-&gt;Descriptors + jx;
-switch (desc-&gt;Type)
-{
-/* Process element jx in Descriptors array. */
-...
-}
-}
-/* Advance to next <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">IO_RESOURCE_LIST</a> block in memory. */
-list = (<a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">PIO_RESOURCE_LIST</a>)(list-&gt;Descriptors + list-&gt;Count);
-}
-return FALSE;
+    <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">PIO_RESOURCE_LIST</a> list;
+
+    list = reqlist-&gt;List;
+
+    for (int ix = 0; ix &lt; reqlist-&gt;AlternativeLists; ++ix)
+    {
+        /* Process resources in <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">IO_RESOURCE_LIST</a> block number ix. */
+
+        for (int jx = 0; jx &lt; list-&gt;Count; ++jx)
+        {
+            <a href="io_resource_descriptor" title="typedef struct _IO_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Option;&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  UCHAR  Spare1;&#10;  USHORT Flags;&#10;  USHORT Spare2;&#10;  union {&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Port;&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Memory;&#10;...">PIO_RESOURCE_DESCRIPTOR</a> desc;
+
+            desc = list-&gt;Descriptors + jx;
+
+            switch (desc-&gt;Type)
+            {
+               /* Process element jx in Descriptors array. */
+
+               ...
+
+            }
+        }
+
+        /* Advance to next <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">IO_RESOURCE_LIST</a> block in memory. */
+
+        list = (<a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">PIO_RESOURCE_LIST</a>)(list-&gt;Descriptors + list-&gt;Count);
+    }
+
+    return FALSE;
 }
 </code></pre>
 <h2>See also</h2>
@@ -177,27 +188,38 @@ return FALSE;
 <p>If a driver contains a handler for an <strong><a href="irp_mn_filter_resource_requirements" title="#define IRP_MN_FILTER_RESOURCE_REQUIREMENTS 0x0D">IRP_MN_FILTER_RESOURCE_REQUIREMENTS</a></strong> <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>, the handler typically walks the resource list that is pointed to by the <strong>IoStatus.Information</strong> field in the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>. The following code example contains a function—named FilterResources—that is called in the handler to walk the list. This function either verifies that a particular resource is specified in the list, or changes the resource requirements in the list without changing the size of the list. (A function that changes the size of the list would need to allocate a buffer for the updated list, write the list to this buffer, update the <strong>IoStatus.Information</strong> field in the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> to point to the updated list, and free the buffer that contains the original list.)</p>
 <p>The FilterResources function returns <strong>TRUE</strong> (probably from the <strong>switch</strong> statement, although the details are omitted to simplify the code example) if it finds the resource that it is looking for in the list, or if it makes a change to the list that does not change the size of the list. Otherwise, it returns <strong>FALSE</strong>.</p>
 <pre><code>/* Modify the resource list in place (without changing its size). */
+
 BOOLEAN FilterResources(PIO_RESOURCE_REQUIREMENTS_LIST reqlist)
 {
-<a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">PIO_RESOURCE_LIST</a> list;
-list = reqlist-&gt;List;
-for (int ix = 0; ix &lt; reqlist-&gt;AlternativeLists; ++ix)
-{
-/* Process resources in <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">IO_RESOURCE_LIST</a> block number ix. */
-for (int jx = 0; jx &lt; list-&gt;Count; ++jx)
-{
-<a href="io_resource_descriptor" title="typedef struct _IO_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Option;&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  UCHAR  Spare1;&#10;  USHORT Flags;&#10;  USHORT Spare2;&#10;  union {&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Port;&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Memory;&#10;...">PIO_RESOURCE_DESCRIPTOR</a> desc;
-desc = list-&gt;Descriptors + jx;
-switch (desc-&gt;Type)
-{
-/* Process element jx in Descriptors array. */
-...
-}
-}
-/* Advance to next <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">IO_RESOURCE_LIST</a> block in memory. */
-list = (<a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">PIO_RESOURCE_LIST</a>)(list-&gt;Descriptors + list-&gt;Count);
-}
-return FALSE;
+    <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">PIO_RESOURCE_LIST</a> list;
+
+    list = reqlist-&gt;List;
+
+    for (int ix = 0; ix &lt; reqlist-&gt;AlternativeLists; ++ix)
+    {
+        /* Process resources in <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">IO_RESOURCE_LIST</a> block number ix. */
+
+        for (int jx = 0; jx &lt; list-&gt;Count; ++jx)
+        {
+            <a href="io_resource_descriptor" title="typedef struct _IO_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Option;&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  UCHAR  Spare1;&#10;  USHORT Flags;&#10;  USHORT Spare2;&#10;  union {&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Port;&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Memory;&#10;...">PIO_RESOURCE_DESCRIPTOR</a> desc;
+
+            desc = list-&gt;Descriptors + jx;
+
+            switch (desc-&gt;Type)
+            {
+               /* Process element jx in Descriptors array. */
+
+               ...
+
+            }
+        }
+
+        /* Advance to next <a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">IO_RESOURCE_LIST</a> block in memory. */
+
+        list = (<a href="io_resource_list" title="typedef struct _IO_RESOURCE_LIST {&#10;  USHORT                 Version;&#10;  USHORT                 Revision;&#10;  ULONG                  Count;&#10;  IO_RESOURCE_DESCRIPTOR Descriptors[1];&#10;} IO_RESOURCE_LIST, *PIO_RESOURCE_LIST;">PIO_RESOURCE_LIST</a>)(list-&gt;Descriptors + list-&gt;Count);
+    }
+
+    return FALSE;
 }
 </code></pre>
 <h2>See also</h2>

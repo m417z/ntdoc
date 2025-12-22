@@ -91,37 +91,40 @@
 <p>The following code example is a section of a request handler. The request handler accepts only read and write requests, and it completes each request with an error status if the request type is not read or write.</p>
 <pre><code>VOID
 MyEvtIoDefault(
-IN WDFQUEUE  Queue,
-IN WDFREQUEST  Request
-)
+    IN WDFQUEUE  Queue,
+    IN WDFREQUEST  Request
+    )
 {
-<a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
-<a href="wdf_dma_direction" title="typedef enum _WDF_DMA_DIRECTION {&#10;  WdfDmaDirectionReadFromDevice = FALSE,&#10;  WdfDmaDirectionWriteToDevice = TRUE&#10;} WDF_DMA_DIRECTION;">WDF_DMA_DIRECTION</a>  direction;
+    <a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
+    <a href="wdf_dma_direction" title="typedef enum _WDF_DMA_DIRECTION {&#10;  WdfDmaDirectionReadFromDevice = FALSE,&#10;  WdfDmaDirectionWriteToDevice = TRUE&#10;} WDF_DMA_DIRECTION;">WDF_DMA_DIRECTION</a>  direction;
+
 ...
-<a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
-<a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a>(
-Request,
-&amp;params
-);
-//
-// Validate and gather parameters.
-//
-switch (params.Type) {
-case WdfRequestTypeRead:
-length = params.Parameters.Read.Length;
-direction = WdfDmaDirectionReadFromDevice;
-break;
-case WdfRequestTypeWrite:
-length = params.Parameters.Write.Length;
-direction = WdfDmaDirectionWriteToDevice;
-break;
-default:
-WdfRequestComplete(
-Request,
-STATUS_INVALID_DEVICE_REQUEST
-);
-return;
-}
+    <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
+
+    <a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a>(
+                            Request,
+                            &amp;params
+                            );
+
+    //
+    // Validate and gather parameters.
+    //
+    switch (params.Type) {
+        case WdfRequestTypeRead:
+            length = params.Parameters.Read.Length;
+            direction = WdfDmaDirectionReadFromDevice;
+            break;
+        case WdfRequestTypeWrite:
+            length = params.Parameters.Write.Length;
+            direction = WdfDmaDirectionWriteToDevice;
+            break;
+        default:
+            WdfRequestComplete(
+                               Request,
+                               STATUS_INVALID_DEVICE_REQUEST
+                               );
+            return;
+    }
 ...
 }
 </code></pre>

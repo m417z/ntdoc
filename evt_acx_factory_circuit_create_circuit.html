@@ -93,45 +93,56 @@
 <h3>Example</h3>
 <p>Example usage is shown below.</p>
 <pre><code>EVT_ACX_FACTORY_CIRCUIT_CREATE_CIRCUIT Dsp_EvtAcxFactoryCircuitCreateCircuit;
+
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 Dsp_EvtAcxFactoryCircuitCreateCircuit(
-_In_ WDFDEVICE                          Parent,
-_In_ WDFDEVICE                          Device,
-_In_ ACXFACTORYCIRCUIT                  Factory,
-_In_ <a href="acx_factory_circuit_add_circuit" title="typedef struct _ACX_FACTORY_CIRCUIT_ADD_CIRCUIT {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  GUID             CircuitUniqueId;&#10;  HANDLE           CompositeProperties;&#10;  HANDLE           FactoryProperties;&#10;  HANDLE           CircuitProperties;&#10;  PCUNICODE_STRING TargetSymbolicLinkName;&#10;} ACX_FACTORY_CIRCUIT_ADD_CIRCUIT, *PACX_FACTORY_CIRCUIT_ADD_CIRCUIT;">PACX_FACTORY_CIRCUIT_ADD_CIRCUIT</a>   CircuitConfig,
-_In_ PACXCIRCUIT_INIT                   CircuitInit
+    _In_ WDFDEVICE                          Parent,
+    _In_ WDFDEVICE                          Device,
+    _In_ ACXFACTORYCIRCUIT                  Factory,
+    _In_ <a href="acx_factory_circuit_add_circuit" title="typedef struct _ACX_FACTORY_CIRCUIT_ADD_CIRCUIT {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  GUID             CircuitUniqueId;&#10;  HANDLE           CompositeProperties;&#10;  HANDLE           FactoryProperties;&#10;  HANDLE           CircuitProperties;&#10;  PCUNICODE_STRING TargetSymbolicLinkName;&#10;} ACX_FACTORY_CIRCUIT_ADD_CIRCUIT, *PACX_FACTORY_CIRCUIT_ADD_CIRCUIT;">PACX_FACTORY_CIRCUIT_ADD_CIRCUIT</a>   CircuitConfig,
+    _In_ PACXCIRCUIT_INIT                   CircuitInit
 )
 {
-ACXOBJECTBAG circuitProperties;
-PAGED_CODE();
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-// Create object bag from the CompositeProperties
-<a href="acx_objectbag_config" title="typedef struct _ACX_OBJECTBAG_CONFIG {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  WDFKEY           ParentKey;&#10;  PCUNICODE_STRING Name;&#10;  HANDLE           Handle;&#10;} ACX_OBJECTBAG_CONFIG, *PACX_OBJECTBAG_CONFIG;">ACX_OBJECTBAG_CONFIG</a> propConfig;
-<a href="acx_objectbag_config_init" title="VOID ACX_OBJECTBAG_CONFIG_INIT(&#10;  PACX_OBJECTBAG_CONFIG Config&#10;);">ACX_OBJECTBAG_CONFIG_INIT</a>(&amp;propConfig);
-propConfig.Handle = CircuitConfig-&gt;CircuitProperties;
-propConfig.Flags |= AcxObjectBagConfigOpenWithHandle;
-<a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> attributes;
-<a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a>(&amp;attributes);
-RETURN_NTSTATUS_IF_FAILED(<a href="acxobjectbagopen" title="NTSTATUS AcxObjectBagOpen(&#10;  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  PACX_OBJECTBAG_CONFIG  Config,&#10;  ACXOBJECTBAG           *ObjectBag&#10;);">AcxObjectBagOpen</a>(&amp;attributes, &amp;propConfig, &amp;circuitProperties));
-auto cleanupPropConfig = scope_exit([=]() {
-<a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(circuitProperties);
-}
-);
-// Retrieve the intended Circuit ID from the object bag
-GUID circuitId;
-RETURN_NTSTATUS_IF_FAILED(Dsp_DetermineCircuitGuidFromVendorProperties(circuitProperties, &amp;circuitId));
-<a href="acxcircuitinitsetcomponentid" title="VOID AcxCircuitInitSetComponentId(&#10;  PACXCIRCUIT_INIT CircuitInit,&#10;  const GUID       *ComponentId&#10;);">AcxCircuitInitSetComponentId</a>(CircuitInit, &amp;circuitId);
-// Call the appropriate CreateCircuitDevice based on the Circuit ID
-if (IsEqualGUID(circuitId, DSP_CIRCUIT_MICROPHONE_GUID) || IsEqualGUID(circuitId, DSP_CIRCUIT_UNIVERSALJACK_CAPTURE_GUID))
-{
-return DspC_EvtAcxFactoryCircuitCreateCircuit(Parent, Device, Factory, CircuitConfig, CircuitInit);
-}
-else if (IsEqualGUID(circuitId, DSP_CIRCUIT_SPEAKER_GUID) || IsEqualGUID(circuitId, DSP_CIRCUIT_UNIVERSALJACK_RENDER_GUID))
-{
-return DspR_EvtAcxFactoryCircuitCreateCircuit(Parent, Device, Factory, CircuitConfig, CircuitInit);
-}
-status = STATUS_NOT_SUPPORTED;
-return status;
+    ACXOBJECTBAG circuitProperties;
+
+    PAGED_CODE();
+
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+
+    // Create object bag from the CompositeProperties
+    <a href="acx_objectbag_config" title="typedef struct _ACX_OBJECTBAG_CONFIG {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  WDFKEY           ParentKey;&#10;  PCUNICODE_STRING Name;&#10;  HANDLE           Handle;&#10;} ACX_OBJECTBAG_CONFIG, *PACX_OBJECTBAG_CONFIG;">ACX_OBJECTBAG_CONFIG</a> propConfig;
+    <a href="acx_objectbag_config_init" title="VOID ACX_OBJECTBAG_CONFIG_INIT(&#10;  PACX_OBJECTBAG_CONFIG Config&#10;);">ACX_OBJECTBAG_CONFIG_INIT</a>(&amp;propConfig);
+    propConfig.Handle = CircuitConfig-&gt;CircuitProperties;
+    propConfig.Flags |= AcxObjectBagConfigOpenWithHandle;
+
+    <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> attributes;
+    <a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a>(&amp;attributes);
+
+    RETURN_NTSTATUS_IF_FAILED(<a href="acxobjectbagopen" title="NTSTATUS AcxObjectBagOpen(&#10;  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  PACX_OBJECTBAG_CONFIG  Config,&#10;  ACXOBJECTBAG           *ObjectBag&#10;);">AcxObjectBagOpen</a>(&amp;attributes, &amp;propConfig, &amp;circuitProperties));
+
+    auto cleanupPropConfig = scope_exit([=]() {
+        <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(circuitProperties);
+        }
+    );
+
+    // Retrieve the intended Circuit ID from the object bag
+    GUID circuitId;
+    RETURN_NTSTATUS_IF_FAILED(Dsp_DetermineCircuitGuidFromVendorProperties(circuitProperties, &amp;circuitId));
+
+    <a href="acxcircuitinitsetcomponentid" title="VOID AcxCircuitInitSetComponentId(&#10;  PACXCIRCUIT_INIT CircuitInit,&#10;  const GUID       *ComponentId&#10;);">AcxCircuitInitSetComponentId</a>(CircuitInit, &amp;circuitId);
+
+    // Call the appropriate CreateCircuitDevice based on the Circuit ID
+    if (IsEqualGUID(circuitId, DSP_CIRCUIT_MICROPHONE_GUID) || IsEqualGUID(circuitId, DSP_CIRCUIT_UNIVERSALJACK_CAPTURE_GUID))
+    {
+        return DspC_EvtAcxFactoryCircuitCreateCircuit(Parent, Device, Factory, CircuitConfig, CircuitInit);
+    }
+    else if (IsEqualGUID(circuitId, DSP_CIRCUIT_SPEAKER_GUID) || IsEqualGUID(circuitId, DSP_CIRCUIT_UNIVERSALJACK_RENDER_GUID))
+    {
+        return DspR_EvtAcxFactoryCircuitCreateCircuit(Parent, Device, Factory, CircuitConfig, CircuitInit);
+    }
+
+    status = STATUS_NOT_SUPPORTED;
+    return status;
 }
 </code></pre>
 <h3>ACX requirements</h3>
@@ -139,9 +150,7 @@ return status;
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
 <h2>See also</h2>
 <ul>
-<li>
-
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxcircuit/">acxcircuit.h header</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

@@ -140,29 +140,25 @@ ZwNotifyChangeKey(
 <h3><code>ApcRoutine</code> [in, optional]</h3>
 <p>Pointer to a caller-supplied APC routine to run after the operation completes. This parameter is optional and can be NULL.</p>
 <ul>
-<li>
-
-</li>
+<li>For a kernel-mode call, set this parameter to a pointer to a <strong><a href="work_queue_item" title="typedef struct _WORK_QUEUE_ITEM {&#10;  LIST_ENTRY             List;&#10;  PWORKER_THREAD_ROUTINE WorkerRoutine;&#10;  __volatile PVOID       Parameter;&#10;} WORK_QUEUE_ITEM, *PWORK_QUEUE_ITEM;">WORK_QUEUE_ITEM</a></strong> struct</li>
 </ul>
 <h3><code>ApcContext</code> [in, optional]</h3>
 <p>Pointer to pass as an argument to the APC routine that <strong>ApcRoutine</strong> points to. This argument is required if <strong>ApcRoutine</strong> isn't NULL, and must be cast to type PVOID. Otherwise, if <strong>ApcRoutine</strong> is NULL, set this parameter to NULL, too.</p>
 <p>The meaning of this parameter depends on whether the routine is called from kernel mode or from user mode:</p>
 <ul>
-<li><p>For a kernel-mode call, set this parameter to one of the following <strong><a href="work_queue_type" title="typedef enum _WORK_QUEUE_TYPE {&#10;  CriticalWorkQueue,&#10;  DelayedWorkQueue,&#10;  HyperCriticalWorkQueue,&#10;  NormalWorkQueue,&#10;  BackgroundWorkQueue,&#10;  RealTimeWorkQueue,&#10;  SuperCriticalWorkQueue,&#10;  MaximumWorkQueue,&#10;  CustomPriorityWorkQueue&#10;} WORK_QUEUE_TYPE;">WORK_QUEUE_TYPE</a></strong> enumeration values:</p>
+<li>
+<p>For a kernel-mode call, set this parameter to one of the following <strong><a href="work_queue_type" title="typedef enum _WORK_QUEUE_TYPE {&#10;  CriticalWorkQueue,&#10;  DelayedWorkQueue,&#10;  HyperCriticalWorkQueue,&#10;  NormalWorkQueue,&#10;  BackgroundWorkQueue,&#10;  RealTimeWorkQueue,&#10;  SuperCriticalWorkQueue,&#10;  MaximumWorkQueue,&#10;  CustomPriorityWorkQueue&#10;} WORK_QUEUE_TYPE;">WORK_QUEUE_TYPE</a></strong> enumeration values:</p>
 <ul>
-<li>
-
+<li>CriticalWorkQueue</li>
+<li>DelayedWorkQueue</li>
+</ul>
 </li>
 <li>
-
-</li>
-</ul></li>
-<li>
-
+<p>For a user-mode call, this parameter points to a caller-specified context for the APC routine.</p>
 </li>
 </ul>
 <h3><code>IoStatusBlock</code> [out]</h3>
-<p>Pointer to an <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure that contains the final status and information about the operation. For successful calls that return data, the number of bytes written to <strong>Buffer</strong> is supplied in <strong>IoStatusBlock</strong>-><strong>Information</strong>.</p>
+<p>Pointer to an <strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong> structure that contains the final status and information about the operation. For successful calls that return data, the number of bytes written to <strong>Buffer</strong> is supplied in <strong>IoStatusBlock</strong>-&gt;<strong>Information</strong>.</p>
 <h3><code>CompletionFilter</code> [in]</h3>
 <p>Bitmask of operations that cause the driver to be notified. Specify one or more of the following flags:</p>
 <table>
@@ -208,29 +204,19 @@ ZwNotifyChangeKey(
 <p>The key must be opened with KEY_NOTIFY access before calling this routine.</p>
 <p>For asynchronous operation (<strong>Asynchronous</strong> = TRUE):</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>If <strong>Event</strong> is specified, it will be signaled when changes occur. If <strong>Event</strong> is NULL, then <strong>KeyHandle</strong> is set to the Signaled state.</li>
+<li>If <strong>ApcRoutine</strong> is specified, it will be called with <strong>ApcContext</strong> and <strong>IoStatusBlock</strong>.</li>
+<li>If neither is specified, the <strong>KeyHandle</strong> itself becomes signalable.</li>
 </ul>
 <p>For synchronous operation (<strong>Asynchronous</strong> = FALSE):</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The call blocks until a change occurs.</li>
+<li><strong>Event</strong>, <strong>ApcRoutine</strong>, and <strong>ApcContext</strong> parameters are ignored.</li>
 </ul>
 <p>The notification session ends when <strong>KeyHandle</strong> is closed.</p>
 <p>Note: <strong>CompletionFilter</strong> and <strong>WatchTree</strong> are set on the first call and apply to all subsequent calls using the same <strong>KeyHandle</strong>. These parameters are ignored on subsequent calls.</p>
 <p>Registry notifications hold handles that will prevent hive unload operations (such as <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/winreg/nf-winreg-regunloadkeyw"><strong>RegUnloadKey</strong></a>) until closed. Currently, there is no mechanism for a driver to have a notification that won’t block <strong>RegUnloadKey</strong>. Drivers can try to proactively cancel notifications when the monitored process or user session ends to avoid blocking legitimate hive management operations.</p>
-<p>If the call to the <strong>ZwNotifyChangeKey</strong> function occurs in user mode, you should use the name "<strong>NtNotifyChangeKey</strong>" instead of "<strong>ZwNotifyChangeKey</strong>".</p>
+<p>If the call to the <strong>ZwNotifyChangeKey</strong> function occurs in user mode, you should use the name &quot;<strong>NtNotifyChangeKey</strong>&quot; instead of &quot;<strong>ZwNotifyChangeKey</strong>&quot;.</p>
 <p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
 <h2>See also</h2>
 <p><strong><a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a></strong></p>
@@ -254,9 +240,7 @@ ZwNotifyChangeKey(
 <hr />
 <h1>See also</h1>
 <ul>
-<li>
-
-</li>
+<li><code><a href="ntopenkey" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">NtOpenKey</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntnotifychangekey.md">Edit description on GitHub</a>

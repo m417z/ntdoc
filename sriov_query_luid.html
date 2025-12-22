@@ -80,30 +80,35 @@ identifier of the SR_IOV device implementing the interface.</p>
 <p>Return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, return an appropriate <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS</a> error code.</p>
 <h2>Prototype</h2>
 <pre><code>SRIOV_QUERY_LUID SriovQueryLuid;
+
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> SriovQueryLuid(
-_In_  PVOID Context,
-_Out_ PLUID Luid
+  _In_  PVOID Context,
+  _Out_ PLUID Luid
 )
 { ... }
+
 typedef SRIOV_QUERY_LUID *PSRIOV_QUERY_LUID;
 </code></pre>
 <h2>Remarks</h2>
 <p>This callback function is implemented by the physical function (PF) driver. It is invoked when the system wants to get the identifier of a specific virtual function.</p>
 <p>The PF driver registers its implementation by setting the <strong>QueryLuid</strong> member of the <a href="sriov_device_interface_standard" title="typedef struct _SRIOV_DEVICE_INTERFACE_STANDARD {&#10;  USHORT                           Size;&#10;  USHORT                           Version;&#10;  PVOID                            Context;&#10;  PINTERFACE_REFERENCE             InterfaceReference;&#10;  PINTERFACE_REFERENCE             InterfaceDereference;&#10;  PSRIOV_READ_CONFIG               ReadVfConfig;&#10;  PSRIOV_WRITE_CONFIG              WriteVfConfig;&#10;  PSRIOV_READ_BLOCK                ReadVfConfigBlock;&#10;  PSRIOV_WRITE_BLOCK               WriteVfConfigBlock;&#10;  PSRIOV_QUERY_PROBED_BARS         QueryProbedBars;&#10;  PSRIOV_GET_VENDOR_AND_DEVICE_IDS GetVendorAndDevice;&#10;  PSRIOV_GET_DEVICE_LOCATION       GetDeviceLocation;&#10;  PSRIOV_RESET_FUNCTION            ResetVf;&#10;  PSRIOV_SET_POWER_STATE           SetVfPowerState;&#10;  PSRIOV_GET_RESOURCE_FOR_BAR      GetResourceForBar;&#10;  PSRIOV_QUERY_LUID                QueryLuid;&#10;} SRIOV_DEVICE_INTERFACE_STANDARD, SRIOV_DEVICE_INTERFACE_STANDARD;">SRIOV_DEVICE_INTERFACE_STANDARD</a>, configuring a <a href="wdf_query_interface_config" title="typedef struct _WDF_QUERY_INTERFACE_CONFIG {&#10;  ULONG                                          Size;&#10;  PINTERFACE                                     Interface;&#10;  const GUID                                     *InterfaceType;&#10;  BOOLEAN                                        SendQueryToParentStack;&#10;  PFN_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST EvtDeviceProcessQueryInterfaceRequest;&#10;  BOOLEAN                                        ImportInterface;&#10;} WDF_QUERY_INTERFACE_CONFIG, *PWDF_QUERY_INTERFACE_CONFIG;">WDF_QUERY_INTERFACE_CONFIG</a> structure, and calling <a href="wdfdeviceaddqueryinterface" title="NTSTATUS WdfDeviceAddQueryInterface(&#10;  [in] WDFDEVICE                   Device,&#10;  [in] PWDF_QUERY_INTERFACE_CONFIG InterfaceConfig&#10;);">WdfDeviceAddQueryInterface</a>.</p>
 <p>Here is an example implementation of this callback function. The PF driver generates a unique identifier by calling <a href="ntallocatelocallyuniqueid" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateLocallyUniqueId(&#10;    _Out_ PLUID Luid&#10;    );">ZwAllocateLocallyUniqueId</a> and stores it in the device context.</p>
-<pre><code>
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+<pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 Virtualization_QueryLuid (
-_In_        PVOID             Context,
-_Out_       PLUID             Luid
-)
+    _In_        PVOID             Context,
+    _Out_       PLUID             Luid
+    )
 {
-PDEVICE_CONTEXT deviceContext;
-PAGED_CODE();
-deviceContext = (PDEVICE_CONTEXT)Context;
-*Luid = deviceContext-&gt;Luid;
-return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+    PDEVICE_CONTEXT deviceContext;
+
+    PAGED_CODE();
+
+    deviceContext = (PDEVICE_CONTEXT)Context;
+    *Luid = deviceContext-&gt;Luid;
+
+    return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
 }
+
 </code></pre>
 <hr>
 <div class="ntdoc-description-links">

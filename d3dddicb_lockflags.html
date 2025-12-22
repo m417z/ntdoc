@@ -117,18 +117,10 @@
 <p>This flag is also used to lock swizzled or tiled allocations that are currently located in a non-AGP aperture segment. In this type of lock, the video memory manager maps the alternate virtual address to a physical address range that can be unswizzled or untiled on the fly and then redirects the memory access to the system memory pages.</p>
 <p>The video memory manager creates the alternate virtual address when the allocation is first locked with <strong>UseAlternateVA</strong> and releases the virtual address in one of the following scenarios:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The allocation is not accessible to the CPU, and the swizzling range is released for reuse by another allocation.</li>
+<li>The allocation is not accessible to the CPU and is being evicted.</li>
+<li>The allocation is being destroyed.</li>
+<li>The allocation is being paged in after it was evicted while under lock.</li>
 </ul>
 <p>Be aware that <strong>UseAlternateVA</strong> can only be used on the primary allocation if the primary allocation was created by specifying the <strong>UseAlternateVA</strong> bit-field flag in the <strong>Flags</strong> member of the <a href="dxgk_allocationinfo" title="typedef struct _DXGK_ALLOCATIONINFO {&#10;  VOID                       *pPrivateDriverData;&#10;  UINT                       PrivateDriverDataSize;&#10;  union {&#10;    UINT Alignment;&#10;    struct {&#10;      UINT16 MinimumPageSize;&#10;      UINT16 RecommendedPageSize;&#10;    };&#10;  };&#10;  SIZE_T                     Size;&#10;  SIZE_T                     PitchAlignedSize;&#10;  DXGK_SEGMENTBANKPREFERENCE HintedBank;&#10;  DXGK_SEGMENTPREFERENCE     PreferredSegment;&#10;  union {&#10;    UINT SupportedReadSegmentSet;&#10;    UINT MmuSet;&#10;  };&#10;  UINT                       SupportedWriteSegmentSet;&#10;  UINT                       EvictionSegmentSet;&#10;...">DXGK_ALLOCATIONINFO</a> structure in a call to the display miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_createallocation">DxgkDdiCreateAllocation</a> function. A primary allocation that is created in such a way can only be locked with the <strong>UseAlternateVA</strong> flag.</p>
 <p><strong>UseAlternateVA</strong> cannot be used on a shared allocation.</p>
@@ -146,33 +138,15 @@
 <h2>Remarks</h2>
 <p>When you use a D3DDDICB_LOCKFLAGS structure to specify how to lock an allocation, you must adhere to the following rules:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Simultaneously specifying the <strong>ReadOnly</strong> and <strong>WriteOnly</strong> members is invalid.</li>
+<li>The <strong>IgnoreSync</strong> member has no effect if specified with the <strong>Discard</strong> member.</li>
+<li>The <strong>DonotWait</strong> member has no effect if specified with the <strong>Discard</strong> member.</li>
+<li>Simultaneously specifying the <strong>IgnoreSync</strong> and <strong>AcquireAperture</strong> members is invalid.</li>
+<li>Because specifying the <strong>UseAlternateVA</strong> member indicates that an aperture is acquired, the <strong>AcquireAperture</strong> member must also be set.</li>
+<li>Retired or offered allocations cannot be locked. See also <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/requesting-to-rename-an-allocation">Requesting to Rename an Allocation</a>.</li>
+<li>An allocation can be locked only if it was created with the <strong>CpuVisible</strong> member set in the <a href="dxgk_allocationinfoflags" title="typedef struct _DXGK_ALLOCATIONINFOFLAGS {&#10;  union {&#10;    struct {&#10;      UINT CpuVisible : 1;&#10;      UINT PermanentSysMem : 1;&#10;      UINT Cached : 1;&#10;      UINT Protected : 1;&#10;      UINT ExistingSysMem : 1;&#10;      UINT ExistingKernelSysMem : 1;&#10;      UINT FromEndOfSegment : 1;&#10;      UINT Swizzled : 1;&#10;      UINT Overlay : 1;&#10;      UINT Capture : 1;&#10;      UINT UseAlternateVA : 1;&#10;      UINT SynchronousPaging : 1;&#10;      UINT LinkMirrored : 1;&#10;      UINT LinkInstanced : 1;&#10;      UINT HistoryBuffer : 1;&#10;      UINT AccessedPhysically : 1;&#10;      UINT ExplicitResidencyNotification : 1;&#10;...">DXGK_ALLOCATIONINFOFLAGS</a> structure.</li>
+<li>Only the owner (creator) of a shared allocation can lock it, unless it's a GDI non-managed primary allocation.</li>
+<li>An allocation that is locked with a swizzled range must be unlocked before it can be locked again.</li>
 </ul>
 <h2>See also</h2>
 <p><a href="d3dddicb_lock" title="typedef struct _D3DDDICB_LOCK {&#10;  [in/out] D3DKMT_HANDLE          hAllocation;&#10;  [in]     UINT                   PrivateDriverData;&#10;  [in]     UINT                   NumPages;&#10;  [in]     const UINT             *pPages;&#10;  [out]    VOID                   *pData;&#10;  [in]     D3DDDICB_LOCKFLAGS     Flags;&#10;           D3DGPU_VIRTUAL_ADDRESS GpuVirtualAddress;&#10;} D3DDDICB_LOCK;">D3DDDICB_LOCK</a></p>

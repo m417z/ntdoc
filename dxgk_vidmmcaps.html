@@ -122,41 +122,22 @@
 <p>Starting in WDDM 2.4, DXGI enables the current hybrid presentation optimizations for the broader scenario wherever rendering is on one GPU and presenting on another GPU’s monitor. This is only possible if both GPUs support cross-adapter resources.</p>
 <p>The cross adapter resource properties are listed below.</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The resource can be paged-in only to the aperture GPU memory segment</li>
+<li>The resource is allocated as shared.</li>
+<li>The resource must be marked CPU Visible.</li>
+<li>The allocation will be created by the OS as write-combined.</li>
+<li>The resource has only one allocation and has the linear format.</li>
+<li>The resource has standard pitch alignment (128 bytes). The D3DKMT_CROSS_ADAPTER_RESOURCE_PITCH_ALIGNMENT definition is added for the pitch alignment. The resource must be created at the smallest multiple of this alignment that will contain the resource contents.</li>
+<li>The resource has a standard height alignment (4 rows). The D3DKMT_CROSS_ADAPTER_RESOURCE_HEIGHT_ALIGNMENT is added. The resource must be created at the smallest multiple of this alignment that will contain the resource contents.</li>
 </ul>
 <pre><code>#define D3DKMT_CROSS_ADAPTER_RESOURCE_PITCH_ALIGNMENT 128
+
 #define D3DKMT_CROSS_ADAPTER_RESOURCE_HEIGHT_ALIGNMENT 4
 </code></pre>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The start address of the resource memory is aligned to one page boundary.</li>
+<li>The resource might be e created as a standard allocation from kernel mode and later opened by the UMD.</li>
+<li>The resource might be created by the UMD.</li>
 </ul>
 <p>The cross adapter allocation could be used as a primary, but the driver will not get information, that is usually provided when the primary is created</p>
 <h3><code>VirtualAddressingSupported</code></h3>
@@ -186,42 +167,23 @@
 <p>Specifies whether the driver provides tier 3 support of scanning out cross-adapter resources. A driver that indicates support for <strong>CrossAdapterResourceScanout</strong> must also indicate support for <strong>CrossAdapterResource</strong> and <strong>CrossAdapterResourceTexture</strong>. Supported starting with WDDM version 2.9.</p>
 <p>Tier 3 support requires that the driver be able to perform the supported flipping capabilities, declared by driver in <strong><a href="dxgk_flipcaps" title="typedef struct _DXGK_FLIPCAPS {&#10;  union {&#10;    struct {&#10;      UINT FlipOnVSyncWithNoWait : 1;&#10;      UINT FlipOnVSyncMmIo : 1;&#10;      UINT FlipInterval : 1;&#10;      UINT FlipImmediateMmIo : 1;&#10;      UINT FlipIndependent : 1;&#10;      UINT DdiPresentForIFlip : 1;&#10;      UINT FlipImmediateOnHSync : 1;&#10;#if ...&#10;      UINT Reserved : 25;&#10;#elif&#10;      UINT Reserved : 27;&#10;#else&#10;      UINT Reserved : 28;&#10;#endif&#10;    };&#10;    UINT Value;&#10;  };&#10;...">DXGK_FLIPCAPS</a></strong>, for cross-adapter resources of the following minimum specifications:</p>
 <ul>
-<li>
-
-</li>
+<li>Cross-adapter primary buffer size of 1920 x 1080 or smaller</li>
 <li>Buffer pixel format of any of the following supported DisplayScanOut formats:
 <ul>
-<li>
-
+<li>DXGI_FORMAT_R16G16B16A16_FLOAT</li>
+<li>DXGI_FORMAT_R10G10B10A2_UNORM</li>
+<li>DXGI_FORMAT_R8G8B8A8_UNORM</li>
+<li>DXGI_FORMAT_R8G8B8A8_UNORM_SRGB</li>
+<li>DXGI_FORMAT_B8G8R8A8_UNORM</li>
+<li>DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM</li>
+<li>DXGI_FORMAT_B8G8R8A8_UNORM_SRGB</li>
+</ul>
 </li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-</ul></li>
 </ul>
 <p>The DXGI runtime will query for driver's <strong>CrossAdapterResourceScanout</strong> support and if supported, the presentation stack shall go down the 1 copy path. Therefore, drivers that declare support for <strong>CrossAdapterResourceScanout</strong> are also required to:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Support <strong><a href="dxgkddi_checkmultiplaneoverlaysupport3" title="DXGKDDI_CHECKMULTIPLANEOVERLAYSUPPORT3 DxgkddiCheckmultiplaneoverlaysupport3;&#10;&#10;NTSTATUS DxgkddiCheckmultiplaneoverlaysupport3(&#10;  IN_CONST_HANDLE hAdapter,&#10;  IN_OUT_PDXGKARG_CHECKMULTIPLANEOVERLAYSUPPORT3 pCheckMultiPlaneOverlaySupport&#10;)&#10;{...}">DXGKDDI_CHECKMULTIPLANEOVERLAYSUPPORT3</a></strong>.</li>
+<li>Support all the relevant presentation-related DDIs for cross-adapter primaries of the above minimum specifications. A few examples are pfnCreateResource, pfnCheckMultiplaneOverlaySupport and pfnPresentMultiplaneOverlay/pfnPresent1. Please refer to existing specs for the necessary detail, such as MPO spec and Hybrid spec. Please refer to the section below for more details about falling out of CASO.</li>
 </ul>
 <h3><code>Reserved</code></h3>
 <p>This member is reserved and should be set to zero. Setting this member to zero is equivalent to setting the remaining 31 bits (after setting <strong>OutOfOrderLock</strong>) of the <strong>Value</strong> member to zeros. Note that <strong>Reserved</strong> is available only if DXGKDDI_INTERFACE_VERSION &lt; DXGKDDI_INTERFACE_VERSION_WIN7.</p>

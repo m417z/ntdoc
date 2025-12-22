@@ -86,40 +86,35 @@ VOID EvtWdfRequestCompletionRoutine(
 <p>To register a <em>CompletionRoutine</em> callback function for an I/O request, a driver must call <a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a>. For more information about this callback function, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">Completing I/O Requests</a>.</p>
 <p>The completion parameters structure is fully populated with valid information only if the driver formatted the request by calling one of the following:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><strong>WdfIoTargetFormat</strong><em>Xxx</em> methods, for example <a href="wdfiotargetformatrequestforread" title="NTSTATUS WdfIoTargetFormatRequestForRead(&#10;  [in]           WDFIOTARGET       IoTarget,&#10;  [in]           WDFREQUEST        Request,&#10;  [in, optional] WDFMEMORY         OutputBuffer,&#10;  [in, optional] PWDFMEMORY_OFFSET OutputBufferOffset,&#10;  [in, optional] PLONGLONG         DeviceOffset&#10;);">WdfIoTargetFormatRequestForRead</a></li>
+<li><strong>WdfUsbTargetDeviceFormatRequestFor</strong><em>Xxx</em> methods, for example <strong><a href="wdfusbtargetdeviceformatrequestforstring" title="NTSTATUS WdfUsbTargetDeviceFormatRequestForString(&#10;  [in]           WDFUSBDEVICE      UsbDevice,&#10;  [in]           WDFREQUEST        Request,&#10;  [in]           WDFMEMORY         Memory,&#10;  [in, optional] PWDFMEMORY_OFFSET Offset,&#10;  [in]           UCHAR             StringIndex,&#10;  [in, optional] USHORT            LangID&#10;);">WdfUsbTargetDeviceFormatRequestForString</a></strong></li>
+<li><strong>WdfUsbTargetPipeFormatRequestFor</strong><em>Xxx</em> methods, for example <strong><a href="wdfusbtargetpipeformatrequestforwrite" title="NTSTATUS WdfUsbTargetPipeFormatRequestForWrite(&#10;  [in]           WDFUSBPIPE        Pipe,&#10;  [in]           WDFREQUEST        Request,&#10;  [in, optional] WDFMEMORY         WriteMemory,&#10;  [in, optional] PWDFMEMORY_OFFSET WriteOffset&#10;);">WdfUsbTargetPipeFormatRequestForWrite</a></strong></li>
 </ul>
 <p>If the driver formatted the request using either <strong><a href="wdfrequestformatrequestusingcurrenttype" title="VOID WdfRequestFormatRequestUsingCurrentType(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestFormatRequestUsingCurrentType</a></strong> or <strong><a href="wdfrequestwdmformatusingstacklocation" title="VOID WdfRequestWdmFormatUsingStackLocation(&#10;  [in] WDFREQUEST         Request,&#10;  [in] PIO_STACK_LOCATION Stack&#10;);">WdfRequestWdmFormatUsingStackLocation</a></strong>, only the <strong>IoStatus</strong> field in the completion parameters structure is valid.</p>
 <p>A KMDF driver's <em>CompletionRoutine</em> can run at IRQL &lt;= DISPATCH_LEVEL regardless of the <strong>ExecutionLevel</strong> specified in the <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> structure for the I/O request object.</p>
 <h4>Examples</h4>
 <p>The function type is declared in <em>Wdfrequest.h</em>, as follows.</p>
 <pre><code>typedef VOID
-(EVT_WDF_REQUEST_COMPLETION_ROUTINE)(
-IN WDFREQUEST  Request,
-IN WDFIOTARGET  Target,
-IN <a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">PWDF_REQUEST_COMPLETION_PARAMS</a>  Params,
-IN WDFCONTEXT  Context
-);
+  (EVT_WDF_REQUEST_COMPLETION_ROUTINE)(
+    IN WDFREQUEST  Request,
+    IN WDFIOTARGET  Target,
+    IN <a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">PWDF_REQUEST_COMPLETION_PARAMS</a>  Params,
+    IN WDFCONTEXT  Context
+    );
+
 </code></pre>
 <p>To define a <em>CompletionRoutine</em> callback function that is named <strong>MyCompletionRoutine</strong>, you must first provide a function declaration that SDV and other verification tools require, as follows:</p>
 <pre><code>EVT_WDF_REQUEST_COMPLETION_ROUTINE  MyCompletionRoutine;
 </code></pre>
 <p>Then, implement your callback function as follows:</p>
 <pre><code>VOID
-MyCompletionRoutine (
-IN WDFREQUEST  Request,
-IN WDFIOTARGET  Target,
-IN <a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">PWDF_REQUEST_COMPLETION_PARAMS</a>  Params,
-IN WDFCONTEXT  Context
-)
-{...}
+ MyCompletionRoutine (
+    IN WDFREQUEST  Request,
+    IN WDFIOTARGET  Target,
+    IN <a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">PWDF_REQUEST_COMPLETION_PARAMS</a>  Params,
+    IN WDFCONTEXT  Context
+    )
+  {...}
 </code></pre>
 <h2>See also</h2>
 <p><a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">WDF_REQUEST_COMPLETION_PARAMS</a></p>

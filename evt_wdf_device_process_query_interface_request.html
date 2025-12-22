@@ -92,12 +92,8 @@
 <p>Your driver must provide an <em>EvtDeviceProcessQueryInterfaceRequest</em> event callback function if the driver defines an interface that supports two-way communication (and sets the <strong>ImportInterface</strong> member of the <a href="wdf_query_interface_config" title="typedef struct _WDF_QUERY_INTERFACE_CONFIG {&#10;  ULONG                                          Size;&#10;  PINTERFACE                                     Interface;&#10;  const GUID                                     *InterfaceType;&#10;  BOOLEAN                                        SendQueryToParentStack;&#10;  PFN_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST EvtDeviceProcessQueryInterfaceRequest;&#10;  BOOLEAN                                        ImportInterface;&#10;} WDF_QUERY_INTERFACE_CONFIG, *PWDF_QUERY_INTERFACE_CONFIG;">WDF_QUERY_INTERFACE_CONFIG</a> structure to <strong>TRUE</strong>). The callback function is required because, if <strong>ImportInterface</strong> is <strong>TRUE</strong> and another driver calls <a href="wdffdoqueryforinterface" title="NTSTATUS WdfFdoQueryForInterface(&#10;  [in]           WDFDEVICE  Fdo,&#10;  [in]           LPCGUID    InterfaceType,&#10;  [out]          PINTERFACE Interface,&#10;  [in]           USHORT     Size,&#10;  [in]           USHORT     Version,&#10;  [in, optional] PVOID      InterfaceSpecificData&#10;);">WdfFdoQueryForInterface</a>, the framework does not copy the driver-defined interface into the requesting driver's interface structure. Instead, the callback function must update the requesting driver's interface structure.</p>
 <p>The callback function can modify the interface. In particular, it can:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Change any value in any member of the interface.</li>
+<li>Allocate a dynamic instance-specific context by modifying the <strong>Context</strong> member of the <a href="interface" title="typedef struct _INTERFACE {&#10;  USHORT                 Size;&#10;  USHORT                 Version;&#10;  PVOID                  Context;&#10;  PINTERFACE_REFERENCE   InterfaceReference;&#10;  PINTERFACE_DEREFERENCE InterfaceDereference;&#10;} INTERFACE, *PINTERFACE;">INTERFACE</a> structure.</li>
 </ul>
 <p>The framework calls your driver's <em>EvtDeviceProcessQueryInterfaceRequest</em> callback functions only for GUIDs that the driver has registered by calling <a href="wdfdeviceaddqueryinterface" title="NTSTATUS WdfDeviceAddQueryInterface(&#10;  [in] WDFDEVICE                   Device,&#10;  [in] PWDF_QUERY_INTERFACE_CONFIG InterfaceConfig&#10;);">WdfDeviceAddQueryInterface</a>. Therefore, these callback functions do not use the STATUS_NOT_SUPPORTED return value to report unexpected GUIDs. Instead, a <em>EvtDeviceProcessQueryInterfaceRequest</em> callback function should return STATUS_NOT_SUPPORTED when it determines that, for a particular case, it will not handle the interface. For example, based on data that the requesting driver provides, your driver might determine that a lower-level driver should service the interface request. The STATUS_NOT_SUPPORTED return value informs the framework that your driver is not servicing the interface request, but a lower-level driver might service it.</p>
 <p>For more information about driver-defined interfaces, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-driver-defined-interfaces">Using Driver-Defined Interfaces</a>.</p>
@@ -109,17 +105,17 @@
 <p>Then, implement your callback function as follows:</p>
 <pre><code>_Use_decl_annotations_
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-MyDeviceProcessQueryInterfaceRequest (
-WDFDEVICE  Device,
-LPGUID  InterfaceType,
-<a href="interface" title="typedef struct _INTERFACE {&#10;  USHORT                 Size;&#10;  USHORT                 Version;&#10;  PVOID                  Context;&#10;  PINTERFACE_REFERENCE   InterfaceReference;&#10;  PINTERFACE_DEREFERENCE InterfaceDereference;&#10;} INTERFACE, *PINTERFACE;">PINTERFACE</a>  ExposedInterface,
-PVOID  ExposedInterfaceSpecificData
-)
-{...}
+ MyDeviceProcessQueryInterfaceRequest (
+    WDFDEVICE  Device,
+    LPGUID  InterfaceType,
+    <a href="interface" title="typedef struct _INTERFACE {&#10;  USHORT                 Size;&#10;  USHORT                 Version;&#10;  PVOID                  Context;&#10;  PINTERFACE_REFERENCE   InterfaceReference;&#10;  PINTERFACE_DEREFERENCE InterfaceDereference;&#10;} INTERFACE, *PINTERFACE;">PINTERFACE</a>  ExposedInterface,
+    PVOID  ExposedInterfaceSpecificData
+    )
+  {...}
 </code></pre>
-<p>The <strong>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST</strong> function type is defined in the WdfQueryInterface.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST</strong> function type in the header file are used.
+<p>The <strong>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST</strong> function type is defined in the WdfQueryInterface.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST</strong> function type in the header file are used.
 For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>.
-For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+For information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
 <h2>See also</h2>
 <p><a href="interface" title="typedef struct _INTERFACE {&#10;  USHORT                 Size;&#10;  USHORT                 Version;&#10;  PVOID                  Context;&#10;  PINTERFACE_REFERENCE   InterfaceReference;&#10;  PINTERFACE_DEREFERENCE InterfaceDereference;&#10;} INTERFACE, *PINTERFACE;">INTERFACE</a></p>
 <p><a href="wdf_query_interface_config" title="typedef struct _WDF_QUERY_INTERFACE_CONFIG {&#10;  ULONG                                          Size;&#10;  PINTERFACE                                     Interface;&#10;  const GUID                                     *InterfaceType;&#10;  BOOLEAN                                        SendQueryToParentStack;&#10;  PFN_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST EvtDeviceProcessQueryInterfaceRequest;&#10;  BOOLEAN                                        ImportInterface;&#10;} WDF_QUERY_INTERFACE_CONFIG, *PWDF_QUERY_INTERFACE_CONFIG;">WDF_QUERY_INTERFACE_CONFIG</a></p>

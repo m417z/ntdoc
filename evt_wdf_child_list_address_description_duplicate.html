@@ -88,30 +88,16 @@
 <p>If your driver provides address descriptions but does not provide a <em>EvtChildListAddressDescriptionDuplicate</em> callback function, the framework duplicates address descriptions by calling <a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a>.</p>
 <p>The following steps describe a typical scenario:</p>
 <ol>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The driver determines that a child device exists.</li>
+<li>The driver creates an address description by filling in a driver-defined structure that contains a <a href="wdf_child_address_description_header" title="typedef struct _WDF_CHILD_ADDRESS_DESCRIPTION_HEADER {&#10;  ULONG AddressDescriptionSize;&#10;} WDF_CHILD_ADDRESS_DESCRIPTION_HEADER, *PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER;">WDF_CHILD_ADDRESS_DESCRIPTION_HEADER</a> structure and possibly by dynamically allocating additional memory to store address information that has a device-specific size.</li>
+<li>The driver calls <a href="wdfchildlistaddorupdatechilddescriptionaspresent" title="NTSTATUS WdfChildListAddOrUpdateChildDescriptionAsPresent(&#10;  [in]           WDFCHILDLIST                                 ChildList,&#10;  [in]           PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER IdentificationDescription,&#10;  [in, optional] PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER        AddressDescription&#10;);">WdfChildListAddOrUpdateChildDescriptionAsPresent</a> to report a child device, supplying a pointer to the address description.</li>
+<li>The framework calls the <em>EvtChildListAddressDescriptionDuplicate</em> callback function (if it exists) or <a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a> to duplicate the address description so that it can have an internal copy of the description.</li>
 </ol>
 <p>The framework can use <a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a> to duplicate an address description, if the description consists of a single structure with a predetermined size that is specified by the <strong>AddressDescriptionSize</strong> member of the <a href="wdf_child_address_description_header" title="typedef struct _WDF_CHILD_ADDRESS_DESCRIPTION_HEADER {&#10;  ULONG AddressDescriptionSize;&#10;} WDF_CHILD_ADDRESS_DESCRIPTION_HEADER, *PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER;">WDF_CHILD_ADDRESS_DESCRIPTION_HEADER</a> structure. However, sometimes the description must also contain additional information that is stored in dynamically allocated memory. In this case, you will typically define a description structure so that a member points to the dynamically allocated memory, and your driver must provide an <em>EvtChildListAddressDescriptionDuplicate</em> callback function. The callback function must do the following:</p>
 <ol>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Allocate additional memory, typically by calling <a href="exallocatepool" title="PVOID ExAllocatePool(&#10;  _In_ POOL_TYPE a,&#10;  _In_ SIZE_T b&#10;);">ExAllocatePool</a>.</li>
+<li>Store the allocated memory's address in the driver-defined address description structure (that is, the callback function's <em>DestinationAddressDescription</em> structure).</li>
+<li>Copy other structure members from the callback function's <em>SourceAddressDescription</em> structure to the callback function's <em>DestinationAddressDescription</em> structure.</li>
 </ol>
 <p>The only <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfchildlist/">framework child-list object method</a> that a driver's <em>EvtChildListAddressDescriptionDuplicate</em> callback function can call is <a href="wdfchildlistgetdevice" title="WDFDEVICE WdfChildListGetDevice(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListGetDevice</a>.</p>
 <p>The framework acquires an internal child-list object lock before calling the <em>EvtChildListAddressDescriptionDuplicate</em> callback function. The callback function must only perform operations that are related to the described duplication operation, such as calling framework memory object methods and accessing object context space. It must not call methods that access other drivers.</p>

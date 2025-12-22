@@ -80,40 +80,49 @@
 <p>During this call, the client driver-supplied event callback implementations are also registered by setting appropriate members of <a href="urs_config" title="typedef struct _URS_CONFIG {&#10;  ULONG                                       Size;&#10;  URS_HOST_INTERFACE_TYPE                     HostInterfaceType;&#10;  PFN_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsFilterRemoveResourceRequirements;&#10;  PFN_URS_SET_ROLE                            EvtUrsSetRole;&#10;} URS_CONFIG, *PURS_CONFIG;">URS_CONFIG</a>.</p>
 <p>The method creates resource lists for host and function roles and the queues required to handle IOCTL requests that are sent to the controller. With each role switch operation, the current role's child device stack is torn down and the device stack for the new role is loaded. The <strong>UrsDeviceInitialize</strong> method retrieves identifying information that is used to build those device stacks. The method also retrieves information about the device from the underlying bus, such as ACPI.</p>
 <h4>Examples</h4>
-<pre><code>
-<a href="evt_urs_device_filter_resource_requirements" title="EVT_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsDeviceFilterResourceRequirements;&#10;&#10;NTSTATUS EvtUrsDeviceFilterResourceRequirements(&#10;  [in] WDFDEVICE Device,&#10;  [in] WDFIORESREQLIST IoResourceRequirementsList,&#10;  [in] URSIORESLIST HostRoleResources,&#10;  [in] URSIORESLIST FunctionRoleResources&#10;)&#10;{...}">EVT_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS</a> EvtUrsFilterResourceRequirements;
+<pre><code><a href="evt_urs_device_filter_resource_requirements" title="EVT_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsDeviceFilterResourceRequirements;&#10;&#10;NTSTATUS EvtUrsDeviceFilterResourceRequirements(&#10;  [in] WDFDEVICE Device,&#10;  [in] WDFIORESREQLIST IoResourceRequirementsList,&#10;  [in] URSIORESLIST HostRoleResources,&#10;  [in] URSIORESLIST FunctionRoleResources&#10;)&#10;{...}">EVT_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS</a> EvtUrsFilterResourceRequirements;
 <a href="evt_urs_set_role" title="EVT_URS_SET_ROLE EvtUrsSetRole;&#10;&#10;NTSTATUS EvtUrsSetRole(&#10;  [in] WDFDEVICE Device,&#10;  [in] URS_ROLE Role&#10;)&#10;{...}">EVT_URS_SET_ROLE</a> EvtUrsSetRole;
+
 EvtDriverDeviceAdd (
-_In_ WDFDRIVER Driver,
-_Inout_ PWDFDEVICE_INIT DeviceInit
-)
+    _In_ WDFDRIVER Driver,
+    _Inout_ PWDFDEVICE_INIT DeviceInit
+    )
 {
 ...
-WDFDEVICE device;
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
-<a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> attributes;
-<a href="urs_config" title="typedef struct _URS_CONFIG {&#10;  ULONG                                       Size;&#10;  URS_HOST_INTERFACE_TYPE                     HostInterfaceType;&#10;  PFN_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsFilterRemoveResourceRequirements;&#10;  PFN_URS_SET_ROLE                            EvtUrsSetRole;&#10;} URS_CONFIG, *PURS_CONFIG;">URS_CONFIG</a> ursConfig;
+
+    WDFDEVICE device;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
+    <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> attributes;
+    <a href="urs_config" title="typedef struct _URS_CONFIG {&#10;  ULONG                                       Size;&#10;  URS_HOST_INTERFACE_TYPE                     HostInterfaceType;&#10;  PFN_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsFilterRemoveResourceRequirements;&#10;  PFN_URS_SET_ROLE                            EvtUrsSetRole;&#10;} URS_CONFIG, *PURS_CONFIG;">URS_CONFIG</a> ursConfig;
 ...
-status = <a href="ursdeviceinitinitialize" title="NTSTATUS UrsDeviceInitInitialize(&#10;  PWDFDEVICE_INIT DeviceInit&#10;);">UrsDeviceInitInitialize</a>(DeviceInit);
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-//<a href="ursdeviceinitinitialize" title="NTSTATUS UrsDeviceInitInitialize(&#10;  PWDFDEVICE_INIT DeviceInit&#10;);">UrsDeviceInitInitialize</a> failed.
-return status;
-}
-<a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a>(&amp;attributes, DRIVER_CONTEXT);
-status = <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a>(&amp;DeviceInit, &amp;attributes, &amp;device);
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-// <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a> failed.
-return status;
-}
-<a href="urs_config_init" title="VOID URS_CONFIG_INIT(&#10;  [out] PURS_CONFIG                                 Config,&#10;  [in]  URS_HOST_INTERFACE_TYPE                     HostInterfaceType,&#10;  [in]  PFN_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsFilterRemoveResourceRequirements&#10;);">URS_CONFIG_INIT</a>(&amp;ursConfig, UrsHostInterfaceTypeXhci, EvtUrsFilterResourceRequirements);
-ursConfig.EvtUrsSetRole = EvtUrsSetRole;
-status = UrsDeviceInitialize(device, &amp;ursConfig);
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-// UrsDeviceInitialize failed.
-return status;
-}
+
+    status = <a href="ursdeviceinitinitialize" title="NTSTATUS UrsDeviceInitInitialize(&#10;  PWDFDEVICE_INIT DeviceInit&#10;);">UrsDeviceInitInitialize</a>(DeviceInit);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+        //<a href="ursdeviceinitinitialize" title="NTSTATUS UrsDeviceInitInitialize(&#10;  PWDFDEVICE_INIT DeviceInit&#10;);">UrsDeviceInitInitialize</a> failed.
+        return status;
+    }
+
+    <a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a>(&amp;attributes, DRIVER_CONTEXT);
+    status = <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a>(&amp;DeviceInit, &amp;attributes, &amp;device);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+        // <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a> failed.
+        return status;
+    }
+    <a href="urs_config_init" title="VOID URS_CONFIG_INIT(&#10;  [out] PURS_CONFIG                                 Config,&#10;  [in]  URS_HOST_INTERFACE_TYPE                     HostInterfaceType,&#10;  [in]  PFN_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsFilterRemoveResourceRequirements&#10;);">URS_CONFIG_INIT</a>(&amp;ursConfig, UrsHostInterfaceTypeXhci, EvtUrsFilterResourceRequirements);
+
+    ursConfig.EvtUrsSetRole = EvtUrsSetRole;
+    status = UrsDeviceInitialize(device, &amp;ursConfig);
+
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+        // UrsDeviceInitialize failed.
+        return status;
+
+    }
+
 ...
+
 }
+
 </code></pre>
 <h2>See also</h2>
 <p><a href="urs_config" title="typedef struct _URS_CONFIG {&#10;  ULONG                                       Size;&#10;  URS_HOST_INTERFACE_TYPE                     HostInterfaceType;&#10;  PFN_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsFilterRemoveResourceRequirements;&#10;  PFN_URS_SET_ROLE                            EvtUrsSetRole;&#10;} URS_CONFIG, *PURS_CONFIG;">URS_CONFIG</a></p>

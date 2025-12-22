@@ -119,100 +119,125 @@
 <p>This member is reserved and should be set to zero. Supported starting with Windows 7. <strong>ExistingSysMem</strong>'s limitations follow:</p>
 <ul>
 <li>
-
+<p><strong>ExistingSystemMem</strong> and <strong>ExistingSection</strong> can't both be set for the same allocation. <strong>ExistingSysMem</strong> is set, <strong>StandardAllocation</strong> must also be set.</p>
 </li>
 <li>
-
+<p><strong>ExistingSysMem</strong> must be correctly aligned. The existing system memory buffer that the D3D runtime gives to the kernel must be page-aligned and a multiple of page size, otherwise the kernel fails the call to <strong><a href="d3dkmtcreateallocation" title="NTSTATUS D3DKMTCreateAllocation(&#10;  D3DKMT_CREATEALLOCATION *unnamedParam1&#10;);">D3DKMTCreateAllocation</a></strong>.</p>
 </li>
-<li><p>When the kernel creates a D3DKMDT_STANDARDALLOCATION_GDISURFACE type of standard allocation:</p>
+<li>
+<p>When the kernel creates a D3DKMDT_STANDARDALLOCATION_GDISURFACE type of standard allocation:</p>
 <ul>
-<li>
-
-</li>
-</ul></li>
+<li>The runtime provides the size of the existing system buffer. Using this size, the kernel creates a standard allocation of GDISURFACE type with the following parameters which KMDs understand correctly:</li>
 </ul>
-<pre><code>    <a href="d3dkmdt_gdisurfacedata" title="typedef struct _D3DKMDT_GDISURFACEDATA {&#10;  [in]  UINT                    Width;&#10;  [in]  UINT                    Height;&#10;  [in]  D3DDDIFORMAT            Format;&#10;  [in]  D3DKMDT_GDISURFACETYPE  Type;&#10;  [in]  D3DKMDT_GDISURFACEFLAGS Flags;&#10;  [out] UINT                    Pitch;&#10;} D3DKMDT_GDISURFACEDATA;">D3DKMDT_GDISURFACEDATA</a>::Width = Size of ExistingSysMem buffer
-<a href="d3dkmdt_gdisurfacedata" title="typedef struct _D3DKMDT_GDISURFACEDATA {&#10;  [in]  UINT                    Width;&#10;  [in]  UINT                    Height;&#10;  [in]  D3DDDIFORMAT            Format;&#10;  [in]  D3DKMDT_GDISURFACETYPE  Type;&#10;  [in]  D3DKMDT_GDISURFACEFLAGS Flags;&#10;  [out] UINT                    Pitch;&#10;} D3DKMDT_GDISURFACEDATA;">D3DKMDT_GDISURFACEDATA</a>::Height = 1
-<a href="d3dkmdt_gdisurfacedata" title="typedef struct _D3DKMDT_GDISURFACEDATA {&#10;  [in]  UINT                    Width;&#10;  [in]  UINT                    Height;&#10;  [in]  D3DDDIFORMAT            Format;&#10;  [in]  D3DKMDT_GDISURFACETYPE  Type;&#10;  [in]  D3DKMDT_GDISURFACEFLAGS Flags;&#10;  [out] UINT                    Pitch;&#10;} D3DKMDT_GDISURFACEDATA;">D3DKMDT_GDISURFACEDATA</a>::Format = D3DDDIFMT_UNKNOWN
-<a href="d3dkmdt_gdisurfacedata" title="typedef struct _D3DKMDT_GDISURFACEDATA {&#10;  [in]  UINT                    Width;&#10;  [in]  UINT                    Height;&#10;  [in]  D3DDDIFORMAT            Format;&#10;  [in]  D3DKMDT_GDISURFACETYPE  Type;&#10;  [in]  D3DKMDT_GDISURFACEFLAGS Flags;&#10;  [out] UINT                    Pitch;&#10;} D3DKMDT_GDISURFACEDATA;">D3DKMDT_GDISURFACEDATA</a>::Type = D3DKMDT_GDISURFACE_TEXTURE_CROSSADAPTER
+</li>
+</ul>
+<pre><code><a href="d3dkmdt_gdisurfacedata" title="typedef struct _D3DKMDT_GDISURFACEDATA {&#10;  [in]  UINT                    Width;&#10;  [in]  UINT                    Height;&#10;  [in]  D3DDDIFORMAT            Format;&#10;  [in]  D3DKMDT_GDISURFACETYPE  Type;&#10;  [in]  D3DKMDT_GDISURFACEFLAGS Flags;&#10;  [out] UINT                    Pitch;&#10;} D3DKMDT_GDISURFACEDATA;">D3DKMDT_GDISURFACEDATA</a>::Width = Size of ExistingSysMem buffer
+    <a href="d3dkmdt_gdisurfacedata" title="typedef struct _D3DKMDT_GDISURFACEDATA {&#10;  [in]  UINT                    Width;&#10;  [in]  UINT                    Height;&#10;  [in]  D3DDDIFORMAT            Format;&#10;  [in]  D3DKMDT_GDISURFACETYPE  Type;&#10;  [in]  D3DKMDT_GDISURFACEFLAGS Flags;&#10;  [out] UINT                    Pitch;&#10;} D3DKMDT_GDISURFACEDATA;">D3DKMDT_GDISURFACEDATA</a>::Height = 1
+    <a href="d3dkmdt_gdisurfacedata" title="typedef struct _D3DKMDT_GDISURFACEDATA {&#10;  [in]  UINT                    Width;&#10;  [in]  UINT                    Height;&#10;  [in]  D3DDDIFORMAT            Format;&#10;  [in]  D3DKMDT_GDISURFACETYPE  Type;&#10;  [in]  D3DKMDT_GDISURFACEFLAGS Flags;&#10;  [out] UINT                    Pitch;&#10;} D3DKMDT_GDISURFACEDATA;">D3DKMDT_GDISURFACEDATA</a>::Format = D3DDDIFMT_UNKNOWN
+    <a href="d3dkmdt_gdisurfacedata" title="typedef struct _D3DKMDT_GDISURFACEDATA {&#10;  [in]  UINT                    Width;&#10;  [in]  UINT                    Height;&#10;  [in]  D3DDDIFORMAT            Format;&#10;  [in]  D3DKMDT_GDISURFACETYPE  Type;&#10;  [in]  D3DKMDT_GDISURFACEFLAGS Flags;&#10;  [out] UINT                    Pitch;&#10;} D3DKMDT_GDISURFACEDATA;">D3DKMDT_GDISURFACEDATA</a>::Type = D3DKMDT_GDISURFACE_TEXTURE_CROSSADAPTER
+    ```
+
+* Protect against ExistingSysMem pointer pointing to a DXGALLOCATION which is MemRotated
+
+ The kernel must protect against the scenario where user mode locks an existing DXGALLOCATION and uses the resulting CPU pointer to create an ExistingSysMem standard allocation. This case is invalid if the DXGALLOCATION VAD is <a href="mem_rotate" title="#define MEM_ROTATE 0x00800000">MEM_ROTATE</a>, i.e. if the allocation could be in VRAM. The kernel takes the following steps in the create standard allocation with ExistingSysMem call:
+
+  * MemSecure the ExistingSysMem pointer.
+  * VirtualQuery the memory. If attributes contain <a href="mem_rotate" title="#define MEM_ROTATE 0x00800000">MEM_ROTATE</a> then fail call.
+  * MemSecure is only released when this allocation is freed to prevent memory from being changed behind kernel’s back.
+
+### `NtSecuritySharing`
+
+Specifies whether the allocation is shared with an NT handle, meaning that it doesn't have a global **D3DKMT_HANDLE** kernel-mode handle to the resource.
+
+If **NtSecuritySharing** is set to 1 (TRUE):
+
+* The allocation is shared using the [**<a href="d3dkmtshareobjects" title="NTSTATUS D3DKMTShareObjects(&#10;  [in]  UINT                cObjects,&#10;  [in]  const D3DKMT_HANDLE *hObjects,&#10;  [in]  POBJECT_ATTRIBUTES  pObjectAttributes,&#10;  [in]  DWORD               dwDesiredAccess,&#10;  [out] HANDLE              *phSharedNtHandle&#10;);">D3DKMTShareObjects</a>**](https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmthk/nf-d3dkmthk-d3dkmtshareobjects) function but doesn't have a global **D3DKMT_HANDLE** handle to the resource.
+* **CreateShared** must be set to 1.
+
+For more information on using **NtSecuritySharing**, see the Remarks section. Supported starting with Windows 8.
+
+### `ReadOnly`
+
+Specifies whether the allocation can only be read from. Supported starting with Windows 8.
+
+### `CreateWriteCombined`
+
+This member is reserved and should be set to zero. Supported starting with Windows 8.
+
+### `CreateCached`
+
+This member is reserved and should be set to zero. Supported starting with Windows 8.
+
+### `SwapChainBackBuffer`
+
+This member is reserved and should be set to zero. Supported starting with Windows 8.
+
+### `CrossAdapter`
+
+If set, indicates that the resource is a shared [cross-adapter resource](https://learn.microsoft.com/windows-hardware/drivers/display/using-cross-adapter-resources-in-a-hybrid-system#definition-and-properties-of-a-cross--adapter-resource).
+
+### `OpenCrossAdapter`
+
+If set, indicates that the resource is created by opening a cross adapter resource. Can't be used when allocation is created from the user mode. Supported starting with Windows 8.1 (WDDM 1.3).
+
+### `PartialSharedCreation`
+
+Specifies whether the allocation is created as a partial shared allocation. Supported starting with Windows 8.1 (WDDM 1.3).
+
+### `Zeroed`
+
+[out] Set when the allocation was fulfilled with zeroed pages. Supported starting with Windows 8 (WDDM 1.3).
+
+### `WriteWatch`
+
+[in] Indicates whether to create the allocation with write-watch enabled. Supported starting with Windows 8.1 (WDDM 1.3).
+
+### `StandardAllocation`
+
+[in] When set, instructs *Dxgkrnl* to create a standard allocation using [**pStandardAllocation**](https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmthk/ns-d3dkmthk-_d3dkmt_createallocation) instead of **pPrivateDriverData**. Either **ExistingSysMem** or **ExistingSection** (but not both) must also be set if **StandardAllocation** is set. Additionally, when creating a **StandardAllocation**, the **CreateShared** and **CrossAdapter** flags must also be set. Supported starting with Windows 10 version 1709 (WDDM 2.3).
+
+### `ExistingSection`
+
+[in] When set, instructs *Dxgkrnl* to use the section handle ([**hSection**](https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dukmdt/ns-d3dukmdt-_d3dddi_allocationinfo2)) instead of the system memory pointer (**pSystemMem**). **ExistingSystemMem** and **ExistingSection** can't both be set for the same allocation. If **ExistingSection** is set, **StandardAllocation** must also be set. Supported starting with Windows 10 version 1709 (WDDM 2.3).
+
+### `AllowNotZeroed`
+
+[in] Indicates that the allocation can be created without zeroing the pages. Supported starting with Windows 10, version 1903 (WDDM 2.6).
+
+### `PhysicallyContiguous`
+
+[in] Indicates that the allocation must be physically contiguous. Supported starting with Windows 10, version 2004 (WDDM 2.7).
+
+### `NoKmdAccess`
+
+[in] Indicates that the KMD isn't notified about the allocation. Supported starting with Windows 10, version 2004 (WDDM 2.7).
+
+### `SharedDisplayable`
+
+Indicates that the allocation is a shared, displayable resource. Supported starting with Windows 11 (WDDM 3.0).
+
+### `Reserved`
+
+Supported starting with Windows 8.
+
+This member is reserved and should be set to zero.
+
+## Remarks
+
+Objects to be shared by using the [**<a href="d3dkmtshareobjects" title="NTSTATUS D3DKMTShareObjects(&#10;  [in]  UINT                cObjects,&#10;  [in]  const D3DKMT_HANDLE *hObjects,&#10;  [in]  POBJECT_ATTRIBUTES  pObjectAttributes,&#10;  [in]  DWORD               dwDesiredAccess,&#10;  [out] HANDLE              *phSharedNtHandle&#10;);">D3DKMTShareObjects</a>**](https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmthk/nf-d3dkmthk-d3dkmtshareobjects) function must first be created with the **NtSecuritySharing** flag value set. This flag value is available in the **D3DKMT_CREATEALLOCATIONFLAGS**, [**<a href="d3dkmt_createkeyedmutex2_flags" title="typedef struct _D3DKMT_CREATEKEYEDMUTEX2_FLAGS {&#10;  union {&#10;    struct {&#10;      UINT NtSecuritySharing : 1;&#10;      UINT Reserved : 31;&#10;    };&#10;    [in] UINT Value;&#10;  };&#10;} D3DKMT_CREATEKEYEDMUTEX2_FLAGS;">D3DKMT_CREATEKEYEDMUTEX2_FLAGS</a>**](https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmthk/ns-d3dkmthk-_d3dkmt_createkeyedmutex2_flags), and [**<a href="d3dddi_synchronizationobject_flags" title="typedef struct _D3DDDI_SYNCHRONIZATIONOBJECT_FLAGS {&#10;  union {&#10;    struct {&#10;      UINT Shared : 1;&#10;      UINT NtSecuritySharing : 1;&#10;      UINT CrossAdapter : 1;&#10;      UINT TopOfPipeline : 1;&#10;      UINT NoSignal : 1;&#10;      UINT NoWait : 1;&#10;      UINT NoSignalMaxValueOnTdr : 1;&#10;      UINT NoGPUAccess : 1;&#10;      UINT SignalByKmd : 1;&#10;      UINT Unused : 1;&#10;      UINT UnwaitCpuWaitersOnlyOnDestroy : 1;&#10;#if ...&#10;      UINT Reserved : 20;&#10;#elif&#10;      UINT Reserved : 21;&#10;#elif&#10;      UINT Reserved : 22;&#10;...">D3DDDI_SYNCHRONIZATIONOBJECT_FLAGS</a>**](https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dukmdt/ns-d3dukmdt-_d3dddi_synchronizationobject_flags) structures.
+
+Drivers should follow these guidelines on **D3DKMT_CREATEALLOCATIONFLAGS** sharing flags:
+
+* If the allocation is not shared, set both **CreateShared** and **NtSecuritySharing** to 0.
+* If the allocation is shared with a **D3DKMT_HANDLE** data type, set **CreateShared** = 1 and **NtSecuritySharing** = 0.
+* If the allocation is shared with an NT handle to the process (and without a global **D3DKMT_HANDLE** kernel-mode handle to the resource), set **CreateShared** = 1 and **NtSecuritySharing** = 1.
+
+## See also
+
+[**<a href="d3dkmtcreateallocation" title="NTSTATUS D3DKMTCreateAllocation(&#10;  D3DKMT_CREATEALLOCATION *unnamedParam1&#10;);">D3DKMTCreateAllocation</a>**](https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmthk/nf-d3dkmthk-d3dkmtcreateallocation)
+
+[**<a href="d3dkmt_createallocation" title="typedef struct _D3DKMT_CREATEALLOCATION {&#10;  [in]     D3DKMT_HANDLE                hDevice;&#10;  [in/out] D3DKMT_HANDLE                hResource;&#10;  [out]    D3DKMT_HANDLE                hGlobalShare;&#10;  [in]     const VOID                   *pPrivateRuntimeData;&#10;  [in]     UINT                         PrivateRuntimeDataSize;&#10;  union {&#10;    [in]     D3DKMT_CREATESTANDARDALLOCATION *pStandardAllocation;&#10;    [in]     const VOID                      *pPrivateDriverData;&#10;  };&#10;  [in/out] UINT                         PrivateDriverDataSize;&#10;  [in]     UINT                         NumAllocations;&#10;  union {&#10;    [in]     D3DDDI_ALLOCATIONINFO  *pAllocationInfo;&#10;    [in]     D3DDDI_ALLOCATIONINFO2 *pAllocationInfo2;&#10;  };&#10;  [in]     D3DKMT_CREATEALLOCATIONFLAGS Flags;&#10;  [in]     HANDLE                       hPrivateRuntimeResourceHandle;&#10;} D3DKMT_CREATEALLOCATION;">D3DKMT_CREATEALLOCATION</a>**](https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmthk/ns-d3dkmthk-_d3dkmt_createallocation)
 </code></pre>
-<ul>
-<li><p>Protect against ExistingSysMem pointer pointing to a DXGALLOCATION which is MemRotated</p>
-<p>The kernel must protect against the scenario where user mode locks an existing DXGALLOCATION and uses the resulting CPU pointer to create an ExistingSysMem standard allocation. This case is invalid if the DXGALLOCATION VAD is <a href="mem_rotate" title="#define MEM_ROTATE 0x00800000">MEM_ROTATE</a>, i.e. if the allocation could be in VRAM. The kernel takes the following steps in the create standard allocation with ExistingSysMem call:</p>
-<ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-</ul></li>
-</ul>
-<h3><code>NtSecuritySharing</code></h3>
-<p>Specifies whether the allocation is shared with an NT handle, meaning that it doesn't have a global <strong>D3DKMT_HANDLE</strong> kernel-mode handle to the resource.</p>
-<p>If <strong>NtSecuritySharing</strong> is set to 1 (TRUE):</p>
-<ul>
-<li>
-
-</li>
-<li>
-
-</li>
-</ul>
-<p>For more information on using <strong>NtSecuritySharing</strong>, see the Remarks section. Supported starting with Windows 8.</p>
-<h3><code>ReadOnly</code></h3>
-<p>Specifies whether the allocation can only be read from. Supported starting with Windows 8.</p>
-<h3><code>CreateWriteCombined</code></h3>
-<p>This member is reserved and should be set to zero. Supported starting with Windows 8.</p>
-<h3><code>CreateCached</code></h3>
-<p>This member is reserved and should be set to zero. Supported starting with Windows 8.</p>
-<h3><code>SwapChainBackBuffer</code></h3>
-<p>This member is reserved and should be set to zero. Supported starting with Windows 8.</p>
-<h3><code>CrossAdapter</code></h3>
-<p>If set, indicates that the resource is a shared <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/using-cross-adapter-resources-in-a-hybrid-system#definition-and-properties-of-a-cross--adapter-resource">cross-adapter resource</a>.</p>
-<h3><code>OpenCrossAdapter</code></h3>
-<p>If set, indicates that the resource is created by opening a cross adapter resource. Can't be used when allocation is created from the user mode. Supported starting with Windows 8.1 (WDDM 1.3).</p>
-<h3><code>PartialSharedCreation</code></h3>
-<p>Specifies whether the allocation is created as a partial shared allocation. Supported starting with Windows 8.1 (WDDM 1.3).</p>
-<h3><code>Zeroed</code></h3>
-<p>[out] Set when the allocation was fulfilled with zeroed pages. Supported starting with Windows 8 (WDDM 1.3).</p>
-<h3><code>WriteWatch</code></h3>
-<p>[in] Indicates whether to create the allocation with write-watch enabled. Supported starting with Windows 8.1 (WDDM 1.3).</p>
-<h3><code>StandardAllocation</code></h3>
-<p>[in] When set, instructs <em>Dxgkrnl</em> to create a standard allocation using <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmthk/ns-d3dkmthk-_d3dkmt_createallocation"><strong>pStandardAllocation</strong></a> instead of <strong>pPrivateDriverData</strong>. Either <strong>ExistingSysMem</strong> or <strong>ExistingSection</strong> (but not both) must also be set if <strong>StandardAllocation</strong> is set. Additionally, when creating a <strong>StandardAllocation</strong>, the <strong>CreateShared</strong> and <strong>CrossAdapter</strong> flags must also be set. Supported starting with Windows 10 version 1709 (WDDM 2.3).</p>
-<h3><code>ExistingSection</code></h3>
-<p>[in] When set, instructs <em>Dxgkrnl</em> to use the section handle (<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dukmdt/ns-d3dukmdt-_d3dddi_allocationinfo2"><strong>hSection</strong></a>) instead of the system memory pointer (<strong>pSystemMem</strong>). <strong>ExistingSystemMem</strong> and <strong>ExistingSection</strong> can't both be set for the same allocation. If <strong>ExistingSection</strong> is set, <strong>StandardAllocation</strong> must also be set. Supported starting with Windows 10 version 1709 (WDDM 2.3).</p>
-<h3><code>AllowNotZeroed</code></h3>
-<p>[in] Indicates that the allocation can be created without zeroing the pages. Supported starting with Windows 10, version 1903 (WDDM 2.6).</p>
-<h3><code>PhysicallyContiguous</code></h3>
-<p>[in] Indicates that the allocation must be physically contiguous. Supported starting with Windows 10, version 2004 (WDDM 2.7).</p>
-<h3><code>NoKmdAccess</code></h3>
-<p>[in] Indicates that the KMD isn't notified about the allocation. Supported starting with Windows 10, version 2004 (WDDM 2.7).</p>
-<h3><code>SharedDisplayable</code></h3>
-<p>Indicates that the allocation is a shared, displayable resource. Supported starting with Windows 11 (WDDM 3.0).</p>
-<h3><code>Reserved</code></h3>
-<p>Supported starting with Windows 8.</p>
-<p>This member is reserved and should be set to zero.</p>
-<h2>Remarks</h2>
-<p>Objects to be shared by using the <strong><a href="d3dkmtshareobjects" title="NTSTATUS D3DKMTShareObjects(&#10;  [in]  UINT                cObjects,&#10;  [in]  const D3DKMT_HANDLE *hObjects,&#10;  [in]  POBJECT_ATTRIBUTES  pObjectAttributes,&#10;  [in]  DWORD               dwDesiredAccess,&#10;  [out] HANDLE              *phSharedNtHandle&#10;);">D3DKMTShareObjects</a></strong> function must first be created with the <strong>NtSecuritySharing</strong> flag value set. This flag value is available in the <strong>D3DKMT_CREATEALLOCATIONFLAGS</strong>, <strong><a href="d3dkmt_createkeyedmutex2_flags" title="typedef struct _D3DKMT_CREATEKEYEDMUTEX2_FLAGS {&#10;  union {&#10;    struct {&#10;      UINT NtSecuritySharing : 1;&#10;      UINT Reserved : 31;&#10;    };&#10;    [in] UINT Value;&#10;  };&#10;} D3DKMT_CREATEKEYEDMUTEX2_FLAGS;">D3DKMT_CREATEKEYEDMUTEX2_FLAGS</a></strong>, and <strong><a href="d3dddi_synchronizationobject_flags" title="typedef struct _D3DDDI_SYNCHRONIZATIONOBJECT_FLAGS {&#10;  union {&#10;    struct {&#10;      UINT Shared : 1;&#10;      UINT NtSecuritySharing : 1;&#10;      UINT CrossAdapter : 1;&#10;      UINT TopOfPipeline : 1;&#10;      UINT NoSignal : 1;&#10;      UINT NoWait : 1;&#10;      UINT NoSignalMaxValueOnTdr : 1;&#10;      UINT NoGPUAccess : 1;&#10;      UINT SignalByKmd : 1;&#10;      UINT Unused : 1;&#10;      UINT UnwaitCpuWaitersOnlyOnDestroy : 1;&#10;#if ...&#10;      UINT Reserved : 20;&#10;#elif&#10;      UINT Reserved : 21;&#10;#elif&#10;      UINT Reserved : 22;&#10;...">D3DDDI_SYNCHRONIZATIONOBJECT_FLAGS</a></strong> structures.</p>
-<p>Drivers should follow these guidelines on <strong>D3DKMT_CREATEALLOCATIONFLAGS</strong> sharing flags:</p>
-<ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-</ul>
-<h2>See also</h2>
-<p><strong><a href="d3dkmtcreateallocation" title="NTSTATUS D3DKMTCreateAllocation(&#10;  D3DKMT_CREATEALLOCATION *unnamedParam1&#10;);">D3DKMTCreateAllocation</a></strong></p>
-<p><strong><a href="d3dkmt_createallocation" title="typedef struct _D3DKMT_CREATEALLOCATION {&#10;  [in]     D3DKMT_HANDLE                hDevice;&#10;  [in/out] D3DKMT_HANDLE                hResource;&#10;  [out]    D3DKMT_HANDLE                hGlobalShare;&#10;  [in]     const VOID                   *pPrivateRuntimeData;&#10;  [in]     UINT                         PrivateRuntimeDataSize;&#10;  union {&#10;    [in]     D3DKMT_CREATESTANDARDALLOCATION *pStandardAllocation;&#10;    [in]     const VOID                      *pPrivateDriverData;&#10;  };&#10;  [in/out] UINT                         PrivateDriverDataSize;&#10;  [in]     UINT                         NumAllocations;&#10;  union {&#10;    [in]     D3DDDI_ALLOCATIONINFO  *pAllocationInfo;&#10;    [in]     D3DDDI_ALLOCATIONINFO2 *pAllocationInfo2;&#10;  };&#10;  [in]     D3DKMT_CREATEALLOCATIONFLAGS Flags;&#10;  [in]     HANDLE                       hPrivateRuntimeResourceHandle;&#10;} D3DKMT_CREATEALLOCATION;">D3DKMT_CREATEALLOCATION</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

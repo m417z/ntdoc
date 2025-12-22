@@ -65,25 +65,15 @@ RtlCheckSandboxedToken(
 <p>Determines if a token is considered sandboxed (i.e., has integrity level below medium).</p>
 <h1>Parameters</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><code>TokenHandle</code> - a handle to the token or one of the supported pseudo-handles (see below). The handle must grant <code>TOKEN_QUERY</code> access.</li>
+<li><code>IsSandboxed</code> - a pointer to a variable that receives a boolean indicating whether the token is sandboxed.</li>
 </ul>
 <h1>Pseudo-handles</h1>
 <p>This function supports the following pseudo-handle values:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><code><a href="ntcurrentprocesstoken" title="#define NtCurrentProcessToken() ((HANDLE)(LONG_PTR)-4) // NtOpenProcessToken(NtCurrentProcess())">NtCurrentProcessToken</a></code> - performs the query on the primary token of the calling process.</li>
+<li><code><a href="ntcurrentthreadtoken" title="#define NtCurrentThreadToken() ((HANDLE)(LONG_PTR)-5) // NtOpenThreadToken(NtCurrentThread())">NtCurrentThreadToken</a></code> - performs the query on the impersonation token of the calling thread. The function fails if the thread is not impersonating.</li>
+<li><code><a href="ntcurrentthreadeffectivetoken" title="#define NtCurrentThreadEffectiveToken() ((HANDLE)(LONG_PTR)-6) // NtOpenThreadToken(NtCurrentThread()) + NtOpenProcessToken(NtCurrentProcess())">NtCurrentThreadEffectiveToken</a></code> - performs the query on the impersonation token of the calling thread, if present. Otherwise, the function uses the primary token of the calling process.</li>
 </ul>
 <h1>Implementation details</h1>
 <p>On modern versions of Windows, this function calls <code><a href="ntqueryinformationtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationToken(&#10;    _In_ HANDLE TokenHandle,&#10;    _In_ TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;    _Out_writes_bytes_to_opt_(TokenInformationLength, *ReturnLength) PVOID TokenInformation,&#10;    _In_ ULONG TokenInformationLength,&#10;    _Out_ PULONG ReturnLength&#10;    );">NtQueryInformationToken</a></code> with <code><a href="tokenissandboxed" title="#define TokenIsSandboxed 47 // q: ULONG // since 19H1">TokenIsSandboxed</a></code> info class. Previously, it used to create a security descriptor with a medium mandatory label and perform an access check against it via <code><a href="ntaccesscheck" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAccessCheck(&#10;    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,&#10;    _In_ HANDLE ClientToken,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PGENERIC_MAPPING GenericMapping,&#10;    _Out_writes_bytes_(*PrivilegeSetLength) PPRIVILEGE_SET PrivilegeSet,&#10;    _Inout_ PULONG PrivilegeSetLength,&#10;    _Out_ PACCESS_MASK GrantedAccess,&#10;    _Out_ PNTSTATUS AccessStatus&#10;    );">NtAccessCheck</a></code>.</p>
@@ -91,12 +81,8 @@ RtlCheckSandboxedToken(
 <p>This function was introduced in Windows 10 TH1 (1507).</p>
 <h1>See also</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><code><a href="ntopenprocesstoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenProcessToken(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenProcessToken</a></code></li>
+<li><code><a href="ntopenthreadtoken" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThreadToken(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ BOOLEAN OpenAsSelf,&#10;    _Out_ PHANDLE TokenHandle&#10;    );">NtOpenThreadToken</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/rtlchecksandboxedtoken.md">Edit description on GitHub</a>

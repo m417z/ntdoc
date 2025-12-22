@@ -80,40 +80,32 @@
 <table>
 <thead>
 <tr>
-<th style="text-align:left;"><strong>Return code</strong></th>
-<th style="text-align:left;"><strong>Description</strong></th>
+<th align="left"><strong>Return code</strong></th>
+<th align="left"><strong>Description</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;"><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
-<td style="text-align:left;">DxgkDdiBuildPagingBuffersuccessfully built a paging buffer.</td>
+<td align="left"><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
+<td align="left">DxgkDdiBuildPagingBuffersuccessfully built a paging buffer.</td>
 </tr>
 <tr>
-<td style="text-align:left;"><strong>STATUS_GRAPHICS_ALLOCATION_BUSY</strong></td>
-<td style="text-align:left;">The GPU is currently using the allocation for the paging buffer.</td>
+<td align="left"><strong>STATUS_GRAPHICS_ALLOCATION_BUSY</strong></td>
+<td align="left">The GPU is currently using the allocation for the paging buffer.</td>
 </tr>
 <tr>
-<td style="text-align:left;"><strong>STATUS_GRAPHICS_INSUFFICIENT_DMA_BUFFER</strong></td>
-<td style="text-align:left;">More space is required in the paging buffer (that is, in the pDmaBuffer member of the <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> structure that the pBuildPagingBuffer parameter points to).</td>
+<td align="left"><strong>STATUS_GRAPHICS_INSUFFICIENT_DMA_BUFFER</strong></td>
+<td align="left">More space is required in the paging buffer (that is, in the pDmaBuffer member of the <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> structure that the pBuildPagingBuffer parameter points to).</td>
 </tr>
 </tbody>
 </table>
 <h2>Remarks</h2>
 <p>The <em>DxgkDdiBuildPagingBuffer</em> function is called to build special purpose direct memory access (DMA) buffers that are known as <em>paging buffers</em>. A paging buffer contains an operation that moves the content of portions of allocations:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Within a segment of an allocation.</li>
+<li>Between segments of allocations.</li>
+<li>From a segment of an allocation to system memory.</li>
+<li>From system memory to a segment of an allocation.</li>
 </ul>
 <p>The display miniport driver must write the appropriate graphics processing unit (GPU) instruction in the provided paging buffer (in the <strong>pDmaBuffer</strong> member of <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a>) according to the requested paging operation; and then the driver must return the paging buffer back to the video memory manager (which is part of <em>Dxgkrnl.sys</em>). The GPU scheduler (which is also part of <em>Dxgkrnl.sys</em>) subsequently calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_submitcommand">DxgkDdiSubmitCommand</a> function to request that the driver submit the paging buffer as a regular DMA buffer to the GPU.</p>
 <p><strong>Note</strong> Before the video memory manager submits the paging buffer, it calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_patch">DxgkDdiPatch</a> function to assign (that is, <em>patch</em>) physical addresses to the paging buffer; however, in the call to <em>DxgkDdiPatch</em>, the video memory manager does not provide patch-location lists. The driver's <em>DxgkDdiPatch</em> function can perform last-minute updates to the paging buffer; however, the driver's <em>DxgkDdiPatch</em> function cannot change the size of the paging buffer.</p>
@@ -121,46 +113,58 @@
 <p>If <em>DxgkDdiBuildPagingBuffer</em> determines that a paging operation requires more than one paging buffer, the driver can specify information in the <strong>MultipassOffset</strong> member of <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> and can use this information across multiple iterations of the paging operation. The video memory manager initializes the information in <strong>MultipassOffset</strong> to zero before the first paging operation request and does not modify the information in <strong>MultipassOffset</strong> between iterations. Therefore, the driver can use <strong>MultipassOffset</strong> to save the progress between iterations. For example, the driver can store the page number that was last transferred for a paged-based transfer.</p>
 <p>A paging buffer is currently built for the following types of operations:</p>
 <ul>
-<li><p>Transfer</p>
+<li>
+<p>Transfer</p>
 <p>The transfer operation moves the content of an allocation from one location to another. This operation is the most common type of memory operation.</p>
 <p>An allocation is always entirely transferred from one location to another. However, because of memory constraints, the transfer of an allocation can be divided into multiple sub-transfers (that is, a portion of the allocation is moved from location A to B, and then the following portion is moved, and so on, until the entire allocation is transferred). The first sub-transfer of an allocation is marked with the <strong>TransferStart</strong> bit-field flag in the <strong>Flags</strong> member of the <strong>Transfer</strong> member of <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a>; the last sub-transfer of an allocation is marked with the <strong>TransferEnd</strong> bit-field flag. The driver is guaranteed to receive the end of a pending transfer (that is, the last sub-transfer) before the driver receives the start of a new transfer.</p>
 <p>Each sub-transfer might require multiple calls to <em>DxgkDdiBuildPagingBuffer</em> to complete (for example, the driver might run out of DMA buffer space). Therefore, the driver might receive the <strong>TransferStart</strong> flag in multiple calls to <em>DxgkDdiBuildPagingBuffer</em> until the driver receives the <strong>TransferEnd</strong> flag in a call to <em>DxgkDdiBuildPagingBuffer</em>. Receiving the <strong>TransferStart</strong> flag multiple times does not indicate the start of multiple new transfers; it indicates that the sub-transfers for the allocation require multiple iterations (for example, if the driver ran out of DMA buffer space). The driver can use the <strong>MultipassOffset</strong> member of <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> to keep track of the progress for a particular sub-transfer across multiple iterations of <em>DxgkDdiBuildPagingBuffer</em>.</p>
 <p>Typically, a transfer occurs in a single operation. In this situation, both the <strong>TransferStart</strong> and <strong>TransferEnd</strong> bit-field flags are set.</p>
 <p>In some scenarios, the driver might be required to set up hardware resources when certain allocations are paged in or out of memory. By default, the GPU might be using the allocation that is referenced during the call to <em>DxgkDdiBuildPagingBuffer</em>. In these scenarios, the driver might require the allocation to be idle before the driver programs the required hardware resources (that is, programming the hardware resources cannot be queued in the provided DMA buffer). For such scenarios, the driver can fail the call to <em>DxgkDdiBuildPagingBuffer</em> with STATUS_GRAPHICS_ALLOCATION_BUSY.</p>
 <p>If the driver returns STATUS_GRAPHICS_ALLOCATION_BUSY, the video memory manager waits until the GPU is done with any reference to the current allocation and then calls the driver's <em>DxgkDdiBuildPagingBuffer</em> function again. In the second call to <em>DxgkDdiBuildPagingBuffer</em>, the video memory manager sets the <strong>AllocationIsIdle</strong> bit-field flag in the <strong>Flags</strong> member of the <strong>Transfer</strong> member of <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> to indicate that the allocation that is being referenced is idle. If the idle flag is not set, the driver should always determine that the allocation is either currently busy or might soon become busy. If the idle flag is set, the video memory manager guarantees that the allocation that is being referenced remains idle for the duration of the call to <em>DxgkDdiBuildPagingBuffer</em>.</p>
-<p>If the <strong>hAllocation</strong> member of <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> is <strong>NULL</strong>, the driver should copy the data in the source to the destination without performing any swizzling or tiling.</p></li>
-<li><p>Fill</p>
-<p>The fill operation fills an allocation with a specified pattern. The fill operation is used to set up the initial content of an allocation. When the content of the allocation is filled, the allocation is guaranteed to be idle (that is, not in use by the GPU). The fill operation can be performed only on a memory segment. The video memory manager never requests that the display miniport driver fill an aperture segment.</p></li>
-<li><p>Discard content</p>
+<p>If the <strong>hAllocation</strong> member of <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> is <strong>NULL</strong>, the driver should copy the data in the source to the destination without performing any swizzling or tiling.</p>
+</li>
+<li>
+<p>Fill</p>
+<p>The fill operation fills an allocation with a specified pattern. The fill operation is used to set up the initial content of an allocation. When the content of the allocation is filled, the allocation is guaranteed to be idle (that is, not in use by the GPU). The fill operation can be performed only on a memory segment. The video memory manager never requests that the display miniport driver fill an aperture segment.</p>
+</li>
+<li>
+<p>Discard content</p>
 <p>The discard-content operation notifies the driver that an allocation is discarded from the allocation's current location in a memory segment. That is, the allocation is evicted and not copied back to system memory.</p>
 <p>In some scenarios, the driver might be required to set up hardware resources when certain allocations are paged in or out of memory. By default, the GPU might use the allocation that is referenced during the call to <em>DxgkDdiBuildPagingBuffer</em>. In these scenarios, the driver might require the allocation to be idle before the driver programs the required hardware resources (that is, programming the hardware resources cannot be queued in the provided DMA buffer). For such scenarios, the driver can fail the call to <em>DxgkDdiBuildPagingBuffer</em> with STATUS_GRAPHICS_ALLOCATION_BUSY.</p>
-<p>If the driver returns STATUS_GRAPHICS_ALLOCATION_BUSY, the video memory manager waits until the GPU is done with any reference to the current allocation and then calls the driver's <em>DxgkDdiBuildPagingBuffer</em> function again. In the second call to <em>DxgkDdiBuildPagingBuffer</em>, the video memory manager sets the <strong>AllocationIsIdle</strong> bit-field flag in the <strong>Flags</strong> member of the <strong>DiscardContent</strong> member of the <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> structure to indicate that the allocation that is being referenced is idle. If the idle flag is not set, the driver should always determine that the allocation is either currently busy or might soon become busy. If the idle flag is set, the video memory manager guarantees that the allocation that is being referenced remains idle for the duration of the call to <em>DxgkDdiBuildPagingBuffer</em>.</p></li>
-<li><p>Read physical</p>
-<p>The read-physical operation reads from a specified physical memory address. The driver is requested to program the GPU for the operation. The size of the physical memory to access for the read can be from 1 byte through 8 bytes. Because the data that is read is irrelevant, <em>DxgkDdiBuildPagingBuffer</em> is not required to return the data. However, in scenarios where the CPU attempts to read from AGP memory after the GPU writes to that AGP memory, the read-physical operation is critical to ensure memory coherency.</p></li>
-<li><p>Write physical</p>
-<p>The write-physical operation writes to a specified physical address. The driver is requested to program the GPU for the operation. The size of the physical memory to access for the write operation can be from 1 byte through 8 bytes. Because the data that is written is irrelevant, <em>DxgkDdiBuildPagingBuffer</em> can write any data to the memory. However, in scenarios where the CPU attempts to read from AGP memory after the GPU writes to that AGP memory, the write-physical operation is critical to ensure memory coherency.</p></li>
-<li><p>Map aperture segment</p>
+<p>If the driver returns STATUS_GRAPHICS_ALLOCATION_BUSY, the video memory manager waits until the GPU is done with any reference to the current allocation and then calls the driver's <em>DxgkDdiBuildPagingBuffer</em> function again. In the second call to <em>DxgkDdiBuildPagingBuffer</em>, the video memory manager sets the <strong>AllocationIsIdle</strong> bit-field flag in the <strong>Flags</strong> member of the <strong>DiscardContent</strong> member of the <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> structure to indicate that the allocation that is being referenced is idle. If the idle flag is not set, the driver should always determine that the allocation is either currently busy or might soon become busy. If the idle flag is set, the video memory manager guarantees that the allocation that is being referenced remains idle for the duration of the call to <em>DxgkDdiBuildPagingBuffer</em>.</p>
+</li>
+<li>
+<p>Read physical</p>
+<p>The read-physical operation reads from a specified physical memory address. The driver is requested to program the GPU for the operation. The size of the physical memory to access for the read can be from 1 byte through 8 bytes. Because the data that is read is irrelevant, <em>DxgkDdiBuildPagingBuffer</em> is not required to return the data. However, in scenarios where the CPU attempts to read from AGP memory after the GPU writes to that AGP memory, the read-physical operation is critical to ensure memory coherency.</p>
+</li>
+<li>
+<p>Write physical</p>
+<p>The write-physical operation writes to a specified physical address. The driver is requested to program the GPU for the operation. The size of the physical memory to access for the write operation can be from 1 byte through 8 bytes. Because the data that is written is irrelevant, <em>DxgkDdiBuildPagingBuffer</em> can write any data to the memory. However, in scenarios where the CPU attempts to read from AGP memory after the GPU writes to that AGP memory, the write-physical operation is critical to ensure memory coherency.</p>
+</li>
+<li>
+<p>Map aperture segment</p>
 <p>The map-aperture-segment operation maps a specified memory descriptor list (<a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>) into a specified aperture segment at a specified segment offset for a specified number of pages. If the <strong>CacheCoherent</strong> bit-field flag is set in the <strong>Flags</strong> member of the <strong>MapApertureSegment</strong> member of the <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> structure, the driver must ensure that cache coherency is enforced on the pages that are mapped; otherwise, cache coherency is not required for the pages that are mapped.</p>
 <p><strong>Note</strong> The <strong>CacheCoherent</strong> bit-field flag is set only when cacheable memory is being mapped into a cache-coherent aperture segment and is never set on a non-cache-coherent aperture segment or on a write-combined allocation that is mapped into a cache-coherent segment.</p>
-<p>The driver can optionally use memory-mapped I/O (MMIO) to configure an aperture segment. The GPU will not be accessing the aperture range at configuration time. However, this aperture configuration must not interfere with the execution of the GPU. The GPU will not be idle when <em>DxgkDdiBuildPagingBuffer</em> is called with the DXGK_OPERATION_MAP_APERTURE_SEGMENT operation type set, and the GPU might be busy accessing other portions of the aperture segment that is being reconfigured.</p></li>
-<li><p>Unmap aperture segment</p>
+<p>The driver can optionally use memory-mapped I/O (MMIO) to configure an aperture segment. The GPU will not be accessing the aperture range at configuration time. However, this aperture configuration must not interfere with the execution of the GPU. The GPU will not be idle when <em>DxgkDdiBuildPagingBuffer</em> is called with the DXGK_OPERATION_MAP_APERTURE_SEGMENT operation type set, and the GPU might be busy accessing other portions of the aperture segment that is being reconfigured.</p>
+</li>
+<li>
+<p>Unmap aperture segment</p>
 <p>The unmap-aperture-segment operation unmaps a previously mapped range of a specified aperture segment. The driver must map the range that is unmapped to the dummy page that the <strong>DummyPage</strong> member of the <strong>UnmapApertureSegment</strong> member of the <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> structure specifies.</p>
 <p><strong>Note</strong> When the driver unmaps to the dummy page, the driver must enable GPU accesses through the specified aperture range so the DirectX graphics kernel subsystem can detect corruption issues. Conformance tests exist to check this situation.</p>
 <p>The video memory manager uses the dummy page that is in the unmapped portion of the aperture to determine difficulties the memory manager has accessing the aperture segment.</p>
-<p>The driver can optionally use MMIO to configure an aperture segment. The GPU will not be accessing the aperture range at configuration time. However, this aperture configuration must not interfere with the execution of the GPU. The GPU will not be idle when <em>DxgkDdiBuildPagingBuffer</em> is called with the DXGK_OPERATION_UNMAP_APERTURE_SEGMENT operation type set, and the GPU might be busy accessing other portions of the aperture segment that is being reconfigured.</p></li>
-<li><p>Special-lock transfer</p>
+<p>The driver can optionally use MMIO to configure an aperture segment. The GPU will not be accessing the aperture range at configuration time. However, this aperture configuration must not interfere with the execution of the GPU. The GPU will not be idle when <em>DxgkDdiBuildPagingBuffer</em> is called with the DXGK_OPERATION_UNMAP_APERTURE_SEGMENT operation type set, and the GPU might be busy accessing other portions of the aperture segment that is being reconfigured.</p>
+</li>
+<li>
+<p>Special-lock transfer</p>
 <p>The special-lock-transfer operation is similar to the regular transfer operation. However, instead of transferring the content of the allocation from or to the allocation's regular backing store, the special-lock-transfer operation transfers the content of the allocation from or to the alternate virtual address that was set up for the allocation when the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_lockcb">pfnLockCb</a> function was called with the <strong>UseAlternateVA</strong> bit-field flag set.</p>
 <p>The special-lock-transfer operation occurs only in one of the following scenarios:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The allocation is currently CPU-accessible with an alternate virtual address and is being evicted.</li>
+<li>An allocation that was previously evicted, such as the situation that is described in the preceding bullet, is being paged back in.Drivers that do not support the use of the <strong>UseAlternateVA</strong> bit-field flag will not be called to perform a special-lock-transfer operation.</li>
 </ul>
 <p>In some scenarios, the driver might be required to set up hardware resources when certain allocations are paged in or out of memory. By default, the GPU might be using the allocation that is referenced during the call to <em>DxgkDdiBuildPagingBuffer</em>. In these scenarios, the driver might require the allocation to be idle before the driver programs the required hardware resources (that is, programming the hardware resources cannot be queued in the provided DMA buffer). For such scenarios, the driver can fail the call to <em>DxgkDdiBuildPagingBuffer</em> with STATUS_GRAPHICS_ALLOCATION_BUSY.</p>
-<p>If the driver returns STATUS_GRAPHICS_ALLOCATION_BUSY, the video memory manager waits until the GPU is done with any reference to the current allocation and then calls the driver's <em>DxgkDdiBuildPagingBuffer</em> function again. In the second call to <em>DxgkDdiBuildPagingBuffer</em>, the video memory manager sets the <strong>AllocationIsIdle</strong> bit-field flag in the <strong>Flags</strong> member of the <strong>SpecialLockTransfer</strong> member of the <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> structure to indicate that the allocation that is being referenced is idle. If the idle flag is not set, the driver should always determine that the allocation is either currently busy or might soon become busy. If the idle flag is set, the video memory manager guarantees that the allocation that is being referenced remains idle for the duration of the call to <em>DxgkDdiBuildPagingBuffer</em>.</p></li>
+<p>If the driver returns STATUS_GRAPHICS_ALLOCATION_BUSY, the video memory manager waits until the GPU is done with any reference to the current allocation and then calls the driver's <em>DxgkDdiBuildPagingBuffer</em> function again. In the second call to <em>DxgkDdiBuildPagingBuffer</em>, the video memory manager sets the <strong>AllocationIsIdle</strong> bit-field flag in the <strong>Flags</strong> member of the <strong>SpecialLockTransfer</strong> member of the <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> structure to indicate that the allocation that is being referenced is idle. If the idle flag is not set, the driver should always determine that the allocation is either currently busy or might soon become busy. If the idle flag is set, the video memory manager guarantees that the allocation that is being referenced remains idle for the duration of the call to <em>DxgkDdiBuildPagingBuffer</em>.</p>
+</li>
 </ul>
 <p>Note that if the driver must use a hardware aperture to linearize a swizzled allocation that an application can directly access, the driver must unswizzle that allocation while the driver transfers the allocation to system memory to maintain the coherency of the allocation's virtual address. The driver must unswizzle the allocation because an eviction might occur while the application is accessing the allocation.</p>
 <p>The system's memory manager ensures that the transfer is invisible to the application. However, because the allocation is in system memory and the allocation's virtual address can no longer go through the hardware aperture, the driver must ensure the byte ordering into system memory matches what was visible through the aperture.</p>
@@ -169,6 +173,7 @@
 <p>The following code example shows how to use <em>DxgkDdiBuildPagingBuffer</em>.</p>
 <pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ntStatus;
 <a href="dxgkarg_buildpagingbuffer" title="typedef struct _DXGKARG_BUILDPAGINGBUFFER {&#10;  VOID                             *pDmaBuffer;&#10;  UINT                             DmaSize;&#10;  VOID                             *pDmaBufferPrivateData;&#10;  UINT                             DmaBufferPrivateDataSize;&#10;  DXGK_BUILDPAGINGBUFFER_OPERATION Operation;&#10;  UINT                             MultipassOffset;&#10;  union {&#10;    struct {&#10;      HANDLE             hAllocation;&#10;      UINT               TransferOffset;&#10;      SIZE_T             TransferSize;&#10;      struct {&#10;        UINT SegmentId;&#10;        union {&#10;          LARGE_INTEGER SegmentAddress;&#10;          MDL           *pMdl;&#10;        };&#10;      } Source;&#10;      struct {&#10;...">DXGKARG_BUILDPAGINGBUFFER</a> param;
+
 // The driver receives the following paging operation to build:
 //
 param.Flags = 0;
@@ -184,37 +189,42 @@ param.Transfer.Source.SegmentId = 0; // Source is an <a href="mdl" title="typede
 param.Transfer.Source.pMdl = MDLDescribingPagesForAllocationBeingMoved;
 param.Transfer.Destination.SegmentId = 1; // Source to segment #1.
 param.Transfer.Destination.SegmentAddress = 0; // Source to offset 0 of segment #1.
+
 // The driver receives MultipassOffset when it is initialized to zero
 // and uses it for multiple iterations of the paging operation.
 //
 param.MultipassOffset = 0;
+
 do {
-// Call the driver's BuildPagingBuffer function to build a paging buffer.
-//
-ntStatus = BuildPagingBuffer(hAdapter, &amp;param);
-// BuildPagingBuffer updates the size that is left in the
-//  paging buffer with the amount of bytes that were written.
-//
-if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(ntStatus)) {
-//
-// If <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, batch the paging buffer to the
-// scheduler after multiple paging operations are batched.
-}
-else if (ntStatus == STATUS_GRAPHICS_INSUFFICIENT_DMA_BUFFER) {
-//
-// If STATUS_GRAPHICS_INSUFFICIENT_DMA_BUFFER, submit the current paging buffer to the scheduler to let
-// the GPU start working on a partial transfer.
-VidSchSubmitPagingBuffer(CurrentPagingBuffer, CurrentPagingBufferSizeLeft);
-// Acquire a new paging buffer to complete the transfer.
-//
-VidMmAcquirePagingBuffer(&amp;CurrentPagingBuffer, &amp;CurrentPagingBufferSizeLeft);
-}
-else {
-//
-// A critical failure occurred, so bugcheck the system.
-// This situation should never occur because the driver can
-// fail the call only if it requires more DMA buffer space.
-}
+    // Call the driver's BuildPagingBuffer function to build a paging buffer.
+    //
+    ntStatus = BuildPagingBuffer(hAdapter, &amp;param);
+    // BuildPagingBuffer updates the size that is left in the
+    //  paging buffer with the amount of bytes that were written.
+    //
+    if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(ntStatus)) {
+        //
+        // If <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, batch the paging buffer to the
+        // scheduler after multiple paging operations are batched.
+    }
+    else if (ntStatus == STATUS_GRAPHICS_INSUFFICIENT_DMA_BUFFER) {
+
+        //
+        // If STATUS_GRAPHICS_INSUFFICIENT_DMA_BUFFER, submit the current paging buffer to the scheduler to let
+        // the GPU start working on a partial transfer.
+
+        VidSchSubmitPagingBuffer(CurrentPagingBuffer, CurrentPagingBufferSizeLeft);
+
+        // Acquire a new paging buffer to complete the transfer.
+        //
+        VidMmAcquirePagingBuffer(&amp;CurrentPagingBuffer, &amp;CurrentPagingBufferSizeLeft);
+    }
+    else {
+        //
+        // A critical failure occurred, so bugcheck the system.
+        // This situation should never occur because the driver can
+        // fail the call only if it requires more DMA buffer space.
+    }
 } while(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(ntStatus))
 </code></pre>
 <h2>See also</h2>

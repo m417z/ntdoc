@@ -78,7 +78,7 @@
 <h3><code>Packet</code></h3>
 <p>The number of the packet written by the OS to the WaveRT buffer. Depending on the values provided by the driver to <a href="acxrtstreamnotifypacketcomplete" title="NTSTATUS AcxRtStreamNotifyPacketComplete(&#10;  ACXSTREAM Stream,&#10;  ULONGLONG CompletedPacket,&#10;  ULONGLONG QPCCompletion&#10;);">AcxRtStreamNotifyPacketComplete</a>, the Packet number may skip values.</p>
 <h3><code>Flags</code></h3>
-<p>Flags can be 0 or <code>KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM = 0x200</code>, indicating the Packet is the last packet in the stream, and EosPacketLength is a valid length in bytes for the packet. For more information see _OptionsFlags_ in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ks/ns-ks-ksstream_header">KSSTREAM_HEADER structure (ks.h)</a>.</p>
+<p>Flags can be 0 or <code>KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM = 0x200</code>, indicating the Packet is the last packet in the stream, and EosPacketLength is a valid length in bytes for the packet. For more information see <em>OptionsFlags</em> in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ks/ns-ks-ksstream_header">KSSTREAM_HEADER structure (ks.h)</a>.</p>
 <h3><code>EosPacketLength</code></h3>
 <p>The length of the EOS packet if <code>KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM = 0x200</code> is specified in Flags. Zero is a valid value. If <code>KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM</code> is not specified in Flags, this parameter should be ignored. The EosPacketLength is measured in bytes.</p>
 <h2>Return value</h2>
@@ -91,40 +91,47 @@
 <p>After the OS calls this routine, the driver may optionally use the provided information to optimize the hardware transfer. For example, the driver might optimize DMA transfers, or program hardware to stop transfer at the end of the specified packet in case the OS does not call this routine again to inform the driver of another packet. This can mitigate audible effects of underflow, for example introducing an audible gap rather than repeating a circular buffer. The driver however is still obligated to increase its internal packet counter and signal notification events at a nominal real time rate.</p>
 <p>Depending on hardware capabilities, if the KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM flag is specified, the driver may silence-fill a portion of the WaveRT buffer that follows the EOS packet in case the hardware transfers data beyond the EOS position.</p>
 <p>The client starts by pre-rolling a buffer. When the client calls ReleaseBuffer, this will translate to a call in AudioKSE that will call into the ACX layer, which will call EvtAcxStreamSetRenderPacket on the active ACXSTREAM. The property will include the packet index (0-based) and, if appropriate, an EOS flag with the byte offset of the end of the stream in the current packet. 
-</p>
+ </p>
 <h3>Example</h3>
 <p>Example usage is shown below.</p>
-<pre><code>    //
-// Init RT streaming callbacks.
-//
-<a href="acx_rt_stream_callbacks" title="typedef struct _ACX_RT_STREAM_CALLBACKS {&#10;  ULONG                                    Size;&#10;  PFN_ACX_STREAM_GET_HW_LATENCY            EvtAcxStreamGetHwLatency;&#10;  PFN_ACX_STREAM_ALLOCATE_RTPACKETS        EvtAcxStreamAllocateRtPackets;&#10;  PFN_ACX_STREAM_FREE_RTPACKETS            EvtAcxStreamFreeRtPackets;&#10;  PFN_ACX_STREAM_SET_RENDER_PACKET         EvtAcxStreamSetRenderPacket;&#10;  PFN_ACX_STREAM_GET_CURRENT_PACKET        EvtAcxStreamGetCurrentPacket;&#10;  PFN_ACX_STREAM_GET_CAPTURE_PACKET        EvtAcxStreamGetCapturePacket;&#10;  PFN_ACX_STREAM_GET_PRESENTATION_POSITION EvtAcxStreamGetPresentationPosition;&#10;} ACX_RT_STREAM_CALLBACKS, *PACX_RT_STREAM_CALLBACKS;">ACX_RT_STREAM_CALLBACKS</a> rtCallbacks;
-<a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a>(&amp;rtCallbacks);
-rtCallbacks.EvtAcxStreamSetRenderPacket = EvtStreamSetRenderPacket;
-status = <a href="acxstreaminitassignacxrtstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxRtStreamCallbacks(&#10;  PACXSTREAM_INIT          StreamInit,&#10;  PACX_RT_STREAM_CALLBACKS RtStreamCallbacks&#10;);">AcxStreamInitAssignAcxRtStreamCallbacks</a>(StreamInit, &amp;rtCallbacks);
+<pre><code>//
+    // Init RT streaming callbacks.
+    //
+    <a href="acx_rt_stream_callbacks" title="typedef struct _ACX_RT_STREAM_CALLBACKS {&#10;  ULONG                                    Size;&#10;  PFN_ACX_STREAM_GET_HW_LATENCY            EvtAcxStreamGetHwLatency;&#10;  PFN_ACX_STREAM_ALLOCATE_RTPACKETS        EvtAcxStreamAllocateRtPackets;&#10;  PFN_ACX_STREAM_FREE_RTPACKETS            EvtAcxStreamFreeRtPackets;&#10;  PFN_ACX_STREAM_SET_RENDER_PACKET         EvtAcxStreamSetRenderPacket;&#10;  PFN_ACX_STREAM_GET_CURRENT_PACKET        EvtAcxStreamGetCurrentPacket;&#10;  PFN_ACX_STREAM_GET_CAPTURE_PACKET        EvtAcxStreamGetCapturePacket;&#10;  PFN_ACX_STREAM_GET_PRESENTATION_POSITION EvtAcxStreamGetPresentationPosition;&#10;} ACX_RT_STREAM_CALLBACKS, *PACX_RT_STREAM_CALLBACKS;">ACX_RT_STREAM_CALLBACKS</a> rtCallbacks;
+    <a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a>(&amp;rtCallbacks);
+
+    rtCallbacks.EvtAcxStreamSetRenderPacket = EvtStreamSetRenderPacket;
+
+    status = <a href="acxstreaminitassignacxrtstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxRtStreamCallbacks(&#10;  PACXSTREAM_INIT          StreamInit,&#10;  PACX_RT_STREAM_CALLBACKS RtStreamCallbacks&#10;);">AcxStreamInitAssignAcxRtStreamCallbacks</a>(StreamInit, &amp;rtCallbacks);
 </code></pre>
-<pre><code>#pragma code_seg("PAGE")
+<pre><code>#pragma code_seg(&quot;PAGE&quot;)
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 EvtStreamSetRenderPacket(
-_In_ ACXSTREAM Stream,
-_In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     Packet,
-_In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     Flags,
-_In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     EosPacketLength
-)
+    _In_ ACXSTREAM Stream,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     Packet,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     Flags,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     EosPacketLength
+    )
 {
-PSTREAM_CONTEXT ctx;
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>        status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-PAGED_CODE();
-ctx = GetStreamContext(Stream);
-currentPacket = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)<a href="interlockedcompareexchange" title="LONG InterlockedCompareExchange(&#10;  [in, out] LONG volatile *Destination,&#10;            LONG          ExChange,&#10;            LONG          Comperand&#10;);">InterlockedCompareExchange</a>((<a href="long" title="typedef long LONG;">LONG</a>*)&amp;ctx-&gt;m_CurrentPacket, -1, -1);
-if (Packet &lt;= currentPacket)
-{
-status = STATUS_DATA_LATE_ERROR;
-}
-else if (Packet &gt; currentPacket + 1)
-{
-status = STATUS_DATA_OVERRUN;
-}
-return status;
+    PSTREAM_CONTEXT ctx;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>        status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+
+    PAGED_CODE();
+
+    ctx = GetStreamContext(Stream);
+
+    currentPacket = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)<a href="interlockedcompareexchange" title="LONG InterlockedCompareExchange(&#10;  [in, out] LONG volatile *Destination,&#10;            LONG          ExChange,&#10;            LONG          Comperand&#10;);">InterlockedCompareExchange</a>((<a href="long" title="typedef long LONG;">LONG</a>*)&amp;ctx-&gt;m_CurrentPacket, -1, -1);
+
+    if (Packet &lt;= currentPacket)
+    {
+        status = STATUS_DATA_LATE_ERROR;
+    }
+    else if (Packet &gt; currentPacket + 1)
+    {
+        status = STATUS_DATA_OVERRUN;
+    }
+
+    return status;
 }
 </code></pre>
 <h3>ACX requirements</h3>
@@ -132,9 +139,7 @@ return status;
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
 <h2>See also</h2>
 <ul>
-<li>
-
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/">acxstreams.h header</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

@@ -113,12 +113,8 @@
 <p>The driver must create the transaction specified by <em>DmaTransaction</em> prior to calling <strong>WdfDmaTransactionAllocateResources</strong>. After calling <strong>WdfDmaTransactionAllocateResources</strong>, the driver initializes and initiates the transaction. The driver can reinitialize and reinitiate the same transaction object multiple times, avoiding the delay that would otherwise occur between transactions as map registers were freed back to the HAL and then reallocated.</p>
 <p>A driver could call <strong>WdfDmaTransactionAllocateResources</strong> in the following situations:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The driver receives a set of DMA channels in its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_prepare_hardware">EvtDevicePrepareHardware</a> callback function. In <em>EvtDevicePrepareHardware</em>, the driver initializes a DMA transaction and calls <strong>WdfDmaTransactionAllocateResources</strong> to reserve the enabler for exclusive use with this transaction. Alternatively, the driver can call <strong>WdfDmaTransactionAllocateResources</strong> from a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/request-handlers">request handler</a> and then initiate the transaction multiple times.</li>
+<li>The driver needs to perform a series of transactions on the enabler. The driver reserves the enabler, initializes and initiates multiple transactions using the same transaction object, and then releases the enabler.</li>
 </ul>
 <p>Before calling <strong>WdfDmaTransactionAllocateResources</strong>, the driver must determine the number of map registers needed for any transaction that it will initiate using this reservation. To do so, the driver can call either the <a href="address_and_size_to_span_pages" title="#define ADDRESS_AND_SIZE_TO_SPAN_PAGES(Address, Size) ((BYTE_OFFSET(Address) + ((SIZE_T)(Size)) + PAGE_MASK) &gt;&gt; PAGE_SHIFT)">ADDRESS_AND_SIZE_TO_SPAN_PAGES</a> macro or <a href="wdfdmatransactiongettransferinfo" title="VOID WdfDmaTransactionGetTransferInfo(&#10;  [in]            WDFDMATRANSACTION DmaTransaction,&#10;  [out, optional] ULONG             *MapRegisterCount,&#10;  [out, optional] ULONG             *ScatterGatherElementCount&#10;);">WdfDmaTransactionGetTransferInfo</a>.</p>
 <p>When calling <strong>WdfDmaTransactionAllocateResources</strong>, the driver should not request more map registers than it requested when it created the enabler.</p>

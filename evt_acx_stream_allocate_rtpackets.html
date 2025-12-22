@@ -90,103 +90,121 @@
 <p>The buffer allocation typically only involves allocating system memory in such a way that it can be used with the DMA hardware. Typically, the buffer allocation will not have any effect on the streaming hardware. The prepare hardware phase is used as the driver is getting the stream ready to run, by completing tasks such as reserving bandwidth, programming DMA, and completing the preparation for the request to run the stream. Typically, the prepare hardware code will make use of the allocated buffers for preparing the DMA and related activities to be ready to start the stream.</p>
 <h3>Example</h3>
 <p>Example usage is shown below.</p>
-<pre><code>    //
-// Init RT streaming callbacks.
-//
-<a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a>(&amp;rtCallbacks);
-rtCallbacks.EvtAcxStreamAllocateRtPackets       = Codec_EvtStreamAllocateRtPackets;
+<pre><code>//
+    // Init RT streaming callbacks.
+    //
+    <a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a>(&amp;rtCallbacks);
+    rtCallbacks.EvtAcxStreamAllocateRtPackets       = Codec_EvtStreamAllocateRtPackets;
+
 ...
-#pragma code_seg("PAGE")
+
+#pragma code_seg(&quot;PAGE&quot;)
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 Codec_EvtStreamAllocateRtPackets(
-_In_ ACXSTREAM Stream,
-_In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PacketCount,
-_In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PacketSize,
-_Out_ <a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">PACX_RTPACKET</a> *Packets
-)
+    _In_ ACXSTREAM Stream,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PacketCount,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PacketSize,
+    _Out_ <a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">PACX_RTPACKET</a> *Packets
+    )
 {
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-PCODEC_STREAM_CONTEXT ctx;
-<a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">PACX_RTPACKET</a> packets = NULL;
-PVOID packetBuffer = NULL;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> i;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> packetAllocSizeInPages = 0;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> packetAllocSizeInBytes = 0;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> firstPacketOffset = 0;
-<a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> packetsSize = 0;
-PAGED_CODE();
-ctx = GetCodecStreamContext(Stream);
-if (PacketCount &gt; 2)
-{
-status = STATUS_INVALID_PARAMETER;
-goto exit;
-}
-status = <a href="rtlsizetmult" title="#define RtlSizeTMult RtlULongLongMult">RtlSizeTMult</a>(PacketCount, sizeof(<a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">ACX_RTPACKET</a>), &amp;packetsSize);
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-goto exit;
-}
-packets = (<a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">PACX_RTPACKET</a>)<a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a>(POOL_FLAG_NON_PAGED, packetsSize, DRIVER_TAG);
-if (!packets) {
-status = STATUS_NO_MEMORY;
-goto exit;
-}
-// We need to allocate page-aligned buffers, to ensure no kernel memory leaks
-// to user space. Round up the packet size to page aligned, then calculate
-// the first packet's buffer offset so packet 0 ends on a page boundary and
-// packet 1 begins on a page boundary.
-status = <a href="rtlulongadd" title="_Must_inspect_result_&#10;__inline&#10;NTSTATUS&#10;RtlULongAdd(&#10;    _In_ ULONG ulAugend,&#10;    _In_ ULONG ulAddend,&#10;    _Out_ _Deref_out_range_(==, ulAugend + ulAddend) ULONG* pulResult)&#10;{&#10;    NTSTATUS status;&#10;&#10;    if ((ulAugend + ulAddend) &gt;= ulAugend)&#10;    {&#10;        *pulResult = (ulAugend + ulAddend);&#10;        status = STATUS_SUCCESS;&#10;    }&#10;    else&#10;    {&#10;        *pulResult = ULONG_ERROR;&#10;        status = STATUS_INTEGER_OVERFLOW;&#10;    }&#10;...">RtlULongAdd</a>(PacketSize, <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> - 1, &amp;packetAllocSizeInPages);
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-goto exit;
-}
-packetAllocSizeInPages = packetAllocSizeInPages / <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a>;
-packetAllocSizeInBytes = <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> * packetAllocSizeInPages;
-firstPacketOffset = packetAllocSizeInBytes - PacketSize;
-for (i = 0; i &lt; PacketCount; ++i)
-{
-<a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">PMDL</a> pMdl = NULL;
-<a href="acx_rtpacket_init" title="VOID ACX_RTPACKET_INIT(&#10;  PACX_RTPACKET RtPacket&#10;);">ACX_RTPACKET_INIT</a>(&amp;packets[i]);
-packetBuffer = <a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a>(POOL_FLAG_NON_PAGED, packetAllocSizeInBytes, DRIVER_TAG);
-if (packetBuffer == NULL) {
-status = STATUS_NO_MEMORY;
-goto exit;
-}
-pMdl = <a href="ioallocatemdl" title="PMDL IoAllocateMdl(&#10;  [in, optional]      __drv_aliasesMem PVOID VirtualAddress,&#10;  [in]                ULONG                  Length,&#10;  [in]                BOOLEAN                SecondaryBuffer,&#10;  [in]                BOOLEAN                ChargeQuota,&#10;  [in, out, optional] PIRP                   Irp&#10;);">IoAllocateMdl</a>(packetBuffer, packetAllocSizeInBytes, FALSE, TRUE, NULL);
-if (pMdl == NULL) {
-status = STATUS_NO_MEMORY;
-goto exit;
-}
-<a href="mmbuildmdlfornonpagedpool" title="VOID MmBuildMdlForNonPagedPool(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmBuildMdlForNonPagedPool</a>(pMdl);
-<a href="wdf_memory_descriptor_init_mdl" title="VOID WDF_MEMORY_DESCRIPTOR_INIT_MDL(&#10;  [out] PWDF_MEMORY_DESCRIPTOR Descriptor,&#10;  [in]  PMDL                   Mdl,&#10;  [in]  ULONG                  BufferLength&#10;);">WDF_MEMORY_DESCRIPTOR_INIT_MDL</a>(
-&amp;((packets)[i].RtPacketBuffer),
-pMdl,
-packetAllocSizeInBytes);
-packets[i].RtPacketSize = PacketSize;
-if (i == 0)
-{
-packets[i].RtPacketOffset = firstPacketOffset;
-}
-else
-{
-packets[i].RtPacketOffset = 0;
-}
-m_Packets[i] = packetBuffer;
-packetBuffer = NULL;
-}
-*Packets = packets;
-packets = NULL;
-ctx-&gt;PacketsCount = PacketCount;
-ctx-&gt;PacketSize = PacketSize;
-ctx-&gt;FirstPacketOffset = firstPacketOffset;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+    PCODEC_STREAM_CONTEXT ctx;
+    <a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">PACX_RTPACKET</a> packets = NULL;
+    PVOID packetBuffer = NULL;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> i;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> packetAllocSizeInPages = 0;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> packetAllocSizeInBytes = 0;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> firstPacketOffset = 0;
+    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> packetsSize = 0;
+
+    PAGED_CODE();
+
+    ctx = GetCodecStreamContext(Stream);
+
+    if (PacketCount &gt; 2)
+    {
+        status = STATUS_INVALID_PARAMETER;
+        goto exit;
+    }
+
+    status = <a href="rtlsizetmult" title="#define RtlSizeTMult RtlULongLongMult">RtlSizeTMult</a>(PacketCount, sizeof(<a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">ACX_RTPACKET</a>), &amp;packetsSize);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+        goto exit;
+    }
+
+    packets = (<a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">PACX_RTPACKET</a>)<a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a>(POOL_FLAG_NON_PAGED, packetsSize, DRIVER_TAG);
+    if (!packets) {
+        status = STATUS_NO_MEMORY;
+        goto exit;
+    }
+
+    // We need to allocate page-aligned buffers, to ensure no kernel memory leaks
+    // to user space. Round up the packet size to page aligned, then calculate
+    // the first packet's buffer offset so packet 0 ends on a page boundary and
+    // packet 1 begins on a page boundary.
+    status = <a href="rtlulongadd" title="_Must_inspect_result_&#10;__inline&#10;NTSTATUS&#10;RtlULongAdd(&#10;    _In_ ULONG ulAugend,&#10;    _In_ ULONG ulAddend,&#10;    _Out_ _Deref_out_range_(==, ulAugend + ulAddend) ULONG* pulResult)&#10;{&#10;    NTSTATUS status;&#10;&#10;    if ((ulAugend + ulAddend) &gt;= ulAugend)&#10;    {&#10;        *pulResult = (ulAugend + ulAddend);&#10;        status = STATUS_SUCCESS;&#10;    }&#10;    else&#10;    {&#10;        *pulResult = ULONG_ERROR;&#10;        status = STATUS_INTEGER_OVERFLOW;&#10;    }&#10;...">RtlULongAdd</a>(PacketSize, <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> - 1, &amp;packetAllocSizeInPages);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+        goto exit;
+    }
+    packetAllocSizeInPages = packetAllocSizeInPages / <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a>;
+    packetAllocSizeInBytes = <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> * packetAllocSizeInPages;
+    firstPacketOffset = packetAllocSizeInBytes - PacketSize;
+
+    for (i = 0; i &lt; PacketCount; ++i)
+    {
+        <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">PMDL</a> pMdl = NULL;
+
+        <a href="acx_rtpacket_init" title="VOID ACX_RTPACKET_INIT(&#10;  PACX_RTPACKET RtPacket&#10;);">ACX_RTPACKET_INIT</a>(&amp;packets[i]);
+
+        packetBuffer = <a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a>(POOL_FLAG_NON_PAGED, packetAllocSizeInBytes, DRIVER_TAG);
+        if (packetBuffer == NULL) {
+            status = STATUS_NO_MEMORY;
+            goto exit;
+        }
+
+        pMdl = <a href="ioallocatemdl" title="PMDL IoAllocateMdl(&#10;  [in, optional]      __drv_aliasesMem PVOID VirtualAddress,&#10;  [in]                ULONG                  Length,&#10;  [in]                BOOLEAN                SecondaryBuffer,&#10;  [in]                BOOLEAN                ChargeQuota,&#10;  [in, out, optional] PIRP                   Irp&#10;);">IoAllocateMdl</a>(packetBuffer, packetAllocSizeInBytes, FALSE, TRUE, NULL);
+        if (pMdl == NULL) {
+            status = STATUS_NO_MEMORY;
+            goto exit;
+        }
+
+        <a href="mmbuildmdlfornonpagedpool" title="VOID MmBuildMdlForNonPagedPool(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmBuildMdlForNonPagedPool</a>(pMdl);
+
+        <a href="wdf_memory_descriptor_init_mdl" title="VOID WDF_MEMORY_DESCRIPTOR_INIT_MDL(&#10;  [out] PWDF_MEMORY_DESCRIPTOR Descriptor,&#10;  [in]  PMDL                   Mdl,&#10;  [in]  ULONG                  BufferLength&#10;);">WDF_MEMORY_DESCRIPTOR_INIT_MDL</a>(
+            &amp;((packets)[i].RtPacketBuffer),
+            pMdl,
+            packetAllocSizeInBytes);
+
+        packets[i].RtPacketSize = PacketSize;
+        if (i == 0)
+        {
+            packets[i].RtPacketOffset = firstPacketOffset;
+        }
+        else
+        {
+            packets[i].RtPacketOffset = 0;
+        }
+        m_Packets[i] = packetBuffer;
+
+        packetBuffer = NULL;
+    }
+
+    *Packets = packets;
+    packets = NULL;
+    ctx-&gt;PacketsCount = PacketCount;
+    ctx-&gt;PacketSize = PacketSize;
+    ctx-&gt;FirstPacketOffset = firstPacketOffset;
+
 exit:
-if (packetBuffer)
-{
-<a href="exfreepoolwithtag" title="VOID ExFreePoolWithTag(&#10;  [in] PVOID P,&#10;  [in] ULONG Tag&#10;);">ExFreePoolWithTag</a>(packetBuffer, DRIVER_TAG);
-}
-if (packets)
-{
-FreeRtPackets(packets, PacketCount);
-}
-return status;
+    if (packetBuffer)
+    {
+        <a href="exfreepoolwithtag" title="VOID ExFreePoolWithTag(&#10;  [in] PVOID P,&#10;  [in] ULONG Tag&#10;);">ExFreePoolWithTag</a>(packetBuffer, DRIVER_TAG);
+    }
+    if (packets)
+    {
+        FreeRtPackets(packets, PacketCount);
+    }
+    return status;
 }
 </code></pre>
 <h3>ACX requirements</h3>
@@ -194,9 +212,7 @@ return status;
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
 <h2>See also</h2>
 <ul>
-<li>
-
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/">acxstreams.h header</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

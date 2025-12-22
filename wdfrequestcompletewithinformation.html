@@ -95,42 +95,45 @@
 <p>The following code example shows how a driver for a USB device might call <strong>WdfRequestCompleteWithInformation</strong> in a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function .</p>
 <pre><code>VOID
 EvtRequestReadCompletionRoutine(
-IN WDFREQUEST  Request,
-IN WDFIOTARGET  Target,
-<a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">PWDF_REQUEST_COMPLETION_PARAMS</a>  CompletionParams,
-IN WDFCONTEXT  Context
-)
+    IN WDFREQUEST  Request,
+    IN WDFIOTARGET  Target,
+    <a href="wdf_request_completion_params" title="typedef struct _WDF_REQUEST_COMPLETION_PARAMS {&#10;  ULONG            Size;&#10;  WDF_REQUEST_TYPE Type;&#10;  IO_STATUS_BLOCK  IoStatus;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Write;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      size_t    Length;&#10;      size_t    Offset;&#10;    } Read;&#10;    struct {&#10;      ULONG  IoControlCode;&#10;      struct {&#10;        WDFMEMORY Buffer;&#10;        size_t    Offset;&#10;...">PWDF_REQUEST_COMPLETION_PARAMS</a>  CompletionParams,
+    IN WDFCONTEXT  Context
+    )
 {
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
-<a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  bytesRead = 0;
-<a href="wdf_usb_request_completion_params" title="typedef struct _WDF_USB_REQUEST_COMPLETION_PARAMS {&#10;  USBD_STATUS          UsbdStatus;&#10;  WDF_USB_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      USHORT    LangID;&#10;      UCHAR     StringIndex;&#10;      UCHAR     RequiredSize;&#10;    } DeviceString;&#10;    struct {&#10;      WDFMEMORY                    Buffer;&#10;      WDF_USB_CONTROL_SETUP_PACKET SetupPacket;&#10;      ULONG                        Length;&#10;    } DeviceControlTransfer;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;    } DeviceUrb;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;...">PWDF_USB_REQUEST_COMPLETION_PARAMS</a>  usbCompletionParams;
-UNREFERENCED_PARAMETER(Target);
-UNREFERENCED_PARAMETER(Context);
-status = CompletionParams-&gt;IoStatus.Status;
-usbCompletionParams = CompletionParams-&gt;Parameters.Usb.Completion;
-bytesRead =  usbCompletionParams-&gt;Parameters.PipeRead.Length;
-if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-TraceEvents(
-TRACE_LEVEL_INFORMATION,
-DBG_READ,
-"Number of bytes read: %I64d\n",
-(INT64)bytesRead
-);
-} else {
-TraceEvents(
-TRACE_LEVEL_ERROR,
-DBG_READ,
-"Read failed - request status 0x%x UsbdStatus 0x%x\n",
-status,
-usbCompletionParams-&gt;UsbdStatus
-);
-}
-WdfRequestCompleteWithInformation(
-Request,
-status,
-bytesRead
-);
-return;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
+    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  bytesRead = 0;
+    <a href="wdf_usb_request_completion_params" title="typedef struct _WDF_USB_REQUEST_COMPLETION_PARAMS {&#10;  USBD_STATUS          UsbdStatus;&#10;  WDF_USB_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;      USHORT    LangID;&#10;      UCHAR     StringIndex;&#10;      UCHAR     RequiredSize;&#10;    } DeviceString;&#10;    struct {&#10;      WDFMEMORY                    Buffer;&#10;      WDF_USB_CONTROL_SETUP_PACKET SetupPacket;&#10;      ULONG                        Length;&#10;    } DeviceControlTransfer;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;    } DeviceUrb;&#10;    struct {&#10;      WDFMEMORY Buffer;&#10;...">PWDF_USB_REQUEST_COMPLETION_PARAMS</a>  usbCompletionParams;
+
+    UNREFERENCED_PARAMETER(Target);
+    UNREFERENCED_PARAMETER(Context);
+
+    status = CompletionParams-&gt;IoStatus.Status;
+    usbCompletionParams = CompletionParams-&gt;Parameters.Usb.Completion;
+    bytesRead =  usbCompletionParams-&gt;Parameters.PipeRead.Length;
+
+    if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
+        TraceEvents(
+                    TRACE_LEVEL_INFORMATION,
+                    DBG_READ,
+                    &quot;Number of bytes read: %I64d\n&quot;,
+                    (INT64)bytesRead
+                    );
+    } else {
+        TraceEvents(
+                    TRACE_LEVEL_ERROR,
+                    DBG_READ,
+                    &quot;Read failed - request status 0x%x UsbdStatus 0x%x\n&quot;,
+                    status,
+                    usbCompletionParams-&gt;UsbdStatus
+                    );
+    }
+    WdfRequestCompleteWithInformation(
+                                      Request,
+                                      status,
+                                      bytesRead
+                                      );
+    return;
 }
 </code></pre>
 <h2>See also</h2>

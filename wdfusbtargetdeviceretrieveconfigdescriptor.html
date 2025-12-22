@@ -107,15 +107,9 @@
 <p>You can use <strong><a href="wdfusbtargetdeviceselectconfig" title="NTSTATUS WdfUsbTargetDeviceSelectConfig(&#10;  [in]           WDFUSBDEVICE                         UsbDevice,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES               PipeAttributes,&#10;  [in, out]      PWDF_USB_DEVICE_SELECT_CONFIG_PARAMS Params&#10;);">WdfUsbTargetDeviceSelectConfig</a></strong> to select only the first USB configuration listed in the descriptor list, but you can select multiple interfaces within this single configuration.</p>
 <p>Drivers should call <strong>WdfUsbTargetDeviceRetrieveConfigDescriptor</strong> twice, as follows:</p>
 <ol>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Set the <em>ConfigDescriptor</em> pointer to <strong>NULL</strong>, so that <strong>WdfUsbTargetDeviceRetrieveConfigDescriptor</strong> will return the required buffer size in the address that <em>ConfigDescriptorLength</em> points to.</li>
+<li>Allocate buffer space to hold the configuration information. For example, a driver might call <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a> to allocate a buffer, or it might call <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a> to create a framework memory object.</li>
+<li>Call <strong>WdfUsbTargetDeviceRetrieveConfigDescriptor</strong> again, passing it a pointer to the new buffer and the buffer's size.</li>
 </ol>
 <p>After the second call to <strong>WdfUsbTargetDeviceRetrieveConfigDescriptor</strong> returns, the buffer that is pointed to by <em>ConfigDescriptor</em> contains a <a href="usb_configuration_descriptor" title="typedef struct _USB_CONFIGURATION_DESCRIPTOR {&#10;  UCHAR  bLength;&#10;  UCHAR  bDescriptorType;&#10;  USHORT wTotalLength;&#10;  UCHAR  bNumInterfaces;&#10;  UCHAR  bConfigurationValue;&#10;  UCHAR  iConfiguration;&#10;  UCHAR  bmAttributes;&#10;  UCHAR  MaxPower;&#10;} USB_CONFIGURATION_DESCRIPTOR, *PUSB_CONFIGURATION_DESCRIPTOR;">USB_CONFIGURATION_DESCRIPTOR</a> structure, followed by one or more <a href="usb_interface_descriptor" title="typedef struct _USB_INTERFACE_DESCRIPTOR {&#10;  UCHAR bLength;&#10;  UCHAR bDescriptorType;&#10;  UCHAR bInterfaceNumber;&#10;  UCHAR bAlternateSetting;&#10;  UCHAR bNumEndpoints;&#10;  UCHAR bInterfaceClass;&#10;  UCHAR bInterfaceSubClass;&#10;  UCHAR bInterfaceProtocol;&#10;  UCHAR iInterface;&#10;} USB_INTERFACE_DESCRIPTOR, *PUSB_INTERFACE_DESCRIPTOR;">USB_INTERFACE_DESCRIPTOR</a> and <a href="usb_endpoint_descriptor" title="typedef struct _USB_ENDPOINT_DESCRIPTOR {&#10;  UCHAR  bLength;&#10;  UCHAR  bDescriptorType;&#10;  UCHAR  bEndpointAddress;&#10;  UCHAR  bmAttributes;&#10;  USHORT wMaxPacketSize;&#10;  UCHAR  bInterval;&#10;} USB_ENDPOINT_DESCRIPTOR, *PUSB_ENDPOINT_DESCRIPTOR;">USB_ENDPOINT_DESCRIPTOR</a> structures. These latter structures are arranged in the order that is described in the USB specification.</p>
 <p>For more information about the <strong>WdfUsbTargetDeviceRetrieveConfigDescriptor</strong> method and USB I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/usb-i-o-targets">USB I/O Targets</a>.</p>
@@ -127,35 +121,41 @@ PMY_DEVICE_CONTEXT  myDeviceContext;
 <a href="usb_configuration_descriptor" title="typedef struct _USB_CONFIGURATION_DESCRIPTOR {&#10;  UCHAR  bLength;&#10;  UCHAR  bDescriptorType;&#10;  USHORT wTotalLength;&#10;  UCHAR  bNumInterfaces;&#10;  UCHAR  bConfigurationValue;&#10;  UCHAR  iConfiguration;&#10;  UCHAR  bmAttributes;&#10;  UCHAR  MaxPower;&#10;} USB_CONFIGURATION_DESCRIPTOR, *PUSB_CONFIGURATION_DESCRIPTOR;">PUSB_CONFIGURATION_DESCRIPTOR</a>  configurationDescriptor = NULL;
 <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a>  objectAttribs;
 WDFMEMORY  memoryHandle;
+
 myDeviceContext = GetDeviceContext(Device);
+
 ntStatus = WdfUsbTargetDeviceRetrieveConfigDescriptor(
-myDeviceContext-&gt;WdfUsbTargetDevice,
-NULL,
-&amp;size
-);
+                                            myDeviceContext-&gt;WdfUsbTargetDevice,
+                                            NULL,
+                                            &amp;size
+                                            );
+
 if (ntStatus != STATUS_BUFFER_TOO_SMALL) {
-return ntStatus;
+    return ntStatus;
 }
+
 <a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a>(&amp;objectAttribs);
 objectAttribs.ParentObject = myDeviceContext-&gt;WdfUsbTargetDevice;
+
 ntStatus = <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a>(
-&amp;objectAttribs,
-NonPagedPool,
-POOL_TAG,
-size,
-&amp;memoryHandle,
-(PVOID)&amp;configurationDescriptor
-);
+                           &amp;objectAttribs,
+                           NonPagedPool,
+                           POOL_TAG,
+                           size,
+                           &amp;memoryHandle,
+                           (PVOID)&amp;configurationDescriptor
+                           );
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(ntStatus)) {
-return ntStatus;
+    return ntStatus;
 }
+
 ntStatus = WdfUsbTargetDeviceRetrieveConfigDescriptor(
-myDeviceContext-&gt;WdfUsbTargetDevice,
-configurationDescriptor,
-&amp;size
-);
+                                            myDeviceContext-&gt;WdfUsbTargetDevice,
+                                            configurationDescriptor,
+                                            &amp;size
+                                            );
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(ntStatus)) {
-return ntStatus;
+    return ntStatus;
 }
 </code></pre>
 <h2>See also</h2>

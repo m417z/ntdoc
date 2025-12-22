@@ -111,15 +111,9 @@
 <p>A driver can call <strong>WdfChildListAddOrUpdateChildDescriptionAsPresent</strong> to add or update a single child description. The framework immediately updates the child list and informs the Plug and Play (PnP) manager that changes have been made.</p>
 <p>Alternatively, the driver can do the following:</p>
 <ol>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Call <a href="wdfchildlistbeginscan" title="VOID WdfChildListBeginScan(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListBeginScan</a> to prepare the child list for updating.</li>
+<li>Call <strong>WdfChildListAddOrUpdateChildDescriptionAsPresent</strong> multiple times to add or update the child descriptions for all of the parent device's children.</li>
+<li>Call <a href="wdfchildlistendscan" title="VOID WdfChildListEndScan(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListEndScan</a> to process changes to the child list.</li>
 </ol>
 <p>If the driver uses this alternative procedure, the framework waits until the driver calls <a href="wdfchildlistendscan" title="VOID WdfChildListEndScan(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListEndScan</a> before updating the child list and informing the PnP manager that changes have been made. When your driver calls <a href="wdfchildlistbeginscan" title="VOID WdfChildListBeginScan(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListBeginScan</a>, the framework marks all previously reported devices as no longer being present. Therefore, the driver must call <strong>WdfChildListAddOrUpdateChildDescriptionAsPresent</strong> for all children, not just newly discovered children.</p>
 <p>At some time after a driver calls <strong>WdfChildListAddOrUpdateChildDescriptionAsPresent</strong>, the framework calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfchildlist/nc-wdfchildlist-evt_wdf_child_list_create_device">EvtChildListCreateDevice</a> callback function so that the driver can create a device object by calling <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a>.</p>
@@ -130,26 +124,30 @@
 WDFCHILDLIST  list;
 <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>  i;
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
+
 pDeviceContext = GetDeviceContext(Device);
 list = <a href="wdffdogetdefaultchildlist" title="WDFCHILDLIST WdfFdoGetDefaultChildList(&#10;  [in] WDFDEVICE Fdo&#10;);">WdfFdoGetDefaultChildList</a>(Device);
+
 <a href="wdfchildlistbeginscan" title="VOID WdfChildListBeginScan(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListBeginScan</a>(list);
+
 for (i = 0; i &lt; RTL_BITS_OF(<a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>); i++) {
-if (pDeviceContext-&gt;CurrentSwitchState &amp; (1&lt;&lt;i)) {
-PDO_IDENTIFICATION_DESCRIPTION description;
-<a href="wdf_child_identification_description_header_init" title="VOID WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT(&#10;  [out] PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER Header,&#10;  [in]  ULONG                                        IdentificationDescriptionSize&#10;);">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT</a>(
-&amp;description.Header,
-sizeof(description)
-);
-description.SwitchNumber = i;
-status = WdfChildListAddOrUpdateChildDescriptionAsPresent(
-list,
-&amp;description.Header,
-NULL
-);
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) &amp;&amp; (status != STATUS_OBJECT_NAME_EXISTS)) {
-break;
-}
-}
+    if (pDeviceContext-&gt;CurrentSwitchState &amp; (1&lt;&lt;i)) {
+        PDO_IDENTIFICATION_DESCRIPTION description;
+        <a href="wdf_child_identification_description_header_init" title="VOID WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT(&#10;  [out] PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER Header,&#10;  [in]  ULONG                                        IdentificationDescriptionSize&#10;);">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER_INIT</a>(
+                                                 &amp;description.Header,
+                                                 sizeof(description)
+                                                 );
+        description.SwitchNumber = i;
+
+        status = WdfChildListAddOrUpdateChildDescriptionAsPresent(
+                                                 list,
+                                                 &amp;description.Header,
+                                                 NULL
+                                                 );
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) &amp;&amp; (status != STATUS_OBJECT_NAME_EXISTS)) {
+            break;
+        }
+    }
 }
 <a href="wdfchildlistendscan" title="VOID WdfChildListEndScan(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListEndScan</a>(list);
 </code></pre>

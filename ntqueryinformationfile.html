@@ -267,29 +267,29 @@ ZwQueryInformationFile(
 <p>When <em>FileInformationClass</em> = <strong>FileNameInformation</strong>, the file name is returned in the <a href="file_name_information" title="typedef struct _FILE_NAME_INFORMATION&#10;{&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;">FILE_NAME_INFORMATION</a> structure. The precise syntax of the file name depends on a number of factors:</p>
 <ul>
 <li>
-
+<p>If you opened the file by submitting a full path to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong>, <strong>NtQueryInformationFile</strong> returns that full path.</p>
 </li>
 <li>
-
+<p>If the <strong>ObjectAttributes-&gt;RootDirectory</strong> handle was opened by name in a call to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong>, and subsequently the file was opened by <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong> relative to this root-directory handle, <strong>NtQueryInformationFile</strong> returns the full path.</p>
 </li>
 <li>
-
+<p>If the <strong>ObjectAttributes-&gt;RootDirectory</strong> handle was opened by file ID (using the <a href="file_open_by_file_id" title="#define FILE_OPEN_BY_FILE_ID 0x00002000">FILE_OPEN_BY_FILE_ID</a> flag) in a call to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong>, and subsequently the file was opened by <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong> relative to this root-directory handle, <strong>NtQueryInformationFile</strong> returns the relative path.</p>
 </li>
 <li>
-
+<p>However, if the user has <strong>SeChangeNotifyPrivilege</strong> (described in the Microsoft Windows SDK documentation), <strong>NtQueryInformationFile</strong> returns the full path in all cases.</p>
 </li>
 <li>
-
+<p>If only the relative path is returned, the file name string will not begin with a backslash.</p>
 </li>
 <li>
-
+<p>If the full path and file name are returned, the string will begin with a single backslash, regardless of its location. Thus the file C:\dir1\dir2\filename.ext will appear as \dir1\dir2\filename.ext, while the file \server\share\dir1\dir2\filename.ext will appear as \server\share\dir1\dir2\filename.ext.</p>
 </li>
 </ul>
 <p>If <strong>NtQueryInformationFile</strong> fails because of a buffer overflow, drivers that implement <strong>FileNameInformation</strong> should return as many WCHAR characters of the file name as will fit in the buffer and specify the full length that is required in the <em>FileNameLength</em> parameter of the <a href="file_name_information" title="typedef struct _FILE_NAME_INFORMATION&#10;{&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;">FILE_NAME_INFORMATION</a> structure. You should reissue the query by using the file name length so that you can retrieve the full file name. Drivers that do not follow this pattern might require a gradual increase in length until they retrieve the full file name. For more information about working with files, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-files-in-a-driver">Using Files in a Driver</a>.</p>
 <p>Callers of <strong>NtQueryInformationFile</strong> must be running at IRQL = PASSIVE_LEVEL and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/disabling-apcs">with special kernel APCs enabled</a>.</p>
 <blockquote>
 <p>[!NOTE]
-If the call to this function occurs in user mode, you should use the name "<strong>NtQueryInformationFile</strong>" instead of "<strong>ZwQueryInformationFile</strong>".</p>
+If the call to this function occurs in user mode, you should use the name &quot;<strong>NtQueryInformationFile</strong>&quot; instead of &quot;<strong>ZwQueryInformationFile</strong>&quot;.</p>
 </blockquote>
 <p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
 <h2>See also</h2>
@@ -378,7 +378,7 @@ If the call to this function occurs in user mode, you should use the name "<stro
 </tr>
 <tr>
 <td><strong>FileAlignmentInformation</strong> (17)</td>
-<td>A <strong><a href="file_alignment_information" title="typedef struct _FILE_ALIGNMENT_INFORMATION&#10;{&#10;    ULONG AlignmentRequirement;&#10;} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;">FILE_ALIGNMENT_INFORMATION</a></strong> structure. The caller can query this information as long as the file is open, without any particular requirements for <strong>DesiredAccess*[</strong>*. This information is useful if the file was opened with the <a href="file_no_intermediate_buffering" title="#define FILE_NO_INTERMEDIATE_BUFFERING 0x00000008">FILE_NO_INTERMEDIATE_BUFFERING</a> flag specified in the <strong>CreateOptions</strong> parameter.</td>
+<td>A <strong><a href="file_alignment_information" title="typedef struct _FILE_ALIGNMENT_INFORMATION&#10;{&#10;    ULONG AlignmentRequirement;&#10;} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION;">FILE_ALIGNMENT_INFORMATION</a></strong> structure. The caller can query this information as long as the file is open, without any particular requirements for <em><em>DesiredAccess</em>[</em>**. This information is useful if the file was opened with the <a href="file_no_intermediate_buffering" title="#define FILE_NO_INTERMEDIATE_BUFFERING 0x00000008">FILE_NO_INTERMEDIATE_BUFFERING</a> flag specified in the <strong>CreateOptions</strong> parameter.</td>
 </tr>
 <tr>
 <td><strong>FileAllInformation</strong> (18)</td>
@@ -413,27 +413,27 @@ If the call to this function occurs in user mode, you should use the name "<stro
 <p>When <strong>FileInformationClass</strong> = <strong>FileNameInformation</strong>, the file name is returned in the <strong><a href="file_name_information" title="typedef struct _FILE_NAME_INFORMATION&#10;{&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;">FILE_NAME_INFORMATION</a></strong> structure. The precise syntax of the file name depends on a number of factors:</p>
 <ul>
 <li>
-
+<p>If you opened the file by submitting a full path to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong>, <strong>ZwQueryInformationFile</strong> returns that full path.</p>
 </li>
 <li>
-
+<p>If the <strong>ObjectAttributes-&gt;RootDirectory</strong> handle was opened by name in a call to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong>, and subsequently the file was opened by <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong> relative to this root-directory handle, <strong>ZwQueryInformationFile</strong> returns the full path.</p>
 </li>
 <li>
-
+<p>If the <strong>ObjectAttributes-&gt;RootDirectory</strong> handle was opened by file ID (using the <a href="file_open_by_file_id" title="#define FILE_OPEN_BY_FILE_ID 0x00002000">FILE_OPEN_BY_FILE_ID</a> flag) in a call to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong>, and subsequently the file was opened by <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong> relative to this root-directory handle, <strong>ZwQueryInformationFile</strong> returns the relative path.</p>
 </li>
 <li>
-
+<p>However, if the user has <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/secauthz/privilege-constants"><strong>SeChangeNotifyPrivilege</strong></a>, <strong>ZwQueryInformationFile</strong> returns the full path in all cases.</p>
 </li>
 <li>
-
+<p>If only the relative path is returned, the file name string will not begin with a backslash.</p>
 </li>
 <li>
-
+<p>If the full path and file name are returned, the string will begin with a single backslash, regardless of its location. Thus the file C:\dir1\dir2\filename.ext will appear as \dir1\dir2\filename.ext, while the file \server\share\dir1\dir2\filename.ext will appear as \server\share\dir1\dir2\filename.ext.</p>
 </li>
 </ul>
 <p>If <strong>ZwQueryInformationFile</strong> fails because of a buffer overflow, drivers that implement <strong>FileNameInformation</strong> should return as many WCHAR characters of the file name as will fit in the buffer and specify the full length that is required in the <strong>FileNameLength</strong> parameter of the <strong><a href="file_name_information" title="typedef struct _FILE_NAME_INFORMATION&#10;{&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;">FILE_NAME_INFORMATION</a></strong> structure. You should reissue the query by using the file name length so that you can retrieve the full file name. Drivers that do not follow this pattern might require a gradual increase in length until they retrieve the full file name. For more information about working with files, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-files-in-a-driver">Using Files in a Driver</a>.</p>
 <p>Callers of <strong>ZwQueryInformationFile</strong> must be running at IRQL = PASSIVE_LEVEL and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/disabling-apcs">with special kernel APCs enabled</a>.</p>
-<p>If the call to this function occurs in user mode, you should use the name "<strong>NtQueryInformationFile</strong>" instead of "<strong>ZwQueryInformationFile</strong>".</p>
+<p>If the call to this function occurs in user mode, you should use the name &quot;<strong>NtQueryInformationFile</strong>&quot; instead of &quot;<strong>ZwQueryInformationFile</strong>&quot;.</p>
 <p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
 <h2>See also</h2>
 <p><strong><a href="file_access_information" title="typedef struct _FILE_ACCESS_INFORMATION&#10;{&#10;    ACCESS_MASK AccessFlags;&#10;} FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;">FILE_ACCESS_INFORMATION</a></strong></p>
@@ -479,33 +479,17 @@ If the call to this function occurs in user mode, you should use the name "<stro
 <p>Enumerated information class. See <code><a href="file_information_class" title="typedef enum _FILE_INFORMATION_CLASS&#10;{&#10;    FileDirectoryInformation = 1,                   // q: FILE_DIRECTORY_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileFullDirectoryInformation,                   // q: FILE_FULL_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBothDirectoryInformation,                   // q: FILE_BOTH_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBasicInformation,                           // qs: FILE_BASIC_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileStandardInformation,                        // q: FILE_STANDARD_INFORMATION, FILE_STANDARD_INFORMATION_EX&#10;    FileInternalInformation,                        // q: FILE_INTERNAL_INFORMATION&#10;    FileEaInformation,                              // q: FILE_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileAccessInformation,                          // q: FILE_ACCESS_INFORMATION&#10;    FileNameInformation,                            // q: FILE_NAME_INFORMATION&#10;    FileRenameInformation,                          // s: FILE_RENAME_INFORMATION (requires DELETE) // 10&#10;    FileLinkInformation,                            // s: FILE_LINK_INFORMATION&#10;    FileNamesInformation,                           // q: FILE_NAMES_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileDispositionInformation,                     // s: FILE_DISPOSITION_INFORMATION (requires DELETE)&#10;    FilePositionInformation,                        // qs: FILE_POSITION_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileFullEaInformation,                          // q: FILE_FULL_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileModeInformation,                            // qs: FILE_MODE_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileAlignmentInformation,                       // q: FILE_ALIGNMENT_INFORMATION&#10;    FileAllInformation,                             // q: FILE_ALL_INFORMATION&#10;...">FILE_INFORMATION_CLASS</a></code> for detailed information about usage.</p>
 <h1>Documented by</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>Tomasz Nowak</li>
+<li>Bo Branten</li>
 </ul>
 <h1>See also</h1>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><code><a href="file_information_class" title="typedef enum _FILE_INFORMATION_CLASS&#10;{&#10;    FileDirectoryInformation = 1,                   // q: FILE_DIRECTORY_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileFullDirectoryInformation,                   // q: FILE_FULL_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBothDirectoryInformation,                   // q: FILE_BOTH_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBasicInformation,                           // qs: FILE_BASIC_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileStandardInformation,                        // q: FILE_STANDARD_INFORMATION, FILE_STANDARD_INFORMATION_EX&#10;    FileInternalInformation,                        // q: FILE_INTERNAL_INFORMATION&#10;    FileEaInformation,                              // q: FILE_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileAccessInformation,                          // q: FILE_ACCESS_INFORMATION&#10;    FileNameInformation,                            // q: FILE_NAME_INFORMATION&#10;    FileRenameInformation,                          // s: FILE_RENAME_INFORMATION (requires DELETE) // 10&#10;    FileLinkInformation,                            // s: FILE_LINK_INFORMATION&#10;    FileNamesInformation,                           // q: FILE_NAMES_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileDispositionInformation,                     // s: FILE_DISPOSITION_INFORMATION (requires DELETE)&#10;    FilePositionInformation,                        // qs: FILE_POSITION_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileFullEaInformation,                          // q: FILE_FULL_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileModeInformation,                            // qs: FILE_MODE_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileAlignmentInformation,                       // q: FILE_ALIGNMENT_INFORMATION&#10;    FileAllInformation,                             // q: FILE_ALL_INFORMATION&#10;...">FILE_INFORMATION_CLASS</a></code></li>
+<li><code><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></code></li>
+<li><code><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></code></li>
+<li><code><a href="ntqueryattributesfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryAttributesFile(&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PFILE_BASIC_INFORMATION FileInformation&#10;    );">NtQueryAttributesFile</a></code></li>
+<li><code><a href="ntquerydirectoryfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryDirectoryFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass,&#10;    _In_ BOOLEAN ReturnSingleEntry,&#10;    _In_opt_ PCUNICODE_STRING FileName,&#10;    _In_ BOOLEAN RestartScan&#10;    );">NtQueryDirectoryFile</a></code></li>
+<li><code><a href="ntsetinformationfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationFile(&#10;    _In_ HANDLE FileHandle,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_reads_bytes_(Length) PVOID FileInformation,&#10;    _In_ ULONG Length,&#10;    _In_ FILE_INFORMATION_CLASS FileInformationClass&#10;    );">NtSetInformationFile</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntqueryinformationfile.md">Edit description on GitHub</a>

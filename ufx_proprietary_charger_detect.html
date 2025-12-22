@@ -83,57 +83,72 @@
 <h4>Examples</h4>
 <pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 UsbLowerFilter_ProprietaryChargerDetect(
-__in PVOID Context,
-__out <a href="ufx_proprietary_charger" title="typedef struct _UFX_PROPRIETARY_CHARGER {&#10;  GUID               ChargerId;&#10;  DEVICE_POWER_STATE DxState;&#10;} UFX_PROPRIETARY_CHARGER, *PUFX_PROPRIETARY_CHARGER;">PUFX_PROPRIETARY_CHARGER</a> DetectedCharger
-)
+    __in PVOID Context,
+    __out <a href="ufx_proprietary_charger" title="typedef struct _UFX_PROPRIETARY_CHARGER {&#10;  GUID               ChargerId;&#10;  DEVICE_POWER_STATE DxState;&#10;} UFX_PROPRIETARY_CHARGER, *PUFX_PROPRIETARY_CHARGER;">PUFX_PROPRIETARY_CHARGER</a> DetectedCharger
+    )
 {
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-PPDCP_CONTEXT PdcpContext = NULL;
-PAGED_CODE();
-PdcpContext = DeviceGetUsbLowerFilterContext((WDFDEVICE)Context);
-// Clear our event
-<a href="keclearevent" title="VOID KeClearEvent(&#10;  [in, out] PRKEVENT Event&#10;);">KeClearEvent</a>(&amp;PdcpContext&gt;AbortOperation);
-// Wait for a while
-Timeout.QuadPart = <a href="wdf_rel_timeout_in_ms" title="LONGLONG WDF_REL_TIMEOUT_IN_MS(&#10;  [in] ULONGLONG Time&#10;);">WDF_REL_TIMEOUT_IN_MS</a>(PdcpContext&gt;DetectionDelayInms);
-Status = <a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a>(
-&amp;PdcpContext&gt;AbortOperation,
-Executive,
-KernelMode,
-FALSE,
-&amp;Timeout);
-switch (Status)
-{
-case <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>:
-// The abort event was set. Abort.
-Status = STATUS_REQUEST_ABORTED;
-break;
-case STATUS_TIMEOUT:
-// Timed out, detection has completed successfully.
-// Check if we want to fail this.
-if (PdcpContext&gt;RejectNextRequest)
-{
-PdcpContext-&gt;RejectNextRequest = FALSE;
-Status = STATUS_UNSUCCESSFUL;
-}
-else if (!PdcpContext-&gt;PdcpChargerAttached)
-{
-Status = STATUS_NOT_FOUND;
-}
-else
-{
-Status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-}
-break;
-default:
-break;
-}
-if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status))
-{
-PdcpContext-&gt;PdcpChargerDetected = TRUE;
-DetectedCharger-&gt;ChargerId = GUID_USBFN_PROPRIETARY_CHARGER;
-DetectedCharger-&gt;DxState = PowerDeviceD2;
-}
-return Status;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+
+    PPDCP_CONTEXT PdcpContext = NULL;
+
+    PAGED_CODE();
+
+    PdcpContext = DeviceGetUsbLowerFilterContext((WDFDEVICE)Context);
+
+    // Clear our event
+     <a href="keclearevent" title="VOID KeClearEvent(&#10;  [in, out] PRKEVENT Event&#10;);">KeClearEvent</a>(&amp;PdcpContext&gt;AbortOperation);
+
+    // Wait for a while
+     Timeout.QuadPart = <a href="wdf_rel_timeout_in_ms" title="LONGLONG WDF_REL_TIMEOUT_IN_MS(&#10;  [in] ULONGLONG Time&#10;);">WDF_REL_TIMEOUT_IN_MS</a>(PdcpContext&gt;DetectionDelayInms);
+
+    Status = <a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a>(
+        &amp;PdcpContext&gt;AbortOperation,
+        Executive,
+        KernelMode,
+        FALSE,
+        &amp;Timeout);
+
+    switch (Status)
+    {
+    case <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>:
+
+        // The abort event was set. Abort.
+
+        Status = STATUS_REQUEST_ABORTED;
+        break;
+
+    case STATUS_TIMEOUT:
+
+        // Timed out, detection has completed successfully.
+        // Check if we want to fail this.
+
+        if (PdcpContext&gt;RejectNextRequest)
+        {
+            PdcpContext-&gt;RejectNextRequest = FALSE;
+            Status = STATUS_UNSUCCESSFUL;
+        }
+        else if (!PdcpContext-&gt;PdcpChargerAttached)
+        {
+            Status = STATUS_NOT_FOUND;
+        }
+        else
+        {
+            Status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status))
+    {
+        PdcpContext-&gt;PdcpChargerDetected = TRUE;
+        DetectedCharger-&gt;ChargerId = GUID_USBFN_PROPRIETARY_CHARGER;
+        DetectedCharger-&gt;DxState = PowerDeviceD2;
+    }
+
+    return Status;
 }
 </code></pre>
 <h2>See also</h2>

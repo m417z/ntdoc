@@ -71,20 +71,24 @@ void EvtNetAdapterReturnRxBuffer(
 <h2>Description</h2>
 <p>Implement this optional callback function to perform cleanup on a <strong><a href="net_fragment" title="typedef struct _NET_FRAGMENT {&#10;  UINT64 ValidLength : 26;&#10;  UINT64 Capacity : 26;&#10;  UINT64 Offset : 10;&#10;  UINT64 Scratch : 1;&#10;  UINT64 OsReserved_Bounced : 1;&#10;} NET_FRAGMENT;">NET_FRAGMENT</a></strong> receive buffer for which you previously specified manual fragment allocation and attachment.</p>
 <h2>Parameters</h2>
-<h3><code>Adapter</code> [_In_]</h3>
+<h3><code>Adapter</code> [<em>In</em>]</h3>
 <p>The network adapter object that the client created in a prior call to <strong><a href="netadaptercreate" title="NTSTATUS NetAdapterCreate(&#10;  [_In_]     NETADAPTER_INIT       *AdapterInit,&#10;  [_In_opt_] WDF_OBJECT_ATTRIBUTES *AdapterAttributes,&#10;  [_Out_]    NETADAPTER            *Adapter&#10;);">NetAdapterCreate</a></strong>.</p>
-<h3><code>RxReturnContext</code> [_In_]</h3>
+<h3><code>RxReturnContext</code> [<em>In</em>]</h3>
 <p>A pointer to a driver-allocated context space structure.</p>
 <h2>Prototype</h2>
 <pre><code>//Declaration
+
 EVT_NET_ADAPTER_RETURN_RX_BUFFER EvtNetAdapterReturnRxBuffer;
+
 // Definition
+
 VOID EvtNetAdapterReturnRxBuffer
 (
-_In_    NETADAPTER                          Adapter,
-_In_    NET_FRAGMENT_RETURN_CONTEXT_HANDLE  RxReturnContext
+	_In_	NETADAPTER							Adapter,
+	_In_	NET_FRAGMENT_RETURN_CONTEXT_HANDLE	RxReturnContext
 )
 {...}
+
 typedef EVT_NET_ADAPTER_RETURN_RX_BUFFER *PFN_NET_ADAPTER_RETURN_RX_BUFFER;
 </code></pre>
 <h2>Remarks</h2>
@@ -94,17 +98,19 @@ typedef EVT_NET_ADAPTER_RETURN_RX_BUFFER *PFN_NET_ADAPTER_RETURN_RX_BUFFER;
 <p>In this callback function, the client driver can perform whatever cleanup or follow-up actions it needs now that the operating system has finished with this receive buffer. In the following example, the return context contains a member to track the number of indicated packets, as well as a memory object used for a lookaside buffer during receive processing. Error handling has been left out for clarity.</p>
 <pre><code>VOID
 MyReturnRxBuffer(
-_In_    NETADAPTER                          Adapter,
-_In_    NET_FRAGMENT_RETURN_CONTEXT_HANDLE  RxReturnContext
+	_In_	NETADAPTER							Adapter,
+	_In_	NET_FRAGMENT_RETURN_CONTEXT_HANDLE	RxReturnContext
 )
 {
-UNREFERENCED_PARAMETER(Adapter);
-RxReturnContext-&gt;IndicatedPackets--;
-// Clean up the lookaside buffer if this is the last packet
-if(RxReturnContext-&gt;IndicatedPackets == 0)
-{
-<a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(RxReturnContext-&gt;LookasideBufferMemory);
-}
+	UNREFERENCED_PARAMETER(Adapter);
+
+	RxReturnContext-&gt;IndicatedPackets--;
+
+	// Clean up the lookaside buffer if this is the last packet
+	if(RxReturnContext-&gt;IndicatedPackets == 0)
+	{
+		<a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(RxReturnContext-&gt;LookasideBufferMemory);
+	}
 }
 </code></pre>
 <h2>See also</h2>

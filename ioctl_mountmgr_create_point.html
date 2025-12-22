@@ -73,7 +73,7 @@
 <h3>Major code</h3>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-device-control">IRP_MJ_DEVICE_CONTROL</a></p>
 <h3>Input buffer</h3>
-<p>The mount point manager places a <strong><a href="mountmgr_create_point_input" title="typedef struct _MOUNTMGR_CREATE_POINT_INPUT&#10;{&#10;    USHORT SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;">MOUNTMGR_CREATE_POINT_INPUT</a></strong> structure at the beginning of the buffer at <strong>Irp->AssociatedIrp.SystemBuffer</strong>. The mount manager inserts the newly-assigned persistent symbolic link name at the address pointed to by the <strong>SymbolicLinkNameOffset</strong> member of this structure, and it inserts the nonpersistent device name at the address pointed to by the <strong>DeviceNameOffset</strong> member of this structure.</p>
+<p>The mount point manager places a <strong><a href="mountmgr_create_point_input" title="typedef struct _MOUNTMGR_CREATE_POINT_INPUT&#10;{&#10;    USHORT SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;">MOUNTMGR_CREATE_POINT_INPUT</a></strong> structure at the beginning of the buffer at <strong>Irp-&gt;AssociatedIrp.SystemBuffer</strong>. The mount manager inserts the newly-assigned persistent symbolic link name at the address pointed to by the <strong>SymbolicLinkNameOffset</strong> member of this structure, and it inserts the nonpersistent device name at the address pointed to by the <strong>DeviceNameOffset</strong> member of this structure.</p>
 <h3>Input buffer length</h3>
 <p><strong>Parameters.DeviceIoControl.InputBufferLength</strong> in the I/O stack location of the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> indicates the size, in bytes, of the input buffer, which must be greater than or equal to <code>sizeof(<a href="mountmgr_create_point_input" title="typedef struct _MOUNTMGR_CREATE_POINT_INPUT&#10;{&#10;    USHORT SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;">MOUNTMGR_CREATE_POINT_INPUT</a>)</code>.</p>
 <h3>Output buffer</h3>
@@ -94,50 +94,50 @@
 <p>If IOCTL_MOUNTMGR_CREATE_POINT specifies a drive letter, the drive letter must be upper case.</p>
 <p>Note that a client can discover whether the mount manager has received the MOUNTDEV_MOUNTED_DEVICE_GUID device interface notification for its volume by querying the mount manager with <strong><a href="ioctl_mountmgr_query_points" title="#define IOCTL_MOUNTMGR_QUERY_POINTS CTL_CODE(MOUNTMGRCONTROLTYPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)">IOCTL_MOUNTMGR_QUERY_POINTS</a></strong>.</p>
 <p>In this pseudocode sample, a mount manager client uses IOCTL_MOUNTMGR_CREATE_POINT to send the mount manager a device object name and its corresponding symbolic link:</p>
-<pre><code>    // The persistent symbolic link is a drive letter in
-// this case:
-wsprintf(dosBuffer, L"\\DosDevices\\%C:", DriveLetter);
-<a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;dosName, dosBuffer);
-// The nonpersistent volume (device) object name is
-// formed using the volume number as a suffix
-wsprintf(ntBuffer, L"\\Device\\HarddiskVolume%D",
-Extension-&gt;VolumeNumber);
-<a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;ntName, ntBuffer);
-createPointSize = sizeof(<a href="mountmgr_create_point_input" title="typedef struct _MOUNTMGR_CREATE_POINT_INPUT&#10;{&#10;    USHORT SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;">MOUNTMGR_CREATE_POINT_INPUT</a>) +
-dosName.Length + ntName.Length;
-// Allocate a header with length and offset information
-createPoint = (<a href="mountmgr_create_point_input" title="typedef struct _MOUNTMGR_CREATE_POINT_INPUT&#10;{&#10;    USHORT SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;">PMOUNTMGR_CREATE_POINT_INPUT</a>)
-<a href="exallocatepool" title="PVOID ExAllocatePool(&#10;  _In_ POOL_TYPE a,&#10;  _In_ SIZE_T b&#10;);">ExAllocatePool</a>(PagedPool,
-createPointSize);
-createPoint-&gt;SymbolicLinkNameOffset =
-sizeof(<a href="mountmgr_create_point_input" title="typedef struct _MOUNTMGR_CREATE_POINT_INPUT&#10;{&#10;    USHORT SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;">MOUNTMGR_CREATE_POINT_INPUT</a>);
-createPoint-&gt;SymbolicLinkNameLength = dosName.Length;
-createPoint-&gt;DeviceNameOffset =
-createPoint -&gt; SymbolicLinkNameOffset +
-createPoint -&gt; SymbolicLinkNameLength;
-createPoint-&gt;DeviceNameLength = ntName.Length;
-<a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a>((PCHAR) createPoint +
-createPoint -&gt; SymbolicLinkNameOffset,
-dosName.Buffer, dosName.Length);
-<a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a>((PCHAR) createPoint +
-createPoint-&gt;DeviceNameOffset,
-ntName.Buffer, ntName.Length);
-// Use the name of the mount manager device object
-// defined in mountmgr.h (<a href="mountmgr_device_name" title="#define MOUNTMGR_DEVICE_NAME L&quot;\\Device\\MountPointManager&quot;">MOUNTMGR_DEVICE_NAME</a>) to
-// obtain a pointer to the mount manager.
-<a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;name, <a href="mountmgr_device_name" title="#define MOUNTMGR_DEVICE_NAME L&quot;\\Device\\MountPointManager&quot;">MOUNTMGR_DEVICE_NAME</a>);
-status = <a href="iogetdeviceobjectpointer" title="NTSTATUS IoGetDeviceObjectPointer(&#10;  [in]  PUNICODE_STRING ObjectName,&#10;  [in]  ACCESS_MASK     DesiredAccess,&#10;  [out] PFILE_OBJECT    *FileObject,&#10;  [out] PDEVICE_OBJECT  *DeviceObject&#10;);">IoGetDeviceObjectPointer</a>(&amp;name,
-FILE_READ_ATTRIBUTES,
-&amp;fileObject, &amp;deviceObject);
-<a href="keinitializeevent" title="VOID KeInitializeEvent(&#10;  [out] PRKEVENT   Event,&#10;  [in]  EVENT_TYPE Type,&#10;  [in]  BOOLEAN    State&#10;);">KeInitializeEvent</a>(&amp;event, NotificationEvent, FALSE);
-irp = <a href="iobuilddeviceiocontrolrequest" title="__drv_aliasesMem PIRP IoBuildDeviceIoControlRequest(&#10;  [in]            ULONG            IoControlCode,&#10;  [in]            PDEVICE_OBJECT   DeviceObject,&#10;  [in, optional]  PVOID            InputBuffer,&#10;  [in]            ULONG            InputBufferLength,&#10;  [out, optional] PVOID            OutputBuffer,&#10;  [in]            ULONG            OutputBufferLength,&#10;  [in]            BOOLEAN          InternalDeviceIoControl,&#10;  [in, optional]  PKEVENT          Event,&#10;  [out]           PIO_STATUS_BLOCK IoStatusBlock&#10;);">IoBuildDeviceIoControlRequest</a>(
-IOCTL_MOUNTMGR_CREATE_POINT,
-deviceObject, createPoint, createPointSize,
-NULL, 0, FALSE, &amp;event, &amp;ioStatus);
-// Send the irp to the mount manager requesting
-// that a new mount point (persistent symbolic link)
-// be created for the indicated volume.
-status = <a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a>(deviceObject, irp);
+<pre><code>// The persistent symbolic link is a drive letter in
+    // this case:
+    wsprintf(dosBuffer, L&quot;\\DosDevices\\%C:&quot;, DriveLetter);
+    <a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;dosName, dosBuffer);
+    // The nonpersistent volume (device) object name is
+    // formed using the volume number as a suffix
+    wsprintf(ntBuffer, L&quot;\\Device\\HarddiskVolume%D&quot;,
+                       Extension-&gt;VolumeNumber);
+    <a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;ntName, ntBuffer);
+    createPointSize = sizeof(<a href="mountmgr_create_point_input" title="typedef struct _MOUNTMGR_CREATE_POINT_INPUT&#10;{&#10;    USHORT SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;">MOUNTMGR_CREATE_POINT_INPUT</a>) +
+                      dosName.Length + ntName.Length;
+    // Allocate a header with length and offset information
+    createPoint = (<a href="mountmgr_create_point_input" title="typedef struct _MOUNTMGR_CREATE_POINT_INPUT&#10;{&#10;    USHORT SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;">PMOUNTMGR_CREATE_POINT_INPUT</a>)
+                  <a href="exallocatepool" title="PVOID ExAllocatePool(&#10;  _In_ POOL_TYPE a,&#10;  _In_ SIZE_T b&#10;);">ExAllocatePool</a>(PagedPool,
+                  createPointSize);
+    createPoint-&gt;SymbolicLinkNameOffset =
+                  sizeof(<a href="mountmgr_create_point_input" title="typedef struct _MOUNTMGR_CREATE_POINT_INPUT&#10;{&#10;    USHORT SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;} MOUNTMGR_CREATE_POINT_INPUT, *PMOUNTMGR_CREATE_POINT_INPUT;">MOUNTMGR_CREATE_POINT_INPUT</a>);
+    createPoint-&gt;SymbolicLinkNameLength = dosName.Length;
+    createPoint-&gt;DeviceNameOffset =
+        createPoint -&gt; SymbolicLinkNameOffset +
+        createPoint -&gt; SymbolicLinkNameLength;
+    createPoint-&gt;DeviceNameLength = ntName.Length;
+    <a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a>((PCHAR) createPoint +
+                  createPoint -&gt; SymbolicLinkNameOffset,
+                  dosName.Buffer, dosName.Length);
+    <a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a>((PCHAR) createPoint +
+                  createPoint-&gt;DeviceNameOffset,
+                  ntName.Buffer, ntName.Length);
+    // Use the name of the mount manager device object
+    // defined in mountmgr.h (<a href="mountmgr_device_name" title="#define MOUNTMGR_DEVICE_NAME L&quot;\\Device\\MountPointManager&quot;">MOUNTMGR_DEVICE_NAME</a>) to
+    // obtain a pointer to the mount manager.
+    <a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a>(&amp;name, <a href="mountmgr_device_name" title="#define MOUNTMGR_DEVICE_NAME L&quot;\\Device\\MountPointManager&quot;">MOUNTMGR_DEVICE_NAME</a>);
+    status = <a href="iogetdeviceobjectpointer" title="NTSTATUS IoGetDeviceObjectPointer(&#10;  [in]  PUNICODE_STRING ObjectName,&#10;  [in]  ACCESS_MASK     DesiredAccess,&#10;  [out] PFILE_OBJECT    *FileObject,&#10;  [out] PDEVICE_OBJECT  *DeviceObject&#10;);">IoGetDeviceObjectPointer</a>(&amp;name,
+                              FILE_READ_ATTRIBUTES,
+                              &amp;fileObject, &amp;deviceObject);
+    <a href="keinitializeevent" title="VOID KeInitializeEvent(&#10;  [out] PRKEVENT   Event,&#10;  [in]  EVENT_TYPE Type,&#10;  [in]  BOOLEAN    State&#10;);">KeInitializeEvent</a>(&amp;event, NotificationEvent, FALSE);
+    irp = <a href="iobuilddeviceiocontrolrequest" title="__drv_aliasesMem PIRP IoBuildDeviceIoControlRequest(&#10;  [in]            ULONG            IoControlCode,&#10;  [in]            PDEVICE_OBJECT   DeviceObject,&#10;  [in, optional]  PVOID            InputBuffer,&#10;  [in]            ULONG            InputBufferLength,&#10;  [out, optional] PVOID            OutputBuffer,&#10;  [in]            ULONG            OutputBufferLength,&#10;  [in]            BOOLEAN          InternalDeviceIoControl,&#10;  [in, optional]  PKEVENT          Event,&#10;  [out]           PIO_STATUS_BLOCK IoStatusBlock&#10;);">IoBuildDeviceIoControlRequest</a>(
+            IOCTL_MOUNTMGR_CREATE_POINT,
+            deviceObject, createPoint, createPointSize,
+            NULL, 0, FALSE, &amp;event, &amp;ioStatus);
+    // Send the irp to the mount manager requesting
+    // that a new mount point (persistent symbolic link)
+    // be created for the indicated volume.
+    status = <a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a>(deviceObject, irp);
 </code></pre>
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/supporting-mount-manager-requests-in-a-storage-class-driver">Supporting Mount Manager Requests in a Storage Class Driver</a>.</p>
 <h2>See also</h2>

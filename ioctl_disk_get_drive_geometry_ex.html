@@ -78,7 +78,7 @@
 <h3>Input buffer length</h3>
 <p>None.</p>
 <h3>Output buffer</h3>
-<p>The driver returns the <a href="disk_geometry_ex" title="typedef struct _DISK_GEOMETRY_EX {&#10;  DISK_GEOMETRY Geometry;&#10;  LARGE_INTEGER DiskSize;&#10;  UCHAR         Data[1];&#10;} DISK_GEOMETRY_EX, *PDISK_GEOMETRY_EX;">DISK_GEOMETRY_EX</a> data in the buffer at <strong>Irp->AssociatedIrp.SystemBuffer</strong>. The size of the output buffer may not be the same size as the input buffer.</p>
+<p>The driver returns the <a href="disk_geometry_ex" title="typedef struct _DISK_GEOMETRY_EX {&#10;  DISK_GEOMETRY Geometry;&#10;  LARGE_INTEGER DiskSize;&#10;  UCHAR         Data[1];&#10;} DISK_GEOMETRY_EX, *PDISK_GEOMETRY_EX;">DISK_GEOMETRY_EX</a> data in the buffer at <strong>Irp-&gt;AssociatedIrp.SystemBuffer</strong>. The size of the output buffer may not be the same size as the input buffer.</p>
 <h3>Output buffer length</h3>
 <p><strong>Parameters.DeviceIoControl.OutputBufferLength</strong> in the I/O stack location of the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> indicates the size, in bytes, of the buffer, which must be at least (<strong>sizeof</strong>(<a href="disk_geometry" title="typedef struct _DISK_GEOMETRY {&#10;  LARGE_INTEGER Cylinders;&#10;  MEDIA_TYPE    MediaType;&#10;  ULONG         TracksPerCylinder;&#10;  ULONG         SectorsPerTrack;&#10;  ULONG         BytesPerSector;&#10;} DISK_GEOMETRY, *PDISK_GEOMETRY;">DISK_GEOMETRY</a>) + <strong>sizeof</strong>(LARGE_INTEGER)) and up to (<strong>sizeof</strong>(<a href="disk_geometry" title="typedef struct _DISK_GEOMETRY {&#10;  LARGE_INTEGER Cylinders;&#10;  MEDIA_TYPE    MediaType;&#10;  ULONG         TracksPerCylinder;&#10;  ULONG         SectorsPerTrack;&#10;  ULONG         BytesPerSector;&#10;} DISK_GEOMETRY, *PDISK_GEOMETRY;">DISK_GEOMETRY</a>) + <strong>sizeof</strong>(LARGE_INTEGER) + <strong>sizeof</strong>(<a href="disk_partition_info" title="typedef struct _DISK_PARTITION_INFO {&#10;  ULONG           SizeOfPartitionInfo;&#10;  PARTITION_STYLE PartitionStyle;&#10;  union {&#10;    struct {&#10;      ULONG Signature;&#10;      ULONG CheckSum;&#10;    } Mbr;&#10;    struct {&#10;      GUID DiskId;&#10;    } Gpt;&#10;  } DUMMYUNIONNAME;&#10;} DISK_PARTITION_INFO, *PDISK_PARTITION_INFO;">DISK_PARTITION_INFO</a>) + <strong>sizeof</strong>(<a href="disk_detection_info" title="typedef struct _DISK_DETECTION_INFO {&#10;  ULONG          SizeOfDetectInfo;&#10;  DETECTION_TYPE DetectionType;&#10;  union {&#10;    struct {&#10;      DISK_INT13_INFO    Int13;&#10;      DISK_EX_INT13_INFO ExInt13;&#10;    } DUMMYSTRUCTNAME;&#10;  } DUMMYUNIONNAME;&#10;} DISK_DETECTION_INFO, *PDISK_DETECTION_INFO;">DISK_DETECTION_INFO</a>)).</p>
 <h3>Input/output buffer</h3>
@@ -87,27 +87,13 @@
 <p>The <strong>Information</strong> field is set to the size, in bytes, of the returned data.</p>
 <p>The <strong>Status</strong> field returns one of the following values:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></li>
+<li><strong>STATUS_UNRECOGNIZED_MEDIA</strong></li>
+<li><strong>STATUS_INVALID_PARAMETER</strong></li>
+<li><strong>STATUS_INVALID_DEVICE_REQUEST</strong></li>
+<li><strong>STATUS_INFO_LENGTH_MISMATCH</strong></li>
+<li><strong>STATUS_INSUFFICIENT_RESOURCES</strong></li>
+<li><strong>STATUS_BUFFER_TOO_SMALL</strong></li>
 </ul>
 <h2>Remarks</h2>
 <p>Only callers above Partmgr.sys may call this IOCTL as it contains disk partition information.</p>
@@ -129,14 +115,14 @@
 <p>Retrieves extended information about the physical disk's geometry: type, number of cylinders, tracks per cylinder, sectors per track, bytes per sector, and size.</p>
 <p>To perform this operation, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> function with the following parameters.</p>
 <pre><code>BOOL DeviceIoControl(
-(HANDLE) hDevice,                 // handle to device
-IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, // dwIoControlCode
-NULL,                             // lpInBuffer
-0,                                // nInBufferSize
-(LPVOID) lpOutBuffer,             // output buffer
-(<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) nOutBufferSize,           // size of output buffer
-(LPDWORD) lpBytesReturned,        // number of bytes returned
-(LPOVERLAPPED) lpOverlapped       // OVERLAPPED structure
+  (HANDLE) hDevice,                 // handle to device
+  IOCTL_DISK_GET_DRIVE_GEOMETRY_EX, // dwIoControlCode
+  NULL,                             // lpInBuffer
+  0,                                // nInBufferSize
+  (LPVOID) lpOutBuffer,             // output buffer
+  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) nOutBufferSize,           // size of output buffer
+  (LPDWORD) lpBytesReturned,        // number of bytes returned
+  (LPOVERLAPPED) lpOverlapped       // OVERLAPPED structure
 );
 </code></pre>
 <h2>Parameters</h2>
@@ -165,15 +151,9 @@ NULL,                             // lpInBuffer
 <p>If the operation fails, or is pending, the return value is zero. To get extended error information, call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/errhandlingapi/nf-errhandlingapi-getlasterror"><strong>GetLastError</strong></a>.</p>
 <h2>See also</h2>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><a href="disk_geometry_ex" title="typedef struct _DISK_GEOMETRY_EX {&#10;  DISK_GEOMETRY Geometry;&#10;  LARGE_INTEGER DiskSize;&#10;  UCHAR         Data[1];&#10;} DISK_GEOMETRY_EX, *PDISK_GEOMETRY_EX;">DISK_GEOMETRY_EX</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/FileIO/disk-management-control-codes">Disk Management Control Codes</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

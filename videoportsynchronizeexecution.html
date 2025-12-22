@@ -75,15 +75,9 @@
 <h3><code>Priority</code></h3>
 <p>Specifies the type of priority at which the given <em>SynchronizeRoutine</em> must be run, as one of the following:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>If <em>Priority</em> is set to <strong>VpLowPriority</strong>, the current thread is raised to the highest noninterrupt-masking priority. Accordingly, the current thread can be preempted only by an ISR if a device interrupts.</li>
+<li>If <em>Priority</em> is set to <strong>VpMediumPriority</strong> and the miniport driver has an ISR associated with its video adapter, the call to the given <em>SynchronizeRoutine</em> is synchronized with the miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/video/nc-video-pvideo_hw_interrupt">HwVidInterrupt</a> function. Otherwise, synchronization is made at the <strong>VpLowPriority</strong> level.</li>
+<li><strong>VpHighPriority</strong> has the same effect as <strong>VpMediumPriority</strong>.</li>
 </ul>
 <h3><code>SynchronizeRoutine</code></h3>
 <p>Pointer to the miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/video/nc-video-pminiport_synchronize_routine">HwVidSynchronizeExecutionCallback</a> function.</p>
@@ -94,12 +88,8 @@
 <h2>Remarks</h2>
 <p>Miniport drivers seldom call this routine unless either of the following conditions hold:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>The miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/video/nc-video-pvideo_hw_interrupt">HwVidInterrupt</a> function shares memory with other miniport driver functions. In order to access the shared memory in a multiprocessor-safe way, such miniport driver functions must call <strong>VideoPortSynchronizeExecution</strong> with <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/video/nc-video-pminiport_synchronize_routine">HwVidSynchronizeExecutionCallback</a>. This miniport driver function can safely access the shared memory because the video port driver prevents the <em>HwVidInterrupt</em> function from accessing the same memory concurrently.</li>
+<li>The adapter must be programmed with a sequence of commands without being subject to a context switch. For example, a miniport driver's <em>SvgaHwIoPortXxx</em> function that has buffered a sequence of I/O instructions and validated the sequence might call <strong>VideoPortSynchronizeExecution</strong> with <em>HwVidSynchronizeExecutionCallback</em>. This miniport driver function can transfer the buffered and validated I/O stream to the adapter very quickly.</li>
 </ul>
 <p>A caller should specify the lowest practical <em>Priority</em> value for the work <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/video/nc-video-pminiport_synchronize_routine">HwVidSynchronizeExecutionCallback</a> must do. Any <em>CallbackRoutine</em> that is run at a high hardware priority (<strong>VpMediumPriority</strong> or <strong>VpHighPriority</strong>) should return control as quickly as possible. A driver with such a high-priority <em>HwVidSynchronizeExecutionCallback</em> function should be designed to do as much work as possible in every other driver function except one of both of its <em>HwVidSynchronizeExecutionCallback</em> and <em>HwVidInterrupt</em> functions.</p>
 <p>Callers of <strong>VideoPortSynchronizeExecution</strong> must be running at IRQL</p>

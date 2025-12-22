@@ -106,97 +106,99 @@
 <p>The following code example demonstrates how <strong>D3DKMTCreateAllocation</strong> can be used to create a stand-alone allocation in video memory that is not associated with a resource.</p>
 <pre><code>D3DKMT_HANDLE CreateStandAloneAllocation(D3DKMT_HANDLE hDevice, VOID* pPrivateAllocationInfo, <a href="uint" title="typedef unsigned int UINT;">UINT</a> Size)
 {
-<a href="d3dkmt_createallocation" title="typedef struct _D3DKMT_CREATEALLOCATION {&#10;  [in]     D3DKMT_HANDLE                hDevice;&#10;  [in/out] D3DKMT_HANDLE                hResource;&#10;  [out]    D3DKMT_HANDLE                hGlobalShare;&#10;  [in]     const VOID                   *pPrivateRuntimeData;&#10;  [in]     UINT                         PrivateRuntimeDataSize;&#10;  union {&#10;    [in]     D3DKMT_CREATESTANDARDALLOCATION *pStandardAllocation;&#10;    [in]     const VOID                      *pPrivateDriverData;&#10;  };&#10;  [in/out] UINT                         PrivateDriverDataSize;&#10;  [in]     UINT                         NumAllocations;&#10;  union {&#10;    [in]     D3DDDI_ALLOCATIONINFO  *pAllocationInfo;&#10;    [in]     D3DDDI_ALLOCATIONINFO2 *pAllocationInfo2;&#10;  };&#10;  [in]     D3DKMT_CREATEALLOCATIONFLAGS Flags;&#10;  [in]     HANDLE                       hPrivateRuntimeResourceHandle;&#10;} D3DKMT_CREATEALLOCATION;">D3DKMT_CREATEALLOCATION</a> CreateAllocation;
-<a href="d3dddi_allocationinfo" title="typedef struct _D3DDDI_ALLOCATIONINFO {&#10;  D3DKMT_HANDLE                  hAllocation;&#10;  const VOID                     *pSystemMem;&#10;  VOID                           *pPrivateDriverData;&#10;  UINT                           PrivateDriverDataSize;&#10;  D3DDDI_VIDEO_PRESENT_SOURCE_ID VidPnSourceId;&#10;  union {&#10;    struct {&#10;      UINT Primary : 1;&#10;      UINT Stereo : 1;&#10;#if ...&#10;      UINT Reserved : 30;&#10;#else&#10;      UINT Reserved : 31;&#10;#endif&#10;    };&#10;    UINT Value;&#10;  } Flags;&#10;} D3DDDI_ALLOCATIONINFO;">D3DDDI_ALLOCATIONINFO</a> AllocationInfo;
-memset(&amp;CreateAllocation, 0, sizeof(CreateAllocation));
-CreateAllocation.hDevice = hDevice;
-CreateAllocation.NumAllocations = 1;
-CreateAllocation.pAllocationInfo = &amp;AllocationInfo;
-AllocationInfo.hAllocation = NULL;
-AllocationInfo.pSystemMem = NULL;  // Vidmem allocation
-AllocationInfo.pPrivateDriverData = pPrivateAllocationInfo;  // Contains format, size, and so on.
-AllocationInfo.PrivateDriverDataSize = Size;
-if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>((*pfnKTCreateAllocation)(&amp;CreateAllocation))) {
-return AllocationInfo.hAllocation;
-}
-return 0;
+    <a href="d3dkmt_createallocation" title="typedef struct _D3DKMT_CREATEALLOCATION {&#10;  [in]     D3DKMT_HANDLE                hDevice;&#10;  [in/out] D3DKMT_HANDLE                hResource;&#10;  [out]    D3DKMT_HANDLE                hGlobalShare;&#10;  [in]     const VOID                   *pPrivateRuntimeData;&#10;  [in]     UINT                         PrivateRuntimeDataSize;&#10;  union {&#10;    [in]     D3DKMT_CREATESTANDARDALLOCATION *pStandardAllocation;&#10;    [in]     const VOID                      *pPrivateDriverData;&#10;  };&#10;  [in/out] UINT                         PrivateDriverDataSize;&#10;  [in]     UINT                         NumAllocations;&#10;  union {&#10;    [in]     D3DDDI_ALLOCATIONINFO  *pAllocationInfo;&#10;    [in]     D3DDDI_ALLOCATIONINFO2 *pAllocationInfo2;&#10;  };&#10;  [in]     D3DKMT_CREATEALLOCATIONFLAGS Flags;&#10;  [in]     HANDLE                       hPrivateRuntimeResourceHandle;&#10;} D3DKMT_CREATEALLOCATION;">D3DKMT_CREATEALLOCATION</a> CreateAllocation;
+    <a href="d3dddi_allocationinfo" title="typedef struct _D3DDDI_ALLOCATIONINFO {&#10;  D3DKMT_HANDLE                  hAllocation;&#10;  const VOID                     *pSystemMem;&#10;  VOID                           *pPrivateDriverData;&#10;  UINT                           PrivateDriverDataSize;&#10;  D3DDDI_VIDEO_PRESENT_SOURCE_ID VidPnSourceId;&#10;  union {&#10;    struct {&#10;      UINT Primary : 1;&#10;      UINT Stereo : 1;&#10;#if ...&#10;      UINT Reserved : 30;&#10;#else&#10;      UINT Reserved : 31;&#10;#endif&#10;    };&#10;    UINT Value;&#10;  } Flags;&#10;} D3DDDI_ALLOCATIONINFO;">D3DDDI_ALLOCATIONINFO</a> AllocationInfo;
+
+    memset(&amp;CreateAllocation, 0, sizeof(CreateAllocation));
+    CreateAllocation.hDevice = hDevice;
+    CreateAllocation.NumAllocations = 1;
+    CreateAllocation.pAllocationInfo = &amp;AllocationInfo;
+
+    AllocationInfo.hAllocation = NULL;
+    AllocationInfo.pSystemMem = NULL;  // Vidmem allocation
+    AllocationInfo.pPrivateDriverData = pPrivateAllocationInfo;  // Contains format, size, and so on.
+    AllocationInfo.PrivateDriverDataSize = Size;
+
+    if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>((*pfnKTCreateAllocation)(&amp;CreateAllocation))) {
+        return AllocationInfo.hAllocation;
+    }
+    return 0;
 }
 </code></pre>
 <h4>Creating a resource with a single system memory allocation</h4>
 <p>The following code example demonstrates how <strong>D3DKMTCreateAllocation</strong> can be used to create a resource with a single system memory allocation.</p>
 <pre><code>HRESULT CreateSysmemResource(D3DKMT_HANDLE hDevice,
-<a href="uint" title="typedef unsigned int UINT;">UINT</a> AllocationSize,
-VOID* pResourceData,
-<a href="uint" title="typedef unsigned int UINT;">UINT</a> ResourceDataSize,
-VOID* pAllocationData,
-<a href="uint" title="typedef unsigned int UINT;">UINT</a> AllocationDataSize,
-D3DKMT_HANDLE* phResource,
-D3DKMT_HANDLE* phAllocation)
+                             <a href="uint" title="typedef unsigned int UINT;">UINT</a> AllocationSize,
+                             VOID* pResourceData,
+                             <a href="uint" title="typedef unsigned int UINT;">UINT</a> ResourceDataSize,
+                             VOID* pAllocationData,
+                             <a href="uint" title="typedef unsigned int UINT;">UINT</a> AllocationDataSize,
+                             D3DKMT_HANDLE* phResource,
+                             D3DKMT_HANDLE* phAllocation)
 {
-<a href="d3dkmt_createallocation" title="typedef struct _D3DKMT_CREATEALLOCATION {&#10;  [in]     D3DKMT_HANDLE                hDevice;&#10;  [in/out] D3DKMT_HANDLE                hResource;&#10;  [out]    D3DKMT_HANDLE                hGlobalShare;&#10;  [in]     const VOID                   *pPrivateRuntimeData;&#10;  [in]     UINT                         PrivateRuntimeDataSize;&#10;  union {&#10;    [in]     D3DKMT_CREATESTANDARDALLOCATION *pStandardAllocation;&#10;    [in]     const VOID                      *pPrivateDriverData;&#10;  };&#10;  [in/out] UINT                         PrivateDriverDataSize;&#10;  [in]     UINT                         NumAllocations;&#10;  union {&#10;    [in]     D3DDDI_ALLOCATIONINFO  *pAllocationInfo;&#10;    [in]     D3DDDI_ALLOCATIONINFO2 *pAllocationInfo2;&#10;  };&#10;  [in]     D3DKMT_CREATEALLOCATIONFLAGS Flags;&#10;  [in]     HANDLE                       hPrivateRuntimeResourceHandle;&#10;} D3DKMT_CREATEALLOCATION;">D3DKMT_CREATEALLOCATION</a> CreateAllocation;
-<a href="d3dddi_allocationinfo" title="typedef struct _D3DDDI_ALLOCATIONINFO {&#10;  D3DKMT_HANDLE                  hAllocation;&#10;  const VOID                     *pSystemMem;&#10;  VOID                           *pPrivateDriverData;&#10;  UINT                           PrivateDriverDataSize;&#10;  D3DDDI_VIDEO_PRESENT_SOURCE_ID VidPnSourceId;&#10;  union {&#10;    struct {&#10;      UINT Primary : 1;&#10;      UINT Stereo : 1;&#10;#if ...&#10;      UINT Reserved : 30;&#10;#else&#10;      UINT Reserved : 31;&#10;#endif&#10;    };&#10;    UINT Value;&#10;  } Flags;&#10;} D3DDDI_ALLOCATIONINFO;">D3DDDI_ALLOCATIONINFO</a> AllocationInfo;
-VOID* pSysMem;
-*phResource = NULL;
-*phAllocation = NULL;
-// For a sysmem allocation, preallocate the memory.
-pSysMem = MemAlloc(AllocationSize);
-if (pSysMem == NULL) {
-return E_OUTOFMEMORY;
-}
-memset(&amp;CreateAllocation, 0, sizeof(CreateAllocation));
-CreateAllocation.hDevice = hDevice;
-CreateAllocation.Flags.CreateResource = TRUE;
-CreateAllocation.pPrivateDriverData = pResourceData;
-CreateAllocation.PrivateDriverDataSize = ResourceDataSize;
-CreateAllocation.NumAllocations = 1;
-CreateAllocation.pAllocationInfo = &amp;AllocationInfo;
-AllocationInfo.hAllocation = NULL;
-AllocationInfo.pSystemMem = pSysMem;
-AllocationInfo.pPrivateDriverData = pAllocationData;
-AllocationInfo.PrivateDriverDataSize = AllocationDataSize;
-if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>((*pfnKTCreateAllocation)(&amp;CreateAllocation))) {
-*phResource = CreateAllocation.hResource;
-*phAllocation = AllocationInfo.hAllocation;
-return S_OK;
-}
-MemFree(pSysMem);
-return E_FAIL;
+    <a href="d3dkmt_createallocation" title="typedef struct _D3DKMT_CREATEALLOCATION {&#10;  [in]     D3DKMT_HANDLE                hDevice;&#10;  [in/out] D3DKMT_HANDLE                hResource;&#10;  [out]    D3DKMT_HANDLE                hGlobalShare;&#10;  [in]     const VOID                   *pPrivateRuntimeData;&#10;  [in]     UINT                         PrivateRuntimeDataSize;&#10;  union {&#10;    [in]     D3DKMT_CREATESTANDARDALLOCATION *pStandardAllocation;&#10;    [in]     const VOID                      *pPrivateDriverData;&#10;  };&#10;  [in/out] UINT                         PrivateDriverDataSize;&#10;  [in]     UINT                         NumAllocations;&#10;  union {&#10;    [in]     D3DDDI_ALLOCATIONINFO  *pAllocationInfo;&#10;    [in]     D3DDDI_ALLOCATIONINFO2 *pAllocationInfo2;&#10;  };&#10;  [in]     D3DKMT_CREATEALLOCATIONFLAGS Flags;&#10;  [in]     HANDLE                       hPrivateRuntimeResourceHandle;&#10;} D3DKMT_CREATEALLOCATION;">D3DKMT_CREATEALLOCATION</a> CreateAllocation;
+    <a href="d3dddi_allocationinfo" title="typedef struct _D3DDDI_ALLOCATIONINFO {&#10;  D3DKMT_HANDLE                  hAllocation;&#10;  const VOID                     *pSystemMem;&#10;  VOID                           *pPrivateDriverData;&#10;  UINT                           PrivateDriverDataSize;&#10;  D3DDDI_VIDEO_PRESENT_SOURCE_ID VidPnSourceId;&#10;  union {&#10;    struct {&#10;      UINT Primary : 1;&#10;      UINT Stereo : 1;&#10;#if ...&#10;      UINT Reserved : 30;&#10;#else&#10;      UINT Reserved : 31;&#10;#endif&#10;    };&#10;    UINT Value;&#10;  } Flags;&#10;} D3DDDI_ALLOCATIONINFO;">D3DDDI_ALLOCATIONINFO</a> AllocationInfo;
+    VOID* pSysMem;
+
+    *phResource = NULL;
+    *phAllocation = NULL;
+
+    // For a sysmem allocation, preallocate the memory.
+    pSysMem = MemAlloc(AllocationSize);
+    if (pSysMem == NULL) {
+        return E_OUTOFMEMORY;
+    }
+
+    memset(&amp;CreateAllocation, 0, sizeof(CreateAllocation));
+    CreateAllocation.hDevice = hDevice;
+    CreateAllocation.Flags.CreateResource = TRUE;
+    CreateAllocation.pPrivateDriverData = pResourceData;
+    CreateAllocation.PrivateDriverDataSize = ResourceDataSize;
+    CreateAllocation.NumAllocations = 1;
+    CreateAllocation.pAllocationInfo = &amp;AllocationInfo;
+
+    AllocationInfo.hAllocation = NULL;
+    AllocationInfo.pSystemMem = pSysMem;
+    AllocationInfo.pPrivateDriverData = pAllocationData;
+    AllocationInfo.PrivateDriverDataSize = AllocationDataSize;
+
+    if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>((*pfnKTCreateAllocation)(&amp;CreateAllocation))) {
+        *phResource = CreateAllocation.hResource;
+        *phAllocation = AllocationInfo.hAllocation;
+        return S_OK;
+    }
+    MemFree(pSysMem);
+    return E_FAIL;
 }
 </code></pre>
 <h4>Creating a standard allocation with ExistingSysMem</h4>
 <p>The following code example shows the arguments to pass to <strong>D3DKMTCreateAllocation</strong> to create a standard allocation with <strong>ExistingSysMem</strong>. The existing system memory buffer that the runtime provides to the kernel must be page-aligned and a multiple of the page size; otherwise the kernel fails the call.</p>
-<pre><code>    <a href="uint" title="typedef unsigned int UINT;">UINT</a> PrivateDriverDataEstimate = 2048;
-<a href="d3dddi_allocationinfo2" title="typedef struct _D3DDDI_ALLOCATIONINFO2 {&#10;  D3DKMT_HANDLE                         hAllocation;&#10;  union {&#10;    HANDLE     hSection;&#10;    const VOID *pSystemMem;&#10;  } D3DKMT_ALIGN64;&#10;  VOID                                  *pPrivateDriverData;&#10;  UINT                                  PrivateDriverDataSize;&#10;  D3DDDI_VIDEO_PRESENT_SOURCE_ID        VidPnSourceId;&#10;  union {&#10;    struct {&#10;      UINT Primary : 1;&#10;      UINT Stereo : 1;&#10;      UINT OverridePriority : 1;&#10;#if ...&#10;      UINT Reserved : 29;&#10;#elif&#10;      UINT Reserved : 30;&#10;#else&#10;      UINT Reserved : 31;&#10;...">D3DDDI_ALLOCATIONINFO2</a> AllocInfo = {};
-AllocInfo.pSystemMem = SomeValidPageAlignedSysMem;
-AllocInfo.VidPnSourceId = SomeVidPnSourceId;
-D3DKMDT_CREATESTANDARDALLOCATION StandardAlloc = {};
-StandardAlloc.Type = D3DKMT_STANDARDALLOCATIONTYPE_EXISTINGHEAP;
-StandardAlloc.ExistingHeapData.Size = SizeOfSystemMemBuffer; // Multiple of PAGE SIZE
-<a href="d3dkmt_createallocation" title="typedef struct _D3DKMT_CREATEALLOCATION {&#10;  [in]     D3DKMT_HANDLE                hDevice;&#10;  [in/out] D3DKMT_HANDLE                hResource;&#10;  [out]    D3DKMT_HANDLE                hGlobalShare;&#10;  [in]     const VOID                   *pPrivateRuntimeData;&#10;  [in]     UINT                         PrivateRuntimeDataSize;&#10;  union {&#10;    [in]     D3DKMT_CREATESTANDARDALLOCATION *pStandardAllocation;&#10;    [in]     const VOID                      *pPrivateDriverData;&#10;  };&#10;  [in/out] UINT                         PrivateDriverDataSize;&#10;  [in]     UINT                         NumAllocations;&#10;  union {&#10;    [in]     D3DDDI_ALLOCATIONINFO  *pAllocationInfo;&#10;    [in]     D3DDDI_ALLOCATIONINFO2 *pAllocationInfo2;&#10;  };&#10;  [in]     D3DKMT_CREATEALLOCATIONFLAGS Flags;&#10;  [in]     HANDLE                       hPrivateRuntimeResourceHandle;&#10;} D3DKMT_CREATEALLOCATION;">D3DKMT_CREATEALLOCATION</a> CreateAlloc = {};
-CreateAlloc.hDevice = SomeDevice;
-CreateAlloc.NumAllocations = 1;
-CreateAlloc.pAllocationInfo2 = &amp;AllocInfo;
-CreateAlloc.pStandardAllocation = &amp;StandardAlloc;
-CreateAlloc.Flags.ExistingSysMem = TRUE;
-ntStatus = D3DKMTCreateAllocation(&amp;CreateAlloc);
+<pre><code><a href="uint" title="typedef unsigned int UINT;">UINT</a> PrivateDriverDataEstimate = 2048;
+
+    <a href="d3dddi_allocationinfo2" title="typedef struct _D3DDDI_ALLOCATIONINFO2 {&#10;  D3DKMT_HANDLE                         hAllocation;&#10;  union {&#10;    HANDLE     hSection;&#10;    const VOID *pSystemMem;&#10;  } D3DKMT_ALIGN64;&#10;  VOID                                  *pPrivateDriverData;&#10;  UINT                                  PrivateDriverDataSize;&#10;  D3DDDI_VIDEO_PRESENT_SOURCE_ID        VidPnSourceId;&#10;  union {&#10;    struct {&#10;      UINT Primary : 1;&#10;      UINT Stereo : 1;&#10;      UINT OverridePriority : 1;&#10;#if ...&#10;      UINT Reserved : 29;&#10;#elif&#10;      UINT Reserved : 30;&#10;#else&#10;      UINT Reserved : 31;&#10;...">D3DDDI_ALLOCATIONINFO2</a> AllocInfo = {};
+    AllocInfo.pSystemMem = SomeValidPageAlignedSysMem;
+    AllocInfo.VidPnSourceId = SomeVidPnSourceId;
+
+    D3DKMDT_CREATESTANDARDALLOCATION StandardAlloc = {};
+    StandardAlloc.Type = D3DKMT_STANDARDALLOCATIONTYPE_EXISTINGHEAP;
+    StandardAlloc.ExistingHeapData.Size = SizeOfSystemMemBuffer; // Multiple of PAGE SIZE
+
+    <a href="d3dkmt_createallocation" title="typedef struct _D3DKMT_CREATEALLOCATION {&#10;  [in]     D3DKMT_HANDLE                hDevice;&#10;  [in/out] D3DKMT_HANDLE                hResource;&#10;  [out]    D3DKMT_HANDLE                hGlobalShare;&#10;  [in]     const VOID                   *pPrivateRuntimeData;&#10;  [in]     UINT                         PrivateRuntimeDataSize;&#10;  union {&#10;    [in]     D3DKMT_CREATESTANDARDALLOCATION *pStandardAllocation;&#10;    [in]     const VOID                      *pPrivateDriverData;&#10;  };&#10;  [in/out] UINT                         PrivateDriverDataSize;&#10;  [in]     UINT                         NumAllocations;&#10;  union {&#10;    [in]     D3DDDI_ALLOCATIONINFO  *pAllocationInfo;&#10;    [in]     D3DDDI_ALLOCATIONINFO2 *pAllocationInfo2;&#10;  };&#10;  [in]     D3DKMT_CREATEALLOCATIONFLAGS Flags;&#10;  [in]     HANDLE                       hPrivateRuntimeResourceHandle;&#10;} D3DKMT_CREATEALLOCATION;">D3DKMT_CREATEALLOCATION</a> CreateAlloc = {};
+    CreateAlloc.hDevice = SomeDevice;
+    CreateAlloc.NumAllocations = 1;
+    CreateAlloc.pAllocationInfo2 = &amp;AllocInfo;
+    CreateAlloc.pStandardAllocation = &amp;StandardAlloc;
+    CreateAlloc.Flags.ExistingSysMem = TRUE;
+
+    ntStatus = D3DKMTCreateAllocation(&amp;CreateAlloc);
 </code></pre>
 <p>Argument limitations for <strong>D3DKMTCreateAllocation</strong>:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
-<li>
-
-</li>
+<li><strong>ExistingSysMem</strong> (or <strong>ExistingSection</strong>) is only supported with <strong>StandardAllocation</strong> and vice versa.</li>
+<li><strong>NumAllocations</strong> supported is 1.</li>
+<li>Only one of <strong>ExistingSysMem</strong> or <strong>ExistingSection</strong> can be set.</li>
+<li>When creating a <strong>StandardAllocation</strong>, the <strong>CreateShared</strong> and <strong>CrossAdapter</strong> flags must always be set.</li>
+<li><strong>ExistingSysMem</strong> (or <strong>ExistingSection</strong>) can't be created against an existing resource (<strong>D3DKMT_CREATALLOCATION::hResource</strong>).</li>
 </ul>
 <h2>See also</h2>
 <p><strong><a href="d3dkmt_createallocation" title="typedef struct _D3DKMT_CREATEALLOCATION {&#10;  [in]     D3DKMT_HANDLE                hDevice;&#10;  [in/out] D3DKMT_HANDLE                hResource;&#10;  [out]    D3DKMT_HANDLE                hGlobalShare;&#10;  [in]     const VOID                   *pPrivateRuntimeData;&#10;  [in]     UINT                         PrivateRuntimeDataSize;&#10;  union {&#10;    [in]     D3DKMT_CREATESTANDARDALLOCATION *pStandardAllocation;&#10;    [in]     const VOID                      *pPrivateDriverData;&#10;  };&#10;  [in/out] UINT                         PrivateDriverDataSize;&#10;  [in]     UINT                         NumAllocations;&#10;  union {&#10;    [in]     D3DDDI_ALLOCATIONINFO  *pAllocationInfo;&#10;    [in]     D3DDDI_ALLOCATIONINFO2 *pAllocationInfo2;&#10;  };&#10;  [in]     D3DKMT_CREATEALLOCATIONFLAGS Flags;&#10;  [in]     HANDLE                       hPrivateRuntimeResourceHandle;&#10;} D3DKMT_CREATEALLOCATION;">D3DKMT_CREATEALLOCATION</a></strong></p>

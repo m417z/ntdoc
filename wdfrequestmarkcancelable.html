@@ -81,69 +81,66 @@
 <p>If your driver uses the framework's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-automatic-synchronization">automatic synchronization</a>, the driver can call either <strong>WdfRequestMarkCancelable</strong> or <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a>.</p>
 <p>If the driver does not use automatic synchronization, it must call <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a> instead of <strong>WdfRequestMarkCancelable</strong> for the following reasons:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>If the specified request has already been canceled, <strong>WdfRequestMarkCancelable</strong> calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function before returning. If the driver acquires a spinlock before calling <strong>WdfRequestMarkCancelable</strong> and attempts to acquire the same spinlock inside <em>EvtRequestCancel</em>, the same thread attempts to acquire the same spinlock twice, causing a deadlock.</li>
+<li>However, because <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a> never calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a>, this scenario does not occur. If the request has already been canceled, <strong><a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a></strong> returns <strong>STATUS_CANCELLED</strong>. If your driver acquires a spinlock (which sets the IRQL to DISPATCH_LEVEL) before calling <strong><a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a></strong> and releases the spinlock (which sets the IRQL to PASSIVE_LEVEL) after <strong><a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a></strong> returns, the <em>EvtRequestCancel</em> callback function will not be called before the spinlock is released. Therefore, a deadlock does not occur even if the <em>EvtRequestCancel</em> callback function uses the same spinlock.</li>
 </ul>
 <h3>Processing a request after enabling cancellation</h3>
 <p>After a driver calls <strong>WdfRequestMarkCancelable</strong> to enable canceling, the request remains cancelable while the driver <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/request-ownership">owns</a> the request object, unless the driver calls <a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a>.</p>
 <p>If a driver has called <strong>WdfRequestMarkCancelable</strong>, and if the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function has not executed and called <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>, the driver must call <a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a> before it calls <strong><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></strong> outside of the <em>EvtRequestCancel</em> callback function.</p>
 <p>If the driver calls <a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a> to forward the request to a different queue, the following rules apply:</p>
 <ul>
-<li><p>I/O requests cannot be cancelable when your driver forwards them to a different queue.</p>
-<p>Generally, your driver should not call <strong>WdfRequestMarkCancelable</strong> to enable canceling the request before calling <a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a>. If the driver does make the request cancelable, it must call <a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a> to disable cancellation before calling <strong><a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a></strong>.</p></li>
-<li><p>While the request is in the second queue, the framework owns it and can cancel it without notifying the driver.</p>
-<p>If the driver requires cancellation notification (so that it can deallocate any resources that it might have allocated before calling <a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a>), the driver should register an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_canceled_on_queue">EvtIoCanceledOnQueue</a> callback function, and it should use request-specific context memory to store information about the request's resources.</p></li>
 <li>
-
+<p>I/O requests cannot be cancelable when your driver forwards them to a different queue.</p>
+<p>Generally, your driver should not call <strong>WdfRequestMarkCancelable</strong> to enable canceling the request before calling <a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a>. If the driver does make the request cancelable, it must call <a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a> to disable cancellation before calling <strong><a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a></strong>.</p>
+</li>
+<li>
+<p>While the request is in the second queue, the framework owns it and can cancel it without notifying the driver.</p>
+<p>If the driver requires cancellation notification (so that it can deallocate any resources that it might have allocated before calling <a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a>), the driver should register an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_canceled_on_queue">EvtIoCanceledOnQueue</a> callback function, and it should use request-specific context memory to store information about the request's resources.</p>
+</li>
+<li>
+<p>After the framework has dequeued the request from the second queue and delivered it to the driver, the driver can call <strong>WdfRequestMarkCancelable</strong> to enable canceling.</p>
 </li>
 </ul>
 <p>For more information about <strong>WdfRequestMarkCancelable</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/canceling-i-o-requests">Canceling I/O Requests</a>.</p>
 <h4>Examples</h4>
 <p>The following code example shows parts of two callback functions:</p>
 <ul>
-<li>
-
-</li>
-<li>
-
-</li>
+<li>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_read">EvtIoRead</a> callback function that performs request-specific work (such as creating subrequests to send to an I/O target), then enables cancellation of the received I/O request.</li>
+<li>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function that cancels an I/O request.</li>
 </ul>
 <p>The driver must use the framework's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-automatic-synchronization">automatic synchronization</a>.</p>
 <pre><code>VOID
 MyEvtIoRead(
-IN WDFQUEUE  Queue,
-IN WDFREQUEST  Request,
-IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  Length
-)
+    IN WDFQUEUE  Queue,
+    IN WDFREQUEST  Request,
+    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  Length
+    )
 {
 ...
-// Perform request-specific work here
-// (such as creating subrequests
-// to send to an I/O target).
+    // Perform request-specific work here
+    // (such as creating subrequests
+    // to send to an I/O target).
 ...
-WdfRequestMarkCancelable(
-Request,
-MyEvtRequestCancel
-);
-}
+    WdfRequestMarkCancelable(
+                             Request,
+                             MyEvtRequestCancel
+                             );
+    }
 ...
 }
 VOID
 MyEvtRequestCancel(
-IN WDFREQUEST  Request
-)
+    IN WDFREQUEST  Request
+    )
 {
-// Remove request-specific work here, because
-// we don't want the work to be done if the
-// request was canceled.
-<a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
-Request,
-STATUS_CANCELLED
-);
+    // Remove request-specific work here, because
+    // we don't want the work to be done if the
+    // request was canceled.
+
+    <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
+                       Request,
+                       STATUS_CANCELLED
+                       );
 }
 </code></pre>
 <h2>See also</h2>
