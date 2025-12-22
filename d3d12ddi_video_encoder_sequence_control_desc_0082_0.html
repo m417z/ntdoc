@@ -95,7 +95,7 @@
 <p>Check the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/ne-d3d12umddi-d3d12ddi_video_encoder_support_flags_0083_0"><strong>D3D12_VIDEO_ENCODER_SUPPORT_FLAG_0083_0_SUBREGION_LAYOUT_RECONFIGURATION_AVAILABLE</strong></a> flag to determine whether subregion dynamic reconfiguration is supported:</p>
 <ul>
 <li>If supported, <strong>SelectedLayoutMode</strong> indicates the subregion partitioning mode used for the associated <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/nc-d3d12umddi-pfnd3d12ddi_video_encode_frame_0082_0"><strong>EncodeFrame</strong></a> command.</li>
-<li>If not supported, <em>*SelectedLayoutMode</em> indicates the target subregion mode of the full encoding session and must not be changed during the encoding session.</li>
+<li>If not supported, *<em>SelectedLayoutMode</em> indicates the target subregion mode of the full encoding session and must not be changed during the encoding session.</li>
 </ul>
 <h3><code>FrameSubregionsLayoutData</code></h3>
 <p>A <strong><a href="d3d12ddi_video_encoder_picture_control_subregions_layout_data_0080_2" title="typedef struct D3D12DDI_VIDEO_ENCODER_PICTURE_CONTROL_SUBREGIONS_LAYOUT_DATA_0080_2 {&#10;  UINT  DataSize;&#10;  union {&#10;    const D3D12DDI_VIDEO_ENCODER_PICTURE_CONTROL_SUBREGIONS_LAYOUT_DATA_SLICES_0080    *pSlicesPartition_H264;&#10;    const D3D12DDI_VIDEO_ENCODER_PICTURE_CONTROL_SUBREGIONS_LAYOUT_DATA_SLICES_0080    *pSlicesPartition_HEVC;&#10;    const D3D12DDI_VIDEO_ENCODER_AV1_PICTURE_CONTROL_SUBREGIONS_LAYOUT_DATA_TILES_0095 *pTilesPartition_AV1;&#10;  };&#10;} D3D12DDI_VIDEO_ENCODER_PICTURE_CONTROL_SUBREGIONS_LAYOUT_DATA_0080_2;">D3D12DDI_VIDEO_ENCODER_PICTURE_CONTROL_SUBREGIONS_LAYOUT_DATA_0080_2</a></strong> structure that contains picture subregions layout optional codec-specific data. If <strong>SelectedLayoutMode</strong> indicates that there are no subregions, this member must be NULL.</p>
@@ -118,13 +118,21 @@
 </ul>
 <p>The expected behavior when explicitly requesting an intra-refresh wave with duration N frames follows:</p>
 <ul>
-<li><p>If the request for intra-refresh happens at the beginning of a GOP, the intra-refresh occurs for N frames and then a new GOP is started with an I frame.</p></li>
-<li><p>If the request for intra-refresh happens in the middle of a GOP, the group of pictures will be ended until the last submitted <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/nc-d3d12umddi-pfnd3d12ddi_video_encode_frame_0082_0"><strong>EncodeFrame</strong></a> command and restarted after the intra-refresh session with a new GOP starting with an I frame. For example, when the GOP is IPPPP...IPPPP..., if the intra-refresh start is requested at the "IPP" partial submission of the GOP, the last two P frames of that GOP will be ignored, the intra-refresh session will be issued for the N next frames, and then a new key-frame that restarts the GOP structure is expected.</p></li>
+<li>
+<p>If the request for intra-refresh happens at the beginning of a GOP, the intra-refresh occurs for N frames and then a new GOP is started with an I frame.</p>
+</li>
+<li>
+<p>If the request for intra-refresh happens in the middle of a GOP, the group of pictures will be ended until the last submitted <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/nc-d3d12umddi-pfnd3d12ddi_video_encode_frame_0082_0"><strong>EncodeFrame</strong></a> command and restarted after the intra-refresh session with a new GOP starting with an I frame. For example, when the GOP is IPPPP...IPPPP..., if the intra-refresh start is requested at the &quot;IPP&quot; partial submission of the GOP, the last two P frames of that GOP will be ignored, the intra-refresh session will be issued for the N next frames, and then a new key-frame that restarts the GOP structure is expected.</p>
+</li>
 </ul>
 <p>For row-based intra-refresh:</p>
 <ul>
-<li><p>The configured GOP structure will have to be reconfigured to Infinite IPPP...P... GOP (GOPLength = 0u and PPicturePeriod = 1u) for the duration of the intra-refresh session. It can then be reconfigured again after the intra-refresh wave finished.</p></li>
-<li><p>The configured subregion partitioning mode will be reconfigured to correspond with N uniform slices partitioning per frame for a duration of N <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/nc-d3d12umddi-pfnd3d12ddi_video_encode_frame_0082_0"><strong>EncodeFrame</strong></a> commands. This is particularly important when the subregion partitioning is set to an incompatible mode with intra-refresh requirements, for example when the row of intra coded units in a slice will disrupt the limitation set to bytes per slice. The expectation for row based intra-refresh is that the resulting frame contains N slices, all P slices, except the current intra-refresh row slice, which has to be an I slice.</p></li>
+<li>
+<p>The configured GOP structure will have to be reconfigured to Infinite IPPP...P... GOP (GOPLength = 0u and PPicturePeriod = 1u) for the duration of the intra-refresh session. It can then be reconfigured again after the intra-refresh wave finished.</p>
+</li>
+<li>
+<p>The configured subregion partitioning mode will be reconfigured to correspond with N uniform slices partitioning per frame for a duration of N <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/nc-d3d12umddi-pfnd3d12ddi_video_encode_frame_0082_0"><strong>EncodeFrame</strong></a> commands. This is particularly important when the subregion partitioning is set to an incompatible mode with intra-refresh requirements, for example when the row of intra coded units in a slice will disrupt the limitation set to bytes per slice. The expectation for row based intra-refresh is that the resulting frame contains N slices, all P slices, except the current intra-refresh row slice, which has to be an I slice.</p>
+</li>
 </ul>
 <h2>See also</h2>
 <p><strong><a href="d3d12ddi_video_encoder_encodeframe_input_stream_arguments_0082_0" title="typedef struct D3D12DDI_VIDEO_ENCODER_ENCODEFRAME_INPUT_STREAM_ARGUMENTS_0082_0 {&#10;  D3D12DDI_VIDEO_ENCODER_SEQUENCE_CONTROL_DESC_0082_0 SequenceControlDesc;&#10;  D3D12DDI_VIDEO_ENCODER_PICTURE_CONTROL_DESC_0082_0  PictureControlDesc;&#10;  D3D12DDI_HRESOURCE                                  hDrvInputTexture2D;&#10;  UINT                                                InputFrameSubresource;&#10;  UINT                                                CurrentFrameBitstreamMetadataSize;&#10;} D3D12DDI_VIDEO_ENCODER_ENCODEFRAME_INPUT_STREAM_ARGUMENTS_0082_0;">D3D12DDI_VIDEO_ENCODER_ENCODEFRAME_INPUT_STREAM_ARGUMENTS_0082_0</a></strong></p>

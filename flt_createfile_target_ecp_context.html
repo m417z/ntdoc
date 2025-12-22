@@ -81,14 +81,14 @@
 <table>
 <thead>
 <tr>
-  <th>Value</th>
-  <th>Meaning</th>
+<th>Value</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>FLTTCFL_AUTO_REPARSE</strong></td>
-  <td>Request that the <a href="fltcreatefileex2" title="NTSTATUS FLTAPI FltCreateFileEx2(&#10;  [in]            PFLT_FILTER               Filter,&#10;  [in, optional]  PFLT_INSTANCE             Instance,&#10;  [out]           PHANDLE                   FileHandle,&#10;  [out, optional] PFILE_OBJECT              *FileObject,&#10;  [in]            ACCESS_MASK               DesiredAccess,&#10;  [in]            POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]           PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional]  PLARGE_INTEGER            AllocationSize,&#10;  [in]            ULONG                     FileAttributes,&#10;  [in]            ULONG                     ShareAccess,&#10;  [in]            ULONG                     CreateDisposition,&#10;  [in]            ULONG                     CreateOptions,&#10;  [in, optional]  PVOID                     EaBuffer,&#10;  [in]            ULONG                     EaLength,&#10;  [in]            ULONG                     Flags,&#10;  [in, optional]  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">FltCreateFileEx2</a> attempt a reparse operation when a target is not found with the original file information.</td>
+<td><strong>FLTTCFL_AUTO_REPARSE</strong></td>
+<td>Request that the <a href="fltcreatefileex2" title="NTSTATUS FLTAPI FltCreateFileEx2(&#10;  [in]            PFLT_FILTER               Filter,&#10;  [in, optional]  PFLT_INSTANCE             Instance,&#10;  [out]           PHANDLE                   FileHandle,&#10;  [out, optional] PFILE_OBJECT              *FileObject,&#10;  [in]            ACCESS_MASK               DesiredAccess,&#10;  [in]            POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]           PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional]  PLARGE_INTEGER            AllocationSize,&#10;  [in]            ULONG                     FileAttributes,&#10;  [in]            ULONG                     ShareAccess,&#10;  [in]            ULONG                     CreateDisposition,&#10;  [in]            ULONG                     CreateOptions,&#10;  [in, optional]  PVOID                     EaBuffer,&#10;  [in]            ULONG                     EaLength,&#10;  [in]            ULONG                     Flags,&#10;  [in, optional]  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">FltCreateFileEx2</a> attempt a reparse operation when a target is not found with the original file information.</td>
 </tr>
 </tbody>
 </table>
@@ -107,17 +107,29 @@ CrossVolumeCreate(
     _Outptr_ <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">PFILE_OBJECT</a> *FileObject
     )
 /*++
+
 Routine Description:
+
      Issues a targeted create and handles cross volume reparse.
+
 Arguments:
+
     FileName - The name of the file to open
+
     Filter – The filter issuing the create
+
     Instance - The filter instance for the targeted create
+
     IoStatus - Receives the operation status
+
     Handle - Receives the file handle
+
     FileObject - Receives the file object
+
 Return Value:
+
     status of the operation
+
 --*/
 {
     PFLT_CREATEFILE_TARGET_ECP_CONTEXT ecpContext;
@@ -126,19 +138,23 @@ Return Value:
     <a href="io_driver_create_context" title="typedef struct _IO_DRIVER_CREATE_CONTEXT {&#10;  CSHORT               Size;&#10;  struct _ECP_LIST     *ExtraCreateParameter;&#10;  PVOID                DeviceObjectHint;&#10;  PTXN_PARAMETER_BLOCK TxnParameters;&#10;  PESILO               SiloContext;&#10;} IO_DRIVER_CREATE_CONTEXT, *PIO_DRIVER_CREATE_CONTEXT;">IO_DRIVER_CREATE_CONTEXT</a> myCreateContext;
     <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> objAttr;
     <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
+
     ecpContext = NULL;
     ecpList = NULL;
     fileNameInformation = NULL;
     status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+
     <a href="initializeobjectattributes" title="#define InitializeObjectAttributes(p, n, a, r, s) { \&#10;    (p)-&gt;Length = sizeof(OBJECT_ATTRIBUTES); \&#10;    (p)-&gt;RootDirectory = r; \&#10;    (p)-&gt;Attributes = a; \&#10;    (p)-&gt;ObjectName = n; \&#10;    (p)-&gt;SecurityDescriptor = s; \&#10;    (p)-&gt;SecurityQualityOfService = NULL; \&#10;    }">InitializeObjectAttributes</a>( &amp;objAttr,
                                 FileName,
                                 <a href="obj_kernel_handle" title="#define OBJ_KERNEL_HANDLE 0x00000200L">OBJ_KERNEL_HANDLE</a>,
                                 NULL,
                                 NULL );
+
     //
     //  First we optimistically send a targeted create that is not
     //  setup to handle cross-volume reparse.
     //
+
     status = <a href="fltcreatefileex2" title="NTSTATUS FLTAPI FltCreateFileEx2(&#10;  [in]            PFLT_FILTER               Filter,&#10;  [in, optional]  PFLT_INSTANCE             Instance,&#10;  [out]           PHANDLE                   FileHandle,&#10;  [out, optional] PFILE_OBJECT              *FileObject,&#10;  [in]            ACCESS_MASK               DesiredAccess,&#10;  [in]            POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]           PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional]  PLARGE_INTEGER            AllocationSize,&#10;  [in]            ULONG                     FileAttributes,&#10;  [in]            ULONG                     ShareAccess,&#10;  [in]            ULONG                     CreateDisposition,&#10;  [in]            ULONG                     CreateOptions,&#10;  [in, optional]  PVOID                     EaBuffer,&#10;  [in]            ULONG                     EaLength,&#10;  [in]            ULONG                     Flags,&#10;  [in, optional]  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">FltCreateFileEx2</a>( Filter,
                                Instance,
                                Handle,
@@ -155,29 +171,38 @@ Return Value:
                                0,
                                IO_IGNORE_SHARE_ACCESS_CHECK,
                                NULL );
+
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+
         if ((status != STATUS_INVALID_DEVICE_OBJECT_PARAMETER) &amp;&amp;
             (status != STATUS_MOUNT_POINT_NOT_RESOLVED)) {
+
             goto CrossVolumeCreateExit;
         }
+
     } else {
+
         //
         //  The create succeeded. There must not have been a cross-volume
         //  reparse.
         //
+
         goto CrossVolumeCreateExit;
     }
+
     //
     //  The create failed traversing a cross-volume link.
     //  Issue another create with a targeting ECP so that
     //  we can handle cross-volume reparse.
     //
+
     status = <a href="fltallocateextracreateparameterlist" title="NTSTATUS FLTAPI FltAllocateExtraCreateParameterList(&#10;  [in]  PFLT_FILTER                  Filter,&#10;  [in]  FSRTL_ALLOCATE_ECPLIST_FLAGS Flags,&#10;  [out] PECP_LIST                    *EcpList&#10;);">FltAllocateExtraCreateParameterList</a>( Filter,
                                                   0,
                                                   &amp;ecpList );
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>( status )) {
         goto CrossVolumeCreateExit;
     }
+
     status = <a href="fltallocateextracreateparameter" title="NTSTATUS FLTAPI FltAllocateExtraCreateParameter(&#10;  [in]           PFLT_FILTER                                    Filter,&#10;  [in]           LPCGUID                                        EcpType,&#10;  [in]           ULONG                                          SizeOfContext,&#10;  [in]           FSRTL_ALLOCATE_ECP_FLAGS                       Flags,&#10;  [in, optional] PFSRTL_EXTRA_CREATE_PARAMETER_CLEANUP_CALLBACK CleanupCallback,&#10;  [in]           ULONG                                          PoolTag,&#10;  [out]          PVOID                                          *EcpContext&#10;);">FltAllocateExtraCreateParameter</a>( Filter,
                                               &amp;GUID_ECP_FLT_CREATEFILE_TARGET,
                                               sizeof(FLT_CREATEFILE_TARGET_ECP_CONTEXT),
@@ -185,9 +210,11 @@ Return Value:
                                               NULL,
                                               POOL_TAG,
                                               &amp;ecpContext );
+
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>( status )) {
         goto CrossVolumeCreateExit;
     }
+
     //
     //  Initialize the ECP with the FLTTCFL_AUTO_REPARSE flag which
     //  tells filter manager to handle the cross-volume reparse
@@ -196,23 +223,29 @@ Return Value:
     //  be responsible for calling <a href="fltcreatefileex2" title="NTSTATUS FLTAPI FltCreateFileEx2(&#10;  [in]            PFLT_FILTER               Filter,&#10;  [in, optional]  PFLT_INSTANCE             Instance,&#10;  [out]           PHANDLE                   FileHandle,&#10;  [out, optional] PFILE_OBJECT              *FileObject,&#10;  [in]            ACCESS_MASK               DesiredAccess,&#10;  [in]            POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]           PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional]  PLARGE_INTEGER            AllocationSize,&#10;  [in]            ULONG                     FileAttributes,&#10;  [in]            ULONG                     ShareAccess,&#10;  [in]            ULONG                     CreateDisposition,&#10;  [in]            ULONG                     CreateOptions,&#10;  [in, optional]  PVOID                     EaBuffer,&#10;  [in]            ULONG                     EaLength,&#10;  [in]            ULONG                     Flags,&#10;  [in, optional]  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">FltCreateFileEx2</a> with appropriate
     //  Instance parameter.
     //
+
     ecpContext-&gt;Flags = FLTTCFL_AUTO_REPARSE;
+
     ecpContext-&gt;Instance = NULL;
     ecpContext-&gt;Volume = NULL;
     ecpContext-&gt;FileNameInformation = NULL;
+
     status = <a href="fltinsertextracreateparameter" title="NTSTATUS FLTAPI FltInsertExtraCreateParameter(&#10;  [in]      PFLT_FILTER Filter,&#10;  [in, out] PECP_LIST   EcpList,&#10;  [in, out] PVOID       EcpContext&#10;);">FltInsertExtraCreateParameter</a>( Filter,
                                             ecpList,
                                             ecpContext );
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>( status )) {
         goto CrossVolumeCreateExit;
     }
+
     <a href="ioinitializedrivercreatecontext" title="VOID IoInitializeDriverCreateContext(&#10;  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">IoInitializeDriverCreateContext</a>( &amp;myCreateContext );
     myCreateContext.ExtraCreateParameter = ecpList;
+
     <a href="initializeobjectattributes" title="#define InitializeObjectAttributes(p, n, a, r, s) { \&#10;    (p)-&gt;Length = sizeof(OBJECT_ATTRIBUTES); \&#10;    (p)-&gt;RootDirectory = r; \&#10;    (p)-&gt;Attributes = a; \&#10;    (p)-&gt;ObjectName = n; \&#10;    (p)-&gt;SecurityDescriptor = s; \&#10;    (p)-&gt;SecurityQualityOfService = NULL; \&#10;    }">InitializeObjectAttributes</a>( &amp;objAttr,
                                 FileName,
                                 <a href="obj_kernel_handle" title="#define OBJ_KERNEL_HANDLE 0x00000200L">OBJ_KERNEL_HANDLE</a>,
                                 NULL,
                                 NULL );
+
     status = <a href="fltcreatefileex2" title="NTSTATUS FLTAPI FltCreateFileEx2(&#10;  [in]            PFLT_FILTER               Filter,&#10;  [in, optional]  PFLT_INSTANCE             Instance,&#10;  [out]           PHANDLE                   FileHandle,&#10;  [out, optional] PFILE_OBJECT              *FileObject,&#10;  [in]            ACCESS_MASK               DesiredAccess,&#10;  [in]            POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]           PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional]  PLARGE_INTEGER            AllocationSize,&#10;  [in]            ULONG                     FileAttributes,&#10;  [in]            ULONG                     ShareAccess,&#10;  [in]            ULONG                     CreateDisposition,&#10;  [in]            ULONG                     CreateOptions,&#10;  [in, optional]  PVOID                     EaBuffer,&#10;  [in]            ULONG                     EaLength,&#10;  [in]            ULONG                     Flags,&#10;  [in, optional]  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">FltCreateFileEx2</a>( Filter,
                                Instance,
                                Handle,
@@ -229,37 +262,48 @@ Return Value:
                                0,
                                IO_IGNORE_SHARE_ACCESS_CHECK,
                                &amp;myCreateContext );
+
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+
         if ((status != STATUS_INVALID_DEVICE_OBJECT_PARAMETER) &amp;&amp;
             (status != STATUS_MOUNT_POINT_NOT_RESOLVED)) {
+
             goto CrossVolumeCreateExit;
         }
+
     } else {
+
         goto CrossVolumeCreateExit;
     }
+
     //
     //  Filter manager should have acknowledged the ECP. If it
     //  is not acknowledged, it does not contain any cross-volume
     //  targeting information.
     //
+
     if (!<a href="fltisecpacknowledged" title="BOOLEAN FLTAPI FltIsEcpAcknowledged(&#10;  [in] PFLT_FILTER Filter,&#10;  [in] PVOID       EcpContext&#10;);">FltIsEcpAcknowledged</a>( Filter, ecpContext)) {
         goto CrossVolumeCreateExit;
     }
+
     //
     //  Filter manager could not automatically handle the
     //  cross-volume traversal. We choose to send the create
     //  to the top of the stack on the target volume indicated
     //  in the targeting ECP.
     //
+
     //
     //  The ECP may contain pointers to referenced objects. We
     //  need to deal with those references before reusing the
     //  ECP.
     //
+
     if (ecpContext-&gt;Volume != NULL) {
         <a href="fltobjectdereference" title="VOID FLTAPI FltObjectDereference(&#10;  [in, out] PVOID FltObject&#10;);">FltObjectDereference</a>( ecpContext-&gt;Volume );
         ecpContext-&gt;Volume = NULL;
     }
+
     //
     //  Note:  since we flagged the ECP to automatically handle
     //  cross-volume reparse, the create should have failed after
@@ -268,30 +312,39 @@ Return Value:
     //  expect the Instance field in the ECP to be NULL. We still
     //  demonstrate derefing the instance for the general case.
     //
+
     if (ecpContext-&gt;Instance != NULL) {
         <a href="fltobjectdereference" title="VOID FLTAPI FltObjectDereference(&#10;  [in, out] PVOID FltObject&#10;);">FltObjectDereference</a>( ecpContext-&gt;Instance );
         ecpContext-&gt;Instance = NULL;
     }
+
     fileNameInformation = ecpContext-&gt;FileNameInformation;
     ecpContext-&gt;FileNameInformation = NULL;
+
     //
     //  Tell filter manager to not handle the cross-volume
     //  reparse itself. Presumably a filter would do this if it
     //  did not want the create automatically targeted at its
     //  instance on another volume.
     //
+
     ecpContext-&gt;Flags = 0;
+
     //
     //  Reinitialize the targeting ECP to it can be reused.
     //
+
     <a href="fltpreparetoreuseecp" title="VOID FLTAPI FltPrepareToReuseEcp(&#10;  [in] PFLT_FILTER Filter,&#10;  [in] PVOID       EcpContext&#10;);">FltPrepareToReuseEcp</a>( Filter, ecpContext );
+
     <a href="ioinitializedrivercreatecontext" title="VOID IoInitializeDriverCreateContext(&#10;  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">IoInitializeDriverCreateContext</a>( &amp;myCreateContext );
     myCreateContext.ExtraCreateParameter = ecpList;
+
     <a href="initializeobjectattributes" title="#define InitializeObjectAttributes(p, n, a, r, s) { \&#10;    (p)-&gt;Length = sizeof(OBJECT_ATTRIBUTES); \&#10;    (p)-&gt;RootDirectory = r; \&#10;    (p)-&gt;Attributes = a; \&#10;    (p)-&gt;ObjectName = n; \&#10;    (p)-&gt;SecurityDescriptor = s; \&#10;    (p)-&gt;SecurityQualityOfService = NULL; \&#10;    }">InitializeObjectAttributes</a>( &amp;objAttr,
                                 &amp;fileNameInformation-&gt;Name,
                                 <a href="obj_kernel_handle" title="#define OBJ_KERNEL_HANDLE 0x00000200L">OBJ_KERNEL_HANDLE</a>,
                                 NULL,
                                 NULL );
+
     status = <a href="fltcreatefileex2" title="NTSTATUS FLTAPI FltCreateFileEx2(&#10;  [in]            PFLT_FILTER               Filter,&#10;  [in, optional]  PFLT_INSTANCE             Instance,&#10;  [out]           PHANDLE                   FileHandle,&#10;  [out, optional] PFILE_OBJECT              *FileObject,&#10;  [in]            ACCESS_MASK               DesiredAccess,&#10;  [in]            POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]           PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional]  PLARGE_INTEGER            AllocationSize,&#10;  [in]            ULONG                     FileAttributes,&#10;  [in]            ULONG                     ShareAccess,&#10;  [in]            ULONG                     CreateDisposition,&#10;  [in]            ULONG                     CreateOptions,&#10;  [in, optional]  PVOID                     EaBuffer,&#10;  [in]            ULONG                     EaLength,&#10;  [in]            ULONG                     Flags,&#10;  [in, optional]  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">FltCreateFileEx2</a>( Filter,
                                NULL,
                                Handle,
@@ -308,11 +361,15 @@ Return Value:
                                0,
                                IO_IGNORE_SHARE_ACCESS_CHECK,
                                &amp;myCreateContext );
+
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+
         if ((status != STATUS_INVALID_DEVICE_OBJECT_PARAMETER) &amp;&amp;
             (status != STATUS_MOUNT_POINT_NOT_RESOLVED)) {
+
             goto CrossVolumeCreateExit;
         }
+
         //
         //  We hit another cross-volume link. For the purposes of
         //  this example we are just giving up. An actual filter
@@ -328,36 +385,49 @@ Return Value:
         //     NULL instance to target the top of the other
         //     volume's stack.
         //
+
     } else {
+
         goto CrossVolumeCreateExit;
     }
+
 CrossVolumeCreateExit:
+
     if (ecpContext != NULL &amp;&amp;
         <a href="fltisecpacknowledged" title="BOOLEAN FLTAPI FltIsEcpAcknowledged(&#10;  [in] PFLT_FILTER Filter,&#10;  [in] PVOID       EcpContext&#10;);">FltIsEcpAcknowledged</a>( Filter, ecpContext)) {
+
         <a href="fltremoveextracreateparameter" title="NTSTATUS FLTAPI FltRemoveExtraCreateParameter(&#10;  [in]            PFLT_FILTER Filter,&#10;  [in, out]       PECP_LIST   EcpList,&#10;  [in]            LPCGUID     EcpType,&#10;  [out]           PVOID       *EcpContext,&#10;  [out, optional] ULONG       *EcpContextSize&#10;);">FltRemoveExtraCreateParameter</a>( Filter,
                                        ecpList,
                                        &amp;GUID_ECP_FLT_CREATEFILE_TARGET,
                                        &amp;ecpContext,
                                        NULL );
+
         if (ecpContext-&gt;Instance != NULL) {
             <a href="fltobjectdereference" title="VOID FLTAPI FltObjectDereference(&#10;  [in, out] PVOID FltObject&#10;);">FltObjectDereference</a>( ecpContext-&gt;Instance );
         }
+
         if (ecpContext-&gt;Volume != NULL) {
             <a href="fltobjectdereference" title="VOID FLTAPI FltObjectDereference(&#10;  [in, out] PVOID FltObject&#10;);">FltObjectDereference</a>( ecpContext-&gt;Volume );
         }
+
         if (ecpContext-&gt;FileNameInformation != NULL) {
             <a href="fltreleasefilenameinformation" title="VOID FLTAPI FltReleaseFileNameInformation(&#10;  [in] PFLT_FILE_NAME_INFORMATION FileNameInformation&#10;);">FltReleaseFileNameInformation</a>( ecpContext-&gt;FileNameInformation );
         }
+
         <a href="fltfreeextracreateparameter" title="VOID FLTAPI FltFreeExtraCreateParameter(&#10;  [in] PFLT_FILTER Filter,&#10;  [in] PVOID       EcpContext&#10;);">FltFreeExtraCreateParameter</a>( Filter, ecpContext );
     }
+
     if (ecpList != NULL) {
         <a href="fltfreeextracreateparameterlist" title="VOID FLTAPI FltFreeExtraCreateParameterList(&#10;  [in] PFLT_FILTER Filter,&#10;  [in] PECP_LIST   EcpList&#10;);">FltFreeExtraCreateParameterList</a>( Filter, ecpList );
     }
+
     if (fileNameInformation != NULL) {
         <a href="fltreleasefilenameinformation" title="VOID FLTAPI FltReleaseFileNameInformation(&#10;  [in] PFLT_FILE_NAME_INFORMATION FileNameInformation&#10;);">FltReleaseFileNameInformation</a>( fileNameInformation );
     }
+
     return status;
 }
+
 </code></pre>
 <h2>See also</h2>
 <p><a href="fltcreatefileex2" title="NTSTATUS FLTAPI FltCreateFileEx2(&#10;  [in]            PFLT_FILTER               Filter,&#10;  [in, optional]  PFLT_INSTANCE             Instance,&#10;  [out]           PHANDLE                   FileHandle,&#10;  [out, optional] PFILE_OBJECT              *FileObject,&#10;  [in]            ACCESS_MASK               DesiredAccess,&#10;  [in]            POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]           PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional]  PLARGE_INTEGER            AllocationSize,&#10;  [in]            ULONG                     FileAttributes,&#10;  [in]            ULONG                     ShareAccess,&#10;  [in]            ULONG                     CreateDisposition,&#10;  [in]            ULONG                     CreateOptions,&#10;  [in, optional]  PVOID                     EaBuffer,&#10;  [in]            ULONG                     EaLength,&#10;  [in]            ULONG                     Flags,&#10;  [in, optional]  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">FltCreateFileEx2</a></p>

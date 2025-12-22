@@ -84,36 +84,36 @@
 <table>
 <thead>
 <tr>
-  <th>Return value</th>
-  <th>Meaning</th>
+<th>Return value</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>STATUS_PENDING</td>
-  <td>The device is being powered up asynchronously.</td>
+<td>STATUS_PENDING</td>
+<td>The device is being powered up asynchronously.</td>
 </tr>
 <tr>
-  <td>STATUS_INVALID_DEVICE_STATE</td>
-  <td>The driver is not the power policy owner for the device.</td>
+<td>STATUS_INVALID_DEVICE_STATE</td>
+<td>The driver is not the power policy owner for the device.</td>
 </tr>
 <tr>
-  <td>STATUS_POWER_STATE_INVALID</td>
-  <td>A device failure occurred and the device cannot enter its D0 power state.</td>
+<td>STATUS_POWER_STATE_INVALID</td>
+<td>A device failure occurred and the device cannot enter its D0 power state.</td>
 </tr>
 </tbody>
 </table>
 <p>The method might return other <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> values.</p>
 <blockquote>
-  <p>[!NOTE]
-  For devices that specify <strong>SystemManagedIdleTimeout</strong> or <strong>SystemManagedIdleTimeoutWithHint</strong> in the <a href="wdf_power_policy_idle_timeout_type" title="typedef enum _WDF_POWER_POLICY_IDLE_TIMEOUT_TYPE {&#10;  DriverManagedIdleTimeout = 0,&#10;  SystemManagedIdleTimeout = 1,&#10;  SystemManagedIdleTimeoutWithHint = 2&#10;} WDF_POWER_POLICY_IDLE_TIMEOUT_TYPE, *PWDF_POWER_POLICY_IDLE_TIMEOUT_TYPE;">WDF_POWER_POLICY_IDLE_TIMEOUT_TYPE</a> enumeration, when calling <strong>WdfDeviceStopIdle</strong> with <em>WaitForD0</em> set to <strong>FALSE</strong>, if the device is still in D0 and the idle timeout period has not yet elapsed, starting in WDF versions 1.33/2.33, <strong>WdfDeviceStopIdle</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> (in previous versions this resulted in a return value of STATUS_PENDING).</p>
+<p>[!NOTE]
+For devices that specify <strong>SystemManagedIdleTimeout</strong> or <strong>SystemManagedIdleTimeoutWithHint</strong> in the <a href="wdf_power_policy_idle_timeout_type" title="typedef enum _WDF_POWER_POLICY_IDLE_TIMEOUT_TYPE {&#10;  DriverManagedIdleTimeout = 0,&#10;  SystemManagedIdleTimeout = 1,&#10;  SystemManagedIdleTimeoutWithHint = 2&#10;} WDF_POWER_POLICY_IDLE_TIMEOUT_TYPE, *PWDF_POWER_POLICY_IDLE_TIMEOUT_TYPE;">WDF_POWER_POLICY_IDLE_TIMEOUT_TYPE</a> enumeration, when calling <strong>WdfDeviceStopIdle</strong> with <em>WaitForD0</em> set to <strong>FALSE</strong>, if the device is still in D0 and the idle timeout period has not yet elapsed, starting in WDF versions 1.33/2.33, <strong>WdfDeviceStopIdle</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> (in previous versions this resulted in a return value of STATUS_PENDING).</p>
 </blockquote>
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
 <p>If your device can enter a low-power state when it becomes idle, your driver might have to occasionally call <strong>WdfDeviceStopIdle</strong> to bring the device back to its working (D0) state or to prevent it from entering a low-power state.</p>
 <p><strong>WdfDeviceStopIdle</strong> does not prevent the framework from transitioning the device to a sleep state when the system changes to an Sx sleep state. Its only effect is to prevent transitions to Dx sleep states while the system is in the S0 working state. Similarly, if the device supports <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/design/device-experiences/directed-power-management">directed power management</a>, <strong>WdfDeviceStopIdle</strong> does not prevent the device from entering directed power down.</p>
 <blockquote>
-  <p>[!WARNING]
-  Do not call <strong>WdfDeviceStopIdle</strong> with <em>WaitForD0</em> = <strong>TRUE</strong> during power down, either directly or indirectly. For example, if the <strong><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_arm_wake_from_s0">EvtDeviceArmWakeFromS0</a></strong> callback waits on another thread which calls <code>WdfDeviceStopIdle(TRUE)</code>, the power transition is blocked and the system crashes.</p>
+<p>[!WARNING]
+Do not call <strong>WdfDeviceStopIdle</strong> with <em>WaitForD0</em> = <strong>TRUE</strong> during power down, either directly or indirectly. For example, if the <strong><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_arm_wake_from_s0">EvtDeviceArmWakeFromS0</a></strong> callback waits on another thread which calls <code>WdfDeviceStopIdle(TRUE)</code>, the power transition is blocked and the system crashes.</p>
 </blockquote>
 <p>Your driver <em>does not</em> have to call <strong>WdfDeviceStopIdle</strong> when a device is idle and the framework places an I/O request in the device's power-managed I/O queue. Additionally, your driver <em>does not</em> have to call <strong>WdfDeviceStopIdle</strong> when a device is idle and it detects a wake signal. In both of these cases, the framework requests the bus driver to restore the device's power state to D0.</p>
 <p>Although drivers typically do not need to call <strong>WdfDeviceStopIdle</strong> when handling I/O requests that they obtain from a power-managed I/O queue, the call is allowed. However, drivers must not set the <em>WaitForD0</em> parameter to <strong>TRUE</strong> when handling I/O requests from a power-managed I/O queue.</p>
@@ -129,6 +129,7 @@
 <h3>Examples</h3>
 <p>In the following code example, <strong>WdfDeviceStopIdle</strong> returns after the specified device has entered the D0 device power state.</p>
 <pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
+
 status = WdfDeviceStopIdle(Device, TRUE);
 </code></pre>
 <h2>See also</h2>

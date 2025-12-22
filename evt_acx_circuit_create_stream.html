@@ -111,9 +111,10 @@
 </ul>
 <h3>Example</h3>
 <p>Example usage is shown below.</p>
-<pre><code>    status = <a href="acxcircuitinitassignacxcreatestreamcallback" title="NTSTATUS AcxCircuitInitAssignAcxCreateStreamCallback(&#10;  PACXCIRCUIT_INIT              CircuitInit,&#10;  PFN_ACX_CIRCUIT_CREATE_STREAM EvtCircuitCreateStream&#10;);">AcxCircuitInitAssignAcxCreateStreamCallback</a>(
+<pre><code>status = <a href="acxcircuitinitassignacxcreatestreamcallback" title="NTSTATUS AcxCircuitInitAssignAcxCreateStreamCallback(&#10;  PACXCIRCUIT_INIT              CircuitInit,&#10;  PFN_ACX_CIRCUIT_CREATE_STREAM EvtCircuitCreateStream&#10;);">AcxCircuitInitAssignAcxCreateStreamCallback</a>(
                                             circuitInit,
                                             CodecC_EvtCircuitCreateStream);
+
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 CodecC_EvtCircuitCreateStream(
     _In_    WDFDEVICE       Device,
@@ -125,10 +126,15 @@ CodecC_EvtCircuitCreateStream(
     _In_    ACXOBJECTBAG    VarArguments
     )
 /*++
+
 Routine Description:
+
     This routine creates a stream for the specified circuit.
+
 Return Value:
+
     NT status value
+
 --*/
 {
     <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>                        status;
@@ -144,16 +150,22 @@ Return Value:
     CCaptureStreamEngine *          streamEngine = NULL;
     CODEC_CAPTURE_CIRCUIT_CONTEXT * circuitCtx;
     CODEC_PIN_CONTEXT *             pinCtx;
+
     PAGED_CODE();
     UNREFERENCED_PARAMETER(SignalProcessingMode);
     UNREFERENCED_PARAMETER(VarArguments);
+
     <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(IsEqualGUID(*SignalProcessingMode, AUDIO_SIGNALPROCESSINGMODE_RAW));
+
     devCtx = GetCaptureDeviceContext(Device);
     <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(devCtx != NULL);
+
     circuitCtx = GetCaptureCircuitContext(Circuit);
     <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(circuitCtx != NULL);
+
     pinCtx = GetCodecPinContext(Pin);
     <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(pinCtx != NULL);
+
     //
     // Set circuit-callbacks.
     //
@@ -169,6 +181,7 @@ Return Value:
         <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
         goto exit;
     }
+
     /*
     //
     // Add properties, events and methods.
@@ -177,6 +190,7 @@ Return Value:
                                          StreamProperties,
                                          StreamPropertiesCount);
     */
+
     //
     // Init streaming callbacks.
     //
@@ -185,12 +199,14 @@ Return Value:
     streamCallbacks.EvtAcxStreamReleaseHardware     = Codec_EvtStreamReleaseHardware;
     streamCallbacks.EvtAcxStreamRun                 = Codec_EvtStreamRun;
     streamCallbacks.EvtAcxStreamPause               = Codec_EvtStreamPause;
+
     status = <a href="acxstreaminitassignacxstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxStreamCallbacks(&#10;  PACXSTREAM_INIT       StreamInit,&#10;  PACX_STREAM_CALLBACKS StreamCallbacks&#10;);">AcxStreamInitAssignAcxStreamCallbacks</a>(StreamInit, &amp;streamCallbacks);
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
     {
         <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
         goto exit;
     }
+
     //
     // Init RT streaming callbacks.
     //
@@ -201,33 +217,42 @@ Return Value:
     rtCallbacks.EvtAcxStreamGetCapturePacket        = CodecC_EvtStreamGetCapturePacket;
     rtCallbacks.EvtAcxStreamGetCurrentPacket        = Codec_EvtStreamGetCurrentPacket;
     rtCallbacks.EvtAcxStreamGetPresentationPosition = Codec_EvtStreamGetPresentationPosition;
+
     status = <a href="acxstreaminitassignacxrtstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxRtStreamCallbacks(&#10;  PACXSTREAM_INIT          StreamInit,&#10;  PACX_RT_STREAM_CALLBACKS RtStreamCallbacks&#10;);">AcxStreamInitAssignAcxRtStreamCallbacks</a>(StreamInit, &amp;rtCallbacks);
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
     {
         <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
         goto exit;
     }
+
     //
     // Buffer notifications are supported.
     //
     <a href="acxstreaminitsetacxrtstreamsupportsnotifications" title="VOID AcxStreamInitSetAcxRtStreamSupportsNotifications(&#10;  [in] PACXSTREAM_INIT StreamInit&#10;);">AcxStreamInitSetAcxRtStreamSupportsNotifications</a>(StreamInit);
+
     //
     // Create the stream.
     //
     <a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a>(&amp;attributes, CODEC_STREAM_CONTEXT);
+
     attributes.EvtDestroyCallback = Codec_EvtStreamDestroy;
+
     status = <a href="acxrtstreamcreate" title="NTSTATUS AcxRtStreamCreate(&#10;  WDFDEVICE              Device,&#10;  ACXCIRCUIT             Circuit,&#10;  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  PACXSTREAM_INIT        *Config,&#10;  ACXSTREAM              *Stream&#10;);">AcxRtStreamCreate</a>(Device, Circuit, &amp;attributes, &amp;StreamInit, &amp;stream);
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
     {
         <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
         goto exit;
     }
+
     streamCtx = GetCodecStreamContext(stream);
     <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(streamCtx);
+
     if (pinCtx-&gt;CodecPinType == CodecPinTypeKeyword)
     {
         PCODEC_KEYWORDSPOTTER_CONTEXT keywordSpotterCtx;
+
         keywordSpotterCtx = GetCodecKeywordSpotterContext(circuitCtx-&gt;KeywordSpotter);
+
         streamEngine = new(NonPagedPoolNx, DRIVER_TAG) CBufferedCaptureStreamEngine(stream, StreamFormat, (CKeywordDetector *) keywordSpotterCtx-&gt;KeywordDetector);
         if (streamEngine == NULL)
         {
@@ -246,8 +271,10 @@ Return Value:
             goto exit;
         }
     }
+
     streamCtx-&gt;StreamEngine = (PVOID)streamEngine;
     streamEngine = NULL;
+
     //
     // Post stream creation initialization.
     // Create any custom stream-elements.

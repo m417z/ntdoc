@@ -78,26 +78,37 @@
 <p><strong>RtlCompareDeviceMemory</strong> returns the number of bytes in the two blocks that match. If all bytes match up to the specified <strong>Length</strong> value, the <strong>Length</strong> value is returned.</p>
 <h2>Remarks</h2>
 <ul>
-<li><p>The function isn't recognized as a compiler intrinsic so the compiler will never optimize away the call (either entirely or replace the call with an equivalent sequence of instructions). This differs from <strong><a href="rtlcomparememory" title="_Check_return_&#10;NTSYSAPI&#10;SIZE_T&#10;NTAPI&#10;RtlCompareMemory(&#10;    _In_ const VOID* Source1,&#10;    _In_ const VOID* Source2,&#10;    _In_ SIZE_T Length&#10;    );">RtlCompareMemory</a></strong> which is subject to various compiler optimizations.</p></li>
-<li><p>The function uses byte-level accesses to ensure proper handling of device memory that may have side effects or special access requirements.</p></li>
-<li><p>The routine starts by comparing the first byte in the first block to the first byte in the second block, and continues to compare successive bytes in the two blocks while the bytes match. The routine stops comparing bytes when it encounters the first pair of bytes that are not equal, or when the number of matching bytes equals the <strong>Length</strong> parameter value, whichever occurs first.</p></li>
-<li><p>The function might perform unaligned memory accesses if the platform allows for it.</p></li>
+<li>
+<p>The function isn't recognized as a compiler intrinsic so the compiler will never optimize away the call (either entirely or replace the call with an equivalent sequence of instructions). This differs from <strong><a href="rtlcomparememory" title="_Check_return_&#10;NTSYSAPI&#10;SIZE_T&#10;NTAPI&#10;RtlCompareMemory(&#10;    _In_ const VOID* Source1,&#10;    _In_ const VOID* Source2,&#10;    _In_ SIZE_T Length&#10;    );">RtlCompareMemory</a></strong> which is subject to various compiler optimizations.</p>
+</li>
+<li>
+<p>The function uses byte-level accesses to ensure proper handling of device memory that may have side effects or special access requirements.</p>
+</li>
+<li>
+<p>The routine starts by comparing the first byte in the first block to the first byte in the second block, and continues to compare successive bytes in the two blocks while the bytes match. The routine stops comparing bytes when it encounters the first pair of bytes that are not equal, or when the number of matching bytes equals the <strong>Length</strong> parameter value, whichever occurs first.</p>
+</li>
+<li>
+<p>The function might perform unaligned memory accesses if the platform allows for it.</p>
+</li>
 </ul>
 <p>This function works on all versions of Windows, not just the latest. You need to consume the latest WDK to get the function declaration from the wdm.h header. You also need the library (volatileaccessk.lib) from the latest WDK. However, the resulting driver will run fine on older versions of Windows.</p>
 <h3>Example</h3>
 <pre><code><a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> DeviceBuffer1[256];
 <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> DeviceBuffer2[256];
+
 // Read data from device memory into buffers
 ReadFromDevice(DeviceBuffer1, sizeof(DeviceBuffer1));
 ReadFromDevice(DeviceBuffer2, sizeof(DeviceBuffer2));
+
 // Compare the device memory buffers
 <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> matchingBytes = RtlCompareDeviceMemory(DeviceBuffer1, DeviceBuffer2, sizeof(DeviceBuffer1));
+
 if (matchingBytes == sizeof(DeviceBuffer1)) {
     // All bytes matched
-    <a href="dbgprint" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrint(&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrint</a>("Device buffers are identical\n");
+    <a href="dbgprint" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrint(&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrint</a>(&quot;Device buffers are identical\n&quot;);
 } else {
     // Difference found at byte offset 'matchingBytes'
-    <a href="dbgprint" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrint(&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrint</a>("Device buffers differ starting at byte %zu\n", matchingBytes);
+    <a href="dbgprint" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrint(&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrint</a>(&quot;Device buffers differ starting at byte %zu\n&quot;, matchingBytes);
 }
 </code></pre>
 <h2>See also</h2>

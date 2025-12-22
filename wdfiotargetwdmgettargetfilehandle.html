@@ -79,40 +79,59 @@
 <p>If the driver attempts to access the WDM device object after it has been removed, the driver can cause the system to crash. The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/samples/browse/?redirectedfrom=MSDN-samples">toastmon</a> sample demonstrates how the driver can provide an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfiotarget/nc-wdfiotarget-evt_wdf_io_target_query_remove">EvtIoTargetQueryRemove</a> callback function so that it is notified if the I/O target is removed.</p>
 <p>For UMDF, <strong>WdfIoTargetWdmGetTargetFileHandle</strong> returns a Win32 HANDLE valid only in the current process. A legacy UMDF driver (version 1.<em>x</em>) calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfdevice-retrievedevicename">IWDFDevice::RetrieveDeviceName</a> to get the name of the underlying kernel-mode device and then opens a handle to it with <strong>CreateFile</strong>. The driver can then send I/O directly to the lower device(s) using <strong>DeviceIoControl</strong>. Starting in UMDF 2.15, UMDF v2 drivers can open the local I/O target by file (<a href="wdf_io_target_open_params_init_open_by_file" title="VOID WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_FILE(&#10;  [out]          PWDF_IO_TARGET_OPEN_PARAMS Params,&#10;  [in, optional] PCUNICODE_STRING           FileName&#10;);">WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_FILE</a>) and retrieve the file handle using <strong>WdfIoTargetWdmGetTargetFileHandle</strong>. The framework opens and closes the file handle when the remote target is closed or deleted. The file handle remains valid within the contract of <strong>WdfIoTargetWdmGetTargetFileHandle</strong> described above.</p>
 <blockquote>
-  <p>[!WARNING]
-  If a UMDF v2 driver calls <strong>WdfIoTargetWdmGetTargetFileHandle</strong> to obtain the Win32 handle from a remote target opened using <a href="wdf_io_target_open_params_init_open_by_file" title="VOID WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_FILE(&#10;  [out]          PWDF_IO_TARGET_OPEN_PARAMS Params,&#10;  [in, optional] PCUNICODE_STRING           FileName&#10;);">WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_FILE</a>, do not submit overlapped/asynchronous I/O with APIs like <strong>DeviceIoControl</strong>. Doing so can crash the process hosting the driver. If the driver must submit overlapped I/O, it must also set the low-order bit of the <strong>hEvent</strong> member of the <strong>OVERLAPPED</strong> structure. This is because the framework internally binds the handle to an I/O completion port. A valid event handle whose low-order bit is set keeps I/O completion from being queued to the completion port.</p>
+<p>[!WARNING]
+If a UMDF v2 driver calls <strong>WdfIoTargetWdmGetTargetFileHandle</strong> to obtain the Win32 handle from a remote target opened using <a href="wdf_io_target_open_params_init_open_by_file" title="VOID WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_FILE(&#10;  [out]          PWDF_IO_TARGET_OPEN_PARAMS Params,&#10;  [in, optional] PCUNICODE_STRING           FileName&#10;);">WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_FILE</a>, do not submit overlapped/asynchronous I/O with APIs like <strong>DeviceIoControl</strong>. Doing so can crash the process hosting the driver. If the driver must submit overlapped I/O, it must also set the low-order bit of the <strong>hEvent</strong> member of the <strong>OVERLAPPED</strong> structure. This is because the framework internally binds the handle to an I/O completion port. A valid event handle whose low-order bit is set keeps I/O completion from being queued to the completion port.</p>
 </blockquote>
 <p>For more information about <strong>WdfIoTargetWdmGetTargetFileHandle</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/obtaining-information-about-a-general-i-o-target">Obtaining Information About a General I/O Target</a>.</p>
 <p>For more information about I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-i-o-targets">Using I/O Targets</a>.</p>
 <h4>Examples</h4>
 <p>The following code example obtains a handle to the file that is associated with a specified remote I/O target.</p>
 <pre><code>HANDLE h;
+
 h = WdfIoTargetWdmGetTargetFileHandle(IoTarget);
 </code></pre>
 <p>A legacy UMDF driver (version 1.<em>x</em>) calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfdevice-retrievedevicename">IWDFDevice::RetrieveDeviceName</a> to get the name of the underlying kernel-mode device and then open a handle to it with <strong>CreateFile</strong>. The driver then sends I/O directly to the device using <strong>DeviceIoControl</strong>.</p>
 <p>Starting in UMDF 2.15, the driver opens the local I/O target by file and retrieves its handle. The framework opens and closes the file handle. The file handle remains valid within the contract of <strong>WdfIoTargetWdmGetTargetFileHandle</strong>.</p>
 <pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
+
 <a href="wdf_io_target_open_params" title="typedef struct _WDF_IO_TARGET_OPEN_PARAMS {&#10;  ULONG                             Size;&#10;  WDF_IO_TARGET_OPEN_TYPE           Type;&#10;  PFN_WDF_IO_TARGET_QUERY_REMOVE    EvtIoTargetQueryRemove;&#10;  PFN_WDF_IO_TARGET_REMOVE_CANCELED EvtIoTargetRemoveCanceled;&#10;  PFN_WDF_IO_TARGET_REMOVE_COMPLETE EvtIoTargetRemoveComplete;&#10;  PDEVICE_OBJECT                    TargetDeviceObject;&#10;  PFILE_OBJECT                      TargetFileObject;&#10;  UNICODE_STRING                    TargetDeviceName;&#10;  ACCESS_MASK                       DesiredAccess;&#10;  ULONG                             ShareAccess;&#10;  ULONG                             FileAttributes;&#10;  ULONG                             CreateDisposition;&#10;  ULONG                             CreateOptions;&#10;  PVOID                             EaBuffer;&#10;  ULONG                             EaBufferLength;&#10;  PLONGLONG                         AllocationSize;&#10;  ULONG                             FileInformation;&#10;  UNICODE_STRING                    FileName;&#10;} WDF_IO_TARGET_OPEN_PARAMS, *PWDF_IO_TARGET_OPEN_PARAMS;">WDF_IO_TARGET_OPEN_PARAMS</a> params;
+
 WDFIOTARGET ioTarget = NULL;
+
 HANDLE handle = NULL;
+
 status = <a href="wdfiotargetcreate" title="NTSTATUS WdfIoTargetCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES IoTargetAttributes,&#10;  [out]          WDFIOTARGET            *IoTarget&#10;);">WdfIoTargetCreate</a>(Device, &amp;attr, &amp;ioTarget);
+
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+
     // error handling
+
 }
+
 <a href="wdf_io_target_open_params_init_open_by_file" title="VOID WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_FILE(&#10;  [out]          PWDF_IO_TARGET_OPEN_PARAMS Params,&#10;  [in, optional] PCUNICODE_STRING           FileName&#10;);">WDF_IO_TARGET_OPEN_PARAMS_INIT_OPEN_BY_FILE</a>(&amp;params, NULL);
+
 status = <a href="wdfiotargetopen" title="NTSTATUS WdfIoTargetOpen(&#10;  [in] WDFIOTARGET                IoTarget,&#10;  [in] PWDF_IO_TARGET_OPEN_PARAMS OpenParams&#10;);">WdfIoTargetOpen</a>(ioTarget, &amp;params);
+
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+
     // error handling
+
 }
+
 handle = WdfIoTargetWdmGetTargetFileHandle(ioTarget);
+
 if (handle == NULL) {
+
     // error handling
+
 }
+
 if (ioTarget != NULL) {
     <a href="wdfiotargetclose" title="VOID WdfIoTargetClose(&#10;  [in] WDFIOTARGET IoTarget&#10;);">WdfIoTargetClose</a>(ioTarget);
 }
 // You can now call DeviceIoControl(handle, ...) etc.
 // NOTE: See Warning above on submitting overlapped or asynchronous I/O
+
 </code></pre>
 <h2>See also</h2>
 <p><a href="wdfiotargetcreate" title="NTSTATUS WdfIoTargetCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES IoTargetAttributes,&#10;  [out]          WDFIOTARGET            *IoTarget&#10;);">WdfIoTargetCreate</a></p>

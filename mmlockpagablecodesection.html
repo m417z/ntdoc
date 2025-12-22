@@ -72,13 +72,21 @@
 <p><strong>MmLockPagableCodeSection</strong> returns an opaque value that the operating system uses to identify this section of the driver code. This opaque value can be passed subsequently to <strong><a href="mmlockpagablesectionbyhandle" title="VOID MmLockPagableSectionByHandle(&#10;  [in] PVOID ImageSectionHandle&#10;);">MmLockPagableSectionByHandle</a></strong> (if the driver unlocks and then later relocks the section) or to <strong><a href="mmunlockpagableimagesection" title="VOID MmUnlockPagableImageSection(&#10;  [in] PVOID ImageSectionHandle&#10;);">MmUnlockPagableImageSection</a></strong>.</p>
 <p>The <strong>MmLockPagableCodeSection</strong> routine and <strong><a href="mmunlockpagableimagesection" title="VOID MmUnlockPagableImageSection(&#10;  [in] PVOID ImageSectionHandle&#10;);">MmUnlockPagableImageSection</a></strong> (the routine that performs the opposite action) support drivers that can do the following:</p>
 <ul>
-<li><p>Defer loading a subset of driver routines into resident memory until incoming I/O requests for the driver's devices make it necessary for these routines to process IRPs.</p></li>
-<li><p>Make the same subset of driver routines available for paging out when they have completed the processing of I/O requests and no additional requests for the driver's devices are currently expected.</p></li>
+<li>
+<p>Defer loading a subset of driver routines into resident memory until incoming I/O requests for the driver's devices make it necessary for these routines to process IRPs.</p>
+</li>
+<li>
+<p>Make the same subset of driver routines available for paging out when they have completed the processing of I/O requests and no additional requests for the driver's devices are currently expected.</p>
+</li>
 </ul>
 <p><strong>MmLockPagableCodeSection</strong>, <strong><a href="mmlockpagablesectionbyhandle" title="VOID MmLockPagableSectionByHandle(&#10;  [in] PVOID ImageSectionHandle&#10;);">MmLockPagableSectionByHandle</a></strong> and <strong><a href="mmunlockpagableimagesection" title="VOID MmUnlockPagableImageSection(&#10;  [in] PVOID ImageSectionHandle&#10;);">MmUnlockPagableImageSection</a></strong> are intended for use by device and intermediate drivers that have the following characteristics:</p>
 <ul>
-<li><p>The driver has code paths that might not be needed while the system is running, but, if they are needed, the driver's code must be resident because it runs in an arbitrary thread context or at IRQL &gt;= DISPATCH_LEVEL.</p></li>
-<li><p>The driver can determine exactly when the pageable routines should be loaded and when they can be paged out again.</p></li>
+<li>
+<p>The driver has code paths that might not be needed while the system is running, but, if they are needed, the driver's code must be resident because it runs in an arbitrary thread context or at IRQL &gt;= DISPATCH_LEVEL.</p>
+</li>
+<li>
+<p>The driver can determine exactly when the pageable routines should be loaded and when they can be paged out again.</p>
+</li>
 </ul>
 <p>For example, the system-supplied fault-tolerant disk driver supports the creation of mirror sets, stripe sets, and volume sets. Yet, a particular machine can be configured only with a mirror set, only with a stripe set, only with a volume set, or with any combination of these three possible options. In these circumstances, the system ftdisk driver reduces the size of its loaded image by marking routines that explicitly support mirror, stripe, and volume sets as belonging to pageable code sections. During driver initialization, pageable code sections are made resident only if the user has configured the disks to have mirror, stripe, or volume sets. If the user repartitions the disks dynamically, the ftdisk driver locks down any additional pageable code sections necessary to support any mirror, stripe, or volume sets that the user requests.</p>
 <p>As other examples, the system-supplied serial and parallel drivers have <em>DispatchCreate</em> and <em>DispatchClose</em> routines that are called when a particular port is opened for exclusive I/O and when the handle for an opened port is released, respectively. Yet, serial and parallel I/O requests are sporadic, determined by which applications the end user is currently running and which application options the end user is currently exercising. In these circumstances, the system serial and parallel drivers reduce the sizes of their loaded images by marking many routines as belonging to a pageable code section that the <em>DispatchCreate</em> routine makes resident only when the first port is opened for I/O.</p>
@@ -91,9 +99,15 @@
 <p>A single call to <strong>MmLockPagableCodeSection</strong> in, for example, a driver's <em>DispatchCreate</em> routine, causes the entire section, containing every driver routine marked with the same <strong>PAGE</strong><em>xxxx</em> identifier, to be locked in system space.</p>
 <p>Certain types of driver routines cannot be made part of any driver's pageable section, including the following:</p>
 <ul>
-<li><p>Never make an ISR pageable. It is possible for a device driver to receive a spurious interrupt even if its device is not in use, particularly if the interrupt vector could be shared. In general, even if a driver can explicitly disable interrupts on its device, an ISR should not be made pageable.</p></li>
-<li><p>Never make a DPC routine pageable if the driver cannot control when the DPC is queued, such as any <em>DpcForIsr</em> or <em>CustomDpc</em> routine that might be queued from an ISR. In general, driver routines that run at IRQL &gt;= DISPATCH_LEVEL and that can be called in an arbitrary thread context or in response to a random external event should not be made pageable.</p></li>
-<li><p>Never make the <em>DispatchRead</em> or <em>DispatchWrite</em> routine pageable in any driver that might be part of the system paging I/O path. The driver of a disk that might contain the system page file must have <em>DispatchRead</em> and <em>DispatchWrite</em> routines that are resident while the system is running, as must all drivers layered above such a disk driver.</p></li>
+<li>
+<p>Never make an ISR pageable. It is possible for a device driver to receive a spurious interrupt even if its device is not in use, particularly if the interrupt vector could be shared. In general, even if a driver can explicitly disable interrupts on its device, an ISR should not be made pageable.</p>
+</li>
+<li>
+<p>Never make a DPC routine pageable if the driver cannot control when the DPC is queued, such as any <em>DpcForIsr</em> or <em>CustomDpc</em> routine that might be queued from an ISR. In general, driver routines that run at IRQL &gt;= DISPATCH_LEVEL and that can be called in an arbitrary thread context or in response to a random external event should not be made pageable.</p>
+</li>
+<li>
+<p>Never make the <em>DispatchRead</em> or <em>DispatchWrite</em> routine pageable in any driver that might be part of the system paging I/O path. The driver of a disk that might contain the system page file must have <em>DispatchRead</em> and <em>DispatchWrite</em> routines that are resident while the system is running, as must all drivers layered above such a disk driver.</p>
+</li>
 </ul>
 <p>Note that routines in a pageable section marked with the compiler directive <strong>#pragma alloc_text(PAGExxxx, ...)</strong> differ from routines marked with the compiler directive <strong>#pragma alloc_text(INIT, ...)</strong>. The routines in the <strong>INIT</strong> section are not pageable and are discarded as soon as the driver returns from its <strong><a href="driverentry" title="NTSTATUS DriverEntry(&#10;  [in] PDRIVER_OBJECT  DriverObject,&#10;  [in] PUNICODE_STRING RegistryPath&#10;);">DriverEntry</a></strong> or its <em>Reinitialize</em> routine, if it has one.</p>
 <p>The memory manager maintains an internal lock count on any driver's pageable section. Calls to <strong>MmLockPagableCodeSection</strong> increment this count and the reciprocal <strong><a href="mmunlockpagableimagesection" title="VOID MmUnlockPagableImageSection(&#10;  [in] PVOID ImageSectionHandle&#10;);">MmUnlockPagableImageSection</a></strong> decrements the count. A driver's pageable section is not available to be paged out unless this count is zero.</p>

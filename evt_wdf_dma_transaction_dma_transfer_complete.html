@@ -104,8 +104,7 @@ The driver might not call one of the previous methods from <em>EvtDmaTransaction
 <pre><code>EVT_WDF_DMA_TRANSACTION_DMA_TRANSFER_COMPLETE  MyDmaTransactionDmaTransferComplete;
 </code></pre>
 <p>Then, implement your callback function as follows.</p>
-<pre><code>
-_Use_decl_annotations_
+<pre><code>_Use_decl_annotations_
 VOID
 MyDmaTransactionDmaTransferComplete(
     WDFDMATRANSACTION Transaction,
@@ -119,6 +118,7 @@ MyDmaTransactionDmaTransferComplete(
     <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> requestStatus;
     bool overrideStatus = true;
     <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> bytesTransferred;
+
     if (DmaStatus == DmaComplete) {
         //
         // Normal transfer completion.  Indicate this to the framework and see
@@ -132,14 +132,17 @@ MyDmaTransactionDmaTransferComplete(
             //
             goto exit;
         }
+
         requestStatus = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
     }
     else {
+
         //
         // Complete the entire transaction.  But throw out the status and
         // use one derived from the DmaStatus.
         //
         <a href="wdfdmatransactiondmacompletedfinal" title="BOOLEAN WdfDmaTransactionDmaCompletedFinal(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [in]  size_t            FinalTransferredLength,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompletedFinal</a>(Transaction, 0, &amp;requestStatus);
+
         //
         // Error or cancellation.  Indicate that this was the final transfer to
         // the framework.
@@ -148,6 +151,7 @@ MyDmaTransactionDmaTransferComplete(
             requestStatus = STATUS_DEVICE_DATA_ERROR;
         }
         else {
+
             //
             // Cancel status should only be triggered by timeout or cancel.  Rely on
             // someone having already set the status, which means we should lose
@@ -157,26 +161,32 @@ MyDmaTransactionDmaTransferComplete(
             overrideStatus = false;
         }
     }
+
     //
     // Begin completion.  There's nothing special to do here if cancel or
     // timeout got there first.
     //
     BeginCompletion(requestContext, requestStatus, overrideStatus);
+
     //
     // Record the number of bytes we transferred.
     //
     bytesTransferred = <a href="wdfdmatransactiongetbytestransferred" title="size_t WdfDmaTransactionGetBytesTransferred(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionGetBytesTransferred</a>(
                         requestContext-&gt;DmaTransaction
                         );
+
     <a href="wdfrequestsetinformation" title="VOID WdfRequestSetInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestSetInformation</a>(requestContext-&gt;Request, bytesTransferred);
+
     //
     // Success, error or cancel, this was the last transfer in the
     // transaction.  Attempt to complete the request.
     //
     AttemptRequestCompletion(requestContext, true);
+
 exit:
     return;
 }
+
 bool
 BeginCompletion(
     __in PREQUEST_CONTEXT  RequestContext,
@@ -185,20 +195,26 @@ BeginCompletion(
     )
 {
     bool completionStarted;
+
     //
     // Grab the object lock and mark the beginning of
     // completion.
     //
     <a href="wdfspinlockacquire" title="VOID WdfSpinLockAcquire(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockAcquire</a>(RequestContext-&gt;Lock);
+
     completionStarted = RequestContext-&gt;CompletionStarted;
     RequestContext-&gt;CompletionStarted = true;
+
     if ((completionStarted == false) ||
         (ForceStatusUpdate == true)) {
         RequestContext-&gt;CompletionStatus = CompletionStatus;
     }
+
     <a href="wdfspinlockrelease" title="VOID WdfSpinLockRelease(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockRelease</a>(RequestContext-&gt;Lock);
+
     return !completionStarted;
 }
+
 VOID
 AttemptRequestCompletion(
     __in PREQUEST_CONTEXT RequestContext,
@@ -206,17 +222,20 @@ AttemptRequestCompletion(
     )
 {
     <a href="long" title="typedef long LONG;">LONG</a> refCount;
-    <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>("No thread has begun completion",
+
+    <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;No thread has begun completion&quot;,
                  RequestContext-&gt;CompletionStarted == true);
+
     if (TransferComplete) {
         //
         // Unmark the request cancelable.  If that succeeds then drop the cancel reference
         //
         if (<a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a>(RequestContext-&gt;Request) == <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>) {
             refCount = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;(RequestContext-&gt;CompletionRefCount));
-            <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L"Reference count should not have gone to zero yet",
+            <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L&quot;Reference count should not have gone to zero yet&quot;,
                           refCount != 0);
         }
+
         //
         // Stop the timer if it's been started.
         //
@@ -227,22 +246,25 @@ AttemptRequestCompletion(
                 // reference count.
                 //
                 refCount = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;RequestContext-&gt;CompletionRefCount);
-                <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>("Completion reference count should not reach zero until "
-                             L"this routine calls AttemptRequestCompletion",
+                <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;Completion reference count should not reach zero until &quot;
+                             L&quot;this routine calls AttemptRequestCompletion&quot;,
                              refCount &gt; 0);
             }
         }
     }
+
     //
     // Drop this caller's reference.  If that was the last one then
     // complete the request.
     //
     refCount = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;(RequestContext-&gt;CompletionRefCount));
+
     if (refCount == 0) {
-        <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L"Execution reference was released, but execution "
-                      L"path did not set a completion status for the "
-                      L"request",
+        <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L&quot;Execution reference was released, but execution &quot;
+                      L&quot;path did not set a completion status for the &quot;
+                      L&quot;request&quot;,
                       RequestContext-&gt;CompletionStatus != STATUS_PENDING);
+
         //
         // Timers are disposed of at passive level.  If we leave it attached to
         // the request then we can hit a verifier issue, since the request
@@ -256,16 +278,17 @@ AttemptRequestCompletion(
             <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(RequestContext-&gt;Timer);
             RequestContext-&gt;Timer = NULL;
         }
+
         <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(RequestContext-&gt;Request,
                            RequestContext-&gt;CompletionStatus);
     }
 }
 </code></pre>
 <p>The <strong>EVT_WDF_DMA_TRANSACTION_DMA_TRANSFER_COMPLETE</strong> function type is defined in the WdfDmaTransaction.h header file.
-To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition.
-The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>EVT_WDF_DMA_TRANSACTION_DMA_TRANSFER_COMPLETE</strong> function type in the header file are used.
+To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition.
+The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>EVT_WDF_DMA_TRANSACTION_DMA_TRANSFER_COMPLETE</strong> function type in the header file are used.
 For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>.
-For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+For information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
 <h2>See also</h2>
 <p><a href="wdfdmatransactionsettransfercompletecallback" title="VOID WdfDmaTransactionSetTransferCompleteCallback(&#10;  [in]           WDFDMATRANSACTION                             DmaTransaction,&#10;  [in, optional] PFN_WDF_DMA_TRANSACTION_DMA_TRANSFER_COMPLETE DmaCompletionRoutine,&#10;  [in, optional] PVOID                                         DmaCompletionContext&#10;);">WdfDmaTransactionSetTransferCompleteCallback</a></p>
 <hr>

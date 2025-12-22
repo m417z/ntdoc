@@ -88,6 +88,7 @@ MyTimerFunc(
 {
     WDFREQUEST request = (WDFREQUEST) <a href="wdftimergetparentobject" title="WDFOBJECT WdfTimerGetParentObject(&#10;  [in] WDFTIMER Timer&#10;);">WdfTimerGetParentObject</a>(Timer);
     PREQUEST_CONTEXT requestContext = GetRequestContext(request);
+
     //
     // Begin the completion process.  If we're the first to get here
     // then stop the DMA transfer.  The dma completion routine will
@@ -96,8 +97,10 @@ MyTimerFunc(
     if (BeginCompletion(requestContext, STATUS_IO_TIMEOUT, false)) {
         WdfDmaTransactionStopSystemTransfer(requestContext-&gt;DmaTransaction);
     }
+
     AttemptRequestCompletion(requestContext, false);
 }
+
 bool
 BeginCompletion(
     __in PREQUEST_CONTEXT  RequestContext,
@@ -106,20 +109,26 @@ BeginCompletion(
     )
 {
     bool completionStarted;
+
     //
     // Grab the object lock and mark the beginning of
     // completion.
     //
     <a href="wdfspinlockacquire" title="VOID WdfSpinLockAcquire(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockAcquire</a>(RequestContext-&gt;Lock);
+
     completionStarted = RequestContext-&gt;CompletionStarted;
     RequestContext-&gt;CompletionStarted = true;
+
     if ((completionStarted == false) ||
         (ForceStatusUpdate == true)) {
         RequestContext-&gt;CompletionStatus = CompletionStatus;
     }
+
     <a href="wdfspinlockrelease" title="VOID WdfSpinLockRelease(&#10;  WDFSPINLOCK SpinLock&#10;);">WdfSpinLockRelease</a>(RequestContext-&gt;Lock);
+
     return !completionStarted;
 }
+
 VOID
 AttemptRequestCompletion(
     __in PREQUEST_CONTEXT RequestContext,
@@ -127,17 +136,20 @@ AttemptRequestCompletion(
     )
 {
     <a href="long" title="typedef long LONG;">LONG</a> refCount;
-    <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>("No thread has begun completion",
+
+    <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;No thread has begun completion&quot;,
                  RequestContext-&gt;CompletionStarted == true);
+
     if (TransferComplete) {
         //
         // Unmark the request cancelable.  If that succeeds then drop the cancel reference
         //
         if (<a href="wdfrequestunmarkcancelable" title="NTSTATUS WdfRequestUnmarkCancelable(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestUnmarkCancelable</a>(RequestContext-&gt;Request) == <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>) {
             refCount = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;(RequestContext-&gt;CompletionRefCount));
-            <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L"Reference count should not have gone to zero yet",
+            <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L&quot;Reference count should not have gone to zero yet&quot;,
                           refCount != 0);
         }
+
         //
         // Stop the timer if it's been started.
         //
@@ -148,22 +160,25 @@ AttemptRequestCompletion(
                 // reference count.
                 //
                 refCount = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;RequestContext-&gt;CompletionRefCount);
-                <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>("Completion reference count should not reach zero until "
-                             L"this routine calls AttemptRequestCompletion",
+                <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;Completion reference count should not reach zero until &quot;
+                             L&quot;this routine calls AttemptRequestCompletion&quot;,
                              refCount &gt; 0);
             }
         }
     }
+
     //
     // Drop this caller's reference.  If that was the last one then
     // complete the request.
     //
     refCount = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;(RequestContext-&gt;CompletionRefCount));
+
     if (refCount == 0) {
-        <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L"Execution reference was released, but execution "
-                      L"path did not set a completion status for the "
-                      L"request",
+        <a href="nt_assertmsgw" title="#define NT_ASSERTMSGW NT_ASSERTMSGW_ASSUME">NT_ASSERTMSGW</a>(L&quot;Execution reference was released, but execution &quot;
+                      L&quot;path did not set a completion status for the &quot;
+                      L&quot;request&quot;,
                       RequestContext-&gt;CompletionStatus != STATUS_PENDING);
+
         //
         // Timers are disposed of at passive level.  If we leave it attached to
         // the request then we can hit a verifier issue, since the request
@@ -177,10 +192,12 @@ AttemptRequestCompletion(
             <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(RequestContext-&gt;Timer);
             RequestContext-&gt;Timer = NULL;
         }
+
         <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(RequestContext-&gt;Request,
                            RequestContext-&gt;CompletionStatus);
     }
 }
+
 </code></pre>
 <p>The following code example shows how a driver might call <strong>WdfDmaTransactionStopSystemTransfer</strong> from an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_cancel">EvtRequestCancel</a> callback function. The driver previously called <a href="wdfrequestmarkcancelableex" title="NTSTATUS WdfRequestMarkCancelableEx(&#10;  [in] WDFREQUEST             Request,&#10;  [in] PFN_WDF_REQUEST_CANCEL EvtRequestCancel&#10;);">WdfRequestMarkCancelableEx</a> from its I/O request handler to register the callback.</p>
 <pre><code>VOID
@@ -190,10 +207,13 @@ MyRequestCancel(
 {
     PREQUEST_CONTEXT requestContext = GetRequestContext(Request);
     <a href="long" title="typedef long LONG;">LONG</a> oldValue;
+
     //
     // Start completion
     //
+
     if (BeginCompletion(requestContext, STATUS_CANCELLED, false)) {
+
         //
         // Cancel the DMA transaction.
         //
@@ -203,10 +223,10 @@ MyRequestCancel(
             // called.  Drop the I/O reference.
             //
             oldValue = <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a>(&amp;requestContext-&gt;CompletionRefCount);
-            <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>("Completion reference count should not reach zero until "
-                         L"this routine calls AttemptRequestCompletion",
+            <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;Completion reference count should not reach zero until &quot;
+                         L&quot;this routine calls AttemptRequestCompletion&quot;,
                          oldValue &gt; 0);
-            <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>("Completion status should be cancelled",
+            <a href="nt_assertmsg" title="#define NT_ASSERTMSG NT_ASSERTMSG_ASSUME">NT_ASSERTMSG</a>(&quot;Completion status should be cancelled&quot;,
                          requestContext-&gt;CompletionStatus == STATUS_CANCELLED);
         }
         else {
@@ -217,8 +237,10 @@ MyRequestCancel(
             WdfDmaTransactionStopSystemTransfer(requestContext-&gt;DmaTransaction);
         }
     }
+
     AttemptRequestCompletion(requestContext, false);
 }
+
 </code></pre>
 <h2>See also</h2>
 <p><a href="wdfdmatransactioncancel" title="BOOLEAN WdfDmaTransactionCancel(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionCancel</a></p>

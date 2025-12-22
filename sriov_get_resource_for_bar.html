@@ -85,6 +85,7 @@
 <p>Return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, return an appropriate <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS</a> error code.</p>
 <h2>Prototype</h2>
 <pre><code>SRIOV_GET_RESOURCE_FOR_BAR SriovGetResourceForBar;
+
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> SriovGetResourceForBar(
   _In_  PVOID                           Context,
   _In_  <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>                          VfIndex,
@@ -92,39 +93,48 @@
   _Out_ <a href="cm_partial_resource_descriptor" title="typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  USHORT Flags;&#10;  union {&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Generic;&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Port;&#10;    struct {&#10;#if ...&#10;      USHORT    Level;&#10;      USHORT    Group;&#10;#else&#10;      ULONG     Level;&#10;#endif&#10;...">PCM_PARTIAL_RESOURCE_DESCRIPTOR</a> Resource
 )
 { ... }
+
 typedef SRIOV_GET_RESOURCE_FOR_BAR *PSRIOV_GET_RESOURCE_FOR_BAR;
 </code></pre>
 <h2>Remarks</h2>
 <p>This callback function is implemented by the physical function (PF) driver. It is invoked when the system wants to access the translated hardware resources of a particular BAR of a virtual function.</p>
 <p>The PF driver registers its implementation by setting the <strong>GetResourceForBar</strong> member of the <a href="sriov_device_interface_standard" title="typedef struct _SRIOV_DEVICE_INTERFACE_STANDARD {&#10;  USHORT                           Size;&#10;  USHORT                           Version;&#10;  PVOID                            Context;&#10;  PINTERFACE_REFERENCE             InterfaceReference;&#10;  PINTERFACE_REFERENCE             InterfaceDereference;&#10;  PSRIOV_READ_CONFIG               ReadVfConfig;&#10;  PSRIOV_WRITE_CONFIG              WriteVfConfig;&#10;  PSRIOV_READ_BLOCK                ReadVfConfigBlock;&#10;  PSRIOV_WRITE_BLOCK               WriteVfConfigBlock;&#10;  PSRIOV_QUERY_PROBED_BARS         QueryProbedBars;&#10;  PSRIOV_GET_VENDOR_AND_DEVICE_IDS GetVendorAndDevice;&#10;  PSRIOV_GET_DEVICE_LOCATION       GetDeviceLocation;&#10;  PSRIOV_RESET_FUNCTION            ResetVf;&#10;  PSRIOV_SET_POWER_STATE           SetVfPowerState;&#10;  PSRIOV_GET_RESOURCE_FOR_BAR      GetResourceForBar;&#10;  PSRIOV_QUERY_LUID                QueryLuid;&#10;} SRIOV_DEVICE_INTERFACE_STANDARD, SRIOV_DEVICE_INTERFACE_STANDARD;">SRIOV_DEVICE_INTERFACE_STANDARD</a>, configuring a <a href="wdf_query_interface_config" title="typedef struct _WDF_QUERY_INTERFACE_CONFIG {&#10;  ULONG                                          Size;&#10;  PINTERFACE                                     Interface;&#10;  const GUID                                     *InterfaceType;&#10;  BOOLEAN                                        SendQueryToParentStack;&#10;  PFN_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST EvtDeviceProcessQueryInterfaceRequest;&#10;  BOOLEAN                                        ImportInterface;&#10;} WDF_QUERY_INTERFACE_CONFIG, *PWDF_QUERY_INTERFACE_CONFIG;">WDF_QUERY_INTERFACE_CONFIG</a> structure, and calling <a href="wdfdeviceaddqueryinterface" title="NTSTATUS WdfDeviceAddQueryInterface(&#10;  [in] WDFDEVICE                   Device,&#10;  [in] PWDF_QUERY_INTERFACE_CONFIG InterfaceConfig&#10;);">WdfDeviceAddQueryInterface</a>.</p>
 <p>Here is an example implementation of this callback function.</p>
-<pre><code>
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+<pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 Virtualization_GetResourceForBar(
     __inout     PVOID             Context,
     __in        <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>            VfIndex,
     __in        <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>            BarIndex,
     __out       <a href="cm_partial_resource_descriptor" title="typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  USHORT Flags;&#10;  union {&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Generic;&#10;    struct {&#10;      PHYSICAL_ADDRESS Start;&#10;      ULONG            Length;&#10;    } Port;&#10;    struct {&#10;#if ...&#10;      USHORT    Level;&#10;      USHORT    Group;&#10;#else&#10;      ULONG     Level;&#10;#endif&#10;...">PCM_PARTIAL_RESOURCE_DESCRIPTOR</a> Resource
     )
+
 {
     PDEVICE_CONTEXT  deviceContext;
+
     PAGED_CODE();
+
     deviceContext = (PDEVICE_CONTEXT)Context;
+
     TraceEvents(TRACE_LEVEL_VERBOSE, DBG_INTERFACE,
-        "Virtualization_GetResourceForBar received with"
-        "VFIndex = %d, BarIndex = %d\n",
+        &quot;Virtualization_GetResourceForBar received with&quot;
+        &quot;VFIndex = %d, BarIndex = %d\n&quot;,
         VfIndex, BarIndex);
+
     <a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a>(BarIndex &lt; PCI_TYPE0_BAR_COUNT);
+
     if(VfIndex &gt;= deviceContext-&gt;NumVFs)
     {
         <a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a>(FALSE);
         return STATUS_INVALID_DEVICE_REQUEST;
     }
+
     //
     // Copy the descriptor for all VFs at the given Bar index
     // to the output descriptor.
     //
+
     *Resource = deviceContext-&gt;AssignedVfBarResources[BarIndex];
+
     if(Resource-&gt;Type == CmResourceTypeMemory ||
        Resource-&gt;Type == CmResourceTypeMemoryLarge)
     {
@@ -132,8 +142,10 @@ Virtualization_GetResourceForBar(
         Resource-&gt;u.Memory.Length /= deviceContext-&gt;NumVFs;
         Resource-&gt;u.Memory.Start.QuadPart += (Resource-&gt;u.Memory.Length * VfIndex);
     }
+
     return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
 }
+
 </code></pre>
 <hr>
 <div class="ntdoc-description-links">

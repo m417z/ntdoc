@@ -112,13 +112,16 @@ AmccPciEvtInterruptDpc(
     <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
     <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  transferred;
     BOOLEAN  transactionComplete;
+
     UNREFERENCED_PARAMETER( WdfInterrupt );
+
     //
     // Retrieve request and transfer.
     //
     devExt = AmccPciGetDevExt(WdfDevice);
     request  = devExt-&gt;CurrentRequest;
     transfer = GetRequestContext(request);
+
     //
     // Check to see if the request has been canceled.
     //
@@ -126,7 +129,7 @@ AmccPciEvtInterruptDpc(
         TraceEvents(
                     TRACE_LEVEL_ERROR,
                     AMCC_TRACE_IO,
-                    "Aborted DMA transaction 0x%p",
+                    &quot;Aborted DMA transaction 0x%p&quot;,
                     request
                     );
         <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>( transfer-&gt;DmaTransaction );
@@ -137,6 +140,7 @@ AmccPciEvtInterruptDpc(
                            );
         return;
     }
+
     //
     // Notify the framework that a DMA transfer has completed.
     //
@@ -146,35 +150,41 @@ AmccPciEvtInterruptDpc(
                                                     );
     if (transactionComplete) {
         <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(status != STATUS_MORE_PROCESSING_REQUIRED);
+
         //
         // No more data. The request is complete.
         //
         TraceEvents(
                     TRACE_LEVEL_INFORMATION,
                     AMCC_TRACE_IO,
-                    "Request %p completed: status %X",
+                    &quot;Request %p completed: status %X&quot;,
                     request,
                     status
                     );
+
         //
         // Get the byte count.
         //
         transferred =
                 <a href="wdfdmatransactiongetbytestransferred" title="size_t WdfDmaTransactionGetBytesTransferred(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionGetBytesTransferred</a>(transfer-&gt;DmaTransaction);
+
         TraceEvents(
                     TRACE_LEVEL_INFORMATION,
                     AMCC_TRACE_IO,
-                    "Bytes transferred %d",
+                    &quot;Bytes transferred %d&quot;,
                     (int) transferred
                     );
+
         //
         // Delete this DmaTransaction object.
         //
         <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(transfer-&gt;DmaTransaction);
+
         //
         // Clean up the device context for this request.
         //
         devExt-&gt;CurrentRequest = NULL;
+
         //
         // Complete this I/O request.
         //

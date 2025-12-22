@@ -88,7 +88,7 @@
 <p>The OS may call this routine at any time. In normal operation, the OS calls this routine after the driver calls <a href="acxrtstreamnotifypacketcomplete" title="NTSTATUS AcxRtStreamNotifyPacketComplete(&#10;  ACXSTREAM Stream,&#10;  ULONGLONG CompletedPacket,&#10;  ULONGLONG QPCCompletion&#10;);">AcxRtStreamNotifyPacketComplete</a> or after a previous call returns true for MoreData. When the OS calls this routine, the driver may assume that the OS has finished reading all previous packets. If the hardware has captured enough data, the driver may immediately burst the next complete packet to the audio buffer and call <a href="acxrtstreamnotifypacketcomplete" title="NTSTATUS AcxRtStreamNotifyPacketComplete(&#10;  ACXSTREAM Stream,&#10;  ULONGLONG CompletedPacket,&#10;  ULONGLONG QPCCompletion&#10;);">AcxRtStreamNotifyPacketComplete</a> again. In the case of capture overflow (when the OS does not read data quickly enough) the audio driver may drop or overwrite some audio data. The audio driver drops or overwrites oldest data first. The audio driver may continue to advance its internal packet counter even though the OS may not have read the data.</p>
 <h3>Example</h3>
 <p>Example usage is shown below.</p>
-<pre><code>#pragma code_seg("PAGE")
+<pre><code>#pragma code_seg(&quot;PAGE&quot;)
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 CodecC_EvtStreamGetCapturePacket(
     _In_ ACXSTREAM          Stream,
@@ -101,15 +101,19 @@ CodecC_EvtStreamGetCapturePacket(
     CCaptureStreamEngine* streamEngine = nullptr;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> currentPacket;
     <a href="longlong" title="typedef __int64 LONGLONG;">LONGLONG</a> qpcPacketStart;
+
     PAGED_CODE();
+
     ctx = GetCodecStreamContext(Stream);
     // Retrieve the current packet that is being written to by the audio hardware
     currentPacket = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)<a href="interlockedcompareexchange" title="LONG InterlockedCompareExchange(&#10;  [in, out] LONG volatile *Destination,&#10;            LONG          ExChange,&#10;            LONG          Comperand&#10;);">InterlockedCompareExchange</a>((<a href="long" title="typedef long LONG;">LONG</a>*)&amp;ctx-&gt;CurrentPacket, -1, -1);
     qpcPacketStart = InterlockedCompareExchange64(&amp;ctx-&gt;LastPacketStart.QuadPart, -1, -1);
+
     // The Last capture packet is the packet before the current packet.
     *LastCapturePacket = currentPacket - 1;
     *QPCPacketStart = (<a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a>)qpcPacketStart;
     *MoreData = FALSE;
+
     return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
 }
 </code></pre>

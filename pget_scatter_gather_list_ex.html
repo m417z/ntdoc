@@ -81,8 +81,8 @@
 <h2>Description</h2>
 <p>The <strong>GetScatterGatherListEx</strong> routine allocates the resources that are required for a DMA transfer, builds a scatter/gather list, and calls the driver-supplied <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_list_control">AdapterListControl</a> routine to initiate the DMA transfer.</p>
 <blockquote>
-  <p>[!CAUTION]
-  Do not call this routine for a system DMA device.</p>
+<p>[!CAUTION]
+Do not call this routine for a system DMA device.</p>
 </blockquote>
 <h2>Parameters</h2>
 <h3><code>DmaAdapter</code> [in]</h3>
@@ -102,14 +102,14 @@
 <table>
 <thead>
 <tr>
-  <th>Flag</th>
-  <th>Meaning</th>
+<th>Flag</th>
+<th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td>DMA_SYNCHRONOUS_CALLBACK</td>
-  <td>The <strong>GetScatterGatherListEx</strong> routine is called synchronously. If this flag is set, and the required DMA resources are not immediately available, the call fails and returns STATUS_INSUFFICIENT_RESOURCES.</td>
+<td>DMA_SYNCHRONOUS_CALLBACK</td>
+<td>The <strong>GetScatterGatherListEx</strong> routine is called synchronously. If this flag is set, and the required DMA resources are not immediately available, the call fails and returns STATUS_INSUFFICIENT_RESOURCES.</td>
 </tr>
 </tbody>
 </table>
@@ -134,18 +134,18 @@
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_INVALID_PARAMETERS</strong></td>
-  <td>The routine failed due to invalid parameter values passed by the caller.</td>
+<td><strong>STATUS_INVALID_PARAMETERS</strong></td>
+<td>The routine failed due to invalid parameter values passed by the caller.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-  <td>The routine failed to allocate resources required for the DMA transfer.</td>
+<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+<td>The routine failed to allocate resources required for the DMA transfer.</td>
 </tr>
 </tbody>
 </table>
@@ -154,18 +154,32 @@
 <p>Use <strong>GetScatterGatherListEx</strong> only for bus-master adapters. Do not use this routine for a system DMA adapter.</p>
 <p>The driver of a bus-master device can use <strong>GetScatterGatherListEx</strong> to combine the operations performed by the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pallocate_adapter_channel_ex">AllocateAdapterChannelEx</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pmap_transfer_ex">MapTransferEx</a> routines into a one call. <strong>GetScatterGatherListEx</strong> performs the following operations:</p>
 <ol>
-<li><p>Allocates the resources that are required for the DMA transfer.</p></li>
-<li><p>Builds a scatter/gather list based on the values of the <em>Mdl</em>, <em>Offset</em>, and <em>Length</em> parameters.</p></li>
-<li><p>Calls the driver-supplied <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_list_control">AdapterListControl</a> routine and supplies the scatter/gather list to this routine as a parameter.</p></li>
+<li>
+<p>Allocates the resources that are required for the DMA transfer.</p>
+</li>
+<li>
+<p>Builds a scatter/gather list based on the values of the <em>Mdl</em>, <em>Offset</em>, and <em>Length</em> parameters.</p>
+</li>
+<li>
+<p>Calls the driver-supplied <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_list_control">AdapterListControl</a> routine and supplies the scatter/gather list to this routine as a parameter.</p>
+</li>
 </ol>
 <p>The allocated resources are automatically released after the <em>AdapterListControl</em> routine returns. If <strong>GetScatterGatherListEx</strong> is called synchronously (that is, if the <strong>DMA_SYNCHRONOUS_CALLBACK</strong> flag is set), the <em>AdapterListControl</em> routine can be omitted. In this case, the caller uses the allocated resources to initiate the DMA transfer after <strong>GetScatterGatherListEx</strong> returns. The caller must explicitly release these resources.</p>
 <p>By default, <strong>GetScatterGatherListEx</strong> returns asynchronously, without waiting for the requested resource allocation to complete. After this return, the caller can, if necessary, cancel the pending allocation request by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pcancel_adapter_channel">CancelAdapterChannel</a> routine.</p>
 <p>If the calling driver sets the <strong>DMA_SYNCHRONOUS_CALLBACK</strong> flag, the <strong>GetScatterGatherListEx</strong> routine behaves as follows:</p>
 <ul>
-<li><p>If the requested resources are not immediately available, <strong>GetScatterGatherListEx</strong> does not wait for resources, does not build a scatter/gather list, and does not call the <em>AdapterListControl</em> routine. Instead, <strong>GetScatterGatherListEx</strong> fails and returns STATUS_INSUFFICIENT_RESOURCES.</p></li>
-<li><p>The driver is not required to supply an <em>AdapterListControl</em> routine if the <strong>DMA_SYNCHRONOUS_CALLBACK</strong> flag is set.</p></li>
-<li><p>If the driver supplies an <em>AdapterListControl</em> routine, the <strong>DMA_SYNCHRONOUS_CALLBACK</strong> flag indicates that this routine is to be called in the context of the calling thread, before <strong>GetScatterGatherListEx</strong> returns.</p></li>
-<li><p>If the driver does not supply an <em>AdapterListControl</em> routine, the driver can use the allocated resources and scatter/gather list after <strong>GetScatterGatherListEx</strong> returns. In this case, the driver must supply a valid, non-NULL <em>ScatterGatherList</em> pointer. In addition, after the driver initiates the DMA transfer, the driver must call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pfree_adapter_object">FreeAdapterObject</a> routine to free the resources that <strong>GetScatterGatherListEx</strong> allocated for the adapter object.</p></li>
+<li>
+<p>If the requested resources are not immediately available, <strong>GetScatterGatherListEx</strong> does not wait for resources, does not build a scatter/gather list, and does not call the <em>AdapterListControl</em> routine. Instead, <strong>GetScatterGatherListEx</strong> fails and returns STATUS_INSUFFICIENT_RESOURCES.</p>
+</li>
+<li>
+<p>The driver is not required to supply an <em>AdapterListControl</em> routine if the <strong>DMA_SYNCHRONOUS_CALLBACK</strong> flag is set.</p>
+</li>
+<li>
+<p>If the driver supplies an <em>AdapterListControl</em> routine, the <strong>DMA_SYNCHRONOUS_CALLBACK</strong> flag indicates that this routine is to be called in the context of the calling thread, before <strong>GetScatterGatherListEx</strong> returns.</p>
+</li>
+<li>
+<p>If the driver does not supply an <em>AdapterListControl</em> routine, the driver can use the allocated resources and scatter/gather list after <strong>GetScatterGatherListEx</strong> returns. In this case, the driver must supply a valid, non-NULL <em>ScatterGatherList</em> pointer. In addition, after the driver initiates the DMA transfer, the driver must call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pfree_adapter_object">FreeAdapterObject</a> routine to free the resources that <strong>GetScatterGatherListEx</strong> allocated for the adapter object.</p>
+</li>
 </ul>
 <p><strong>GetScatterGatherListEx</strong> is an extended version of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pget_scatter_gather_list">GetScatterGatherList</a> routine. The following features are available only in the extended version:</p>
 <p><strong>GetScatterGatherListEx</strong> is similar to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pbuild_scatter_gather_list_ex">BuildScatterGatherListEx</a> routine, except that <strong>GetScatterGatherListEx</strong> automatically allocates the buffer for the scatter/gather list.</p>

@@ -109,11 +109,14 @@
     pDesiredStatus = <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>(PagedPool,
  sizeof(DESIRED_CHILD_STATUS) * ChildCount,
  ATI_TAG);
+
   if (pDesiredStatus == NULL) {
      Status = STATUS_NO_MEMORY;
         goto cleanup;
   }
+
  <a href="rtlzeromemory" title="VOID RtlZeroMemory(&#10;  _Out_ VOID UNALIGNED *Destination,&#10;  _In_  SIZE_T         Length&#10;);">RtlZeroMemory</a>(pDesiredStatus, sizeof(DESIRED_CHILD_STATUS) * ChildCount);
+
  for (ChildIndex = 0; ChildIndex &lt; ChildCount; ChildIndex++) {
  // If not a video output child, go to the next child.
  if (AcpiChildrenArray[ChildIndex].Argument
@@ -123,10 +126,12 @@
       // A video output child so the ChildUid is the VidPnTargetId.
        ChildUid = (AcpiChildrenArray[ChildIndex].Argument
    &amp; ACPI_HARDWARE_ID) | HW_ID_DISPLAY_CHILD;
+
       // Query ACPI for the required state.
       //
   // Beginning with Windows Vista SP1 and Windows Server 2008,
   // use DXGK_ACPI_PASS_ARGS_TO_CHILDREN.
+
   #if (NTDDI_VERSION &gt;= NTDDI_WIN6SP1)
    AcpiInputBuffer.Signature =
    DXGK_ACPI_PASS_ARGS_TO_CHILDREN;
@@ -134,6 +139,7 @@
     AcpiInputBuffer.Signature =
    ACPI_EVAL_INPUT_BUFFER_COMPLEX_SIGNATURE;
        #endif
+
      AcpiInputBuffer.MethodNameAsUlong =
    ACPI_METHOD_OUTPUT_DGS;
      Status = DxgkCbEvalAcpiMethod(HwDeviceExtension-&gt;DeviceHandle,
@@ -157,6 +163,7 @@
       pDesiredStatus[ChildIndex].ulSourceId = 0;
       pDesiredStatus[ChildIndex].ulTargetId = ChildUid;
   }
+
  Status = InvalidateVidPnForHotKey(HwDeviceExtension, pDesiredStatus);
 }
 </code></pre>

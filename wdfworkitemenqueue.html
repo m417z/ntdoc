@@ -83,10 +83,12 @@
 <p><strong>Example 1: KMDF versions 1.7 and later</strong></p>
 <p>The following code example calls a local routine that returns a pointer to a work-item object's context memory. The example sets information in the object's context memory and then calls <strong>WdfWorkItemEnqueue</strong>. The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function will later retrieve the information from the work-item object.</p>
 <pre><code>PMY_CONTEXT_TYPE context;
+
 context = GetWorkItemContext(hWorkItem);
 context-&gt;FdoData = FdoData;
 context-&gt;Argument1 = Context1;
 context-&gt;Argument2 = Context2;
+
 WdfWorkItemEnqueue(hWorkItem);
 </code></pre>
 <p>The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function contains the following code.</p>
@@ -95,7 +97,9 @@ WdfWorkItemEnqueue(hWorkItem);
     )
 {
     PMY_CONTEXT_TYPE context;
+
     context = GetWorkItemContext(hWorkItem);
+
     //
     // Do work here.
     //
@@ -105,17 +109,19 @@ WdfWorkItemEnqueue(hWorkItem);
 }
 </code></pre>
 <p><strong>Example 2: KMDF versions prior to 1.7</strong></p>
-<p>The following code example calls a local routine that returns a pointer to a work-item object's context memory. The example sets information in the object's context memory, sets a state variable to "busy", and then calls <strong>WdfWorkItemEnqueue</strong>. The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function will later retrieve the information from the work-item object.</p>
+<p>The following code example calls a local routine that returns a pointer to a work-item object's context memory. The example sets information in the object's context memory, sets a state variable to &quot;busy&quot;, and then calls <strong>WdfWorkItemEnqueue</strong>. The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function will later retrieve the information from the work-item object.</p>
 <pre><code>typedef enum _WORKITEM_STATE {
     WORKITEM_STATE_FREE =0,
     WORKITEM_STATE_BUSY = 1
 } WORKITEM_STATE;
 ...
 PMY_CONTEXT_TYPE context;
+
 context = GetWorkItemContext(hWorkItem);
 context-&gt;FdoData = FdoData;
 context-&gt;Argument1 = Context1;
 context-&gt;Argument2 = Context2;
+
 if (<a href="interlockedcompareexchange" title="LONG InterlockedCompareExchange(&#10;  [in, out] LONG volatile *Destination,&#10;            LONG          ExChange,&#10;            LONG          Comperand&#10;);">InterlockedCompareExchange</a>(
                                (PLONG)&amp;context-&gt;WorkItemState,
                                WORKITEM_STATE_BUSY,
@@ -124,14 +130,16 @@ if (<a href="interlockedcompareexchange" title="LONG InterlockedCompareExchange(
  WdfWorkItemEnqueue(hWorkItem);
 }
 </code></pre>
-<p>The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function contains the following code. Just before the <strong>return</strong> statement, the code sets the work-item object's state variable to "free" so that the driver can queue the object again.</p>
+<p>The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function contains the following code. Just before the <strong>return</strong> statement, the code sets the work-item object's state variable to &quot;free&quot; so that the driver can queue the object again.</p>
 <pre><code>MyWorkItemCallback (
     IN WDFWORKITEM hWorkItem
     )
 {
     PMY_CONTEXT_TYPE context;
     <a href="long" title="typedef long LONG;">LONG</a> result;
+
     context = GetWorkItemContext(hWorkItem);
+
     //
     // Do work here.
     //

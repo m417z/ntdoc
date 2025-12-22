@@ -87,22 +87,22 @@
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
-  <td>The driver supplies an invalid handle.</td>
+<td><strong>STATUS_INVALID_PARAMETER</strong></td>
+<td>The driver supplies an invalid handle.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_NOT_FOUND</strong></td>
-  <td>The request that is identified by the <em>FoundRequest</em> parameter cannot be found in the I/O queue.</td>
+<td><strong>STATUS_NOT_FOUND</strong></td>
+<td>The request that is identified by the <em>FoundRequest</em> parameter cannot be found in the I/O queue.</td>
 </tr>
 <tr>
-  <td><strong>STATUS_NO_MORE_ENTRIES</strong></td>
-  <td>The framework reached the end of the I/O queue without finding a request that matches the search criteria.</td>
+<td><strong>STATUS_NO_MORE_ENTRIES</strong></td>
+<td>The framework reached the end of the I/O queue without finding a request that matches the search criteria.</td>
 </tr>
 </tbody>
 </table>
@@ -138,9 +138,12 @@ NICGetIoctlRequest(
     <a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
     WDFREQUEST  tagRequest;
     WDFREQUEST  prevTagRequest;
+
     <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
+
     *Request = NULL;
     prevTagRequest = tagRequest = NULL;
+
     do {
         <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
         status = WdfIoQueueFindRequest(
@@ -209,6 +212,7 @@ NICGetIoctlRequest(
         }
     } while (TRUE);
     return status;
+
 }
 </code></pre>
 <p><strong>Example 2</strong></p>
@@ -217,6 +221,7 @@ NICGetIoctlRequest(
 // Type declaration for the driver's search-specific subroutines.
 //
 typedef BOOLEAN (*PFN_CALLBACK_COMPARE)(WDFREQUEST, <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>);
+
 //
 // General-purpose search routine. One of the routine's
 // parameters is the address of a search-specific
@@ -234,7 +239,9 @@ FindRequestWithMatchingData(
     WDFREQUEST  tagRequest = NULL;
     WDFREQUEST  outRequest = NULL;
     <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = STATUS_INVALID_DEVICE_REQUEST;
+
     PAGED_CODE();
+
     do {
         status = WdfIoQueueFindRequest(Queue,
                                        prevTagRequest,
@@ -250,7 +257,7 @@ FindRequestWithMatchingData(
             <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(prevTagRequest);
         }
         if (status == STATUS_NO_MORE_ENTRIES) {
-            <a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>(("WdfIoQueueFindRequest returned status 0x%x\n", status));
+            <a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>((&quot;WdfIoQueueFindRequest returned status 0x%x\n&quot;, status));
             break;
         }
         if (status == STATUS_NOT_FOUND) {
@@ -262,9 +269,10 @@ FindRequestWithMatchingData(
             continue;
         }
         if ( !<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-            <a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>(("WdfIoQueueFindRequest failed 0x%x\n", status));
+            <a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>((&quot;WdfIoQueueFindRequest failed 0x%x\n&quot;, status));
             break;
         }
+
         //
         // We have a handle to the next request that is
         // in the queue. Now we call the subroutine
@@ -284,6 +292,7 @@ FindRequestWithMatchingData(
             // so we decrement the count here.
             //
             <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>(tagRequest);
+
             if (status == STATUS_NOT_FOUND) {
                 //
                 // The TagRequest object is no longer
@@ -293,14 +302,17 @@ FindRequestWithMatchingData(
                 prevTagRequest = tagRequest = NULL;
                 continue;
             }
+
             if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-                <a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>(("<a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a> failed 0x%x\n",
+                <a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a>((&quot;<a href="wdfioqueueretrievefoundrequest" title="NTSTATUS WdfIoQueueRetrieveFoundRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [in]  WDFREQUEST FoundRequest,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveFoundRequest</a> failed 0x%x\n&quot;,
                           status));
             }
+
             //
             // We found the request we were looking for.
             //
             break;
+
         } else {
             //
             // The request did not match our criteria.
@@ -312,6 +324,7 @@ FindRequestWithMatchingData(
     } while(TRUE);
     return outRequest;
  }
+
 /
 // An example of a driver's search-specific subroutine.
 // Your driver can have multiple subroutines to handle
@@ -324,7 +337,9 @@ CallbackCheckForInfo1(
     )
 {
     PREQUEST_CONTEXT reqContext;
+
     PAGED_CODE();
+
     //
     // Retrieve information that the driver has stored
     // in the request object's context space.
@@ -337,6 +352,7 @@ CallbackCheckForInfo1(
         return FALSE;
     }
 }
+
 //
 // This code shows a call to the FindRequestWithMatchingData routine.
 //

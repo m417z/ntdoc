@@ -89,6 +89,7 @@
 <h3>Example</h3>
 <p>Example usage is shown below.</p>
 <pre><code>EVT_ACX_AUDIOMODULE_PROCESSCOMMAND  CodecR_EvtProcessCommand0;
+
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 CodecR_EvtProcessCommand0(
     _In_    ACXAUDIOMODULE  AudioModule,
@@ -106,7 +107,9 @@ CodecR_EvtProcessCommand0(
     PCODEC_AUDIOMODULE0_CONTEXT     audioModuleCtx;
     AUDIOMODULE_PARAMETER_INFO *    parameterInfo = NULL;
     AUDIOMODULE_CUSTOM_COMMAND *    command = NULL;
+
     PAGED_CODE();
+
     audioModuleCtx = GetCodecAudioModule0Context(AudioModule);
     if (audioModuleCtx == NULL)
     {
@@ -114,6 +117,7 @@ CodecR_EvtProcessCommand0(
         status = STATUS_INTERNAL_ERROR;
         goto exit;
     }
+
     //
     // Basic parameter validation (module specific).
     //
@@ -121,15 +125,19 @@ CodecR_EvtProcessCommand0(
     {
         return STATUS_INVALID_PARAMETER;
     }
+
     if (InBufferCb &lt; sizeof(AUDIOMODULE_CUSTOM_COMMAND))
     {
         return STATUS_INVALID_PARAMETER;
     }
+
     command = (AUDIOMODULE_CUSTOM_COMMAND*)InBuffer;
+
     if (command-&gt;ParameterId &gt;= SIZEOF_ARRAY(AudioModule0_ParameterInfo))
     {
         return STATUS_INVALID_PARAMETER;
     }
+
     //
     // Validate the parameter referenced in the command.
     //
@@ -147,15 +155,18 @@ CodecR_EvtProcessCommand0(
             status = STATUS_INVALID_PARAMETER;
             goto exit;
     }
+
     //
     // Update input buffer ptr/size.
     //
     inBuffer = (PVOID)((<a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a>)InBuffer + sizeof(AUDIOMODULE_CUSTOM_COMMAND));
     inBufferCb = InBufferCb - sizeof(AUDIOMODULE_CUSTOM_COMMAND);
+
     if (inBufferCb == 0)
     {
         inBuffer = NULL;
     }
+
     status = AudioModule_GenericHandler(
                 command-&gt;Verb,
                 command-&gt;ParameterId,
@@ -166,24 +177,30 @@ CodecR_EvtProcessCommand0(
                 OutBuffer,
                 OutBufferCb,
                 &amp;fNewValue);
+
     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
     {
         goto exit;
     }
+
     if (fNewValue &amp;&amp;
         (parameterInfo-&gt;Flags &amp; AUDIOMODULE_PARAMETER_FLAG_CHANGE_NOTIFICATION))
     {
         AUDIOMODULE_CUSTOM_NOTIFICATION customNotification = {0};
+
         customNotification.Type = AudioModuleParameterChanged;
         customNotification.ParameterChanged.ParameterId = command-&gt;ParameterId;
+
         status = <a href="acxpnpeventgenerateevent" title="NTSTATUS AcxPnpEventGenerateEvent(&#10;  ACXPNPEVENT Event,&#10;  PVOID       Payload,&#10;  USHORT      Size&#10;);">AcxPnpEventGenerateEvent</a>(audioModuleCtx-&gt;Event, &amp;customNotification, (<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>)sizeof(customNotification));
         if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
         {
             goto exit;
         }
     }
+
     // Normalize error code.
     status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+
 exit:
     return status;
 }

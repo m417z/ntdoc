@@ -105,13 +105,13 @@
 <h3><code>D3D10DDI_QUERY_EVENT</code></h3>
 <p>This query type provides a synchronization primitive that many of the following query types mimic to deal with the asynchronous nature of the graphics processing unit (GPU). An issued D3D10DDI_QUERY_EVENT becomes signaled after the GPU is finished with all of the previously issued commands, generally from the backend of the graphics pipeline. The data that the driver associates with this query type is a BOOL. However, the BOOL value is redundant because whenever a D3D10DDI_QUERY_EVENT query is signaled, the value of the BOOL is always <strong>TRUE</strong>. The driver should always send back the BOOL data value of <strong>TRUE</strong> when signaling the D3D10DDI_QUERY_EVENT.</p>
 <h3><code>D3D10DDI_QUERY_OCCLUSION</code></h3>
-<p>The statistic data that the driver associates with this query type is a <a href="uint64" title="typedef unsigned __int64 UINT64;">UINT64</a>. This statistic data contains the number of multisamples that passed depth and stencil testing, also known as "visible" multisamples, for all primitives since the creation of the device context. If the render target is not multisampled, the counter is incremented by the number of whole pixels that are visible. The counter should wrap around when it overflows.</p>
+<p>The statistic data that the driver associates with this query type is a <a href="uint64" title="typedef unsigned __int64 UINT64;">UINT64</a>. This statistic data contains the number of multisamples that passed depth and stencil testing, also known as &quot;visible&quot; multisamples, for all primitives since the creation of the device context. If the render target is not multisampled, the counter is incremented by the number of whole pixels that are visible. The counter should wrap around when it overflows.</p>
 <blockquote>
-  <p>[!NOTE]
-  The Direct3D runtime can call the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_querygetdata"><strong>QueryGetData</strong></a> function at any time to request this statistic data. Therefore, it must be continually calculated accurately.</p>
+<p>[!NOTE]
+The Direct3D runtime can call the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_querygetdata"><strong>QueryGetData</strong></a> function at any time to request this statistic data. Therefore, it must be continually calculated accurately.</p>
 </blockquote>
 <p>Only the difference between two independent statistic requests will provide meaningful information. The driver should calculate the difference between the statistic data that it receives when a call to its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_querybegin"><strong>QueryBegin</strong></a> function occurs and the statistic data that it receives when a call to its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_queryend"><strong>QueryEnd</strong></a> function occurs.</p>
-<p>For the purposes of calculating visible multisamples, disabled depth tests or stencil tests should behave as if the multisamples "pass" the disabled test. This produces equivalent results to when the test units were enabled with the test function set to "always". In addition, these values should be tabulated as normal even if there are no render targets bound. Because the depth and stencil tests logically occur in the output-merger stage of the pipeline, pixels that are discarded during pixel-shader execution do not increment the occlusion counter. Discarded pixels logically do not even reach the output merger. There are pipeline configurations where the only effective results that are produced from the pipeline are the tabulation of the occlusion counter.</p>
+<p>For the purposes of calculating visible multisamples, disabled depth tests or stencil tests should behave as if the multisamples &quot;pass&quot; the disabled test. This produces equivalent results to when the test units were enabled with the test function set to &quot;always&quot;. In addition, these values should be tabulated as normal even if there are no render targets bound. Because the depth and stencil tests logically occur in the output-merger stage of the pipeline, pixels that are discarded during pixel-shader execution do not increment the occlusion counter. Discarded pixels logically do not even reach the output merger. There are pipeline configurations where the only effective results that are produced from the pipeline are the tabulation of the occlusion counter.</p>
 <h3><code>D3D10DDI_QUERY_TIMESTAMP</code></h3>
 <p>The data that the driver associates with this query type is a <a href="uint64" title="typedef unsigned __int64 UINT64;">UINT64</a>. The TIMESTAMP query type is used similarly to the D3D10DDI_QUERY_EVENT query type because the TIMESTAMP query type also provides a type of synchronization primitive. Like D3D10DDI_QUERY_EVENT, TIMESTAMP should become signaled when the GPU is finished with all the previously issued commands. However, TIMESTAMP differs from D3D10DDI_QUERY_EVENT by returning a 64-bit timestamp value. This 64-bit timestamp value should be sampled from a GPU counter, which increments at a consistent frequency. The timestamp value should be sampled at the instant that the GPU is finished with all the previously issued commands. The GPU is not required to ensure that all caches are flushed to memory to determine that work is complete. This is so that satisfying multiple high-frequency TIMESTAMP query types does not heavily disturb the pipeline. However, the CPU should monitor well-defined memory write-ordering between itself and the GPU, especially when D3D10DDI_QUERY_EVENT is supported. If the CPU were to determine that the GPU wrote a certain value (especially a fence value), the CPU would determine that all previous memory writes that were issued prior to the fence write should be flushed to memory and able to be seen immediately by the CPU. The type of flush that might be required to get data out of GPU caches and into CPU accessible memory should not need to be done every TIMESTAMP but probably more at the end of every command buffer.</p>
 <p>The frequency of the timestamp counter is provided within the context of a D3D10DDI_QUERY_TIMESTAMPDISJOINT query type. The frequency of this counter should be greater than 10 MHz and resistant to high-frequency dynamic throttling of the GPU. The timestamp counter should be global. Therefore, the timestamp counter is not required to take into account the GPU time slicing of contexts.</p>
@@ -126,8 +126,8 @@
 <h3><code>D3D10DDI_QUERY_STREAMOUTPUTSTATS</code></h3>
 <p>The data that the driver associates with this query type is a <strong><a href="d3d10_ddi_query_data_so_statistics" title="typedef struct D3D10_DDI_QUERY_DATA_SO_STATISTICS {&#10;  UINT64 NumPrimitivesWritten;&#10;  UINT64 PrimitivesStorageNeeded;&#10;} D3D10_DDI_QUERY_DATA_SO_STATISTICS;">D3D10_DDI_QUERY_DATA_SO_STATISTICS</a></strong> structure. This structure contains statistics for monitoring the amount of data that is streamed out at the stream-output stage of the pipeline. These statistics count only complete primitives (for example, points, lines, and triangles) that are streamed out. If the primitive type changes (for example, lines to triangles), the counting is not adjusted in any way. That is, the count is always total primitives, regardless of type.</p>
 <blockquote>
-  <p>[!NOTE]
-  The Direct3D runtime can call the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_querygetdata"><strong>QueryGetData</strong></a> function at any time to request these statistics. Therefore, it must be continually calculated accurately.</p>
+<p>[!NOTE]
+The Direct3D runtime can call the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_querygetdata"><strong>QueryGetData</strong></a> function at any time to request these statistics. Therefore, it must be continually calculated accurately.</p>
 </blockquote>
 <p>Only the difference between two independent statistic requests will provide meaningful information. The driver should calculate the difference between the statistic data that it receives when a call to its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_querybegin"><strong>QueryBegin</strong></a> function occurs and the statistic data that it receives when a call to its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_queryend"><strong>QueryEnd</strong></a> function occurs.</p>
 <h3><code>D3D10DDI_QUERY_STREAMOVERFLOWPREDICATE</code></h3>
@@ -215,36 +215,36 @@
 <table>
 <thead>
 <tr>
-  <th style="text-align:left;">Scenario</th>
-  <th style="text-align:left;">IAVertices valid value</th>
-  <th style="text-align:left;">IAPrimitives valid value</th>
-  <th style="text-align:left;">VSInvocations valid value</th>
+<th align="left">Scenario</th>
+<th align="left">IAVertices valid value</th>
+<th align="left">IAPrimitives valid value</th>
+<th align="left">VSInvocations valid value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td style="text-align:left;">Draw indexed triangle strip of 4 primitives (with all indices the same value)</td>
-  <td style="text-align:left;">6</td>
-  <td style="text-align:left;">4</td>
-  <td style="text-align:left;">1--12</td>
+<td align="left">Draw indexed triangle strip of 4 primitives (with all indices the same value)</td>
+<td align="left">6</td>
+<td align="left">4</td>
+<td align="left">1--12</td>
 </tr>
 <tr>
-  <td style="text-align:left;">Draw indexed triangle list of 4 primitives (with all indices the same value)</td>
-  <td style="text-align:left;">12</td>
-  <td style="text-align:left;">4</td>
-  <td style="text-align:left;">1--12</td>
+<td align="left">Draw indexed triangle list of 4 primitives (with all indices the same value)</td>
+<td align="left">12</td>
+<td align="left">4</td>
+<td align="left">1--12</td>
 </tr>
 <tr>
-  <td style="text-align:left;">Draw triangle strip of 4 primitives</td>
-  <td style="text-align:left;">6</td>
-  <td style="text-align:left;">4</td>
-  <td style="text-align:left;">6--12</td>
+<td align="left">Draw triangle strip of 4 primitives</td>
+<td align="left">6</td>
+<td align="left">4</td>
+<td align="left">6--12</td>
 </tr>
 <tr>
-  <td style="text-align:left;">Draw triangle list of 4 primitives</td>
-  <td style="text-align:left;">12</td>
-  <td style="text-align:left;">4</td>
-  <td style="text-align:left;">6--12</td>
+<td align="left">Draw triangle list of 4 primitives</td>
+<td align="left">12</td>
+<td align="left">4</td>
+<td align="left">6--12</td>
 </tr>
 </tbody>
 </table>

@@ -81,50 +81,50 @@
 <table>
 <thead>
 <tr>
-  <th>Return code</th>
-  <th>Description</th>
+<th>Return code</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-  <td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
-  <td>The entire command buffer was translated.</td>
+<td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
+<td>The entire command buffer was translated.</td>
 </tr>
 <tr>
-  <td>STATUS_NO_MEMORY</td>
-  <td>DxgkDdiRender could not allocate memory that was required for it to complete.</td>
+<td>STATUS_NO_MEMORY</td>
+<td>DxgkDdiRender could not allocate memory that was required for it to complete.</td>
 </tr>
 <tr>
-  <td>STATUS_GRAPHICS_INSUFFICIENT_DMA_BUFFER</td>
-  <td>The current DMA buffer is depleted.</td>
+<td>STATUS_GRAPHICS_INSUFFICIENT_DMA_BUFFER</td>
+<td>The current DMA buffer is depleted.</td>
 </tr>
 <tr>
-  <td>STATUS_PRIVILEGED_INSTRUCTION</td>
-  <td>DxgkDdiRender detected nonprivileged instructions (that is, instructions that access memory beyond the privilege of the current central processing unit [CPU] process).</td>
+<td>STATUS_PRIVILEGED_INSTRUCTION</td>
+<td>DxgkDdiRender detected nonprivileged instructions (that is, instructions that access memory beyond the privilege of the current central processing unit [CPU] process).</td>
 </tr>
 <tr>
-  <td>STATUS_ILLEGAL_INSTRUCTION</td>
-  <td>DxgkDdiRender detected instructions that graphics hardware could not support.</td>
+<td>STATUS_ILLEGAL_INSTRUCTION</td>
+<td>DxgkDdiRender detected instructions that graphics hardware could not support.</td>
 </tr>
 <tr>
-  <td>STATUS_INVALID_PARAMETER</td>
-  <td>DxgkDdiRender detected instruction parameters that graphics hardware could not support; however, the graphics hardware can support the instructions themselves. The driver is not required to return this error code. Instead, it can return STATUS_ILLEGAL_INSTRUCTION when it detects unsupported instruction parameters.</td>
+<td>STATUS_INVALID_PARAMETER</td>
+<td>DxgkDdiRender detected instruction parameters that graphics hardware could not support; however, the graphics hardware can support the instructions themselves. The driver is not required to return this error code. Instead, it can return STATUS_ILLEGAL_INSTRUCTION when it detects unsupported instruction parameters.</td>
 </tr>
 <tr>
-  <td>STATUS_INVALID_USER_BUFFER</td>
-  <td>DxgkDdiRender detected data or instruction underrun or overrun. That is, the driver received less or more instructions or data than expected. The driver is not required to return this error code. Instead, it can return STATUS_ILLEGAL_INSTRUCTION when it detects data or instruction underrun or overrun.</td>
+<td>STATUS_INVALID_USER_BUFFER</td>
+<td>DxgkDdiRender detected data or instruction underrun or overrun. That is, the driver received less or more instructions or data than expected. The driver is not required to return this error code. Instead, it can return STATUS_ILLEGAL_INSTRUCTION when it detects data or instruction underrun or overrun.</td>
 </tr>
 <tr>
-  <td>STATUS_INVALID_HANDLE</td>
-  <td>DxgkDdiRender detected an invalid handle in the command buffer.</td>
+<td>STATUS_INVALID_HANDLE</td>
+<td>DxgkDdiRender detected an invalid handle in the command buffer.</td>
 </tr>
 <tr>
-  <td>STATUS_GRAPHICS_DRIVER_MISMATCH</td>
-  <td>The display miniport driver is not compatible with the user-mode display driver that initiated the call to DxgkDdiRender (that is, submitted the command buffer).</td>
+<td>STATUS_GRAPHICS_DRIVER_MISMATCH</td>
+<td>The display miniport driver is not compatible with the user-mode display driver that initiated the call to DxgkDdiRender (that is, submitted the command buffer).</td>
 </tr>
 <tr>
-  <td>STATUS_GRAPHICS_GPU_EXCEPTION_ON_DEVICE</td>
-  <td>The display miniport driver detected an error in the DMA stream. The graphics context device is placed in a lost state if the driver returns this error code.</td>
+<td>STATUS_GRAPHICS_GPU_EXCEPTION_ON_DEVICE</td>
+<td>The display miniport driver detected an error in the DMA stream. The graphics context device is placed in a lost state if the driver returns this error code.</td>
 </tr>
 </tbody>
 </table>
@@ -145,27 +145,31 @@ __except(EXCEPTION_EXECUTE_HANDLER)
   {
     Status = STATUS_INVALID_PARAMETER;
     SAMPLE_LOG_ERROR(
-  "Exception occurred accessing user-mode allocation list. Returning Status=0x%I64x",
+  &quot;Exception occurred accessing user-mode allocation list. Returning Status=0x%I64x&quot;,
       Status);
     goto cleanup;
   }
 </code></pre>
 <blockquote>
-  <p>[!NOTE]
-  Access to the kernel buffers does not require protection from <code>try/except</code> code.</p>
+<p>[!NOTE]
+Access to the kernel buffers does not require protection from <code>try/except</code> code.</p>
 </blockquote>
 <p>The display miniport driver is not required to use information that the user-mode display driver provides if recreating the information is more optimal. For example, if <strong>pPatchLocationListIn</strong> is empty because the user-mode display driver did not provide an input patch-location list, the display miniport driver can generate the content of <strong>pPatchLocationListOut</strong> based on the content of the command buffer instead.</p>
 <p>The allocation list that the user-mode display driver provides is validated, copied, and converted into a kernel-mode allocation list during the kernel transition. The DirectX graphics kernel subsystem converts each <a href="d3dddi_allocationlist" title="typedef struct _D3DDDI_ALLOCATIONLIST {&#10;  D3DKMT_HANDLE hAllocation;&#10;  union {&#10;    struct {&#10;      UINT WriteOperation : 1;&#10;      UINT DoNotRetireInstance : 1;&#10;      UINT OfferPriority : 3;&#10;#if ...&#10;      UINT Reserved : 27;&#10;#else&#10;      UINT Reserved : 30;&#10;#endif&#10;    };&#10;    UINT Value;&#10;  };&#10;} D3DDDI_ALLOCATIONLIST;">D3DDDI_ALLOCATIONLIST</a> element into a <a href="dxgk_allocationlist" title="typedef struct _DXGK_ALLOCATIONLIST&#10;{&#10;    HANDLE              hDeviceSpecificAllocation;&#10;    struct&#10;    {&#10;        UINT            WriteOperation  : 1;    // 0x00000001&#10;        UINT            SegmentId       : 5;    // 0x0000002E&#10;        UINT            Reserved        : 26;   // 0xFFFFFFC0&#10;    };&#10;#if (DXGKDDI_INTERFACE_VERSION &gt;= DXGKDDI_INTERFACE_VERSION_WDDM2_0)&#10;    union&#10;    {&#10;        PHYSICAL_ADDRESS        PhysicalAddress;&#10;        D3DGPU_VIRTUAL_ADDRESS  VirtualAddress;&#10;    };&#10;#else // (DXGKDDI_INTERFACE_VERSION &lt; DXGKDDI_INTERFACE_VERSION_WDDM2_0)&#10;    PHYSICAL_ADDRESS    PhysicalAddress;&#10;#endif // (DXGKDDI_INTERFACE_VERSION &gt;= DXGKDDI_INTERFACE_VERSION_WDDM2_0)&#10;} DXGK_ALLOCATIONLIST;">DXGK_ALLOCATIONLIST</a> element by converting the D3DKMT_HANDLE-typed handle that the user-mode display driver provides into a device-specific handle, which the display miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_openallocationinfo">DxgkDdiOpenAllocation</a> function returns. The index of each allocation and the write status of the allocation (that is, the setting of the <strong>WriteOperation</strong> bit-field flag) remains constant during the conversion.</p>
 <p>In addition to the device-specific handle, the DirectX graphics kernel subsystem provides the display miniport driver with the last known GPU segment address for each allocation. If allocation index <em>N</em> is currently paged out, the DirectX graphics kernel subsystem sets the <strong>SegmentId</strong> member of the <em>N</em>th element of the <strong>pAllocationList</strong> member of <a href="dxgkarg_render" title="typedef struct _DXGKARG_RENDER {&#10;  [in]     const VOID               *pCommand;&#10;  [in]     UINT                     CommandLength;&#10;  [out]    VOID                     *pDmaBuffer;&#10;  [in]     UINT                     DmaSize;&#10;  [in]     VOID                     *pDmaBufferPrivateData;&#10;  [in]     UINT                     DmaBufferPrivateDataSize;&#10;  [in]     DXGK_ALLOCATIONLIST      *pAllocationList;&#10;  [in]     UINT                     AllocationListSize;&#10;  [in]     D3DDDI_PATCHLOCATIONLIST *pPatchLocationListIn;&#10;  [in]     UINT                     PatchLocationListInSize;&#10;  [in/out] D3DDDI_PATCHLOCATIONLIST *pPatchLocationListOut;&#10;  [in]     UINT                     PatchLocationListOutSize;&#10;  [in/out] UINT                     MultipassOffset;&#10;  [in]     UINT                     DmaBufferSegmentId;&#10;  [in]     PHYSICAL_ADDRESS         DmaBufferPhysicalAddress;&#10;} DXGKARG_RENDER;">DXGKARG_RENDER</a> to zero. If the <strong>SegmentId</strong> member of the <em>N</em>th element of the allocation list is not set to zero, the display miniport driver must pre-patch the generated DMA buffer with the provided segment address information. The driver must pre-patch when requested because the DirectX graphics kernel subsystem might not call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_patch">DxgkDdiPatch</a> function on a DMA buffer that the driver should have properly pre-patched.</p>
 <blockquote>
-  <p>[!NOTE]
-  Even though the driver's <em>DxgkDdiRender</em> function pre-patches the DMA buffer, the driver must still insert all of the references to allocations into the output patch-location list that the <strong>pPatchLocationListOut</strong> member of <a href="dxgkarg_render" title="typedef struct _DXGKARG_RENDER {&#10;  [in]     const VOID               *pCommand;&#10;  [in]     UINT                     CommandLength;&#10;  [out]    VOID                     *pDmaBuffer;&#10;  [in]     UINT                     DmaSize;&#10;  [in]     VOID                     *pDmaBufferPrivateData;&#10;  [in]     UINT                     DmaBufferPrivateDataSize;&#10;  [in]     DXGK_ALLOCATIONLIST      *pAllocationList;&#10;  [in]     UINT                     AllocationListSize;&#10;  [in]     D3DDDI_PATCHLOCATIONLIST *pPatchLocationListIn;&#10;  [in]     UINT                     PatchLocationListInSize;&#10;  [in/out] D3DDDI_PATCHLOCATIONLIST *pPatchLocationListOut;&#10;  [in]     UINT                     PatchLocationListOutSize;&#10;  [in/out] UINT                     MultipassOffset;&#10;  [in]     UINT                     DmaBufferSegmentId;&#10;  [in]     PHYSICAL_ADDRESS         DmaBufferPhysicalAddress;&#10;} DXGKARG_RENDER;">DXGKARG_RENDER</a> specifies. This list must contain all of the references because the addresses of the allocations might change before the DMA buffer is submitted to the GPU; therefore, the DirectX graphics kernel subsystem will call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_patch">DxgkDdiPatch</a> function to repatch the DMA buffer.</p>
+<p>[!NOTE]
+Even though the driver's <em>DxgkDdiRender</em> function pre-patches the DMA buffer, the driver must still insert all of the references to allocations into the output patch-location list that the <strong>pPatchLocationListOut</strong> member of <a href="dxgkarg_render" title="typedef struct _DXGKARG_RENDER {&#10;  [in]     const VOID               *pCommand;&#10;  [in]     UINT                     CommandLength;&#10;  [out]    VOID                     *pDmaBuffer;&#10;  [in]     UINT                     DmaSize;&#10;  [in]     VOID                     *pDmaBufferPrivateData;&#10;  [in]     UINT                     DmaBufferPrivateDataSize;&#10;  [in]     DXGK_ALLOCATIONLIST      *pAllocationList;&#10;  [in]     UINT                     AllocationListSize;&#10;  [in]     D3DDDI_PATCHLOCATIONLIST *pPatchLocationListIn;&#10;  [in]     UINT                     PatchLocationListInSize;&#10;  [in/out] D3DDDI_PATCHLOCATIONLIST *pPatchLocationListOut;&#10;  [in]     UINT                     PatchLocationListOutSize;&#10;  [in/out] UINT                     MultipassOffset;&#10;  [in]     UINT                     DmaBufferSegmentId;&#10;  [in]     PHYSICAL_ADDRESS         DmaBufferPhysicalAddress;&#10;} DXGKARG_RENDER;">DXGKARG_RENDER</a> specifies. This list must contain all of the references because the addresses of the allocations might change before the DMA buffer is submitted to the GPU; therefore, the DirectX graphics kernel subsystem will call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_patch">DxgkDdiPatch</a> function to repatch the DMA buffer.</p>
 </blockquote>
 <p>To unbind an allocation, the display miniport driver can specify an element in the allocation list that references a <strong>NULL</strong> handle and then can use a patch-location element that references that <strong>NULL</strong> allocation. Typically, the driver should use the first element of the allocation list (element 0) as the <strong>NULL</strong> element.</p>
 <p>When the display miniport driver translates a command buffer to a DMA buffer, the display miniport driver and user-mode display driver should perform the following actions for the following situations:</p>
 <ul>
-<li><p>In guaranteed contract DMA mode (for more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/using-the-guaranteed-contract-dma-buffer-model">Using the Guaranteed Contract DMA Buffer Model</a>), the user-mode display driver must guarantee enough resources for the translation command. If enough resources do not exist for the translation, the display miniport driver must reject the DMA buffer.</p></li>
-<li><p>The user-mode display driver should always split up commands that might translate to more than the size of a single DMA buffer because the display miniport driver's <em>DxgkDdiRender</em> function cannot handle a single command that is larger than the size of the DMA buffer and that cannot be split.</p></li>
+<li>
+<p>In guaranteed contract DMA mode (for more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/using-the-guaranteed-contract-dma-buffer-model">Using the Guaranteed Contract DMA Buffer Model</a>), the user-mode display driver must guarantee enough resources for the translation command. If enough resources do not exist for the translation, the display miniport driver must reject the DMA buffer.</p>
+</li>
+<li>
+<p>The user-mode display driver should always split up commands that might translate to more than the size of a single DMA buffer because the display miniport driver's <em>DxgkDdiRender</em> function cannot handle a single command that is larger than the size of the DMA buffer and that cannot be split.</p>
+</li>
 </ul>
 <p><em>DxgkDdiRender</em> should be made pageable.</p>
 <p>Support for the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_renderkm">DxgkDdiRenderKm</a> function was added beginning with Windows 7 for display adapters that support <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/gdi-hardware-acceleration">GDI Hardware Acceleration</a>.</p>
