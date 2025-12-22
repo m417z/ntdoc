@@ -8,7 +8,7 @@ import cmarkgfm
 BR_SENTINEL = secrets.token_hex(8)
 
 
-def markdown_to_html(text: str, header_ids=True, code_friendly=False) -> str:
+def markdown_to_html(text: str) -> str:
     # Preserve <br /> tags.
     text = re.sub(r'<br\s*/?>', BR_SENTINEL, text)
 

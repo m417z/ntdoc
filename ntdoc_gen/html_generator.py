@@ -250,12 +250,11 @@ def get_ntdoc_description_markdown(id: str) -> Tuple[str, bool]:
 
 def get_ntdoc_description_html(
     markdown: str,
-    is_selected: bool,
     id: str,
     html_links_adder: HtmlLinksAdder,
 ) -> str:
     if markdown:
-        html_description = markdown_to_html(markdown, header_ids=is_selected)
+        html_description = markdown_to_html(markdown)
         html = html_links_adder.add_links(html_description, id)
     else:
         html = '<div class="ntdoc-description-none">\n'
@@ -270,7 +269,6 @@ def get_ntdoc_description_html(
 
 
 def get_ntinternals_description_html(
-    is_selected: bool,
     id: str,
     html_links_adder: HtmlLinksAdder,
 ) -> Optional[str]:
@@ -279,7 +277,7 @@ def get_ntinternals_description_html(
     if description == '':
         return None
 
-    html_description = markdown_to_html(description, header_ids=is_selected)
+    html_description = markdown_to_html(description)
     html = html_links_adder.add_links(html_description, id)
 
     html += '<div class="ntdoc-description-links">\n'
@@ -291,7 +289,6 @@ def get_ntinternals_description_html(
 
 def get_msdn_description_html(
     chunk: Chunk,
-    is_selected: bool,
     id: str,
     msdn_docs_path: Path,
     html_links_adder: HtmlLinksAdder,
@@ -301,7 +298,7 @@ def get_msdn_description_html(
     if description == '':
         raise RuntimeError(f'MSDN description not found: {description_path}')
 
-    html_description = markdown_to_html(description, header_ids=is_selected, code_friendly=True)
+    html_description = markdown_to_html(description)
     html = html_links_adder.remove_unnecessary_msdn_links(html_description)
     html = html_links_adder.add_links(html, id)
 
@@ -334,10 +331,8 @@ def get_descriptions_html(
     for chunk in chunks:
         if is_msdn_chunk_origin(chunk.origin):
             assert msdn_docs_path
-            is_selected = not prefer_ntdoc_over_fallback and len(descriptions) == 0
             description_msdn = get_msdn_description_html(
                 chunk,
-                is_selected,
                 id,
                 msdn_docs_path,
                 html_links_adder,
@@ -345,10 +340,7 @@ def get_descriptions_html(
             title_msdn = f'{get_msdn_origin_title(chunk.origin)} ({chunk.code_url.split("/")[-1]})'
             descriptions.append((title_msdn, description_msdn))
 
-    is_selected = not prefer_ntdoc_over_fallback and len(descriptions) == 0
-    description_ntinternals = get_ntinternals_description_html(
-        is_selected, id, html_links_adder
-    )
+    description_ntinternals = get_ntinternals_description_html(id, html_links_adder)
     if description_ntinternals:
         title_ntinternals = 'NTinternals.net (undocumented.ntinternals.net)'
         descriptions.append((title_ntinternals, description_ntinternals))
@@ -357,9 +349,7 @@ def get_descriptions_html(
     if not prefer_ntdoc_over_fallback and len(descriptions) > 0:
         selected_index = 1
 
-    description_ntdoc = get_ntdoc_description_html(
-        markdown_ntdoc, selected_index == 0, id, html_links_adder
-    )
+    description_ntdoc = get_ntdoc_description_html(markdown_ntdoc, id, html_links_adder)
     descriptions.insert(0, ('NtDoc', description_ntdoc))
 
     for i, (title, description) in enumerate(descriptions):
