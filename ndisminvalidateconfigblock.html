@@ -42,13 +42,13 @@
     </header>
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
-<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header">// ndis.h
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ndis.h
 
-</span><span class="ntdoc-code-intro"></span><span class="ntdoc-code-body">VOID NdisMInvalidateConfigBlock(
+</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">VOID NdisMInvalidateConfigBlock(
   [in] NDIS_HANDLE            NdisMiniportHandle,
   [in] NDIS_SRIOV_FUNCTION_ID VFId,
   [in] <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a>              BlockMask
-);</span><span class="ntdoc-code-footer"></span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisminvalidateconfigblock">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
+);</span><span class="ntdoc-code-footer language-cpp"></span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nf-ndis-ndisminvalidateconfigblock">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -73,7 +73,7 @@
 <h2>Parameters</h2>
 <h3><code>NdisMiniportHandle</code> [in]</h3>
 <p>The network adapter handle that NDIS passed to the
-<em>MiniportAdapterHandle</em> parameter of
+<strong>MiniportAdapterHandle</strong> parameter of
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a>.</p>
 <h3><code>VFId</code> [in]</h3>
 <p>The identifier of the VF for which the device location is returned.</p>
@@ -101,21 +101,21 @@
 <p>The PF miniport driver calls the <strong>NdisMInvalidateConfigBlock</strong> function to notify NDIS that VF configuration data has changed and is no longer valid.</p>
 </li>
 <li>
-<p>NDIS signals the virtualization stack, which runs in the management operating system, about the change to VF configuration block data. The virtualization stack caches the <em>BlockMask</em> parameter data.</p>
-<p><strong>Note</strong> Each time that the PF miniport driver calls <strong>NdisMInvalidateConfigBlock</strong>, the virtualization stack ORs the <em>BlockMask</em> parameter data with the current value in its cache.</p>
+<p>NDIS signals the virtualization stack, which runs in the management operating system, about the change to VF configuration block data. The virtualization stack caches the <strong>BlockMask</strong> parameter data.</p>
+<p><strong>Note</strong> Each time that the PF miniport driver calls <strong>NdisMInvalidateConfigBlock</strong>, the virtualization stack ORs the <strong>BlockMask</strong> parameter data with the current value in its cache.</p>
 </li>
 <li>
-<p>The virtualization stack notifies the virtual PCI (VPCI) driver, which runs in the guest operating system, about the invalidation of VF configuration data. The virtualization stack sends the cached <em>BlockMask</em> parameter data to the VPCI driver.</p>
+<p>The virtualization stack notifies the virtual PCI (VPCI) driver, which runs in the guest operating system, about the invalidation of VF configuration data. The virtualization stack sends the cached <strong>BlockMask</strong> parameter data to the VPCI driver.</p>
 </li>
 </ol>
 </li>
 <li>In the guest operating system, the following steps occur:
 <ol>
 <li>
-<p>The VPCI driver saves the cached <em>BlockMask</em> parameter data in the <strong>BlockMask</strong> member of the <a href="vpci_invalidate_block_output" title="typedef struct _VPCI_INVALIDATE_BLOCK_OUTPUT {&#10;  UINT64 BlockMask;&#10;} VPCI_INVALIDATE_BLOCK_OUTPUT, *PVPCI_INVALIDATE_BLOCK_OUTPUT;">VPCI_INVALIDATE_BLOCK_OUTPUT</a> structure that is associated with the <a href="ioctl_vpci_invalidate_block" title="// CTL_CODE(0x002a, 0x001, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_VPCI_INVALIDATE_BLOCK 0x002AC007">IOCTL_VPCI_INVALIDATE_BLOCK</a> request.</p>
+<p>The VPCI driver saves the cached <strong>BlockMask</strong> parameter data in the <strong>BlockMask</strong> member of the <a href="vpci_invalidate_block_output" title="typedef struct _VPCI_INVALIDATE_BLOCK_OUTPUT {&#10;  UINT64 BlockMask;&#10;} VPCI_INVALIDATE_BLOCK_OUTPUT, *PVPCI_INVALIDATE_BLOCK_OUTPUT;">VPCI_INVALIDATE_BLOCK_OUTPUT</a> structure that is associated with the <a href="ioctl_vpci_invalidate_block" title="// CTL_CODE(0x002a, 0x001, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_VPCI_INVALIDATE_BLOCK 0x002AC007">IOCTL_VPCI_INVALIDATE_BLOCK</a> request.</p>
 </li>
 <li>
-<p>The VPCI driver successfully completes the <a href="ioctl_vpci_invalidate_block" title="// CTL_CODE(0x002a, 0x001, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_VPCI_INVALIDATE_BLOCK 0x002AC007">IOCTL_VPCI_INVALIDATE_BLOCK</a> request. When this happens, NDIS issues an OID method request of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-sriov-vf-invalidate-config-block">OID_SRIOV_VF_INVALIDATE_CONFIG_BLOCK</a> to the VF miniport driver. An <a href="ndis_sriov_vf_invalidate_config_block_info" title="typedef struct _NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO {&#10;  NDIS_OBJECT_HEADER Header;&#10;  ULONG64            BlockMask;&#10;} NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO, *PNDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO;">NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO</a> request is passed along in the OID request. This structure contains the cached <em>BlockMask</em> parameter data.</p>
+<p>The VPCI driver successfully completes the <a href="ioctl_vpci_invalidate_block" title="// CTL_CODE(0x002a, 0x001, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_VPCI_INVALIDATE_BLOCK 0x002AC007">IOCTL_VPCI_INVALIDATE_BLOCK</a> request. When this happens, NDIS issues an OID method request of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-sriov-vf-invalidate-config-block">OID_SRIOV_VF_INVALIDATE_CONFIG_BLOCK</a> to the VF miniport driver. An <a href="ndis_sriov_vf_invalidate_config_block_info" title="typedef struct _NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO {&#10;  NDIS_OBJECT_HEADER Header;&#10;  ULONG64            BlockMask;&#10;} NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO, *PNDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO;">NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO</a> request is passed along in the OID request. This structure contains the cached <strong>BlockMask</strong> parameter data.</p>
 <p>NDIS also issues another <a href="ioctl_vpci_invalidate_block" title="// CTL_CODE(0x002a, 0x001, METHOD_NEITHER, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_VPCI_INVALIDATE_BLOCK 0x002AC007">IOCTL_VPCI_INVALIDATE_BLOCK</a> request to handle successive notifications of changes to VF configuration data.</p>
 </li>
 <li>
