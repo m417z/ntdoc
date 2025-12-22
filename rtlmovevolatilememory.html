@@ -80,19 +80,19 @@
 <p>The <strong>RtlMoveVolatileMemory</strong> function has the following properties:</p>
 <ul>
 <li>
-<p>The function isn't recognized as a compiler intrinsic so the compiler will never optimize away the call (either entirely or replace the call with an equivalent sequence of instructions). This differs from <strong><a href="rtlmovememory" title="void RtlMoveMemory(&#10;   void*       Destination,&#10;   const void* Source,&#10;   size_t      Length&#10;);">RtlMoveMemory</a></strong> which is subject to various compiler optimizations.</p>
+
 </li>
 <li>
-<p>When the call returns, the data has been copied from <em>Source</em> to <em>Destination</em>. This functions memory accesses to the <em>Source</em> and <em>Destination</em> will only be performed within the function (for example, the compiler can't move memory accesses out of this function).</p>
+
 </li>
 <li>
-<p>The function may perform unaligned memory accesses if the platform allows for it.</p>
+
 </li>
 <li>
-<p>The function may access memory locations more than once as part of its copy operation.</p>
+
 </li>
 <li>
-<p>Similar to <strong><a href="rtlmovememory" title="void RtlMoveMemory(&#10;   void*       Destination,&#10;   const void* Source,&#10;   size_t      Length&#10;);">RtlMoveMemory</a></strong> in that it supports copy operations when <em>Source</em> and <em>Destination</em> overlap each other.</p>
+
 </li>
 </ul>
 <blockquote>
@@ -101,9 +101,7 @@ This function works on all versions of Windows, not just the latest. You need to
 </blockquote>
 <h3>Example</h3>
 <pre><code>HEADER MyHeader;
-
 <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> RawBuffer[100];
-
 // Ensure that the shared memory (which could be constantly changing)
 // is copied in to the local MyHeader variable.
 // Note that the compiler is allowed to optimize away calls to
@@ -114,26 +112,20 @@ This function works on all versions of Windows, not just the latest. You need to
 // that overlap with each other (MoveMemory semantics).
 // Assume SharedMemory points to virtual memory that is also mapped in an untrusted process.
 // Assume that untrusted process is changing the memory contents while you are accessing it.
-
 PVOID SharedMemory;
-
 RtlMoveVolatileMemory(&amp;MyHeader, SharedMemory, sizeof(MyHeader));
-
 if (MyHeader.Size &lt; 100) {
-
-    // Because MyHeader is local and we are guaranteed we actually made
-    // a local copy, we can be sure that the &quot;Size&quot; value will not change
-    // between the previous bounds check and the below call to <a href="rtlfillmemory" title="void RtlFillMemory(&#10;   void*  Destination,&#10;   size_t Length&#10;   int    Fill&#10;);">RtlFillMemory</a>.
-    // If <a href="rtlmovememory" title="void RtlMoveMemory(&#10;   void*       Destination,&#10;   const void* Source,&#10;   size_t      Length&#10;);">RtlMoveMemory</a> had been used to copy the data, it is possible
-    // that a compiler may optimize away the call to MoveMemory and instead fetch
-    // the &quot;size&quot; field of MyHeader directly from untrusted memory two times.
-    // The first time it would be fetched for the bounds check, and the second
-    // time it is fetched is for the call to <a href="rtlfillmemory" title="void RtlFillMemory(&#10;   void*  Destination,&#10;   size_t Length&#10;   int    Fill&#10;);">RtlFillMemory</a>. It is possible the memory
-    // could have changed between the two accesses resulting in the size check
-    // being ineffective.
-
-    <a href="rtlfillmemory" title="void RtlFillMemory(&#10;   void*  Destination,&#10;   size_t Length&#10;   int    Fill&#10;);">RtlFillMemory</a> (RawBuffer, MyHeader.Size, 0);
-
+// Because MyHeader is local and we are guaranteed we actually made
+// a local copy, we can be sure that the "Size" value will not change
+// between the previous bounds check and the below call to <a href="rtlfillmemory" title="void RtlFillMemory(&#10;   void*  Destination,&#10;   size_t Length&#10;   int    Fill&#10;);">RtlFillMemory</a>.
+// If <a href="rtlmovememory" title="void RtlMoveMemory(&#10;   void*       Destination,&#10;   const void* Source,&#10;   size_t      Length&#10;);">RtlMoveMemory</a> had been used to copy the data, it is possible
+// that a compiler may optimize away the call to MoveMemory and instead fetch
+// the "size" field of MyHeader directly from untrusted memory two times.
+// The first time it would be fetched for the bounds check, and the second
+// time it is fetched is for the call to <a href="rtlfillmemory" title="void RtlFillMemory(&#10;   void*  Destination,&#10;   size_t Length&#10;   int    Fill&#10;);">RtlFillMemory</a>. It is possible the memory
+// could have changed between the two accesses resulting in the size check
+// being ineffective.
+<a href="rtlfillmemory" title="void RtlFillMemory(&#10;   void*  Destination,&#10;   size_t Length&#10;   int    Fill&#10;);">RtlFillMemory</a> (RawBuffer, MyHeader.Size, 0);
 }
 </code></pre>
 <h2>See also</h2>

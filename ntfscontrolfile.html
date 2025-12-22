@@ -161,7 +161,7 @@ ZwFsControlFile(
 <h3><code>IoStatusBlock</code> [out]</h3>
 <p>Pointer to an <a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a> structure that receives the final completion status and information about the operation. For successful calls that return data, the number of bytes written to the <strong>OutputBuffer</strong> is returned in the <strong>Information</strong> member of this structure.</p>
 <h3><code>FsControlCode</code> [in]</h3>
-<p>FSCTL_<em>XXX</em> code that indicates which file system control operation is to be carried out. The value of this parameter determines the formats and required lengths of the <strong>InputBuffer</strong> and <strong>OutputBuffer</strong>, as well as which of the following parameter pairs are required. For detailed information about the system-defined FSCTL_<em>XXX</em> codes, see the &quot;Remarks&quot; section of the reference entry for <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a>.</p>
+<p>FSCTL_<em>XXX</em> code that indicates which file system control operation is to be carried out. The value of this parameter determines the formats and required lengths of the <strong>InputBuffer</strong> and <strong>OutputBuffer</strong>, as well as which of the following parameter pairs are required. For detailed information about the system-defined FSCTL_<em>XXX</em> codes, see the "Remarks" section of the reference entry for <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a>.</p>
 <h3><code>InputBuffer</code> [in, optional]</h3>
 <p>Pointer to a caller-allocated input buffer that contains device-specific information to be given to the target driver. If <strong>FsControlCode</strong> specifies an operation that doesn't require input data, this pointer is optional and can be NULL.</p>
 <h3><code>InputBufferLength</code> [in]</h3>
@@ -174,10 +174,18 @@ ZwFsControlFile(
 <p><strong>NtFsControlFile</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the control operation was successfully queued to the I/O system. Once the operation completes, the actual status can be determined by examining the <strong>Status</strong> field of the <strong>IoStatusBlock</strong>.</p>
 <p>The routine can also return various error status values, including but not limited to:</p>
 <ul>
-<li>STATUS_ACCESS_DENIED if the caller lacks required access rights for the <strong>FsControlCode</strong> or if <strong>NtFsControlFile</strong> system service calls are blocked by process mitigation policy</li>
-<li>STATUS_INVALID_PARAMETER if an invalid parameter combination is specified (for example, specifying an <strong>ApcRoutine</strong> when an I/O completion port is associated with the file object)</li>
-<li>STATUS_INSUFFICIENT_RESOURCES if insufficient memory is available to allocate buffers or MDLs</li>
-<li>STATUS_PENDING if the <strong>Asynchronous</strong> parameter is TRUE and the operation has not yet completed</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
 <p>For asynchronous operations, if <strong>Asynchronous</strong> is TRUE and the event has not yet occurred, the routine returns STATUS_PENDING.</p>
 <h2>Remarks</h2>
@@ -185,23 +193,45 @@ ZwFsControlFile(
 <p>If the caller opened the file for asynchronous I/O (with neither FILE_SYNCHRONOUS_<em>XXX</em> create/open option set), the specified event, if any, will be set to the signaled state when the device control operation completes. Otherwise, the file object specified by <strong>FileHandle</strong> will be set to the signaled state. If an <strong>ApcRoutine</strong> was specified, it is called with the <strong>ApcContext</strong> and <strong>IoStatusBlock</strong> pointers.</p>
 <p>The following are some of the FSCTL codes documented for kernel-mode drivers:</p>
 <ul>
-<li><strong><a href="fsctl_delete_reparse_point" title="// CTL_CODE(0x0009, 0x02b, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_DELETE_REPARSE_POINT 0x000900AC">FSCTL_DELETE_REPARSE_POINT</a></strong></li>
-<li><strong><a href="fsctl_get_reparse_point" title="// CTL_CODE(0x0009, 0x02a, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_GET_REPARSE_POINT 0x000900A8">FSCTL_GET_REPARSE_POINT</a></strong></li>
-<li><strong><a href="fsctl_opbatch_ack_close_pending" title="// CTL_CODE(0x0009, 0x004, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_OPBATCH_ACK_CLOSE_PENDING 0x00090010">FSCTL_OPBATCH_ACK_CLOSE_PENDING</a></strong></li>
-<li><strong><a href="fsctl_oplock_break_ack_no_2" title="// CTL_CODE(0x0009, 0x014, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_OPLOCK_BREAK_ACK_NO_2 0x00090050">FSCTL_OPLOCK_BREAK_ACK_NO_2</a></strong></li>
-<li><strong><a href="fsctl_oplock_break_acknowledge" title="// CTL_CODE(0x0009, 0x003, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_OPLOCK_BREAK_ACKNOWLEDGE 0x0009000C">FSCTL_OPLOCK_BREAK_ACKNOWLEDGE</a></strong></li>
-<li><strong><a href="fsctl_oplock_break_notify" title="// CTL_CODE(0x0009, 0x005, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_OPLOCK_BREAK_NOTIFY 0x00090014">FSCTL_OPLOCK_BREAK_NOTIFY</a></strong></li>
-<li><strong><a href="fsctl_request_batch_oplock" title="// CTL_CODE(0x0009, 0x002, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_BATCH_OPLOCK 0x00090008">FSCTL_REQUEST_BATCH_OPLOCK</a></strong></li>
-<li><strong><a href="fsctl_request_filter_oplock" title="// CTL_CODE(0x0009, 0x017, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_FILTER_OPLOCK 0x0009005C">FSCTL_REQUEST_FILTER_OPLOCK</a></strong></li>
-<li><strong><a href="fsctl_request_oplock_level_1" title="// CTL_CODE(0x0009, 0x000, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_1 0x00090000">FSCTL_REQUEST_OPLOCK_LEVEL_1</a></strong></li>
-<li><strong><a href="fsctl_request_oplock_level_2" title="// CTL_CODE(0x0009, 0x001, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_2 0x00090004">FSCTL_REQUEST_OPLOCK_LEVEL_2</a></strong></li>
-<li><strong><a href="fsctl_set_reparse_point" title="// CTL_CODE(0x0009, 0x029, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_SET_REPARSE_POINT 0x000900A4">FSCTL_SET_REPARSE_POINT</a></strong></li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
-<p>For more information about system-defined FSCTL_<em>XXX</em> codes, see the &quot;Remarks&quot; section of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a>, which is typically used by user-mode applications.</p>
+<p>For more information about system-defined FSCTL_<em>XXX</em> codes, see the "Remarks" section of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a>, which is typically used by user-mode applications.</p>
 <p>For more information about system-defined IOCTL_<em>XXX</em> codes, and about defining driver-specific IOCTL_<em>XXX</em> or FSCTL_<em>XXX</em> values, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-i-o-control-codes">Using I/O Control Codes</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/devio/device-input-and-output-control-ioctl-">Device Input and Output Control Codes</a>.</p>
 <p>Minifilters should use <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> instead of <strong>NtFsControlFile</strong>.</p>
 <p>Callers of <strong>NtFsControlFile</strong> must be running at IRQL = PASSIVE_LEVEL and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/disabling-apcs">with special kernel APCs enabled</a>.</p>
-<p>If the call to the <strong>NtFsControlFile</strong> function occurs in user mode, you should use the name &quot;<strong>NtFsControlFile</strong>&quot; instead of &quot;<strong>ZwFsControlFile</strong>&quot;.</p>
+<p>If the call to the <strong>NtFsControlFile</strong> function occurs in user mode, you should use the name "<strong>NtFsControlFile</strong>" instead of "<strong>ZwFsControlFile</strong>".</p>
 <p>For calls from kernel-mode drivers, the <strong>Nt<em>XXX</em></strong> and <strong>Zw<em>XXX</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>XXX</em></strong> and <strong>Zw<em>XXX</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
 <h2>See also</h2>
 <p><strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong></p>
@@ -240,7 +270,7 @@ ZwFsControlFile(
 <h3><code>IoStatusBlock</code> [out]</h3>
 <p>Pointer to an <a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a> structure that receives the final completion status and information about the operation. For successful calls that return data, the number of bytes written to the <em>OutputBuffer</em> is returned in the <strong>Information</strong> member of this structure.</p>
 <h3><code>FsControlCode</code> [in]</h3>
-<p>FSCTL_<em>XXX</em> code that indicates which file system control operation is to be carried out. The value of this parameter determines the formats and required lengths of the <em>InputBuffer</em> and <em>OutputBuffer</em>, as well as which of the following parameter pairs are required. For detailed information about the system-defined FSCTL_<em>XXX</em> codes, see the &quot;Remarks&quot; section of the reference entry for <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a> in the Microsoft Windows SDK documentation.</p>
+<p>FSCTL_<em>XXX</em> code that indicates which file system control operation is to be carried out. The value of this parameter determines the formats and required lengths of the <em>InputBuffer</em> and <em>OutputBuffer</em>, as well as which of the following parameter pairs are required. For detailed information about the system-defined FSCTL_<em>XXX</em> codes, see the "Remarks" section of the reference entry for <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a> in the Microsoft Windows SDK documentation.</p>
 <h3><code>InputBuffer</code> [in, optional]</h3>
 <p>Pointer to a caller-allocated input buffer that contains device-specific information to be given to the target driver. If <em>FsControlCode</em> specifies an operation that does not require input data, this pointer is optional and can be <strong>NULL</strong>.</p>
 <h3><code>InputBufferLength</code> [in]</h3>
@@ -266,11 +296,11 @@ ZwFsControlFile(
 <p><a href="fsctl_request_oplock_level_1" title="// CTL_CODE(0x0009, 0x000, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_1 0x00090000">FSCTL_REQUEST_OPLOCK_LEVEL_1</a></p>
 <p><a href="fsctl_request_oplock_level_2" title="// CTL_CODE(0x0009, 0x001, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_REQUEST_OPLOCK_LEVEL_2 0x00090004">FSCTL_REQUEST_OPLOCK_LEVEL_2</a></p>
 <p><a href="fsctl_set_reparse_point" title="// CTL_CODE(0x0009, 0x029, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_SET_REPARSE_POINT 0x000900A4">FSCTL_SET_REPARSE_POINT</a></p>
-<p>For more information about system-defined FSCTL_<em>XXX</em> codes, see the &quot;Remarks&quot; section of the reference entry for <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a> in the Microsoft Windows SDK documentation.</p>
+<p>For more information about system-defined FSCTL_<em>XXX</em> codes, see the "Remarks" section of the reference entry for <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a> in the Microsoft Windows SDK documentation.</p>
 <p>For more information about system-defined IOCTL_<em>XXX</em> codes, and about defining driver-specific IOCTL_<em>XXX</em> or FSCTL_<em>XXX</em> values, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-i-o-control-codes">Using I/O Control Codes</a> in the <em>Kernel Mode Architecture Guide</em> and <em>Device Input and Output Control Codes</em> in the Windows SDK documentation.</p>
 <p>Minifilters should use <a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a> instead of <strong>ZwFsControlFile</strong>.</p>
 <p>Callers of <strong>ZwFsControlFile</strong> must be running at IRQL = PASSIVE_LEVEL and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/disabling-apcs">with special kernel APCs enabled</a>.</p>
-<p><strong>Note</strong> If the call to the <strong>ZwFsControlFile</strong> function occurs in user mode, you should use the name &quot;<strong>NtFsControlFile</strong>&quot; instead of &quot;<strong>ZwFsControlFile</strong>&quot;.</p>
+<p><strong>Note</strong> If the call to the <strong>ZwFsControlFile</strong> function occurs in user mode, you should use the name "<strong>NtFsControlFile</strong>" instead of "<strong>ZwFsControlFile</strong>".</p>
 <p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
 <h2>See also</h2>
 <p><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></p>
@@ -320,14 +350,24 @@ ZwFsControlFile(
 <p>Length of <code>OutputBuffer</code>, in bytes.</p>
 <h1>Documented by</h1>
 <ul>
-<li>Tomasz Nowak</li>
-<li>ReactOS</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
 <h1>See also</h1>
 <ul>
-<li><code><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></code></li>
-<li><code><a href="ntdeviceiocontrolfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDeviceIoControlFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG IoControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">NtDeviceIoControlFile</a></code></li>
-<li><code><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></code></li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntfscontrolfile.md">Edit description on GitHub</a>

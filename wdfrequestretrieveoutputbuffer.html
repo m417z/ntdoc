@@ -124,88 +124,81 @@
 <p>The following code example is part of an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_device_control">EvtIoDeviceControl</a> callback function. This example obtains a USB device's configuration descriptor and places the descriptor in the I/O request's output buffer.</p>
 <pre><code>VOID
 MyEvtIoDeviceControl(
-    IN WDFQUEUE  Queue,
-    IN WDFREQUEST  Request,
-    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  OutputBufferLength,
-    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  InputBufferLength,
-    IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  IoControlCode
-    )
+IN WDFQUEUE  Queue,
+IN WDFREQUEST  Request,
+IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  OutputBufferLength,
+IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  InputBufferLength,
+IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  IoControlCode
+)
 {
-    WDFDEVICE  device;
-    PDEVICE_CONTEXT  pDevContext;
-    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  bytesReturned = 0;
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
-
-    device = <a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue);
-    //
-    // GetDeviceContext is a driver-defined function
-    // to retrieve device object context space.
-    //
-    pDevContext = GetDeviceContext(device);
-
-    switch(IoControlCode) {
-
-      case IOCTL_OSRUSBFX2_GET_CONFIG_DESCRIPTOR: {
-
-        <a href="usb_configuration_descriptor" title="typedef struct _USB_CONFIGURATION_DESCRIPTOR {&#10;  UCHAR  bLength;&#10;  UCHAR  bDescriptorType;&#10;  USHORT wTotalLength;&#10;  UCHAR  bNumInterfaces;&#10;  UCHAR  bConfigurationValue;&#10;  UCHAR  iConfiguration;&#10;  UCHAR  bmAttributes;&#10;  UCHAR  MaxPower;&#10;} USB_CONFIGURATION_DESCRIPTOR, *PUSB_CONFIGURATION_DESCRIPTOR;">PUSB_CONFIGURATION_DESCRIPTOR</a>  configurationDescriptor = NULL;
-        <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>  requiredSize;
-
-        //
-        // First, get the size of the USB configuration descriptor.
-        //
-        status = <a href="wdfusbtargetdeviceretrieveconfigdescriptor" title="NTSTATUS WdfUsbTargetDeviceRetrieveConfigDescriptor(&#10;  [in]      WDFUSBDEVICE UsbDevice,&#10;  [out]     PVOID        ConfigDescriptor,&#10;  [in, out] PUSHORT      ConfigDescriptorLength&#10;);">WdfUsbTargetDeviceRetrieveConfigDescriptor</a>(
-                                                pDevContext-&gt;UsbDevice,
-                                                NULL,
-                                                &amp;requiredSize
-                                                );
-        if (status == STATUS_BUFFER_TOO_SMALL) {
-            break;
-        }
-
-        //
-        // Get the buffer. Make sure the buffer is big
-        // enough to hold the configuration descriptor.
-        //
-        status = WdfRequestRetrieveOutputBuffer(
-                                                Request,
-                                                (<a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>)requiredSize,
-                                                &amp;configurationDescriptor,
-                                                NULL
-                                                );
-        if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-            break;
-        }
-        //
-        // Now get the config descriptor.
-        //
-        status = <a href="wdfusbtargetdeviceretrieveconfigdescriptor" title="NTSTATUS WdfUsbTargetDeviceRetrieveConfigDescriptor(&#10;  [in]      WDFUSBDEVICE UsbDevice,&#10;  [out]     PVOID        ConfigDescriptor,&#10;  [in, out] PUSHORT      ConfigDescriptorLength&#10;);">WdfUsbTargetDeviceRetrieveConfigDescriptor</a>(
-                                                pDevContext-&gt;UsbDevice,
-                                                configurationDescriptor,
-                                                &amp;requiredSize
-                                                );
-        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-            break;
-        }
-
-        bytesReturned = requiredSize;
-      }
-        break;
+WDFDEVICE  device;
+PDEVICE_CONTEXT  pDevContext;
+<a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  bytesReturned = 0;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
+device = <a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue);
+//
+// GetDeviceContext is a driver-defined function
+// to retrieve device object context space.
+//
+pDevContext = GetDeviceContext(device);
+switch(IoControlCode) {
+case IOCTL_OSRUSBFX2_GET_CONFIG_DESCRIPTOR: {
+<a href="usb_configuration_descriptor" title="typedef struct _USB_CONFIGURATION_DESCRIPTOR {&#10;  UCHAR  bLength;&#10;  UCHAR  bDescriptorType;&#10;  USHORT wTotalLength;&#10;  UCHAR  bNumInterfaces;&#10;  UCHAR  bConfigurationValue;&#10;  UCHAR  iConfiguration;&#10;  UCHAR  bmAttributes;&#10;  UCHAR  MaxPower;&#10;} USB_CONFIGURATION_DESCRIPTOR, *PUSB_CONFIGURATION_DESCRIPTOR;">PUSB_CONFIGURATION_DESCRIPTOR</a>  configurationDescriptor = NULL;
+<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>  requiredSize;
+//
+// First, get the size of the USB configuration descriptor.
+//
+status = <a href="wdfusbtargetdeviceretrieveconfigdescriptor" title="NTSTATUS WdfUsbTargetDeviceRetrieveConfigDescriptor(&#10;  [in]      WDFUSBDEVICE UsbDevice,&#10;  [out]     PVOID        ConfigDescriptor,&#10;  [in, out] PUSHORT      ConfigDescriptorLength&#10;);">WdfUsbTargetDeviceRetrieveConfigDescriptor</a>(
+pDevContext-&gt;UsbDevice,
+NULL,
+&amp;requiredSize
+);
+if (status == STATUS_BUFFER_TOO_SMALL) {
+break;
+}
+//
+// Get the buffer. Make sure the buffer is big
+// enough to hold the configuration descriptor.
+//
+status = WdfRequestRetrieveOutputBuffer(
+Request,
+(<a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>)requiredSize,
+&amp;configurationDescriptor,
+NULL
+);
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
+break;
+}
+//
+// Now get the config descriptor.
+//
+status = <a href="wdfusbtargetdeviceretrieveconfigdescriptor" title="NTSTATUS WdfUsbTargetDeviceRetrieveConfigDescriptor(&#10;  [in]      WDFUSBDEVICE UsbDevice,&#10;  [out]     PVOID        ConfigDescriptor,&#10;  [in, out] PUSHORT      ConfigDescriptorLength&#10;);">WdfUsbTargetDeviceRetrieveConfigDescriptor</a>(
+pDevContext-&gt;UsbDevice,
+configurationDescriptor,
+&amp;requiredSize
+);
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+break;
+}
+bytesReturned = requiredSize;
+}
+break;
 ...
-    (Other case statements removed.)
+(Other case statements removed.)
 ...
-    default:
-        status = STATUS_INVALID_DEVICE_REQUEST;
-        break;
-    }
-    //
-    // Complete the request.
-    //
-    <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
-                                      Request,
-                                      status,
-                                      bytesReturned
-                                      );
-    return;
+default:
+status = STATUS_INVALID_DEVICE_REQUEST;
+break;
+}
+//
+// Complete the request.
+//
+<a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
+Request,
+status,
+bytesReturned
+);
+return;
 }
 </code></pre>
 <h2>See also</h2>

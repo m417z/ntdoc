@@ -117,8 +117,12 @@
 <p>To forward an I/O request that your driver received in an I/O queue, specify the received request's handle for the <strong>WdfUsbTargetDeviceSendUrbSynchronously</strong> method's <em>Request</em> parameter.</p>
 <p>To create and send a new request, either supply a <strong>NULL</strong> request handle for the <em>Request</em> parameter, or create a new request object and supply its handle:</p>
 <ul>
-<li>If you supply a <strong>NULL</strong> request handle, the framework uses an internal request object. This technique is simple to use, but the driver cannot cancel the request.</li>
-<li>If you call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> to create one or more request objects, you can reuse these request objects by calling <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>. This technique enables your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function to preallocate request objects for a device. Additionally, another driver thread can call <a href="wdfrequestcancelsentrequest" title="BOOLEAN WdfRequestCancelSentRequest(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestCancelSentRequest</a> to cancel the request, if necessary.</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
 <p>Your driver can specify a non-<strong>NULL</strong> <em>RequestOptions</em> parameter, whether the driver provides a non-<strong>NULL</strong> or a <strong>NULL</strong> <em>Request</em> parameter. You can, for example, use the <em>RequestOptions</em> parameter to specify a time-out value.</p>
 <p>For information about obtaining status information after an I/O request completes, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">Obtaining Completion Information</a>.</p>
@@ -127,20 +131,18 @@
 <p>The following code example initializes a <a href="urb" title="typedef struct _URB {&#10;  union {&#10;#if ...&#10;    _URB_HEADER                                     UrbHeader;&#10;#else&#10;    struct _URB_HEADER                              UrbHeader;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_INTERFACE                           UrbSelectInterface;&#10;#else&#10;    struct _URB_SELECT_INTERFACE                    UrbSelectInterface;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_CONFIGURATION                       UrbSelectConfiguration;&#10;#else&#10;    struct _URB_SELECT_CONFIGURATION                UrbSelectConfiguration;&#10;#endif&#10;#if ...&#10;    _URB_PIPE_REQUEST                               UrbPipeRequest;&#10;#else&#10;...">URB</a> structure and calls <strong>WdfUsbTargetDeviceSendUrbSynchronously</strong>.</p>
 <pre><code><a href="urb" title="typedef struct _URB {&#10;  union {&#10;#if ...&#10;    _URB_HEADER                                     UrbHeader;&#10;#else&#10;    struct _URB_HEADER                              UrbHeader;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_INTERFACE                           UrbSelectInterface;&#10;#else&#10;    struct _URB_SELECT_INTERFACE                    UrbSelectInterface;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_CONFIGURATION                       UrbSelectConfiguration;&#10;#else&#10;    struct _URB_SELECT_CONFIGURATION                UrbSelectConfiguration;&#10;#endif&#10;#if ...&#10;    _URB_PIPE_REQUEST                               UrbPipeRequest;&#10;#else&#10;...">URB</a> Urb;
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
-
 Urb.UrbHeader.Function =  URB_FUNCTION_GET_CONFIGURATION;
 Urb.UrbHeader.Length = sizeof(struct <a href="_urb_control_get_configuration_request" title="struct _URB_CONTROL_GET_CONFIGURATION_REQUEST {&#10;  struct _URB_HEADER   Hdr;&#10;  PVOID                Reserved;&#10;  ULONG                Reserved0;&#10;  ULONG                TransferBufferLength;&#10;  PVOID                TransferBuffer;&#10;  PMDL                 TransferBufferMDL;&#10;  struct _URB          *UrbLink;&#10;  struct _URB_HCD_AREA hca;&#10;  UCHAR                Reserved1[8];&#10;};">_URB_CONTROL_GET_CONFIGURATION_REQUEST</a>);
 Urb.UrbControlGetConfigurationRequest.TransferBufferLength = 1 ; // Must be 1
 Urb.UrbControlGetConfigurationRequest.TransferBufferMDL = NULL;
 Urb.UrbControlGetConfigurationRequest.TransferBuffer = outBuffer;
 Urb.UrbControlGetConfigurationRequest.UrbLink = NULL;
-
 status = WdfUsbTargetDeviceSendUrbSynchronously(
-                                                UsbDevice,
-                                                NULL,
-                                                NULL,
-                                                &amp;Urb
-                                                );
+UsbDevice,
+NULL,
+NULL,
+&amp;Urb
+);
 </code></pre>
 <h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a></p>

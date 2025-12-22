@@ -97,74 +97,67 @@
 <h4>Examples</h4>
 <p>The following code example shows how to evaluate an ACPI method.</p>
 <pre><code>if (HwDeviceExtension-&gt;AcpiChildren != NULL) {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ChildIndex;
-    PACPI_METHOD_ARGUMENT AcpiChildrenArray =
- &amp;(((<a href="pacpi_eval_output_buffer" title="typedef struct _ACPI_EVAL_OUTPUT_BUFFER_V1 {&#10;  ULONG                   Signature;&#10;  ULONG                   Length;&#10;  ULONG                   Count;&#10;  ACPI_METHOD_ARGUMENT_V1 Argument[ANYSIZE_ARRAY];&#10;} ACPI_EVAL_OUTPUT_BUFFER_V1, ACPI_EVAL_OUTPUT_BUFFER, *PACPI_EVAL_OUTPUT_BUFFER;">PACPI_EVAL_OUTPUT_BUFFER</a>)HwDeviceExtension-&gt;AcpiChildren)
-   -&gt;Argument[0]);
-   <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ChildCount = ((<a href="pacpi_eval_output_buffer" title="typedef struct _ACPI_EVAL_OUTPUT_BUFFER_V1 {&#10;  ULONG                   Signature;&#10;  ULONG                   Length;&#10;  ULONG                   Count;&#10;  ACPI_METHOD_ARGUMENT_V1 Argument[ANYSIZE_ARRAY];&#10;} ACPI_EVAL_OUTPUT_BUFFER_V1, ACPI_EVAL_OUTPUT_BUFFER, *PACPI_EVAL_OUTPUT_BUFFER;">PACPI_EVAL_OUTPUT_BUFFER</a>)
-   (HwDeviceExtension-&gt;AcpiChildren))-&gt;Count;
-  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ChildUid;
-  ACPI_EVAL_INPUT_BUFFER_COMPLEX AcpiInputBuffer = {'\0'};
-   ACPI_EVAL_OUTPUT_BUFFER AcpiOutputBuffer;
-    pDesiredStatus = <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>(PagedPool,
- sizeof(DESIRED_CHILD_STATUS) * ChildCount,
- ATI_TAG);
-
-  if (pDesiredStatus == NULL) {
-     Status = STATUS_NO_MEMORY;
-        goto cleanup;
-  }
-
- <a href="rtlzeromemory" title="VOID RtlZeroMemory(&#10;  _Out_ VOID UNALIGNED *Destination,&#10;  _In_  SIZE_T         Length&#10;);">RtlZeroMemory</a>(pDesiredStatus, sizeof(DESIRED_CHILD_STATUS) * ChildCount);
-
- for (ChildIndex = 0; ChildIndex &lt; ChildCount; ChildIndex++) {
- // If not a video output child, go to the next child.
- if (AcpiChildrenArray[ChildIndex].Argument
-   &amp; ACPI_NON_VIDEO_OUTPUT_DEVICE) {
-   continue;
-      }
-      // A video output child so the ChildUid is the VidPnTargetId.
-       ChildUid = (AcpiChildrenArray[ChildIndex].Argument
-   &amp; ACPI_HARDWARE_ID) | HW_ID_DISPLAY_CHILD;
-
-      // Query ACPI for the required state.
-      //
-  // Beginning with Windows Vista SP1 and Windows Server 2008,
-  // use DXGK_ACPI_PASS_ARGS_TO_CHILDREN.
-
-  #if (NTDDI_VERSION &gt;= NTDDI_WIN6SP1)
-   AcpiInputBuffer.Signature =
-   DXGK_ACPI_PASS_ARGS_TO_CHILDREN;
-     #else
-    AcpiInputBuffer.Signature =
-   ACPI_EVAL_INPUT_BUFFER_COMPLEX_SIGNATURE;
-       #endif
-
-     AcpiInputBuffer.MethodNameAsUlong =
-   ACPI_METHOD_OUTPUT_DGS;
-     Status = DxgkCbEvalAcpiMethod(HwDeviceExtension-&gt;DeviceHandle,
-         ChildUid,
-         &amp;AcpiInputBuffer,
-         sizeof(ACPI_EVAL_INPUT_BUFFER_COMPLEX),
-         &amp;AcpiOutputBuffer,
-         sizeof(ACPI_EVAL_OUTPUT_BUFFER));
-     if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
-         // Something really wrong
-         goto cleanup;
-     }
-      // Determine what the new VidPn should be and
-      // allow RecommendFunctionalVidPn to return it.
-      // AcpiOutputBuffer.Argument[0].Argument == 1 indicates active
-       // AcpiOutputBuffer.Argument[0].Argument == 0
-       // indicates not active
-       pDesiredStatus[ChildIndex].bActive =
-   (AcpiOutputBuffer.Argument[0].Argument == 1) ? TRUE : FALSE;
-      // Always use the first source because this is a keyboard shortcut.
-      pDesiredStatus[ChildIndex].ulSourceId = 0;
-      pDesiredStatus[ChildIndex].ulTargetId = ChildUid;
-  }
-
- Status = InvalidateVidPnForHotKey(HwDeviceExtension, pDesiredStatus);
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ChildIndex;
+PACPI_METHOD_ARGUMENT AcpiChildrenArray =
+&amp;(((<a href="pacpi_eval_output_buffer" title="typedef struct _ACPI_EVAL_OUTPUT_BUFFER_V1 {&#10;  ULONG                   Signature;&#10;  ULONG                   Length;&#10;  ULONG                   Count;&#10;  ACPI_METHOD_ARGUMENT_V1 Argument[ANYSIZE_ARRAY];&#10;} ACPI_EVAL_OUTPUT_BUFFER_V1, ACPI_EVAL_OUTPUT_BUFFER, *PACPI_EVAL_OUTPUT_BUFFER;">PACPI_EVAL_OUTPUT_BUFFER</a>)HwDeviceExtension-&gt;AcpiChildren)
+-&gt;Argument[0]);
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ChildCount = ((<a href="pacpi_eval_output_buffer" title="typedef struct _ACPI_EVAL_OUTPUT_BUFFER_V1 {&#10;  ULONG                   Signature;&#10;  ULONG                   Length;&#10;  ULONG                   Count;&#10;  ACPI_METHOD_ARGUMENT_V1 Argument[ANYSIZE_ARRAY];&#10;} ACPI_EVAL_OUTPUT_BUFFER_V1, ACPI_EVAL_OUTPUT_BUFFER, *PACPI_EVAL_OUTPUT_BUFFER;">PACPI_EVAL_OUTPUT_BUFFER</a>)
+(HwDeviceExtension-&gt;AcpiChildren))-&gt;Count;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ChildUid;
+ACPI_EVAL_INPUT_BUFFER_COMPLEX AcpiInputBuffer = {'\0'};
+ACPI_EVAL_OUTPUT_BUFFER AcpiOutputBuffer;
+pDesiredStatus = <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>(PagedPool,
+sizeof(DESIRED_CHILD_STATUS) * ChildCount,
+ATI_TAG);
+if (pDesiredStatus == NULL) {
+Status = STATUS_NO_MEMORY;
+goto cleanup;
+}
+<a href="rtlzeromemory" title="VOID RtlZeroMemory(&#10;  _Out_ VOID UNALIGNED *Destination,&#10;  _In_  SIZE_T         Length&#10;);">RtlZeroMemory</a>(pDesiredStatus, sizeof(DESIRED_CHILD_STATUS) * ChildCount);
+for (ChildIndex = 0; ChildIndex &lt; ChildCount; ChildIndex++) {
+// If not a video output child, go to the next child.
+if (AcpiChildrenArray[ChildIndex].Argument
+&amp; ACPI_NON_VIDEO_OUTPUT_DEVICE) {
+continue;
+}
+// A video output child so the ChildUid is the VidPnTargetId.
+ChildUid = (AcpiChildrenArray[ChildIndex].Argument
+&amp; ACPI_HARDWARE_ID) | HW_ID_DISPLAY_CHILD;
+// Query ACPI for the required state.
+//
+// Beginning with Windows Vista SP1 and Windows Server 2008,
+// use DXGK_ACPI_PASS_ARGS_TO_CHILDREN.
+#if (NTDDI_VERSION &gt;= NTDDI_WIN6SP1)
+AcpiInputBuffer.Signature =
+DXGK_ACPI_PASS_ARGS_TO_CHILDREN;
+#else
+AcpiInputBuffer.Signature =
+ACPI_EVAL_INPUT_BUFFER_COMPLEX_SIGNATURE;
+#endif
+AcpiInputBuffer.MethodNameAsUlong =
+ACPI_METHOD_OUTPUT_DGS;
+Status = DxgkCbEvalAcpiMethod(HwDeviceExtension-&gt;DeviceHandle,
+ChildUid,
+&amp;AcpiInputBuffer,
+sizeof(ACPI_EVAL_INPUT_BUFFER_COMPLEX),
+&amp;AcpiOutputBuffer,
+sizeof(ACPI_EVAL_OUTPUT_BUFFER));
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status)) {
+// Something really wrong
+goto cleanup;
+}
+// Determine what the new VidPn should be and
+// allow RecommendFunctionalVidPn to return it.
+// AcpiOutputBuffer.Argument[0].Argument == 1 indicates active
+// AcpiOutputBuffer.Argument[0].Argument == 0
+// indicates not active
+pDesiredStatus[ChildIndex].bActive =
+(AcpiOutputBuffer.Argument[0].Argument == 1) ? TRUE : FALSE;
+// Always use the first source because this is a keyboard shortcut.
+pDesiredStatus[ChildIndex].ulSourceId = 0;
+pDesiredStatus[ChildIndex].ulTargetId = ChildUid;
+}
+Status = InvalidateVidPnForHotKey(HwDeviceExtension, pDesiredStatus);
 }
 </code></pre>
 <h2>See also</h2>

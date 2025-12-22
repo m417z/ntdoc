@@ -133,22 +133,22 @@
 <p>Both the command buffer <strong>pCommand</strong> and the input patch-location list <strong>pPatchLocationListIn</strong> that the user-mode display driver generates are allocated from the user-mode address space and are passed to the display miniport driver untouched. The display miniport driver must use <code>__try/__except</code> code on any access to the buffer and list and must validate the content of the buffer and list before copying the content to the respective kernel buffers (that is, before copying the content of the <strong>pCommand</strong> member to the <strong>pDmaBuffer</strong> member and the content of the <strong>pPatchLocationListIn</strong> member to the <strong>pPatchLocationListOut</strong> member, which are all members of the <a href="dxgkarg_render" title="typedef struct _DXGKARG_RENDER {&#10;  [in]     const VOID               *pCommand;&#10;  [in]     UINT                     CommandLength;&#10;  [out]    VOID                     *pDmaBuffer;&#10;  [in]     UINT                     DmaSize;&#10;  [in]     VOID                     *pDmaBufferPrivateData;&#10;  [in]     UINT                     DmaBufferPrivateDataSize;&#10;  [in]     DXGK_ALLOCATIONLIST      *pAllocationList;&#10;  [in]     UINT                     AllocationListSize;&#10;  [in]     D3DDDI_PATCHLOCATIONLIST *pPatchLocationListIn;&#10;  [in]     UINT                     PatchLocationListInSize;&#10;  [in/out] D3DDDI_PATCHLOCATIONLIST *pPatchLocationListOut;&#10;  [in]     UINT                     PatchLocationListOutSize;&#10;  [in/out] UINT                     MultipassOffset;&#10;  [in]     UINT                     DmaBufferSegmentId;&#10;  [in]     PHYSICAL_ADDRESS         DmaBufferPhysicalAddress;&#10;} DXGKARG_RENDER;">DXGKARG_RENDER</a> structure that the <em>pRender</em> parameter points to).</p>
 <p>Here's an example of how display miniport drivers should access these buffers using <code>__try</code> and <code>__except</code> logic. <strong>AllocationListIn</strong> points to the user-mode buffer.</p>
 <pre><code>__try
-  {
-    for (Index = 0; Index &lt; AllocationListInSize; AllocationTable++,
-           AllocationListIn++, AllocationListOut++, Index++)
-    {
-      D3DKMT_HANDLE AllocationHandle = AllocationListIn-&gt;hAllocation;
-      . . .
-    }
-  }
+{
+for (Index = 0; Index &lt; AllocationListInSize; AllocationTable++,
+AllocationListIn++, AllocationListOut++, Index++)
+{
+D3DKMT_HANDLE AllocationHandle = AllocationListIn-&gt;hAllocation;
+. . .
+}
+}
 __except(EXCEPTION_EXECUTE_HANDLER)
-  {
-    Status = STATUS_INVALID_PARAMETER;
-    SAMPLE_LOG_ERROR(
-  &quot;Exception occurred accessing user-mode allocation list. Returning Status=0x%I64x&quot;,
-      Status);
-    goto cleanup;
-  }
+{
+Status = STATUS_INVALID_PARAMETER;
+SAMPLE_LOG_ERROR(
+"Exception occurred accessing user-mode allocation list. Returning Status=0x%I64x",
+Status);
+goto cleanup;
+}
 </code></pre>
 <blockquote>
 <p>[!NOTE]
@@ -165,10 +165,10 @@ Even though the driver's <em>DxgkDdiRender</em> function pre-patches the DMA buf
 <p>When the display miniport driver translates a command buffer to a DMA buffer, the display miniport driver and user-mode display driver should perform the following actions for the following situations:</p>
 <ul>
 <li>
-<p>In guaranteed contract DMA mode (for more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/using-the-guaranteed-contract-dma-buffer-model">Using the Guaranteed Contract DMA Buffer Model</a>), the user-mode display driver must guarantee enough resources for the translation command. If enough resources do not exist for the translation, the display miniport driver must reject the DMA buffer.</p>
+
 </li>
 <li>
-<p>The user-mode display driver should always split up commands that might translate to more than the size of a single DMA buffer because the display miniport driver's <em>DxgkDdiRender</em> function cannot handle a single command that is larger than the size of the DMA buffer and that cannot be split.</p>
+
 </li>
 </ul>
 <p><em>DxgkDdiRender</em> should be made pageable.</p>

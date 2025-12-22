@@ -84,7 +84,7 @@
 <h3>Input/output buffer</h3>
 <h3>Input/output buffer length</h3>
 <h3>Status block</h3>
-<p>Irp-&gt;IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
+<p>Irp->IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
 <p>Otherwise, Status to the appropriate error condition as a <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code.</p>
 <p>For more information, see [XREF-LINK:<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Values].</p>
 <h2>Remarks</h2>
@@ -191,44 +191,38 @@
 <p>A VF configuration block is used for backchannel communication between the drivers of the PCIe PF and a VF on a device that supports the SR-IOV interface. VF configuration data can be exchanged between the following drivers:</p>
 <ul>
 <li>
-<p>The VF driver, which runs in the guest operating system. This operating system runs within a Hyper-V child partition.</p>
+
 </li>
-<li>
-<p>The PF driver, which runs in the management operating system.</p>
-<p>This operating system runs within the Hyper-V parent partition.</p>
-</li>
+<li><p>The PF driver, which runs in the management operating system.</p>
+<p>This operating system runs within the Hyper-V parent partition.</p></li>
 </ul>
 <p>Starting with NDIS 6.30, the VF miniport driver should not issue an IOCTL_VPCI_INVALIDATE_BLOCK request. Instead, the following steps are performed in order to handle notifications of invalidated VF configuration block data.</p>
 <ol>
-<li>In the guest OS, NDIS issues an IOCTL_VPCI_INVALIDATE_BLOCK request.</li>
-<li>In the management OS, the following steps occur:
+<li>
+
+</li>
+<li><p>In the management OS, the following steps occur:</p>
 <ol>
 <li>
-<p>The PF miniport driver calls the <a href="ndisminvalidateconfigblock" title="VOID NdisMInvalidateConfigBlock(&#10;  [in] NDIS_HANDLE            NdisMiniportHandle,&#10;  [in] NDIS_SRIOV_FUNCTION_ID VFId,&#10;  [in] ULONGLONG              BlockMask&#10;);">NdisMInvalidateConfigBlock</a> function to notify NDIS that VF configuration data has changed and is no longer valid. The driver sets the <em>BlockMask</em> parameter to a <strong><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></strong> bitmask that specifies which VF configuration blocks have changed. Each bit in the bitmask corresponds to a VF configuration block. If a bit is set to one, the data in the corresponding VF configuration block has changed.</p>
+
 </li>
+<li><p>NDIS signals the virtualization stack, which runs in the management OS, about the change in VF configuration block data. The virtualization stack caches the <em>BlockMask</em> parameter data.</p>
+<p><strong>Note</strong> Each time that the PF miniport driver calls <a href="ndisminvalidateconfigblock" title="VOID NdisMInvalidateConfigBlock(&#10;  [in] NDIS_HANDLE            NdisMiniportHandle,&#10;  [in] NDIS_SRIOV_FUNCTION_ID VFId,&#10;  [in] ULONGLONG              BlockMask&#10;);">NdisMInvalidateConfigBlock</a>, the virtualization stack <strong>OR</strong>s the <em>BlockMask</em> parameter data with the current value in its cache.</p></li>
 <li>
-<p>NDIS signals the virtualization stack, which runs in the management OS, about the change in VF configuration block data. The virtualization stack caches the <em>BlockMask</em> parameter data.</p>
-<p><strong>Note</strong> Each time that the PF miniport driver calls <a href="ndisminvalidateconfigblock" title="VOID NdisMInvalidateConfigBlock(&#10;  [in] NDIS_HANDLE            NdisMiniportHandle,&#10;  [in] NDIS_SRIOV_FUNCTION_ID VFId,&#10;  [in] ULONGLONG              BlockMask&#10;);">NdisMInvalidateConfigBlock</a>, the virtualization stack <strong>OR</strong>s the <em>BlockMask</em> parameter data with the current value in its cache.</p>
+
 </li>
-<li>
-<p>The virtualization stack notifies the virtual PCI (VPCI) driver, which runs in the guest OS, about the invalidation of VF configuration data. The virtualization stack sends the cached <em>BlockMask</em> parameter data to the VPCI driver.</p>
-</li>
-</ol>
-</li>
-<li>In the Guest OS, the following steps occur:
+</ol></li>
+<li><p>In the Guest OS, the following steps occur:</p>
 <ol>
 <li>
-<p>The VPCI driver saves the cached <em>BlockMask</em> parameter data in the <strong>BlockMask</strong> member of the <a href="vpci_invalidate_block_output" title="typedef struct _VPCI_INVALIDATE_BLOCK_OUTPUT {&#10;  UINT64 BlockMask;&#10;} VPCI_INVALIDATE_BLOCK_OUTPUT, *PVPCI_INVALIDATE_BLOCK_OUTPUT;">VPCI_INVALIDATE_BLOCK_OUTPUT</a> structure that is associated with the IOCTL_VPCI_INVALIDATE_BLOCK request.</p>
+
 </li>
+<li><p>The VPCI driver successfully completes the IOCTL_VPCI_INVALIDATE_BLOCK request. When this happens, NDIS issues an object identifier (OID) request of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-sriov-vf-invalidate-config-block">OID_SRIOV_VF_INVALIDATE_CONFIG_BLOCK</a> to the VF miniport driver. A pointer to an <a href="ndis_sriov_vf_invalidate_config_block_info" title="typedef struct _NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO {&#10;  NDIS_OBJECT_HEADER Header;&#10;  ULONG64            BlockMask;&#10;} NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO, *PNDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO;">NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO</a> structure is passed along in the OID request. This structure contains the cached <em>BlockMask</em> parameter data.</p>
+<p>NDIS also issues another IOCTL_VPCI_INVALIDATE_BLOCK request to handle successive notifications of changes to VF configuration data.</p></li>
 <li>
-<p>The VPCI driver successfully completes the IOCTL_VPCI_INVALIDATE_BLOCK request. When this happens, NDIS issues an object identifier (OID) request of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-sriov-vf-invalidate-config-block">OID_SRIOV_VF_INVALIDATE_CONFIG_BLOCK</a> to the VF miniport driver. A pointer to an <a href="ndis_sriov_vf_invalidate_config_block_info" title="typedef struct _NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO {&#10;  NDIS_OBJECT_HEADER Header;&#10;  ULONG64            BlockMask;&#10;} NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO, *PNDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO;">NDIS_SRIOV_VF_INVALIDATE_CONFIG_BLOCK_INFO</a> structure is passed along in the OID request. This structure contains the cached <em>BlockMask</em> parameter data.</p>
-<p>NDIS also issues another IOCTL_VPCI_INVALIDATE_BLOCK request to handle successive notifications of changes to VF configuration data.</p>
+
 </li>
-<li>
-<p>When the VF driver handles the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/oid-sriov-vf-invalidate-config-block">OID_SRIOV_VF_INVALIDATE_CONFIG_BLOCK</a> request, it reads data from the specified VF configuration blocks.</p>
-</li>
-</ol>
-</li>
+</ol></li>
 </ol>
 <p><strong>Note</strong> The usage of the VF configuration block and the format of its configuration data are defined by the independent hardware vendor (IHV) of the device. The configuration data is used only by the drivers of the PF and VF.</p>
 <h2>See also</h2>

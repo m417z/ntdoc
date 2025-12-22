@@ -73,12 +73,13 @@
 <p>[in] Pointer to a <strong><a href="dxgkarg_updatecurrentvaluesfromcpu" title="typedef struct _DXGKARG_UPDATECURRENTVALUESFROMCPU {&#10;  HANDLE                                *NativeFenceArray;&#10;  UINT64                                *UpdatedValueArray;&#10;  void                                  **CurrentValueKernelCpuVa;&#10;  UINT                                  NumFences;&#10;  DXGK_UPDATECURRENTVALUESFROMCPU_FLAGS Flags;&#10;  BYTE                                  Reserved[28];&#10;} DXGKARG_UPDATECURRENTVALUESFROMCPU;">DXGKARG_UPDATECURRENTVALUESFROMCPU</a></strong> structure that contains the current values to update.</p>
 <h2>Return value</h2>
 <h2>Remarks</h2>
-<p>This DDI is used to support the existing &quot;signal fence from CPU&quot; API semantics. Instead of <em>Dxgkrnl</em> writing a new <strong>CurrentValue</strong>, the driver is asked to write to <strong>CurrentValue</strong> in order to give drivers an opportunity to insert any required pre-write synchronization/barriers. The OS synchronizes CPU-side updates and guarantees that the most up to date value is available to <strong>DxgkDdiUpdateCurrentValuesFromCpu</strong>. After updating <strong>CurrentValue</strong>, the driver must trigger the GPU to unblock hardware queues that were waiting on this fence and got unblocked with the update to <strong>CurrentValue</strong>.</p>
+<p>This DDI is used to support the existing "signal fence from CPU" API semantics. Instead of <em>Dxgkrnl</em> writing a new <strong>CurrentValue</strong>, the driver is asked to write to <strong>CurrentValue</strong> in order to give drivers an opportunity to insert any required pre-write synchronization/barriers. The OS synchronizes CPU-side updates and guarantees that the most up to date value is available to <strong>DxgkDdiUpdateCurrentValuesFromCpu</strong>. After updating <strong>CurrentValue</strong>, the driver must trigger the GPU to unblock hardware queues that were waiting on this fence and got unblocked with the update to <strong>CurrentValue</strong>.</p>
 <p>In a nutshell the steps to be followed by the driver are:</p>
-<pre><code>for i = 1 : NumFences
-  1. Insert pre-write memory barrier if required
-  2. write new value to CurrentValueCpuVa
-  3. trigger GPU to unblock any HwQueues that got unblocked by the updated CurrentValue
+<pre><code>
+for i = 1 : NumFences
+1. Insert pre-write memory barrier if required
+2. write new value to CurrentValueCpuVa
+3. trigger GPU to unblock any HwQueues that got unblocked by the updated CurrentValue
 end
 </code></pre>
 <p>The OS only guarantees that the <strong>CurrentValueKernelCpuVa</strong> pointer is valid for the duration of this DDI call, and not before or after it. Hence, KMD must never cache this pointer for use elsewhere.</p>

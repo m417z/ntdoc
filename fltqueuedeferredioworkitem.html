@@ -79,16 +79,22 @@
 <p>A pointer to a caller-supplied worker callback routine. This routine is declared as follows:</p>
 <pre><code>typedef VOID
 (*PFLT_DEFERRED_IO_WORKITEM_ROUTINE) (
-    _In_ PFLT_DEFERRED_IO_WORKITEM FltWorkItem,
-    _In_ <a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">PFLT_CALLBACK_DATA</a> CallbackData,
-    _In_opt_ PVOID Context
-    );
+_In_ PFLT_DEFERRED_IO_WORKITEM FltWorkItem,
+_In_ <a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">PFLT_CALLBACK_DATA</a> CallbackData,
+_In_opt_ PVOID Context
+);
 </code></pre>
 <p>where:</p>
 <ul>
-<li><strong>FltWorkItem</strong> is an opaque pointer to a deferred work item structure.</li>
-<li><strong>CallbackData</strong> is a pointer to the callback data structure for the I/O operation.</li>
-<li><strong>Context</strong> is an optional context information pointer that was passed as the <strong>Context</strong> parameter of <strong>FltQueueDeferredIoWorkItem</strong>.</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
 <h3><code>QueueType</code> [in]</h3>
 <p>Specifies the queue into which the work item that <strong>FltWorkItem</strong> points to is to be inserted. <strong>QueueType</strong> can be one of the following values.</p>
@@ -125,7 +131,7 @@
 <tbody>
 <tr>
 <td>STATUS_FLT_DELETING_OBJECT</td>
-<td>The target instance for the I/O operation (<strong>Data-&gt;Iopb-&gt;TargetInstance</strong>) is being torn down. This is an error code.</td>
+<td>The target instance for the I/O operation (<strong>Data->Iopb->TargetInstance</strong>) is being torn down. This is an error code.</td>
 </tr>
 <tr>
 <td>STATUS_FLT_NOT_SAFE_TO_POST_OPERATION</td>
@@ -139,46 +145,46 @@
 <p><strong>FltQueueDeferredIoWorkItem</strong> returns STATUS_FLT_NOT_SAFE_TO_POST_OPERATION when the I/O operation cannot be posted safely to a worker thread. Possible reasons include the following:</p>
 <ul>
 <li>
-<p><strong>FltQueueDeferredIoWorkItem</strong> cannot post a paging I/O operation to a worker thread.</p>
+
 </li>
 <li>
-<p><strong>FltQueueDeferredIoWorkItem</strong> cannot post an I/O operation to a worker thread if the <strong>TopLevelIrp</strong> field of the current thread is not <strong>NULL</strong>, because the resulting file system recursion could cause deadlocks or stack overflows. For more information, see <strong><a href="iogettoplevelirp" title="PIRP IoGetTopLevelIrp();">IoGetTopLevelIrp</a></strong>.</p>
+
 </li>
 </ul>
 <p>A minifilter driver can use <strong>FltQueueDeferredIoWorkItem</strong> in a preoperation callback (<strong><a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a></strong>) routine as follows:</p>
 <ol>
 <li>
-<p>The preoperation callback calls <strong><a href="fltallocatedeferredioworkitem" title="PFLT_DEFERRED_IO_WORKITEM FLTAPI FltAllocateDeferredIoWorkItem();">FltAllocateDeferredIoWorkItem</a></strong> to allocate the work item.</p>
+
 </li>
 <li>
-<p>The preoperation callback calls <strong>FltQueueDeferredIoWorkItem</strong> to post the operation to the work queue.</p>
+
 </li>
 <li>
-<p>The preoperation callback returns FLT_PREOP_PENDING.</p>
+
 </li>
 <li>
-<p>After processing the I/O operation, the work routine calls <strong><a href="fltcompletependedpreoperation" title="VOID FLTAPI FltCompletePendedPreOperation(&#10;                 PFLT_CALLBACK_DATA        CallbackData,&#10;  [in]           FLT_PREOP_CALLBACK_STATUS CallbackStatus,&#10;  [in, optional] PVOID                     Context&#10;);">FltCompletePendedPreOperation</a></strong> to return the I/O operation to the Filter Manager.</p>
+
 </li>
 <li>
-<p>The work routine calls <strong><a href="fltfreedeferredioworkitem" title="VOID FLTAPI FltFreeDeferredIoWorkItem(&#10;  [in] PFLT_DEFERRED_IO_WORKITEM FltWorkItem&#10;);">FltFreeDeferredIoWorkItem</a></strong> to free the work item.</p>
+
 </li>
 </ol>
 <p>A minifilter driver can use <strong>FltQueueDeferredIoWorkItem</strong> in a post-operation callback (<strong><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></strong>) routine as follows:</p>
 <ol>
 <li>
-<p>The post-operation callback calls <strong><a href="fltallocatedeferredioworkitem" title="PFLT_DEFERRED_IO_WORKITEM FLTAPI FltAllocateDeferredIoWorkItem();">FltAllocateDeferredIoWorkItem</a></strong> to allocate the work item.</p>
+
 </li>
 <li>
-<p>The post-operation callback calls <strong>FltQueueDeferredIoWorkItem</strong> to post the operation to the work queue.</p>
+
 </li>
 <li>
-<p>The post-operation callback returns FLT_POSTOP_MORE_PROCESSING_REQUIRED.</p>
+
 </li>
 <li>
-<p>After processing the I/O operation, the work routine calls <strong><a href="fltcompletependedpostoperation" title="VOID FLTAPI FltCompletePendedPostOperation(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltCompletePendedPostOperation</a></strong> to return the I/O operation to the Filter Manager.</p>
+
 </li>
 <li>
-<p>The work routine calls <strong><a href="fltfreedeferredioworkitem" title="VOID FLTAPI FltFreeDeferredIoWorkItem(&#10;  [in] PFLT_DEFERRED_IO_WORKITEM FltWorkItem&#10;);">FltFreeDeferredIoWorkItem</a></strong> to free the work item.</p>
+
 </li>
 </ol>
 <h2>See also</h2>

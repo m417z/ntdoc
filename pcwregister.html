@@ -102,13 +102,13 @@
 <p><code>PcwRegister</code> may return <code>STATUS_INVALID_PARAMETER_2</code> in the following cases:</p>
 <ul>
 <li>
-<p>The <code>Info-&gt;Name-&gt;Length</code> field is 0 or is not a multiple of <code>sizeof(WCHAR)</code>.</p>
+
 </li>
 <li>
-<p>The <code>Info-&gt;Version</code> field does not match a supported value for this version of Windows. When running on Windows prior to 10.0.19645 (<code>NTDDI_VERSION &lt; NTDDI_VERSION_MN</code>), the <code>Version</code> field must be set to PCW_VERSION_1 (0x100). When running on Windows 10.0.19645 and later (<code>NTDDI_VERSION &gt;= NTDDI_VERSION_MN</code>), this may be set to PCW_VERSION_1 (0x100) or PCW_VERSION_2 (0x200).</p>
+
 </li>
 <li>
-<p>The <code>Info-&gt;Flags</code> field contains a value not recognized by the running version of Windows.</p>
+
 </li>
 </ul>
 <h2>Remarks</h2>
@@ -118,40 +118,35 @@
 <p>Most developers do not need to call <code>PcwRegister</code> directly. Instead, they will compile a manifest with the CTRPP tool and use the RegisterXxx function from the CTRPP-generated header. The generated function will look like this:</p>
 <pre><code><a href="extern_c" title="#define EXTERN_C extern &quot;C&quot;">EXTERN_C</a> FORCEINLINE <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 RegisterMyCounterset(
-    __in_opt PPCW_CALLBACK Callback,
-    __in_opt PVOID CallbackContext
-    )
+__in_opt PPCW_CALLBACK Callback,
+__in_opt PVOID CallbackContext
+)
 {
-    <a href="pcw_registration_information" title="typedef struct _PCW_REGISTRATION_INFORMATION {&#10;  ULONG                   Version;&#10;  PCUNICODE_STRING        Name;&#10;  ULONG                   CounterCount;&#10;  PPCW_COUNTER_DESCRIPTOR Counters;&#10;  PPCW_CALLBACK           Callback;&#10;  PVOID                   CallbackContext;&#10;  PCW_REGISTRATION_FLAGS  Flags;&#10;} PCW_REGISTRATION_INFORMATION, *PPCW_REGISTRATION_INFORMATION;">PCW_REGISTRATION_INFORMATION</a> RegInfo;
-
-    PAGED_CODE();
-
-    InitRegistrationInformationMyCounterset(Callback, CallbackContext, &amp;RegInfo);
-
-    return PcwRegister(&amp;MyCounterset, &amp;RegInfo);
+<a href="pcw_registration_information" title="typedef struct _PCW_REGISTRATION_INFORMATION {&#10;  ULONG                   Version;&#10;  PCUNICODE_STRING        Name;&#10;  ULONG                   CounterCount;&#10;  PPCW_COUNTER_DESCRIPTOR Counters;&#10;  PPCW_CALLBACK           Callback;&#10;  PVOID                   CallbackContext;&#10;  PCW_REGISTRATION_FLAGS  Flags;&#10;} PCW_REGISTRATION_INFORMATION, *PPCW_REGISTRATION_INFORMATION;">PCW_REGISTRATION_INFORMATION</a> RegInfo;
+PAGED_CODE();
+InitRegistrationInformationMyCounterset(Callback, CallbackContext, &amp;RegInfo);
+return PcwRegister(&amp;MyCounterset, &amp;RegInfo);
 }
 </code></pre>
 <p>The CTRPP-generated Register function will be named <em>Prefix</em>Register<em>Counterset</em>. <em>Prefix</em> is usually blank, but may be present if the <code>-prefix</code> parameter was used on the CTRPP command-line. <em>Counterset</em> is the name of the counterset, as specified in the manifest. The generated Register function will invoke the <em>Prefix</em>InitRegistrationInformation<em>Counterset</em> function to initialize a <code><a href="pcw_registration_information" title="typedef struct _PCW_REGISTRATION_INFORMATION {&#10;  ULONG                   Version;&#10;  PCUNICODE_STRING        Name;&#10;  ULONG                   CounterCount;&#10;  PPCW_COUNTER_DESCRIPTOR Counters;&#10;  PPCW_CALLBACK           Callback;&#10;  PVOID                   CallbackContext;&#10;  PCW_REGISTRATION_FLAGS  Flags;&#10;} PCW_REGISTRATION_INFORMATION, *PPCW_REGISTRATION_INFORMATION;">PCW_REGISTRATION_INFORMATION</a></code> structure and then invoke <code>PcwRegister</code> to create a new registration and store the handle in the global <em>Counterset</em> variable (declared in the CTRPP-generated header, <code>MyCounterset</code> in the example).</p>
 <p>In some cases, the CTRPP-generated Add function might not be appropriate.</p>
 <ul>
 <li>
-<p>If you must compile with <code>NTDDI_VERSION &gt;= NTDDI_VERSION_FE</code> but must run on earlier versions of Windows, the CTRPP-generated Register function will not work because it sets <code>RegInfo.Version = PCW_CURRENT_VERSION</code>. When <code>NTDDI_VERSION &gt;= NTDDI_VERSION_FE</code>, <code>PCW_CURRENT_VERSION</code> will be set to <code>PCW_VERSION_2</code>, causing <code>PcwRegister</code> to return an error.</p>
+
 </li>
 <li>
-<p>If you need to support multiple counterset registrations (e.g. to support a separate registration per server silo), the CTRPP-generated Register function will not work because it stores the returned handle in a global variable.</p>
+
 </li>
 <li>
-<p>If you want to create a silo-neutral counterset registration, the CTRPP-generated Register function will not work because there is no way to change the value of <code>RegInfo.Flags</code> before calling <code>PcwRegister</code>.</p>
+
 </li>
 </ul>
 <p>In these cases, use code like the following instead of calling the CTRPP-generated Register function:</p>
 <pre><code><a href="pcw_registration_information" title="typedef struct _PCW_REGISTRATION_INFORMATION {&#10;  ULONG                   Version;&#10;  PCUNICODE_STRING        Name;&#10;  ULONG                   CounterCount;&#10;  PPCW_COUNTER_DESCRIPTOR Counters;&#10;  PPCW_CALLBACK           Callback;&#10;  PVOID                   CallbackContext;&#10;  PCW_REGISTRATION_FLAGS  Flags;&#10;} PCW_REGISTRATION_INFORMATION, *PPCW_REGISTRATION_INFORMATION;">PCW_REGISTRATION_INFORMATION</a> RegInfo;
 InitRegistrationInformationMyCounterset(Callback, CallbackContext, &amp;RegInfo);
-
 // Modify RegInfo as needed,
 // e.g. RegInfo.Version = PCW_VERSION_1,
 // or RegInfo.Flags = PcwRegistrationSiloNeutral.
-
 // If needed, use another variable to store the handle instead of MyCounterset.
 Status = PcwRegister(&amp;MyCounterset, &amp;RegInfo);
 </code></pre>

@@ -124,126 +124,122 @@
 <h4>Examples</h4>
 <p>The following code example is a shortened version of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_io_in_caller_context">EvtIoInCallerContext</a> callback function that the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">NONPNP</a> sample driver contains. When the callback function receives an I/O request, it determines if the request contains an I/O control code with a transfer type of METHOD_NEITHER. If the request does contain such an I/O control code, the function:</p>
 <ol>
-<li>Calls <a href="wdfrequestretrieveunsafeuserinputbuffer" title="NTSTATUS WdfRequestRetrieveUnsafeUserInputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredLength,&#10;  [out]           PVOID      *InputBuffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveUnsafeUserInputBuffer</a> and <a href="wdfrequestretrieveunsafeuseroutputbuffer" title="NTSTATUS WdfRequestRetrieveUnsafeUserOutputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredLength,&#10;  [out]           PVOID      *OutputBuffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveUnsafeUserOutputBuffer</a> to obtain the virtual addresses of the request's read and write buffers.</li>
-<li>Calls <strong>WdfRequestProbeAndLockUserBufferForRead</strong> and <a href="wdfrequestprobeandlockuserbufferforwrite" title="NTSTATUS WdfRequestProbeAndLockUserBufferForWrite(&#10;  [in]  WDFREQUEST Request,&#10;  [in]  PVOID      Buffer,&#10;  [in]  size_t     Length,&#10;  [out] WDFMEMORY  *MemoryObject&#10;);">WdfRequestProbeAndLockUserBufferForWrite</a> to probe and lock the buffers and to obtain a handle to a framework memory object that represents each buffer.</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ol>
 <pre><code>VOID
 NonPnpEvtIoInCallerContext(
-    IN WDFDEVICE  Device,
-    IN WDFREQUEST Request
-    )
+IN WDFDEVICE  Device,
+IN WDFREQUEST Request
+)
 {
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-    PREQUEST_CONTEXT  reqContext = NULL;
-    <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a>  attributes;
-    <a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
-    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  inBufLen, outBufLen;
-    PVOID  inBuf, outBuf;
-
-    <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
-    <a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a>(
-                            Request,
-                            &amp;params
-                            );
-
-    //
-    // Check to see whether the driver received a METHOD_NEITHER I/O control code.
-    // If not, just send the request back to the framework.
-    //
-    if(!(params.Type == WdfRequestTypeDeviceControl &amp;&amp;
-            params.Parameters.DeviceIoControl.IoControlCode ==
-                                    IOCTL_NONPNP_METHOD_NEITHER)) {
-        status = <a href="wdfdeviceenqueuerequest" title="NTSTATUS WdfDeviceEnqueueRequest(&#10;  [in] WDFDEVICE  Device,&#10;  [in] WDFREQUEST Request&#10;);">WdfDeviceEnqueueRequest</a>(
-                                         Device,
-                                         Request
-                                         );
-        if( !<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) ) {
-            goto End;
-        }
-        return;
-    }
-
-    //
-    // The I/O control code is METHOD_NEITHER.
-    // First, retrieve the virtual addresses of
-    // the input and output buffers.
-    //
-    status = <a href="wdfrequestretrieveunsafeuserinputbuffer" title="NTSTATUS WdfRequestRetrieveUnsafeUserInputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredLength,&#10;  [out]           PVOID      *InputBuffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveUnsafeUserInputBuffer</a>(
-                                                     Request,
-                                                     0,
-                                                     &amp;inBuf,
-                                                     &amp;inBufLen
-                                                     );
-    if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        goto End;
-    }
-    status = <a href="wdfrequestretrieveunsafeuseroutputbuffer" title="NTSTATUS WdfRequestRetrieveUnsafeUserOutputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredLength,&#10;  [out]           PVOID      *OutputBuffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveUnsafeUserOutputBuffer</a>(
-                                                      Request,
-                                                      0,
-                                                      &amp;outBuf,
-                                                      &amp;outBufLen
-                                                      );
-    if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-       goto End;
-    }
-
-    //
-    // Next, allocate context space for the request, so that the
-    // driver can store handles to the memory objects that will
-    // be created for input and output buffers.
-    //
-    <a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a>(&amp;attributes,
-                                        REQUEST_CONTEXT);
-    status = <a href="wdfobjectallocatecontext" title="NTSTATUS WdfObjectAllocateContext(&#10;  [in]  WDFOBJECT              Handle,&#10;  [in]  PWDF_OBJECT_ATTRIBUTES ContextAttributes,&#10;  [out] PVOID                  *Context&#10;);">WdfObjectAllocateContext</a>(
-                                      Request,
-                                      &amp;attributes,
-                                      &amp;reqContext
-                                      );
-    if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        goto End;
-    }
-
-    //
-    // Next, probe and lock the read and write buffers.
-    //
-    status = WdfRequestProbeAndLockUserBufferForRead(
-                                                     Request,
-                                                     inBuf,
-                                                     inBufLen,
-                                                     &amp;reqContext-&gt;InputMemoryBuffer
-                                                     );
-    if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        goto End;
-    }
-
-    status = <a href="wdfrequestprobeandlockuserbufferforwrite" title="NTSTATUS WdfRequestProbeAndLockUserBufferForWrite(&#10;  [in]  WDFREQUEST Request,&#10;  [in]  PVOID      Buffer,&#10;  [in]  size_t     Length,&#10;  [out] WDFMEMORY  *MemoryObject&#10;);">WdfRequestProbeAndLockUserBufferForWrite</a>(
-                                                      Request,
-                                                      outBuf,
-                                                      outBufLen,
-                                                      &amp;reqContext-&gt;OutputMemoryBuffer
-                                                      );
-    if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        goto End;
-    }
-
-    //
-    // Finally, return the request to the framework.
-    //
-    status = <a href="wdfdeviceenqueuerequest" title="NTSTATUS WdfDeviceEnqueueRequest(&#10;  [in] WDFDEVICE  Device,&#10;  [in] WDFREQUEST Request&#10;);">WdfDeviceEnqueueRequest</a>(
-                                     Device,
-                                     Request
-                                     );
-    if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        goto End;
-    }
-    return;
-
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+PREQUEST_CONTEXT  reqContext = NULL;
+<a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a>  attributes;
+<a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
+<a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  inBufLen, outBufLen;
+PVOID  inBuf, outBuf;
+<a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
+<a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a>(
+Request,
+&amp;params
+);
+//
+// Check to see whether the driver received a METHOD_NEITHER I/O control code.
+// If not, just send the request back to the framework.
+//
+if(!(params.Type == WdfRequestTypeDeviceControl &amp;&amp;
+params.Parameters.DeviceIoControl.IoControlCode ==
+IOCTL_NONPNP_METHOD_NEITHER)) {
+status = <a href="wdfdeviceenqueuerequest" title="NTSTATUS WdfDeviceEnqueueRequest(&#10;  [in] WDFDEVICE  Device,&#10;  [in] WDFREQUEST Request&#10;);">WdfDeviceEnqueueRequest</a>(
+Device,
+Request
+);
+if( !<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) ) {
+goto End;
+}
+return;
+}
+//
+// The I/O control code is METHOD_NEITHER.
+// First, retrieve the virtual addresses of
+// the input and output buffers.
+//
+status = <a href="wdfrequestretrieveunsafeuserinputbuffer" title="NTSTATUS WdfRequestRetrieveUnsafeUserInputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredLength,&#10;  [out]           PVOID      *InputBuffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveUnsafeUserInputBuffer</a>(
+Request,
+0,
+&amp;inBuf,
+&amp;inBufLen
+);
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto End;
+}
+status = <a href="wdfrequestretrieveunsafeuseroutputbuffer" title="NTSTATUS WdfRequestRetrieveUnsafeUserOutputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredLength,&#10;  [out]           PVOID      *OutputBuffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveUnsafeUserOutputBuffer</a>(
+Request,
+0,
+&amp;outBuf,
+&amp;outBufLen
+);
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto End;
+}
+//
+// Next, allocate context space for the request, so that the
+// driver can store handles to the memory objects that will
+// be created for input and output buffers.
+//
+<a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a>(&amp;attributes,
+REQUEST_CONTEXT);
+status = <a href="wdfobjectallocatecontext" title="NTSTATUS WdfObjectAllocateContext(&#10;  [in]  WDFOBJECT              Handle,&#10;  [in]  PWDF_OBJECT_ATTRIBUTES ContextAttributes,&#10;  [out] PVOID                  *Context&#10;);">WdfObjectAllocateContext</a>(
+Request,
+&amp;attributes,
+&amp;reqContext
+);
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto End;
+}
+//
+// Next, probe and lock the read and write buffers.
+//
+status = WdfRequestProbeAndLockUserBufferForRead(
+Request,
+inBuf,
+inBufLen,
+&amp;reqContext-&gt;InputMemoryBuffer
+);
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto End;
+}
+status = <a href="wdfrequestprobeandlockuserbufferforwrite" title="NTSTATUS WdfRequestProbeAndLockUserBufferForWrite(&#10;  [in]  WDFREQUEST Request,&#10;  [in]  PVOID      Buffer,&#10;  [in]  size_t     Length,&#10;  [out] WDFMEMORY  *MemoryObject&#10;);">WdfRequestProbeAndLockUserBufferForWrite</a>(
+Request,
+outBuf,
+outBufLen,
+&amp;reqContext-&gt;OutputMemoryBuffer
+);
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto End;
+}
+//
+// Finally, return the request to the framework.
+//
+status = <a href="wdfdeviceenqueuerequest" title="NTSTATUS WdfDeviceEnqueueRequest(&#10;  [in] WDFDEVICE  Device,&#10;  [in] WDFREQUEST Request&#10;);">WdfDeviceEnqueueRequest</a>(
+Device,
+Request
+);
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto End;
+}
+return;
 End:
-    <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
-                       Request,
-                       status
-                       );
-    return;
+<a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
+Request,
+status
+);
+return;
 }
 </code></pre>
 <h2>See also</h2>

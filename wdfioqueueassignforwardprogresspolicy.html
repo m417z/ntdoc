@@ -105,9 +105,15 @@
 <p>In KMDF versions 1.11 and later, the I/O queue that the <em>Queue</em> parameter represents can be any queue that receives a request directly from the framework. For example, the driver might specify a queue to which it will <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dispatching-irps-to-i-o-queues">dynamically forward IRPs</a>.</p>
 <p>Before <strong>WdfIoQueueAssignForwardProgressPolicy</strong> returns, the framework does the following:</p>
 <ul>
-<li>Creates and stores the number of request objects that the driver has specified for the <strong>TotalForwardProgressRequests</strong> member of the <a href="wdf_io_queue_forward_progress_policy" title="typedef struct _WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY {&#10;  ULONG                                              Size;&#10;  ULONG                                              TotalForwardProgressRequests;&#10;  WDF_IO_FORWARD_PROGRESS_RESERVED_POLICY            ForwardProgressReservedPolicy;&#10;  WDF_IO_FORWARD_PROGRESS_RESERVED_POLICY_SETTINGS   ForwardProgressReservePolicySettings;&#10;  PFN_WDF_IO_ALLOCATE_RESOURCES_FOR_RESERVED_REQUEST EvtIoAllocateResourcesForReservedRequest;&#10;  PFN_WDF_IO_ALLOCATE_REQUEST_RESOURCES              EvtIoAllocateRequestResources;&#10;} WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY, *PWDF_IO_QUEUE_FORWARD_PROGRESS_POLICY;">WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY</a> structure.</li>
-<li>If the driver previously called <a href="wdfdeviceinitsetrequestattributes" title="VOID WdfDeviceInitSetRequestAttributes(&#10;  [in] PWDFDEVICE_INIT        DeviceInit,&#10;  [in] PWDF_OBJECT_ATTRIBUTES RequestAttributes&#10;);">WdfDeviceInitSetRequestAttributes</a>, each allocation includes context space that <strong><a href="wdfdeviceinitsetrequestattributes" title="VOID WdfDeviceInitSetRequestAttributes(&#10;  [in] PWDFDEVICE_INIT        DeviceInit,&#10;  [in] PWDF_OBJECT_ATTRIBUTES RequestAttributes&#10;);">WdfDeviceInitSetRequestAttributes</a></strong> specified.</li>
-<li>Calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_allocate_resources_for_reserved_request">EvtIoAllocateResourcesForReservedRequest</a> callback function for each request object that the framework creates.</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
 <p>After the driver has called <strong>WdfIoQueueAssignForwardProgressPolicy</strong> to create reserved request objects, the framework uses those reserved objects whenever its attempt to create a new request object fails. (Typically, such failures are caused by low memory situations.)</p>
 <p>The framework deletes its reserved request objects only when it deletes the framework queue object that they belong to. If your driver calls <a href="wdfdeviceinitsetrequestattributes" title="VOID WdfDeviceInitSetRequestAttributes(&#10;  [in] PWDFDEVICE_INIT        DeviceInit,&#10;  [in] PWDF_OBJECT_ATTRIBUTES RequestAttributes&#10;);">WdfDeviceInitSetRequestAttributes</a> and specifies an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_cleanup">EvtCleanupCallback</a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a> callback function for its request objects, the framework calls these callback functions for its reserved request objects when it deletes the objects.</p>
@@ -115,29 +121,28 @@
 <h4>Examples</h4>
 <p>This code example configures a previously created I/O queue to receive write requests, and then it enables guaranteed forward progress for the queue.</p>
 <pre><code>#define MAX_RESERVED_REQUESTS 10
-
 <a href="wdf_io_queue_forward_progress_policy" title="typedef struct _WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY {&#10;  ULONG                                              Size;&#10;  ULONG                                              TotalForwardProgressRequests;&#10;  WDF_IO_FORWARD_PROGRESS_RESERVED_POLICY            ForwardProgressReservedPolicy;&#10;  WDF_IO_FORWARD_PROGRESS_RESERVED_POLICY_SETTINGS   ForwardProgressReservePolicySettings;&#10;  PFN_WDF_IO_ALLOCATE_RESOURCES_FOR_RESERVED_REQUEST EvtIoAllocateResourcesForReservedRequest;&#10;  PFN_WDF_IO_ALLOCATE_REQUEST_RESOURCES              EvtIoAllocateRequestResources;&#10;} WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY, *PWDF_IO_QUEUE_FORWARD_PROGRESS_POLICY;">WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY</a> queueForwardProgressPolicy;
 WDFQUEUE writeQueue;
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
 ...
 status = <a href="wdfdeviceconfigurerequestdispatching" title="NTSTATUS WdfDeviceConfigureRequestDispatching(&#10;  [in] WDFDEVICE        Device,&#10;  [in] WDFQUEUE         Queue,&#10;  [in] WDF_REQUEST_TYPE RequestType&#10;);">WdfDeviceConfigureRequestDispatching</a>(
-             device,
-             writeQueue,
-             WdfRequestTypeWrite
-             );
+device,
+writeQueue,
+WdfRequestTypeWrite
+);
 if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-    return status;
+return status;
 }
 <a href="wdf_io_queue_forward_progress_policy_default_init" title="VOID WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY_DEFAULT_INIT(&#10;  [out] PWDF_IO_QUEUE_FORWARD_PROGRESS_POLICY Policy,&#10;  [in]  ULONG                                 TotalForwardProgressRequests&#10;);">WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY_DEFAULT_INIT</a>(
-    &amp;queueForwardProgressPolicy,
-    MAX_RESERVED_REQUESTS
-    );
+&amp;queueForwardProgressPolicy,
+MAX_RESERVED_REQUESTS
+);
 status = WdfIoQueueAssignForwardProgressPolicy(
-             writeQueue,
-             &amp;queueForwardProgressPolicy
-             );
+writeQueue,
+&amp;queueForwardProgressPolicy
+);
 if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-    return status;
+return status;
 }
 </code></pre>
 <h2>See also</h2>

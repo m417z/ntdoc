@@ -120,29 +120,27 @@
 <p>To forward an I/O request that your driver received in an I/O queue:</p>
 <ol>
 <li>
-<p>Specify the received request's handle for the <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> method's <em>Request</em> parameter.</p>
+
 </li>
-<li>
-<p>Use the received request's input buffer for the <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> method's <em>WriteMemory</em> parameter.</p>
-<p>The driver must call <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a> to obtain a handle to a framework memory object that represents the request's input buffer and use that handle as the value for <em>WriteMemory</em>.</p>
-</li>
+<li><p>Use the received request's input buffer for the <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> method's <em>WriteMemory</em> parameter.</p>
+<p>The driver must call <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a> to obtain a handle to a framework memory object that represents the request's input buffer and use that handle as the value for <em>WriteMemory</em>.</p></li>
 </ol>
 <p>For more information about forwarding an I/O request, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/forwarding-i-o-requests">Forwarding I/O Requests</a>.</p>
 <p>Drivers often divide received I/O requests into smaller requests that they send to an I/O target, so your driver might create new requests.</p>
 <p>To create a new I/O request:</p>
 <ol>
-<li>
-<p>Create a new request object and supply its handle for the <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> method's <em>Request</em> parameter.</p>
-<p>Call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> to preallocate one or more request objects. You can reuse these request objects by calling <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>. Your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function can preallocate request objects for a device.</p>
-</li>
-<li>
-<p>Provide buffer space, and supply the buffer's handle for the <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> method's <em>WriteMemory</em> parameter.</p>
+<li><p>Create a new request object and supply its handle for the <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> method's <em>Request</em> parameter.</p>
+<p>Call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> to preallocate one or more request objects. You can reuse these request objects by calling <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>. Your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function can preallocate request objects for a device.</p></li>
+<li><p>Provide buffer space, and supply the buffer's handle for the <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> method's <em>WriteMemory</em> parameter.</p>
 <p>Your driver must specify this buffer space as a WDFMEMORY handle to framework-managed memory. Your driver can do either of the following:</p>
 <ul>
-<li>Call <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a> or <a href="wdfmemorycreatepreallocated" title="NTSTATUS WdfMemoryCreatePreallocated(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]           __drv_aliasesMem PVOID Buffer,&#10;  [in]           size_t                 BufferSize,&#10;  [out]          WDFMEMORY              *Memory&#10;);">WdfMemoryCreatePreallocated</a> to create a new memory buffer, if you want the driver to pass a new buffer to the I/O target.</li>
-<li>Call <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a> to obtain a handle to the memory object that represents a received I/O request's buffer, if you want the driver to pass that buffer's contents to the I/O target.Note that if your driver calls <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a> and passes the memory handle to <strong>WdfUsbTargetPipeFormatRequestForWrite</strong>, the driver must not complete the received I/O request until after the driver deletes, reuses, or reformats the new, driver-created request object. (<strong>WdfUsbTargetPipeFormatRequestForWrite</strong> increments the memory object's reference count. Deleting, reusing, or reformatting a request object decrements the memory object's reference count.)</li>
-</ul>
+<li>
+
 </li>
+<li>
+
+</li>
+</ul></li>
 </ol>
 <p>After calling <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> to format an I/O request, the driver must call <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> to send the request (either synchronously or asynchronously) to an I/O target.</p>
 <p>Multiple calls to <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> that use the same request do not cause additional resource allocations. Therefore, to reduce the chance that <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> will return STATUS_INSUFFICIENT_RESOURCES, your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function can call <strong><a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a></strong> to preallocate one or more request objects for a device. The driver can subsequently reuse (call <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>), reformat (call <strong>WdfUsbTargetPipeFormatRequestForWrite</strong>), and resend (call <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>) each request object without risking a STATUS_INSUFFICIENT_RESOURCES return value from a later call to <strong><a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a></strong>. All subsequent calls to <strong>WdfUsbTargetPipeFormatRequestForWrite</strong> for the reused request object will return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, if parameter values do not change. (If the driver does not call the same request-formatting method each time, additional resources might be allocated.)</p>
@@ -152,67 +150,59 @@
 <p>The following code example is from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">kmdf_fx2</a> sample driver. This example is an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_write">EvtIoWrite</a> callback function that forwards a write request to a USB pipe. The example calls <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a> to obtain the request's input buffer, and then it formats the write request so that the request can be sent to a USB pipe. Next, the example registers a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function. Finally, it sends the request to the USB pipe.</p>
 <pre><code>VOID
 OsrFxEvtIoWrite(
-    IN WDFQUEUE  Queue,
-    IN WDFREQUEST  Request,
-    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  Length
-    )
+IN WDFQUEUE  Queue,
+IN WDFREQUEST  Request,
+IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  Length
+)
 {
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
-    WDFUSBPIPE  pipe;
-    WDFMEMORY  reqMemory;
-    PDEVICE_CONTEXT  pDeviceContext;
-
-    if (Length &gt; TEST_BOARD_TRANSFER_BUFFER_SIZE) {
-        status = STATUS_INVALID_PARAMETER;
-        goto Exit;
-    }
-
-    pDeviceContext = GetDeviceContext(<a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue));
-
-    pipe = pDeviceContext-&gt;BulkWritePipe;
-
-    status = <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a>(
-                                           Request,
-                                           &amp;reqMemory
-                                           );
-    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-        goto Exit;
-    }
-
-    status = WdfUsbTargetPipeFormatRequestForWrite(
-                                                   pipe,
-                                                   Request,
-                                                   reqMemory,
-                                                   NULL
-                                                   );
-    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        goto Exit;
-    }
-
-    <a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a>(
-                                   Request,
-                                   EvtRequestWriteCompletionRoutine,
-                                   pipe
-                                   );
-
-    if (<a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>(
-                       Request,
-                       <a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>(pipe),
-                       WDF_NO_SEND_OPTIONS
-                       ) == FALSE) {
-        status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(Request);
-        goto Exit;
-    }
-
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
+WDFUSBPIPE  pipe;
+WDFMEMORY  reqMemory;
+PDEVICE_CONTEXT  pDeviceContext;
+if (Length &gt; TEST_BOARD_TRANSFER_BUFFER_SIZE) {
+status = STATUS_INVALID_PARAMETER;
+goto Exit;
+}
+pDeviceContext = GetDeviceContext(<a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue));
+pipe = pDeviceContext-&gt;BulkWritePipe;
+status = <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a>(
+Request,
+&amp;reqMemory
+);
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
+goto Exit;
+}
+status = WdfUsbTargetPipeFormatRequestForWrite(
+pipe,
+Request,
+reqMemory,
+NULL
+);
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto Exit;
+}
+<a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a>(
+Request,
+EvtRequestWriteCompletionRoutine,
+pipe
+);
+if (<a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>(
+Request,
+<a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>(pipe),
+WDF_NO_SEND_OPTIONS
+) == FALSE) {
+status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(Request);
+goto Exit;
+}
 Exit:
-    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
-                                          Request,
-                                          status,
-                                          0
-                                          );
-    }
-    return;
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+<a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
+Request,
+status,
+0
+);
+}
+return;
 }
 </code></pre>
 <h2>See also</h2>

@@ -132,64 +132,56 @@
 <p>To forward an I/O request that your driver received in an I/O queue:</p>
 <ol>
 <li>
-<p>Specify the received request's handle for the <em>Request</em> parameter.</p>
+
 </li>
-<li>
-<p>Use the received request's output buffer for the <strong>WdfUsbTargetPipeReadSynchronously</strong> method's <em>MemoryDescriptor</em> parameter.</p>
-<p>The driver must call <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> to obtain a handle to a framework memory object that represents the request's output buffer and then place that handle in the <a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a> structure that <em>MemoryDescriptor</em> points to.</p>
-</li>
+<li><p>Use the received request's output buffer for the <strong>WdfUsbTargetPipeReadSynchronously</strong> method's <em>MemoryDescriptor</em> parameter.</p>
+<p>The driver must call <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> to obtain a handle to a framework memory object that represents the request's output buffer and then place that handle in the <a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a> structure that <em>MemoryDescriptor</em> points to.</p></li>
 </ol>
 <p>For more information about forwarding an I/O request, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/forwarding-i-o-requests">Forwarding I/O Requests</a>.</p>
 <p>Drivers often divide received I/O requests into smaller requests that they send to an I/O target, so your driver might create new requests.</p>
 <p>To create a new I/O request:</p>
 <ol>
-<li>
-<p>Supply a <strong>NULL</strong> request handle in the <strong>WdfUsbTargetPipeReadSynchronously</strong> method's <em>Request</em> parameter, or create a new request object and supply its handle:</p>
+<li><p>Supply a <strong>NULL</strong> request handle in the <strong>WdfUsbTargetPipeReadSynchronously</strong> method's <em>Request</em> parameter, or create a new request object and supply its handle:</p>
 <ul>
-<li>If you supply a <strong>NULL</strong> request handle, the framework uses an internal request object. This technique is simple to use, but the driver cannot cancel the request.</li>
-<li>If you call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> to create one or more request objects, you can reuse these request objects by calling <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>. This technique enables your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function to preallocate request objects for a device. Additionally, another driver thread can call <a href="wdfrequestcancelsentrequest" title="BOOLEAN WdfRequestCancelSentRequest(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestCancelSentRequest</a> to cancel the request, if necessary.</li>
-</ul>
-<p>Your driver can specify a non-<strong>NULL</strong> <em>RequestOptions</em> parameter, whether the driver provides a non-<strong>NULL</strong> or a <strong>NULL</strong> <em>Request</em> parameter. You can, for example, use the <em>RequestOptions</em> parameter to specify a time-out value.</p>
+<li>
+
 </li>
 <li>
-<p>Provide buffer space for the <strong>WdfUsbTargetPipeReadSynchronously</strong> method's <em>MemoryDescriptor</em> parameter.</p>
+
+</li>
+</ul>
+<p>Your driver can specify a non-<strong>NULL</strong> <em>RequestOptions</em> parameter, whether the driver provides a non-<strong>NULL</strong> or a <strong>NULL</strong> <em>Request</em> parameter. You can, for example, use the <em>RequestOptions</em> parameter to specify a time-out value.</p></li>
+<li><p>Provide buffer space for the <strong>WdfUsbTargetPipeReadSynchronously</strong> method's <em>MemoryDescriptor</em> parameter.</p>
 <p>Your driver can specify this buffer space as a locally allocated buffer, as a WDFMEMORY handle, or as an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>. You can use whichever method is most convenient.</p>
 <p>If necessary, the framework converts the buffer description to one that is correct for the I/O target's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/methods-for-accessing-data-buffers">method for accessing data buffers</a>.</p>
 <p>The following techniques are available:</p>
 <ul>
-<li>
-<p>Supply a local buffer</p>
+<li><p>Supply a local buffer</p>
 <p>Because <strong>WdfUsbTargetPipeReadSynchronously</strong> handles I/O requests synchronously, the driver can create request buffers that are local to the calling routine, as the following code example shows.</p>
 <pre><code><a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a>  memoryDescriptor;
 MY_BUFFER_TYPE  myBuffer;
 <a href="wdf_memory_descriptor_init_buffer" title="VOID WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&#10;  [out] PWDF_MEMORY_DESCRIPTOR Descriptor,&#10;  [in]  PVOID                  Buffer,&#10;  [in]  ULONG                  BufferLength&#10;);">WDF_MEMORY_DESCRIPTOR_INIT_BUFFER</a>(&amp;memoryDescriptor,
-                                  (PVOID) &amp;myBuffer,
-                                  sizeof(myBuffer));
-</code></pre>
-</li>
-<li>
-<p>Supply a WDFMEMORY handle</p>
+(PVOID) &amp;myBuffer,
+sizeof(myBuffer));
+</code></pre></li>
+<li><p>Supply a WDFMEMORY handle</p>
 <p>Call <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a> or <a href="wdfmemorycreatepreallocated" title="NTSTATUS WdfMemoryCreatePreallocated(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]           __drv_aliasesMem PVOID Buffer,&#10;  [in]           size_t                 BufferSize,&#10;  [out]          WDFMEMORY              *Memory&#10;);">WdfMemoryCreatePreallocated</a> to obtain a handle to framework-managed memory, as the following code example shows.</p>
 <pre><code><a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a>  memoryDescriptor;
 WDFMEMORY  memoryHandle = NULL;
 status = <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a>(NULL,
-                         NonPagedPool,
-                         POOL_TAG,
-                         MY_BUFFER_SIZE,
-                         &amp;memoryHandle,
-                         NULL);
+NonPagedPool,
+POOL_TAG,
+MY_BUFFER_SIZE,
+&amp;memoryHandle,
+NULL);
 <a href="wdf_memory_descriptor_init_handle" title="VOID WDF_MEMORY_DESCRIPTOR_INIT_HANDLE(&#10;  [out]          PWDF_MEMORY_DESCRIPTOR Descriptor,&#10;  [in]           WDFMEMORY              Memory,&#10;  [in, optional] PWDFMEMORY_OFFSET      Offsets&#10;);">WDF_MEMORY_DESCRIPTOR_INIT_HANDLE</a>(&amp;memoryDescriptor,
-                                  memoryHandle,
-                                  NULL);
+memoryHandle,
+NULL);
 </code></pre>
-<p>Alternatively, the driver can call <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> to obtain a handle to a framework memory object that represents a received I/O request's output buffer, if you want the driver to pass that buffer's contents to the I/O target. The driver must not complete the received I/O request until the new request that <strong>WdfUsbTargetPipeReadSynchronously</strong> sends to the I/O target has been deleted, reused, or reformatted. (<strong>WdfUsbTargetPipeReadSynchronously</strong> increments the memory object's reference count. Deleting, reusing, or reformatting a request object decrements the memory object's reference count.)</p>
-</li>
-<li>
-<p>Supply an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a></p>
-<p>Drivers can obtain the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> that is associated with a received I/O request by calling <a href="wdfrequestretrieveoutputwdmmdl" title="NTSTATUS WdfRequestRetrieveOutputWdmMdl(&#10;  [in]  WDFREQUEST Request,&#10;  [out] PMDL       *Mdl&#10;);">WdfRequestRetrieveOutputWdmMdl</a>.</p>
-</li>
-</ul>
-</li>
+<p>Alternatively, the driver can call <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> to obtain a handle to a framework memory object that represents a received I/O request's output buffer, if you want the driver to pass that buffer's contents to the I/O target. The driver must not complete the received I/O request until the new request that <strong>WdfUsbTargetPipeReadSynchronously</strong> sends to the I/O target has been deleted, reused, or reformatted. (<strong>WdfUsbTargetPipeReadSynchronously</strong> increments the memory object's reference count. Deleting, reusing, or reformatting a request object decrements the memory object's reference count.)</p></li>
+<li><p>Supply an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a></p>
+<p>Drivers can obtain the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> that is associated with a received I/O request by calling <a href="wdfrequestretrieveoutputwdmmdl" title="NTSTATUS WdfRequestRetrieveOutputWdmMdl(&#10;  [in]  WDFREQUEST Request,&#10;  [out] PMDL       *Mdl&#10;);">WdfRequestRetrieveOutputWdmMdl</a>.</p></li>
+</ul></li>
 </ol>
 <p>The framework sets the USBD_SHORT_TRANSFER_OK flag in its internal <a href="urb" title="typedef struct _URB {&#10;  union {&#10;#if ...&#10;    _URB_HEADER                                     UrbHeader;&#10;#else&#10;    struct _URB_HEADER                              UrbHeader;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_INTERFACE                           UrbSelectInterface;&#10;#else&#10;    struct _URB_SELECT_INTERFACE                    UrbSelectInterface;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_CONFIGURATION                       UrbSelectConfiguration;&#10;#else&#10;    struct _URB_SELECT_CONFIGURATION                UrbSelectConfiguration;&#10;#endif&#10;#if ...&#10;    _URB_PIPE_REQUEST                               UrbPipeRequest;&#10;#else&#10;...">URB</a>. Setting this flag allows the last packet of a data transfer to be less than the maximum packet size.</p>
 <p>A driver cannot call <strong>WdfUsbTargetPipeReadSynchronously</strong> if it has configured a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/working-with-usb-pipes">continuous reader</a> for the pipe.</p>
@@ -200,37 +192,33 @@ status = <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, o
 <pre><code>WDFMEMORY  wdfMemory;
 <a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a>  readBufDesc;
 <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  BytesRead;
-
 status = <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a>(
-                         WDF_NO_OBJECT_ATTRIBUTES,
-                         NonPagedPool,
-                         0,
-                         readSize,
-                         &amp;wdfMemory,
-                         NULL
-                         );
+WDF_NO_OBJECT_ATTRIBUTES,
+NonPagedPool,
+0,
+readSize,
+&amp;wdfMemory,
+NULL
+);
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-    return ;
+return ;
 }
-
 buffer = <a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a>(
-                            wdfMemory,
-                            NULL
-                            );
-
+wdfMemory,
+NULL
+);
 <a href="wdf_memory_descriptor_init_buffer" title="VOID WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&#10;  [out] PWDF_MEMORY_DESCRIPTOR Descriptor,&#10;  [in]  PVOID                  Buffer,&#10;  [in]  ULONG                  BufferLength&#10;);">WDF_MEMORY_DESCRIPTOR_INIT_BUFFER</a>(
-                                  &amp;readBufDesc,
-                                  buffer,
-                                  readSize
-                                  );
-
+&amp;readBufDesc,
+buffer,
+readSize
+);
 status = WdfUsbTargetPipeReadSynchronously(
-                                           Pipe,
-                                           NULL,
-                                           NULL,
-                                           &amp;readBufDesc,
-                                           &amp;BytesRead
-                                           );
+Pipe,
+NULL,
+NULL,
+&amp;readBufDesc,
+&amp;BytesRead
+);
 </code></pre>
 <h2>See also</h2>
 <p><a href="wdf_memory_descriptor_init_buffer" title="VOID WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&#10;  [out] PWDF_MEMORY_DESCRIPTOR Descriptor,&#10;  [in]  PVOID                  Buffer,&#10;  [in]  ULONG                  BufferLength&#10;);">WDF_MEMORY_DESCRIPTOR_INIT_BUFFER</a></p>

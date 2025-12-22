@@ -126,57 +126,53 @@
 <a href="urb" title="typedef struct _URB {&#10;  union {&#10;#if ...&#10;    _URB_HEADER                                     UrbHeader;&#10;#else&#10;    struct _URB_HEADER                              UrbHeader;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_INTERFACE                           UrbSelectInterface;&#10;#else&#10;    struct _URB_SELECT_INTERFACE                    UrbSelectInterface;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_CONFIGURATION                       UrbSelectConfiguration;&#10;#else&#10;    struct _URB_SELECT_CONFIGURATION                UrbSelectConfiguration;&#10;#endif&#10;#if ...&#10;    _URB_PIPE_REQUEST                               UrbPipeRequest;&#10;#else&#10;...">PURB</a>  pUrb = NULL;
 WDFMEMORY  urbMemory
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
-
 status = <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a>(
-                         WDF_NO_OBJECT_ATTRIBUTES,
-                         NonPagedPool,
-                         0,
-                         sizeof(struct <a href="_urb_get_current_frame_number" title="struct _URB_GET_CURRENT_FRAME_NUMBER {&#10;  struct _URB_HEADER Hdr;&#10;  ULONG              FrameNumber;&#10;};">_URB_GET_CURRENT_FRAME_NUMBER</a>),
-                         &amp;urbMemory,
-                         NULL
-                         );
+WDF_NO_OBJECT_ATTRIBUTES,
+NonPagedPool,
+0,
+sizeof(struct <a href="_urb_get_current_frame_number" title="struct _URB_GET_CURRENT_FRAME_NUMBER {&#10;  struct _URB_HEADER Hdr;&#10;  ULONG              FrameNumber;&#10;};">_URB_GET_CURRENT_FRAME_NUMBER</a>),
+&amp;urbMemory,
+NULL
+);
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-    return status;
+return status;
 }
-
 pUrb = <a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a>(
-                          urbMemory,
-                          NULL
-                          );
-
+urbMemory,
+NULL
+);
 pUrb-&gt;UrbHeader.Length = (<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>) sizeof(struct <a href="_urb_get_current_frame_number" title="struct _URB_GET_CURRENT_FRAME_NUMBER {&#10;  struct _URB_HEADER Hdr;&#10;  ULONG              FrameNumber;&#10;};">_URB_GET_CURRENT_FRAME_NUMBER</a>);
 pUrb-&gt;UrbHeader.Function = URB_FUNCTION_GET_CURRENT_FRAME_NUMBER;
 pUrb-&gt;UrbGetCurrentFrameNumber.FrameNumber = 0;
-
 status = WdfUsbTargetPipeFormatRequestForUrb(
-                                             pipe,
-                                             Request,
-                                             urbMemory,
-                                             NULL
-                                             );
+pipe,
+Request,
+urbMemory,
+NULL
+);
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-    goto Exit;
+goto Exit;
 }
 <a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a>(
-                               Request,
-                               UrbCompletionRoutine,
-                               pipe
-                               );
+Request,
+UrbCompletionRoutine,
+pipe
+);
 if (<a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>(
-                   Request,
-                   <a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>(pipe),
-                   WDF_NO_SEND_OPTIONS
-                   ) == FALSE) {
-    status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(Request);
-    goto Exit;
+Request,
+<a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>(pipe),
+WDF_NO_SEND_OPTIONS
+) == FALSE) {
+status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(Request);
+goto Exit;
 }
 Exit:
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-    <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
-                                      Request,
-                                      status,
-                                      0
-                                      );
+<a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
+Request,
+status,
+0
+);
 }
 return;
 </code></pre>

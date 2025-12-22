@@ -145,9 +145,9 @@
 <p>The driver-supplied <em>LookasideListAllocateEx</em> and <em>LookasideListFreeEx</em> routines both receive <em>Lookaside</em> parameters that point to the <strong>LOOKASIDE_LIST_EX</strong> structure that describes the lookaside list. The routines can use this parameter to access private data that the driver has associated with the lookaside list. For example, the driver might allocate an instance of the following structure to collect private data for each lookaside list that it creates:</p>
 <pre><code>typedef struct
 {
-  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfAllocations;  // number of entries allocated
-  <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfFrees;        // number of entries freed
-  LOOKASIDE_LIST_EX LookasideField;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfAllocations;  // number of entries allocated
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfFrees;        // number of entries freed
+LOOKASIDE_LIST_EX LookasideField;
 } MY_PRIVATE_DATA;
 </code></pre>
 <p>The driver can initialize a lookaside list as shown in the following code example:</p>
@@ -155,56 +155,50 @@
 #define MY_POOL_TAG  'tsLL'
 MY_PRIVATE_DATA *MyContext;
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-
 MyContext = <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>(NonPagedPool, sizeof(MY_PRIVATE_DATA), MY_POOL_TAG);
 if (MyContext)
 {
-    MyContext.NumberOfAllocations = 0;
-    MyContext.NumberOfFrees = 0;
-
-    status = ExInitializeLookasideListEx(
-                 &amp;MyContext.LookasideField,
-                 MyLookasideListAllocateEx,
-                 MyLookasideListFreeEx,
-                 NonPagedPool,
-                 0,
-                 ENTRY_SIZE,
-                 MY_POOL_TAG,
-                 0);
+MyContext.NumberOfAllocations = 0;
+MyContext.NumberOfFrees = 0;
+status = ExInitializeLookasideListEx(
+&amp;MyContext.LookasideField,
+MyLookasideListAllocateEx,
+MyLookasideListFreeEx,
+NonPagedPool,
+0,
+ENTRY_SIZE,
+MY_POOL_TAG,
+0);
 }
 else
 {
-    status = STATUS_INSUFFICIENT_RESOURCES;
+status = STATUS_INSUFFICIENT_RESOURCES;
 }
 </code></pre>
 <p>The following code example shows how the <em>LookasideListAllocateEx</em> routine can use its <em>Lookaside</em> parameter to access the private data that is associated with the lookaside list:</p>
 <pre><code>PVOID
-  MyLookasideListAllocateEx(
-    __in <a href="pool_type" title="typedef enum _POOL_TYPE {&#10;    NonPagedPool,&#10;    NonPagedPoolExecute = NonPagedPool,&#10;    PagedPool,&#10;    NonPagedPoolMustSucceed = NonPagedPool + 2,&#10;    DontUseThisType,&#10;    NonPagedPoolCacheAligned = NonPagedPool + 4,&#10;    PagedPoolCacheAligned,&#10;    NonPagedPoolCacheAlignedMustS = NonPagedPool + 6,&#10;    MaxPoolType,&#10;    NonPagedPoolBase = 0,&#10;    NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,&#10;    NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,&#10;    NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,&#10;    NonPagedPoolSession = 32,&#10;    PagedPoolSession = NonPagedPoolSession + 1,&#10;    NonPagedPoolMustSucceedSession = PagedPoolSession + 1,&#10;    DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,&#10;    NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,&#10;    PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,&#10;...">POOL_TYPE</a>  PoolType,
-    __in <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a>  NumberOfBytes,
-    __in <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  Tag,
-    __inout PLOOKASIDE_LIST_EX  Lookaside)
+MyLookasideListAllocateEx(
+__in <a href="pool_type" title="typedef enum _POOL_TYPE {&#10;    NonPagedPool,&#10;    NonPagedPoolExecute = NonPagedPool,&#10;    PagedPool,&#10;    NonPagedPoolMustSucceed = NonPagedPool + 2,&#10;    DontUseThisType,&#10;    NonPagedPoolCacheAligned = NonPagedPool + 4,&#10;    PagedPoolCacheAligned,&#10;    NonPagedPoolCacheAlignedMustS = NonPagedPool + 6,&#10;    MaxPoolType,&#10;    NonPagedPoolBase = 0,&#10;    NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,&#10;    NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,&#10;    NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,&#10;    NonPagedPoolSession = 32,&#10;    PagedPoolSession = NonPagedPoolSession + 1,&#10;    NonPagedPoolMustSucceedSession = PagedPoolSession + 1,&#10;    DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,&#10;    NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,&#10;    PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,&#10;...">POOL_TYPE</a>  PoolType,
+__in <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a>  NumberOfBytes,
+__in <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  Tag,
+__inout PLOOKASIDE_LIST_EX  Lookaside)
 {
-    MY_PRIVATE_DATA *MyContext;
-    PVOID NewEntry;
-
-    MyContext = <a href="containing_record" title="#define CONTAINING_RECORD(address, type, field) \&#10;    ((type *)((ULONG_PTR)(address) - UFIELD_OFFSET(type, field)))">CONTAINING_RECORD</a>(Lookaside, MY_PRIVATE_DATA, LookasideField);
-
-    NewEntry = <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>(PoolType, NumberOfBytes, Tag);
-
-    if (NewEntry)
-    {
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfAllocations = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>) <a href="interlockedincrement" title="LONG InterlockedIncrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedIncrement</a>((<a href="long" title="typedef long LONG;">LONG</a> volatile*)&amp;MyContext-&gt;NumberOfAllocations);
-    }
-
-    return NewEntry;
+MY_PRIVATE_DATA *MyContext;
+PVOID NewEntry;
+MyContext = <a href="containing_record" title="#define CONTAINING_RECORD(address, type, field) \&#10;    ((type *)((ULONG_PTR)(address) - UFIELD_OFFSET(type, field)))">CONTAINING_RECORD</a>(Lookaside, MY_PRIVATE_DATA, LookasideField);
+NewEntry = <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>(PoolType, NumberOfBytes, Tag);
+if (NewEntry)
+{
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfAllocations = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>) <a href="interlockedincrement" title="LONG InterlockedIncrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedIncrement</a>((<a href="long" title="typedef long LONG;">LONG</a> volatile*)&amp;MyContext-&gt;NumberOfAllocations);
+}
+return NewEntry;
 }
 </code></pre>
 <p>The <strong><a href="containing_record" title="#define CONTAINING_RECORD(address, type, field) \&#10;    ((type *)((ULONG_PTR)(address) - UFIELD_OFFSET(type, field)))">CONTAINING_RECORD</a></strong> macro is defined in the Ntdef.h header file. The <em>LookAsideListFreeEx</em> routine can similarly use its <em>Lookaside</em> parameter to access private data.</p>
 <p>After the <strong>MyLookasideListAllocateEx</strong> routine in this example returns, <strong><a href="exallocatefromlookasidelistex" title="PVOID ExAllocateFromLookasideListEx(&#10;  [in, out] PLOOKASIDE_LIST_EX Lookaside&#10;);">ExAllocateFromLookasideListEx</a></strong> inserts the buffer pointed to by the <strong>NewEntry</strong> variable into the lookaside list. To make this insertion operation thread-safe, <strong><a href="exallocatefromlookasidelistex" title="PVOID ExAllocateFromLookasideListEx(&#10;  [in, out] PLOOKASIDE_LIST_EX Lookaside&#10;);">ExAllocateFromLookasideListEx</a></strong> synchronizes its access of the lookaside list with other list insertion and removal operations that might be performed by other threads. Similarly, when <strong>ExFreeFromLookasideListEx</strong> removes a buffer from the lookaside list, it synchronizes its access to the list.</p>
 <p><strong><a href="exallocatefromlookasidelistex" title="PVOID ExAllocateFromLookasideListEx(&#10;  [in, out] PLOOKASIDE_LIST_EX Lookaside&#10;);">ExAllocateFromLookasideListEx</a></strong> and <strong>ExFreeFromLookasideListEx</strong> do not synchronize their calls to driver-supplied <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-allocate_function_ex">LookasideListAllocateEx</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-free_function_ex">LookasideListFreeEx</a> routines. Thus, if the <strong>MyLookasideListAllocateEx</strong> and <strong>MyLookasideListFreeEx</strong> routines in the preceding code examples must be thread-safe, the driver must provide the necessary synchronization.</p>
-<p>The example routine, <strong>MyLookasideListAllocateEx</strong>, synchronizes its access of the <strong>MyContext-&gt;NumberOfAllocations</strong> variable with other threads that might increment and decrement this variable. To provide this synchronization, <strong>MyLookasideListAllocateEx</strong> calls the <a href="interlockedincrement" title="LONG InterlockedIncrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedIncrement</a> routine to atomically increment this variable. Similarly, the <strong>MyLookasideListFreeEx</strong> routine (not shown) can call the <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a> routine to atomically decrement this variable.</p>
-<p>However, if the sole purpose of the <strong>MyContext-&gt;NumberOfAllocations</strong> variable in the preceding code example is simply to gather statistics on lookaside list allocations, atomic increments and decrements are hardly necessary. In this case, the remote possibility of a missed increment or decrement should not be a concern.</p>
+<p>The example routine, <strong>MyLookasideListAllocateEx</strong>, synchronizes its access of the <strong>MyContext->NumberOfAllocations</strong> variable with other threads that might increment and decrement this variable. To provide this synchronization, <strong>MyLookasideListAllocateEx</strong> calls the <a href="interlockedincrement" title="LONG InterlockedIncrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedIncrement</a> routine to atomically increment this variable. Similarly, the <strong>MyLookasideListFreeEx</strong> routine (not shown) can call the <a href="interlockeddecrement" title="LONG InterlockedDecrement(&#10;  [in, out] LONG volatile *Addend&#10;);">InterlockedDecrement</a> routine to atomically decrement this variable.</p>
+<p>However, if the sole purpose of the <strong>MyContext->NumberOfAllocations</strong> variable in the preceding code example is simply to gather statistics on lookaside list allocations, atomic increments and decrements are hardly necessary. In this case, the remote possibility of a missed increment or decrement should not be a concern.</p>
 <p>For more information about thread safety for lookaside lists, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-lookaside-lists">Using Lookaside Lists</a>.</p>
 <h2>See also</h2>
 <p><a href="exallocatefromlookasidelistex" title="PVOID ExAllocateFromLookasideListEx(&#10;  [in, out] PLOOKASIDE_LIST_EX Lookaside&#10;);">ExAllocateFromLookasideListEx</a></p>

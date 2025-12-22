@@ -76,7 +76,7 @@
 <h3>Input/output buffer</h3>
 <h3>Input/output buffer length</h3>
 <h3>Status block</h3>
-<p><strong>Irp-&gt;IoStatus.Status</strong> is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, <strong>Status</strong> to the appropriate error condition as a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS</a> code.</p>
+<p><strong>Irp->IoStatus.Status</strong> is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, <strong>Status</strong> to the appropriate error condition as a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS</a> code.</p>
 <h2>Remarks</h2>
 <p>This IOCTL request is sent by the virtualization stack to the PCI Express SR-IOV Physical Function (PF) driver that exposes GUID_DEVINTERFACE_VIRTUALIZABLE_DEVICE.</p>
 <p>This request is unsafe if the PF device is currently stopped or stopping for resource re-balance. A device is
@@ -89,55 +89,58 @@ a synchronous kernel-mode <a href="irp" title="typedef struct _IRP {&#10;  CSHOR
 <p>To unregister for Plug and Play events, the VSP sends the <a href="ioctl_sriov_detach" title="// CTL_CODE(0x0022, 0x814, METHOD_BUFFERED, FILE_READ_ACCESS)&#10;#define IOCTL_SRIOV_DETACH 0x00226050">IOCTL_SRIOV_DETACH</a> request.</p>
 <p>These events (defined in <a href="sriov_pf_event" title="typedef enum _SRIOV_PF_EVENT {&#10;  SriovEventPfQueryStopDevice,&#10;  SriovEventPfRestart,&#10;  SriovEventPfMaximum&#10;} SRIOV_PF_EVENT;">SRIOV_PF_EVENT</a>) cause the completion of <a href="ioctl_sriov_notification" title="// CTL_CODE(0x0022, 0x811, METHOD_BUFFERED, FILE_READ_ACCESS)&#10;#define IOCTL_SRIOV_NOTIFICATION 0x00226044">IOCTL_SRIOV_NOTIFICATION</a> and a wait for <a href="ioctl_sriov_event_complete" title="// CTL_CODE(0x0022, 0x812, METHOD_BUFFERED, FILE_READ_ACCESS)&#10;#define IOCTL_SRIOV_EVENT_COMPLETE 0x00226048">IOCTL_SRIOV_EVENT_COMPLETE</a>:</p>
 <ul>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-stop-device">IRP_MN_QUERY_STOP_DEVICE</a> generates <strong>SriovEventPfQueryStopDevice</strong>.</li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-start-device">IRP_MN_START_DEVICE</a> generates <strong>SriovEventPfRestart</strong> <em>if and only if</em> the device was stopped for rebalancing (see above).</li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-cancel-stop-device">IRP_MN_CANCEL_STOP_DEVICE</a> generates <strong>SriovEventPfRestart</strong> <em>if and only if</em> the device was stopped for rebalancing.</li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-remove-device">IRP_MN_QUERY_REMOVE_DEVICE</a> generates <strong>SriovEventPfQueryRemoveDevice</strong>.</li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-surprise-removal">IRP_MN_SURPRISE_REMOVAL</a> generates <strong>SriovEventPfSurpriseRemoveDevice</strong>.</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
-<p>In this example handling of the IOCTL_SRIOV_ATTACH request, the PF driver maintains PnP states in its device context. The deviceContext-&gt;PnpRebalancing is set to TRUE, when the driver receives <a href="irp_mn_query_stop_device" title="#define IRP_MN_QUERY_STOP_DEVICE 0x05">IRP_MN_QUERY_STOP_DEVICE</a> and set to FALSE when it receives <a href="irp_mn_start_device" title="#define IRP_MN_START_DEVICE 0x00">IRP_MN_START_DEVICE</a>.</p>
-<pre><code>case IOCTL_SRIOV_ATTACH:
-        TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, &quot;IOCTL_SRIOV_ATTACH:\n&quot;);
-
-        <a href="wdfwaitlockacquire" title="NTSTATUS WdfWaitLockAcquire(&#10;  [in]           WDFWAITLOCK Lock,&#10;  [in, optional] PLONGLONG   Timeout&#10;);">WdfWaitLockAcquire</a>(fdoContext-&gt;PnpStateLock, NULL);
-
-        //
-        // Block until it is safe for the VSP to attach.  Don't
-        // bother with pending this <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> since this is always a sent as
-        // a synchronous kernel-mode <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> and the caller would block
-        // the thread anyway.  May need to repeat the wait since
-        // waiting for the safe-to-attach event must not be done while
-        // holding the state lock.
-        //
-        while (fdoContext-&gt;PnpSafeToAttach == FALSE)
-        {
-            <a href="wdfwaitlockrelease" title="VOID WdfWaitLockRelease(&#10;  [in] WDFWAITLOCK Lock&#10;);">WdfWaitLockRelease</a>(fdoContext-&gt;PnpStateLock);
-
-            <a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a>(&amp;fdoContext-&gt;PnpSafeEvent,
-                                  Executive,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
-
-            <a href="wdfwaitlockacquire" title="NTSTATUS WdfWaitLockAcquire(&#10;  [in]           WDFWAITLOCK Lock,&#10;  [in, optional] PLONGLONG   Timeout&#10;);">WdfWaitLockAcquire</a>(fdoContext-&gt;PnpStateLock, NULL);
-        }
-
-        //
-        // Allow only a single attach at any time.
-        //
-        if (fdoContext-&gt;PnpVspAttached == FALSE)
-        {
-            fdoContext-&gt;PnpVspAttached = TRUE;
-            status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-        }
-        else
-        {
-            status = STATUS_SHARING_VIOLATION;
-        }
-        <a href="wdfwaitlockrelease" title="VOID WdfWaitLockRelease(&#10;  [in] WDFWAITLOCK Lock&#10;);">WdfWaitLockRelease</a>(fdoContext-&gt;PnpStateLock);
-
-        break;
-
+<p>In this example handling of the IOCTL_SRIOV_ATTACH request, the PF driver maintains PnP states in its device context. The deviceContext->PnpRebalancing is set to TRUE, when the driver receives <a href="irp_mn_query_stop_device" title="#define IRP_MN_QUERY_STOP_DEVICE 0x05">IRP_MN_QUERY_STOP_DEVICE</a> and set to FALSE when it receives <a href="irp_mn_start_device" title="#define IRP_MN_START_DEVICE 0x00">IRP_MN_START_DEVICE</a>.</p>
+<pre><code>    case IOCTL_SRIOV_ATTACH:
+TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, "IOCTL_SRIOV_ATTACH:\n");
+<a href="wdfwaitlockacquire" title="NTSTATUS WdfWaitLockAcquire(&#10;  [in]           WDFWAITLOCK Lock,&#10;  [in, optional] PLONGLONG   Timeout&#10;);">WdfWaitLockAcquire</a>(fdoContext-&gt;PnpStateLock, NULL);
+//
+// Block until it is safe for the VSP to attach.  Don't
+// bother with pending this <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> since this is always a sent as
+// a synchronous kernel-mode <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> and the caller would block
+// the thread anyway.  May need to repeat the wait since
+// waiting for the safe-to-attach event must not be done while
+// holding the state lock.
+//
+while (fdoContext-&gt;PnpSafeToAttach == FALSE)
+{
+<a href="wdfwaitlockrelease" title="VOID WdfWaitLockRelease(&#10;  [in] WDFWAITLOCK Lock&#10;);">WdfWaitLockRelease</a>(fdoContext-&gt;PnpStateLock);
+<a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a>(&amp;fdoContext-&gt;PnpSafeEvent,
+Executive,
+KernelMode,
+FALSE,
+NULL);
+<a href="wdfwaitlockacquire" title="NTSTATUS WdfWaitLockAcquire(&#10;  [in]           WDFWAITLOCK Lock,&#10;  [in, optional] PLONGLONG   Timeout&#10;);">WdfWaitLockAcquire</a>(fdoContext-&gt;PnpStateLock, NULL);
+}
+//
+// Allow only a single attach at any time.
+//
+if (fdoContext-&gt;PnpVspAttached == FALSE)
+{
+fdoContext-&gt;PnpVspAttached = TRUE;
+status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+}
+else
+{
+status = STATUS_SHARING_VIOLATION;
+}
+<a href="wdfwaitlockrelease" title="VOID WdfWaitLockRelease(&#10;  [in] WDFWAITLOCK Lock&#10;);">WdfWaitLockRelease</a>(fdoContext-&gt;PnpStateLock);
+break;
 </code></pre>
 <h2>See also</h2>
 <p><a href="wdfiotargetsendinternalioctlsynchronously" title="NTSTATUS WdfIoTargetSendInternalIoctlSynchronously(&#10;  [in]            WDFIOTARGET               IoTarget,&#10;  [in, optional]  WDFREQUEST                Request,&#10;  [in]            ULONG                     IoctlCode,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    InputBuffer,&#10;  [in, optional]  PWDF_MEMORY_DESCRIPTOR    OutputBuffer,&#10;  [in, optional]  PWDF_REQUEST_SEND_OPTIONS RequestOptions,&#10;  [out, optional] PULONG_PTR                BytesReturned&#10;);">WdfIoTargetSendInternalIoctlSynchronously</a></p>

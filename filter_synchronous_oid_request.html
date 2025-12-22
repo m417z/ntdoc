@@ -94,13 +94,21 @@
 <td>NDIS_STATUS_ALREADY_COMPLETE</td>
 <td>Stop propagating the OID request down, and instead return it to the caller with the status NDIS_STATUS_SUCCESS.</td>
 </tr>
+<tr>
+<td></td>
+</tr>
 </tbody>
 </table>
-<p>|</p>
 <ul>
-<li>NDIS_STATUS_BUFFER_TOO_SHORT</li>
-<li>NDIS_STATUS_INVALID_LENGTH</li>
-<li>NDIS_STATUS_INVALID_DATA</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
 <p>| Same as <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_direct_oid_request"><em>FilterDirectOidRequest</em></a>. |
 | NDIS_STATUS_RESOURCES | Same as <em>FilterDirectOidRequest</em>, but with a caution that Synchronous OID requests must be completed quickly, and so filter drivers should typically avoid allocating resources. |
@@ -180,12 +188,18 @@
 </table>
 <p>In addition to modifying the <strong><a href="ndis_oid_request" title="typedef struct _NDIS_OID_REQUEST {&#10;  NDIS_OBJECT_HEADER       Header;&#10;  NDIS_REQUEST_TYPE        RequestType;&#10;  NDIS_PORT_NUMBER         PortNumber;&#10;  UINT                     Timeout;&#10;  PVOID                    RequestId;&#10;  NDIS_HANDLE              RequestHandle;&#10;  union {&#10;    NDIS_OID Oid;&#10;    struct {&#10;      NDIS_OID Oid;&#10;      PVOID    InformationBuffer;&#10;      UINT     InformationBufferLength;&#10;      UINT     BytesWritten;&#10;      UINT     BytesNeeded;&#10;    } QUERY_INFORMATION;&#10;    struct {&#10;      NDIS_OID Oid;&#10;      PVOID    InformationBuffer;&#10;      UINT     InformationBufferLength;&#10;...">NDIS_OID_REQUEST</a></strong> structure, filter drivers can control the request using the return code from <em>FilterSynchronousOidRequest</em>:</p>
 <ul>
-<li>NDIS_STATUS_SUCCESS: the OID continues to propagate down to the miniport driver.</li>
-<li>NDIS_STATUS_ALREADY_COMPLETE: the OID is immediately completed back to the overlying drivers, without first propagating down to the miniport driver. The OID request is completed to the overlying driver with NDIS_STATUS_SUCCESS.</li>
-<li>Any other status code: the OID is immediately completed back to the overlying drivers, without first propagating down to the miniport driver. The OID request is completed to the overlying driver with the status code returned by the filter driver.</li>
+<li>
+
+</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
 <p>If the filter driver also registers a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nf-ndis-filter_synchronous_oid_request_complete"><em>FilterSynchronousOidRequestComplete</em></a> handler, NDIS guarantees that the <em>FilterSynchronousOidRequestComplete</em> handler will be called if and only if the <em>FilterSynchronousOidRequest</em> handler returns NDIS_STATUS_SUCCESS.</p>
-<p>The <em>FilterSynchronousOidRequest</em> handler can write any PVOID-sized value to <em>*CallContext</em>, and the same value will be returned to the filter driver’s <em>FilterSynchronousOidRequestComplete</em> handler when the OID request is completed. Filter driver can use this to carry state across the two handlers. Since the <em>FilterSynchronousOidRequestComplete</em> handler is only invoked if the <em>FilterSynchronousOidRequest</em> handler returns NDIS_STATUS_SUCCESS, there’s no reason to write a value to <em>*CallContext</em> when returning any other code. Likewise, there’s no reason to write a value to <em>*CallContext</em> if the filter driver does not provide a <em>FilterSynchronousOidRequestComplete</em> handler.</p>
+<p>The <em>FilterSynchronousOidRequest</em> handler can write any PVOID-sized value to _<em>CallContext_, and the same value will be returned to the filter driver’s *FilterSynchronousOidRequestComplete</em> handler when the OID request is completed. Filter driver can use this to carry state across the two handlers. Since the <em>FilterSynchronousOidRequestComplete</em> handler is only invoked if the <em>FilterSynchronousOidRequest</em> handler returns NDIS_STATUS_SUCCESS, there’s no reason to write a value to _<em>CallContext_ when returning any other code. Likewise, there’s no reason to write a value to _</em>CallContext_ if the filter driver does not provide a <em>FilterSynchronousOidRequestComplete</em> handler.</p>
 <p>Filter drivers must not return NDIS_STATUS_PENDING from a <em>FilterSynchronousOidRequest</em> handler. Synchronous OID requests cannot be pended or cancelled.</p>
 <p>Filter drivers are expected to return from their <em>FilterSynchronousOidRequest</em> handler quickly, without blocking, waiting, or sleeping. Synchronous OID requests are only used for low-latency operations, and filter drivers should strive to continue or complete them within several milliseconds.
 NDIS does not serialize Synchronous OID requests against each other, against other OID requests, or against <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_pause"><em>FilterPause</em></a>. It is the responsibility of the filter driver to implement any needed synchronization.</p>

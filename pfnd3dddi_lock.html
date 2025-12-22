@@ -81,22 +81,22 @@ HRESULT Pfnd3dddiLock(
 <table>
 <thead>
 <tr>
-<th align="left"><strong>Return code</strong></th>
-<th align="left"><strong>Description</strong></th>
+<th style="text-align:left;"><strong>Return code</strong></th>
+<th style="text-align:left;"><strong>Description</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left"><strong>S_OK</strong></td>
-<td align="left">The resource is successfully locked.</td>
+<td style="text-align:left;"><strong>S_OK</strong></td>
+<td style="text-align:left;">The resource is successfully locked.</td>
 </tr>
 <tr>
-<td align="left"><strong>E_OUTOFMEMORY</strong></td>
-<td align="left">Lock could not allocate the required memory for it to complete.</td>
+<td style="text-align:left;"><strong>E_OUTOFMEMORY</strong></td>
+<td style="text-align:left;">Lock could not allocate the required memory for it to complete.</td>
 </tr>
 <tr>
-<td align="left"><strong>D3DDDIERR_WASSTILLDRAWING</strong></td>
-<td align="left">The resource was not idle when the Microsoft Direct3D runtime called the Lock function with the DoNotWait bit-field flag set in the Flags member of <a href="d3dddiarg_lock" title="typedef struct _D3DDDIARG_LOCK {&#10;  [in]  HANDLE           hResource;&#10;  [in]  UINT             SubResourceIndex;&#10;  union {&#10;    [in]  D3DDDIRANGE Range;&#10;    [in]  RECT        Area;&#10;    [in]  D3DDDIBOX   Box;&#10;  };&#10;  [out] VOID             *pSurfData;&#10;  [out] UINT             Pitch;&#10;  [out] UINT             SlicePitch;&#10;  [in]  D3DDDI_LOCKFLAGS Flags;&#10;} D3DDDIARG_LOCK;">D3DDDIARG_LOCK</a> .</td>
+<td style="text-align:left;"><strong>D3DDDIERR_WASSTILLDRAWING</strong></td>
+<td style="text-align:left;">The resource was not idle when the Microsoft Direct3D runtime called the Lock function with the DoNotWait bit-field flag set in the Flags member of <a href="d3dddiarg_lock" title="typedef struct _D3DDDIARG_LOCK {&#10;  [in]  HANDLE           hResource;&#10;  [in]  UINT             SubResourceIndex;&#10;  union {&#10;    [in]  D3DDDIRANGE Range;&#10;    [in]  RECT        Area;&#10;    [in]  D3DDDIBOX   Box;&#10;  };&#10;  [out] VOID             *pSurfData;&#10;  [out] UINT             Pitch;&#10;  [out] UINT             SlicePitch;&#10;  [in]  D3DDDI_LOCKFLAGS Flags;&#10;} D3DDDIARG_LOCK;">D3DDDIARG_LOCK</a> .</td>
 </tr>
 </tbody>
 </table>
@@ -105,8 +105,12 @@ HRESULT Pfnd3dddiLock(
 <p>Typically, calls to <em>Lock</em> are followed by matching calls to the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_unlock">Unlock</a> function before the driver receives any calls to its draw-primitive functions (that is, calls to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_drawindexedprimitive">DrawIndexedPrimitive</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_drawindexedprimitive2">DrawIndexedPrimitive2</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_drawprimitive">DrawPrimitive</a>, and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_drawprimitive2">DrawPrimitive2</a>). This order guarantees that a driver is never requested to draw from a locked resource. However, on occasion, when performing software transform and lighting, the runtime must call one of the driver's draw-primitive functions before unlocking a resource (currently, only vertex buffers exhibit this behavior). The runtime marks vertex buffers on which this uncommon behavior might occur with the <strong>MightDrawFromLocked</strong> bit-field flag in the <strong>Flags</strong> member of the <a href="d3dddiarg_createresource" title="typedef struct _D3DDDIARG_CREATERESOURCE {&#10;  [in]     D3DDDIFORMAT                   Format;&#10;  [in]     D3DDDI_POOL                    Pool;&#10;  [in]     D3DDDIMULTISAMPLE_TYPE         MultisampleType;&#10;  [in]     UINT                           MultisampleQuality;&#10;  [in]     const D3DDDI_SURFACEINFO       *pSurfList;&#10;  [in]     UINT                           SurfCount;&#10;  [in]     UINT                           MipLevels;&#10;  [in]     UINT                           Fvf;&#10;  [in]     D3DDDI_VIDEO_PRESENT_SOURCE_ID VidPnSourceId;&#10;  [in]     D3DDDI_RATIONAL                RefreshRate;&#10;  [in/out] HANDLE                         hResource;&#10;  [in]     D3DDDI_RESOURCEFLAGS           Flags;&#10;  [in]     D3DDDI_ROTATION                Rotation;&#10;} D3DDDIARG_CREATERESOURCE;">D3DDDIARG_CREATERESOURCE</a> and <a href="d3dddiarg_lock" title="typedef struct _D3DDDIARG_LOCK {&#10;  [in]  HANDLE           hResource;&#10;  [in]  UINT             SubResourceIndex;&#10;  union {&#10;    [in]  D3DDDIRANGE Range;&#10;    [in]  RECT        Area;&#10;    [in]  D3DDDIBOX   Box;&#10;  };&#10;  [out] VOID             *pSurfData;&#10;  [out] UINT             Pitch;&#10;  [out] UINT             SlicePitch;&#10;  [in]  D3DDDI_LOCKFLAGS Flags;&#10;} D3DDDIARG_LOCK;">D3DDDIARG_LOCK</a> structures (that is, both at creation and at lock time). When the hardware actively renders from a locked vertex buffer, the driver is not required to take any special action because the runtime will not overwrite any data in the locked vertex buffer .</p>
 <p>The runtime calls the user-mode display driver's <em>Lock</em> function to lock preallocated system memory surfaces as well. This operation allows the user-mode display driver to properly synchronize references to such surfaces that might be in the hardware command stream. The user-mode display driver can accomplish the synchronization by:</p>
 <ul>
-<li>Flushing (that is, calling the runtime's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_rendercb">pfnRenderCb</a> callback function) any outstanding commands as necessary.</li>
-<li>Calling <strong>pfnLockCb</strong> with the appropriate allocation handle for commands that have already been submitted to hardware.</li>
+<li>
+
+</li>
+<li>
+
+</li>
 </ul>
 <p>The user-mode display driver returns a pointer to the memory for the locked surface and the pitch of the surface in the <strong>pSurfData</strong> and <strong>Pitch</strong> members of the <a href="d3dddiarg_lock" title="typedef struct _D3DDDIARG_LOCK {&#10;  [in]  HANDLE           hResource;&#10;  [in]  UINT             SubResourceIndex;&#10;  union {&#10;    [in]  D3DDDIRANGE Range;&#10;    [in]  RECT        Area;&#10;    [in]  D3DDDIBOX   Box;&#10;  };&#10;  [out] VOID             *pSurfData;&#10;  [out] UINT             Pitch;&#10;  [out] UINT             SlicePitch;&#10;  [in]  D3DDDI_LOCKFLAGS Flags;&#10;} D3DDDIARG_LOCK;">D3DDDIARG_LOCK</a> structure. However, for preallocated system memory surfaces, the runtime ignores the driver-set memory and pitch, although the driver can still fail the <em>Lock</em> call (and thus fail back to the application). The runtime sets the <strong>NotifyOnly</strong> bit-field flag in the <strong>Flags</strong> member of the <a href="d3dddiarg_lock" title="typedef struct _D3DDDIARG_LOCK {&#10;  [in]  HANDLE           hResource;&#10;  [in]  UINT             SubResourceIndex;&#10;  union {&#10;    [in]  D3DDDIRANGE Range;&#10;    [in]  RECT        Area;&#10;    [in]  D3DDDIBOX   Box;&#10;  };&#10;  [out] VOID             *pSurfData;&#10;  [out] UINT             Pitch;&#10;  [out] UINT             SlicePitch;&#10;  [in]  D3DDDI_LOCKFLAGS Flags;&#10;} D3DDDIARG_LOCK;">D3DDDIARG_LOCK</a> structure to differentiate <em>Lock</em> calls that lock preallocated system memory surfaces from other <em>Lock</em> calls.</p>
 <h2>See also</h2>
