@@ -78,7 +78,7 @@
 <h3>Input buffer length</h3>
 <p>None.</p>
 <h3>Output buffer</h3>
-<p>Optionally, for disk and CD-ROM devices, <strong>Irp->AssociatedIrp.SystemBuffer</strong> points to a buffer to receive the media change count. The driver fills this buffer only if <strong>Parameters.DeviceIoControl.OutputBufferLength</strong> was nonzero and the return value is <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. The media change count is a <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> indicating how many times the media has changed since the driver started.</p>
+<p>Optionally, for disk and CD-ROM devices, <strong>Irp-&gt;AssociatedIrp.SystemBuffer</strong> points to a buffer to receive the media change count. The driver fills this buffer only if <strong>Parameters.DeviceIoControl.OutputBufferLength</strong> was nonzero and the return value is <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. The media change count is a <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> indicating how many times the media has changed since the driver started.</p>
 <p>Otherwise, this request has no output.</p>
 <h3>Output buffer length</h3>
 <p>Optionally, for disk and CD-ROM devices, <strong>Parameters.DeviceIoControl.OutputBufferLength</strong> in the I/O stack location of the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> indicates the size, in bytes, of a buffer, which must be &gt;= <strong>sizeof</strong>(<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>). This field is zero if the optional buffer is not specified.</p>
@@ -86,7 +86,7 @@
 <h3>Input/output buffer</h3>
 <h3>Input/output buffer length</h3>
 <h3>Status block</h3>
-<p>If a disk or CD-ROM driver has no indication that the media has changed, the driver sets the <strong>Status</strong> field to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. In addition, if the optional media change buffer was specified, the driver returns the media change count in the buffer at <strong>Irp->AssociatedIrp.SystemBuffer</strong> and sets the <strong>Information</strong> field to <strong>sizeof</strong>(<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>). If the optional media change buffer was not specified, the driver sets <strong>Information</strong> to zero.</p>
+<p>If a disk or CD-ROM driver has no indication that the media has changed, the driver sets the <strong>Status</strong> field to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. In addition, if the optional media change buffer was specified, the driver returns the media change count in the buffer at <strong>Irp-&gt;AssociatedIrp.SystemBuffer</strong> and sets the <strong>Information</strong> field to <strong>sizeof</strong>(<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>). If the optional media change buffer was not specified, the driver sets <strong>Information</strong> to zero.</p>
 <p>If the driver detects that the media has changed and the volume is mounted (VPB_MOUNTED is set in the <a href="vpb" title="typedef struct _VPB {&#10;  CSHORT                Type;&#10;  CSHORT                Size;&#10;  USHORT                Flags;&#10;  USHORT                VolumeLabelLength;&#10;  struct _DEVICE_OBJECT *DeviceObject;&#10;  struct _DEVICE_OBJECT *RealDevice;&#10;  ULONG                 SerialNumber;&#10;  ULONG                 ReferenceCount;&#10;  WCHAR                 VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];&#10;} VPB, *PVPB;">VPB</a>), it must:</p>
 <ol>
 <li>
@@ -135,14 +135,14 @@ Call <strong>IoCompleteRequest</strong> with the <a href="irp" title="typedef st
 <p>Determines whether media are accessible for a device.</p>
 <p>To perform this operation, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> function with the following parameters.</p>
 <pre><code>BOOL DeviceIoControl(
-(HANDLE) hDevice,             // handle to device
-IOCTL_STORAGE_CHECK_VERIFY,   // dwIoControlCode
-NULL,                         // lpInBuffer
-0,                            // nInBufferSize
-NULL,                         // lpOutBuffer
-0,                            // nOutBufferSize
-(LPDWORD) lpBytesReturned,    // number of bytes returned
-(LPOVERLAPPED) lpOverlapped   // OVERLAPPED structure
+  (HANDLE) hDevice,             // handle to device
+  IOCTL_STORAGE_CHECK_VERIFY,   // dwIoControlCode
+  NULL,                         // lpInBuffer
+  0,                            // nInBufferSize
+  NULL,                         // lpOutBuffer
+  0,                            // nOutBufferSize
+  (LPDWORD) lpBytesReturned,    // number of bytes returned
+  (LPOVERLAPPED) lpOverlapped   // OVERLAPPED structure
 );
 </code></pre>
 <h2>Parameters</h2>
@@ -153,7 +153,7 @@ NULL,                         // lpOutBuffer
 <h3>Input/output buffer</h3>
 <h3>Input/output buffer length</h3>
 <h3>Status block</h3>
-<p>Irp->IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
+<p>Irp-&gt;IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
 <p>Otherwise, Status to the appropriate error condition as a <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code.</p>
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS Values</a>.</p>
 <h2>See also</h2>

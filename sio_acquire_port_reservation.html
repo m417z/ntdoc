@@ -64,29 +64,29 @@
 <p>The <strong>SIO_ACQUIRE_PORT_RESERVATION</strong> control code acquires a runtime reservation for a block of TCP or UDP ports.</p>
 <p>To perform this operation, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/winsock2/nf-winsock2-wsaioctl"><strong>WSAIoctl</strong></a> or <strong>WSPIoctl</strong> function with the following parameters.</p>
 <pre><code>int WSAIoctl(
-(socket) s,             // descriptor identifying a socket
-SIO_ACQUIRE_PORT_RESERVATION, // dwIoControlCode
-(LPVOID) lpvInBuffer,  // pointer to an INET_PORT_RANGE structure
-(<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) cbInBuffer,    // size, in bytes, of the input buffer
-(LPVOID) lpvOutBuffer,             // pointer to an INET_PORT_RESERVATION_INSTANCE structure
-(<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) cbOutBuffer,   // size, in bytes, of the output buffer
-(LPDWORD) lpcbBytesReturned,    // number of bytes returned
-(LPWSAOVERLAPPED) lpOverlapped,   // OVERLAPPED structure
-(LPWSAOVERLAPPED_COMPLETION_ROUTINE) lpCompletionRoutine,  // completion routine
+  (socket) s,             // descriptor identifying a socket
+  SIO_ACQUIRE_PORT_RESERVATION, // dwIoControlCode
+  (LPVOID) lpvInBuffer,  // pointer to an INET_PORT_RANGE structure
+  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) cbInBuffer,    // size, in bytes, of the input buffer
+  (LPVOID) lpvOutBuffer,             // pointer to an INET_PORT_RESERVATION_INSTANCE structure
+  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) cbOutBuffer,   // size, in bytes, of the output buffer
+  (LPDWORD) lpcbBytesReturned,    // number of bytes returned
+  (LPWSAOVERLAPPED) lpOverlapped,   // OVERLAPPED structure
+  (LPWSAOVERLAPPED_COMPLETION_ROUTINE) lpCompletionRoutine,  // completion routine
 );
 </code></pre>
 <pre><code>int WSPIoctl(
-(socket) s,             // descriptor identifying a socket
-SIO_ACQUIRE_PORT_RESERVATION, // dwIoControlCode
-(LPVOID) lpvInBuffer,  // pointer to an INET_PORT_RANGE structure
-(<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) cbInBuffer,    // size, in bytes, of the input buffer
-(LPVOID) lpvOutBuffer,             // pointer to a INET_PORT_RESERVATION_INSTANCE structure
-(<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) cbOutBuffer,   // size, in bytes, of the output buffer
-(LPDWORD) lpcbBytesReturned,    // number of bytes returned
-(LPWSAOVERLAPPED) lpOverlapped,   // OVERLAPPED structure
-(LPWSAOVERLAPPED_COMPLETION_ROUTINE) lpCompletionRoutine,  // completion routine
-(LPWSATHREADID) lpThreadId,   // a WSATHREADID structure
-(LPINT) lpErrno   // a pointer to the error code.
+  (socket) s,             // descriptor identifying a socket
+  SIO_ACQUIRE_PORT_RESERVATION, // dwIoControlCode
+  (LPVOID) lpvInBuffer,  // pointer to an INET_PORT_RANGE structure
+  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) cbInBuffer,    // size, in bytes, of the input buffer
+  (LPVOID) lpvOutBuffer,             // pointer to a INET_PORT_RESERVATION_INSTANCE structure
+  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) cbOutBuffer,   // size, in bytes, of the output buffer
+  (LPDWORD) lpcbBytesReturned,    // number of bytes returned
+  (LPWSAOVERLAPPED) lpOverlapped,   // OVERLAPPED structure
+  (LPWSAOVERLAPPED_COMPLETION_ROUTINE) lpCompletionRoutine,  // completion routine
+  (LPWSATHREADID) lpThreadId,   // a WSATHREADID structure
+  (LPINT) lpErrno   // a pointer to the error code.
 );
 </code></pre>
 <h2>Parameters</h2>
@@ -227,187 +227,187 @@ The socket is closed.
 #include &lt;stdlib.h&gt;
 
 // Need to link with Ws2_32.lib for Winsock functions
-#pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, &quot;ws2_32.lib&quot;)
 
 int wmain(int argc, WCHAR ** argv)
 {
 
-// Declare and initialize variables
+    // Declare and initialize variables
 
-int startPort = 0;          // host byte order
-int numPorts = 0;
-<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> startPortns = 0;     // Network byte order
+    int startPort = 0;          // host byte order
+    int numPorts = 0;
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> startPortns = 0;     // Network byte order
 
-INET_PORT_RANGE portRange = { 0 };
-INET_PORT_RESERVATION_INSTANCE portRes = { 0 };
+    INET_PORT_RANGE portRange = { 0 };
+    INET_PORT_RESERVATION_INSTANCE portRes = { 0 };
 
-unsigned long status = 0;
+    unsigned long status = 0;
 
-WSADATA wsaData = { 0 };
-int iResult = 0;
+    WSADATA wsaData = { 0 };
+    int iResult = 0;
 
-SOCKET sock = INVALID_SOCKET;
-int iFamily = AF_INET;
-int iType = 0;
-int iProtocol = 0;
+    SOCKET sock = INVALID_SOCKET;
+    int iFamily = AF_INET;
+    int iType = 0;
+    int iProtocol = 0;
 
-SOCKET sockRes = INVALID_SOCKET;
+    SOCKET sockRes = INVALID_SOCKET;
 
-<a href="dword" title="typedef unsigned long DWORD;">DWORD</a> bytesReturned = 0;
+    <a href="dword" title="typedef unsigned long DWORD;">DWORD</a> bytesReturned = 0;
 
-// Note that the sockaddr_in struct works only with AF_INET not AF_INET6
-// An application needs to use the sockaddr_in6 for AF_INET6
-sockaddr_in service;
-sockaddr_in sockName;
-int nameLen = sizeof (sockName);
+    // Note that the sockaddr_in struct works only with AF_INET not AF_INET6
+    // An application needs to use the sockaddr_in6 for AF_INET6
+    sockaddr_in service;
+    sockaddr_in sockName;
+    int nameLen = sizeof (sockName);
 
-// Validate the parameters
-if (argc != 6) {
-wprintf
-(L"usage: %s &lt;addressfamily&gt; &lt;type&gt; &lt;protocol&gt; &lt;StartingPort&gt; &lt;NumberOfPorts&gt;\n",
-argv[0]);
-wprintf(L"Opens a socket for the specified family, type, &amp; protocol\n");
-wprintf
-(L"and then acquires a runtime port reservation for the protocol specified\n");
-wprintf(L"%ws example usage\n", argv[0]);
-wprintf(L"   %ws 2 2 17 5000 20\n", argv[0]);
-wprintf(L"   where AF_INET=2 SOCK_DGRAM=2 IPPROTO_UDP=17 StartPort=5000 NumPorts=20", argv[0]);
+    // Validate the parameters
+    if (argc != 6) {
+        wprintf
+            (L&quot;usage: %s &lt;addressfamily&gt; &lt;type&gt; &lt;protocol&gt; &lt;StartingPort&gt; &lt;NumberOfPorts&gt;\n&quot;,
+             argv[0]);
+        wprintf(L&quot;Opens a socket for the specified family, type, &amp; protocol\n&quot;);
+        wprintf
+            (L&quot;and then acquires a runtime port reservation for the protocol specified\n&quot;);
+        wprintf(L&quot;%ws example usage\n&quot;, argv[0]);
+        wprintf(L&quot;   %ws 2 2 17 5000 20\n&quot;, argv[0]);
+        wprintf(L&quot;   where AF_INET=2 SOCK_DGRAM=2 IPPROTO_UDP=17 StartPort=5000 NumPorts=20&quot;, argv[0]);
 
-return 1;
-}
+        return 1;
+    }
 
-iFamily = _wtoi(argv[1]);
-iType = _wtoi(argv[2]);
-iProtocol = _wtoi(argv[3]);
+    iFamily = _wtoi(argv[1]);
+    iType = _wtoi(argv[2]);
+    iProtocol = _wtoi(argv[3]);
 
-startPort = _wtoi(argv[4]);
-if (startPort &lt; 0 || startPort &gt; 65535) {
-wprintf(L"Starting point must be either 0 or between 1 and 65,535\n");
-return 1;
-}
-startPortns = htons((<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>) startPort);
+    startPort = _wtoi(argv[4]);
+    if (startPort &lt; 0 || startPort &gt; 65535) {
+        wprintf(L&quot;Starting point must be either 0 or between 1 and 65,535\n&quot;);
+        return 1;
+    }
+    startPortns = htons((<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>) startPort);
 
-numPorts = _wtoi(argv[5]);
-if (numPorts &lt; 0) {
-wprintf(L"Number of ports must be a positive number\n");
-return 1;
-}
+    numPorts = _wtoi(argv[5]);
+    if (numPorts &lt; 0) {
+        wprintf(L&quot;Number of ports must be a positive number\n&quot;);
+        return 1;
+    }
 
-portRange.StartPort = startPortns;
-portRange.NumberOfPorts = (<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>) numPorts;
+    portRange.StartPort = startPortns;
+    portRange.NumberOfPorts = (<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>) numPorts;
 
-// Initialize Winsock
-iResult = WSAStartup(MAKEWORD(2, 2), &amp;wsaData);
-if (iResult != 0) {
-wprintf(L"WSAStartup failed with error = %d\n", iResult);
-return 1;
-}
+    // Initialize Winsock
+    iResult = WSAStartup(MAKEWORD(2, 2), &amp;wsaData);
+    if (iResult != 0) {
+        wprintf(L&quot;WSAStartup failed with error = %d\n&quot;, iResult);
+        return 1;
+    }
 
-sock = socket(iFamily, iType, iProtocol);
-if (sock == INVALID_SOCKET) {
-wprintf(L"socket function failed with error = %d\n", WSAGetLastError());
-WSACleanup();
-return 1;
-} else {
-wprintf(L"socket function succeeded\n");
+    sock = socket(iFamily, iType, iProtocol);
+    if (sock == INVALID_SOCKET) {
+        wprintf(L&quot;socket function failed with error = %d\n&quot;, WSAGetLastError());
+        WSACleanup();
+        return 1;
+    } else {
+        wprintf(L&quot;socket function succeeded\n&quot;);
 
-iResult =
-WSAIoctl(sock, SIO_ACQUIRE_PORT_RESERVATION, (LPVOID) &amp; portRange,
-sizeof (INET_PORT_RANGE), (LPVOID) &amp; portRes,
-sizeof (INET_PORT_RESERVATION_INSTANCE), &amp;bytesReturned, NULL, NULL);
-if (iResult != 0) {
-wprintf(L"WSAIoctl(SIO_ACQUIRE_PORT_RESERVATION) failed with error = %d\n",
-WSAGetLastError());
-closesocket(sock);
-WSACleanup();
-return 1;
-} else {
-wprintf
-(L"WSAIoctl(SIO_ACQUIRE_PORT_RESERVATION) succeeded, bytesReturned = %u\n",
-bytesReturned);
-wprintf(L"  Starting port=%d,  Number of Ports=%d, Token=%I64d\n",
-htons(portRes.Reservation.StartPort),
-portRes.Reservation.NumberOfPorts, portRes.Token);
+        iResult =
+            WSAIoctl(sock, SIO_ACQUIRE_PORT_RESERVATION, (LPVOID) &amp; portRange,
+                     sizeof (INET_PORT_RANGE), (LPVOID) &amp; portRes,
+                     sizeof (INET_PORT_RESERVATION_INSTANCE), &amp;bytesReturned, NULL, NULL);
+        if (iResult != 0) {
+            wprintf(L&quot;WSAIoctl(SIO_ACQUIRE_PORT_RESERVATION) failed with error = %d\n&quot;,
+                    WSAGetLastError());
+            closesocket(sock);
+            WSACleanup();
+            return 1;
+        } else {
+            wprintf
+                (L&quot;WSAIoctl(SIO_ACQUIRE_PORT_RESERVATION) succeeded, bytesReturned = %u\n&quot;,
+                 bytesReturned);
+            wprintf(L&quot;  Starting port=%d,  Number of Ports=%d, Token=%I64d\n&quot;,
+                    htons(portRes.Reservation.StartPort),
+                    portRes.Reservation.NumberOfPorts, portRes.Token);
 
-sockRes = socket(iFamily, iType, iProtocol);
-if (sockRes == INVALID_SOCKET) {
-wprintf(L"socket function for second socket failed with error = %d\n",
-WSAGetLastError());
-closesocket(sock);
-WSACleanup();
-return 1;
-} else {
-wprintf(L"socket function for second socket succeeded\n");
+            sockRes = socket(iFamily, iType, iProtocol);
+            if (sockRes == INVALID_SOCKET) {
+                wprintf(L&quot;socket function for second socket failed with error = %d\n&quot;,
+                        WSAGetLastError());
+                closesocket(sock);
+                WSACleanup();
+                return 1;
+            } else {
+                wprintf(L&quot;socket function for second socket succeeded\n&quot;);
 
-iResult =
-WSAIoctl(sock, SIO_ASSOCIATE_PORT_RESERVATION,
-(LPVOID) &amp; portRes.Token, sizeof (<a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a>), NULL, 0,
-&amp;bytesReturned, NULL, NULL);
-if (iResult != 0) {
-wprintf
-(L"WSAIoctl(SIO_ASSOCIATE_PORT_RESERVATION) failed with error = %d\n",
-WSAGetLastError());
-} else {
-wprintf
-(L"WSAIoctl(SIO_ASSOCIATE_PORT_RESERVATION) succeeded, bytesReturned = %u\n",
-bytesReturned);
+                iResult =
+                    WSAIoctl(sock, SIO_ASSOCIATE_PORT_RESERVATION,
+                             (LPVOID) &amp; portRes.Token, sizeof (<a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a>), NULL, 0,
+                             &amp;bytesReturned, NULL, NULL);
+                if (iResult != 0) {
+                    wprintf
+                        (L&quot;WSAIoctl(SIO_ASSOCIATE_PORT_RESERVATION) failed with error = %d\n&quot;,
+                         WSAGetLastError());
+                } else {
+                    wprintf
+                        (L&quot;WSAIoctl(SIO_ASSOCIATE_PORT_RESERVATION) succeeded, bytesReturned = %u\n&quot;,
+                         bytesReturned);
 
-service.sin_family = (<a href="address_family" title="typedef USHORT ADDRESS_FAMILY;">ADDRESS_FAMILY</a>) iFamily;
-service.sin_addr.s_addr = INADDR_ANY;
-service.sin_port = 0;
+                    service.sin_family = (<a href="address_family" title="typedef USHORT ADDRESS_FAMILY;">ADDRESS_FAMILY</a>) iFamily;
+                    service.sin_addr.s_addr = INADDR_ANY;
+                    service.sin_port = 0;
 
-iResult = bind(sock, (SOCKADDR *) &amp; service, sizeof (service));
-if (iResult == SOCKET_ERROR)
-wprintf(L"bind failed with error = %d\n", WSAGetLastError());
-else {
-wprintf(L"bind succeeded\n");
-iResult = getsockname(sock, (SOCKADDR *) &amp; sockName, &amp;nameLen);
-if (iResult == SOCKET_ERROR)
-wprintf(L"getsockname failed with error = %d\n",
-WSAGetLastError());
-else {
-wprintf(L"getsockname succeeded\n");
-wprintf(L"Port number allocated = %u\n",
-ntohs(sockName.sin_port));
-}
-}
-}
-}
+                    iResult = bind(sock, (SOCKADDR *) &amp; service, sizeof (service));
+                    if (iResult == SOCKET_ERROR)
+                        wprintf(L&quot;bind failed with error = %d\n&quot;, WSAGetLastError());
+                    else {
+                        wprintf(L&quot;bind succeeded\n&quot;);
+                        iResult = getsockname(sock, (SOCKADDR *) &amp; sockName, &amp;nameLen);
+                        if (iResult == SOCKET_ERROR)
+                            wprintf(L&quot;getsockname failed with error = %d\n&quot;,
+                                    WSAGetLastError());
+                        else {
+                            wprintf(L&quot;getsockname succeeded\n&quot;);
+                            wprintf(L&quot;Port number allocated = %u\n&quot;,
+                                    ntohs(sockName.sin_port));
+                        }
+                    }
+                }
+            }
 
-// comment out this block of code if you don't want to delete the reservation just created
-iResult =
-WSAIoctl(sock, SIO_RELEASE_PORT_RESERVATION, (LPVOID) &amp; portRes.Token,
-sizeof (<a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a>), NULL, 0, &amp;bytesReturned, NULL, NULL);
-if (iResult != 0) {
-wprintf
-(L"WSAIoctl(SIO_RELEASE_PORT_RESERVATION) failed with error = %d\n",
-WSAGetLastError());
-} else {
-wprintf
-(L"WSAIoctl(SIO_RELEASE_PORT_RESERVATION) succeeded, bytesReturned = %u\n",
-bytesReturned);
-}
-}
+            // comment out this block of code if you don't want to delete the reservation just created
+            iResult =
+                WSAIoctl(sock, SIO_RELEASE_PORT_RESERVATION, (LPVOID) &amp; portRes.Token,
+                         sizeof (<a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a>), NULL, 0, &amp;bytesReturned, NULL, NULL);
+            if (iResult != 0) {
+                wprintf
+                    (L&quot;WSAIoctl(SIO_RELEASE_PORT_RESERVATION) failed with error = %d\n&quot;,
+                     WSAGetLastError());
+            } else {
+                wprintf
+                    (L&quot;WSAIoctl(SIO_RELEASE_PORT_RESERVATION) succeeded, bytesReturned = %u\n&quot;,
+                     bytesReturned);
+            }
+        }
 
-if (sockRes != INVALID_SOCKET) {
-iResult = closesocket(sockRes);
-if (iResult == SOCKET_ERROR) {
-wprintf(L"closesocket for second socket failed with error = %d\n",
-WSAGetLastError());
-}
-}
-if (sock != INVALID_SOCKET) {
-iResult = closesocket(sock);
-if (iResult == SOCKET_ERROR) {
-wprintf(L"closesocket for first socket failed with error = %d\n",
-WSAGetLastError());
-}
-}
-}
+        if (sockRes != INVALID_SOCKET) {
+            iResult = closesocket(sockRes);
+            if (iResult == SOCKET_ERROR) {
+                wprintf(L&quot;closesocket for second socket failed with error = %d\n&quot;,
+                        WSAGetLastError());
+            }
+        }
+        if (sock != INVALID_SOCKET) {
+            iResult = closesocket(sock);
+            if (iResult == SOCKET_ERROR) {
+                wprintf(L&quot;closesocket for first socket failed with error = %d\n&quot;,
+                        WSAGetLastError());
+            }
+        }
+    }
 
-WSACleanup();
+    WSACleanup();
 
-return 0;
+    return 0;
 }
 </code></pre>
 <h2>See also</h2>

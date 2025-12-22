@@ -71,9 +71,9 @@
 <h2>Description</h2>
 <p>The <em>EvtNetAdapterReceiveScalingSetIndirectionEntries</em> callback function is implemented by the client driver to perform moves of receive side scaling (RSS) indirection table entries to new receive queues.</p>
 <h2>Parameters</h2>
-<h3><code>Adapter</code> [_In_]</h3>
+<h3><code>Adapter</code> [<em>In</em>]</h3>
 <p>The NETADAPTER object the client driver obtained in a previous call to <strong><a href="netadaptercreate" title="NTSTATUS NetAdapterCreate(&#10;  [_In_]     NETADAPTER_INIT       *AdapterInit,&#10;  [_In_opt_] WDF_OBJECT_ATTRIBUTES *AdapterAttributes,&#10;  [_Out_]    NETADAPTER            *Adapter&#10;);">NetAdapterCreate</a></strong>.</p>
-<h3><code>IndirectionEntries</code> [_Inout_]</h3>
+<h3><code>IndirectionEntries</code> [<em>Inout</em>]</h3>
 <p>A pointer to a <strong><a href="net_adapter_receive_scaling_indirection_entries" title="typedef struct _NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES {&#10;  NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRY *Entries;&#10;  SIZE_T                                        Length;&#10;} NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES;">NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES</a></strong> structure that represents the indirection table.</p>
 <h2>Return value</h2>
 <p>Returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the move operations were successful. Otherwise, returns an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code.</p>
@@ -86,8 +86,8 @@ EVT_NET_ADAPTER_RECEIVE_SCALING_SET_INDIRECTION_ENTRIES EvtNetAdapterReceiveScal
 
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> EvtNetAdapterReceiveScalingSetIndirectionEntries
 (
-_In_    NETADAPTER                                          Adapter,
-_Inout_ <a href="net_adapter_receive_scaling_indirection_entries" title="typedef struct _NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES {&#10;  NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRY *Entries;&#10;  SIZE_T                                        Length;&#10;} NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES;">NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES</a> *   IndirectionEntries
+	_In_	NETADAPTER											Adapter,
+	_Inout_	<a href="net_adapter_receive_scaling_indirection_entries" title="typedef struct _NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES {&#10;  NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRY *Entries;&#10;  SIZE_T                                        Length;&#10;} NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES;">NET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES</a> *	IndirectionEntries
 )
 {...}
 
@@ -102,30 +102,30 @@ typedef EVT_NET_ADAPTER_RECEIVE_SCALING_SET_INDIRECTION_ENTRIES *PFN_NET_ADAPTER
 <p>This simple example assumes a 1:1 ratio of receive queues to processors, so the NIC's indirection table is the same size as the system's indirection table.</p>
 <pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 MyEvtNetAdapterReceiveScalingSetIndirectionEntries(
-_In_    NETADAPTER                                          Adapter,
-_Inout_ PNET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES    IndirectionEntries
+	_In_ 	NETADAPTER   										Adapter,
+    _Inout_ PNET_ADAPTER_RECEIVE_SCALING_INDIRECTION_ENTRIES 	IndirectionEntries
 )
 {
 
-// Get the adapter's context to retrieve the address of the hardware indirection table
-PMY_NET_ADAPTER_CONTEXT adapterContext = GetMyAdapterContext(Adapter);
+	// Get the adapter's context to retrieve the address of the hardware indirection table
+	PMY_NET_ADAPTER_CONTEXT adapterContext = GetMyAdapterContext(Adapter);
 
-// Assign each indirection table entry to the specified receive queue
-for(<a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> i = 0; i &lt; IndirectionEntries-&gt;Count; i++)
-{
-// Get the queue ID from its context
-const <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> queueId = GetMyRxQueueContext(IndirectionEntries-&gt;Entries[i].Queue)-&gt;QueueId;
+	// Assign each indirection table entry to the specified receive queue
+	for(<a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> i = 0; i &lt; IndirectionEntries-&gt;Count; i++)
+	{
+		// Get the queue ID from its context
+		const <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> queueId = GetMyRxQueueContext(IndirectionEntries-&gt;Entries[i].Queue)-&gt;QueueId;
+		
+		// Get the hash index for this entry
+		const <a href="uint32" title="typedef unsigned int UINT32;">UINT32</a> index = IndirectionEntries-&gt;Entries[i].Index;
 
-// Get the hash index for this entry
-const <a href="uint32" title="typedef unsigned int UINT32;">UINT32</a> index = IndirectionEntries-&gt;Entries[i].Index;
+		// Assign the new queue ID for this index in the indirection table and record success
+		IndirectionEntries-&gt;Entries[i].Status = MySetIndirectionTableEntry(adapterContext-&gt;HardwareInfo-&gt;RssIndirectionTable[index],
+	queueId
+	);
+	}
 
-// Assign the new queue ID for this index in the indirection table and record success
-IndirectionEntries-&gt;Entries[i].Status = MySetIndirectionTableEntry(adapterContext-&gt;HardwareInfo-&gt;RssIndirectionTable[index],
-queueId
-);
-}
-
-return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+	return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
 }
 </code></pre>
 <h2>See also</h2>

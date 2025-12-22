@@ -92,117 +92,117 @@
 
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 CodecR_EvtProcessCommand0(
-_In_    ACXAUDIOMODULE  AudioModule,
-_In_    PVOID           InBuffer,
-_In_    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>           InBufferCb,
-_In_    PVOID           OutBuffer,
-_Inout_ PULONG          OutBufferCb
-)
+    _In_    ACXAUDIOMODULE  AudioModule,
+    _In_    PVOID           InBuffer,
+    _In_    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>           InBufferCb,
+    _In_    PVOID           OutBuffer,
+    _Inout_ PULONG          OutBufferCb
+   )
 {
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>                        status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-BOOL                            fNewValue = FALSE;
-PVOID                           currentValue;
-PVOID                           inBuffer = NULL;
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                           inBufferCb = 0;
-PCODEC_AUDIOMODULE0_CONTEXT     audioModuleCtx;
-AUDIOMODULE_PARAMETER_INFO *    parameterInfo = NULL;
-AUDIOMODULE_CUSTOM_COMMAND *    command = NULL;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>                        status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+    BOOL                            fNewValue = FALSE;
+    PVOID                           currentValue;
+    PVOID                           inBuffer = NULL;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                           inBufferCb = 0;
+    PCODEC_AUDIOMODULE0_CONTEXT     audioModuleCtx;
+    AUDIOMODULE_PARAMETER_INFO *    parameterInfo = NULL;
+    AUDIOMODULE_CUSTOM_COMMAND *    command = NULL;
 
-PAGED_CODE();
+    PAGED_CODE();
 
-audioModuleCtx = GetCodecAudioModule0Context(AudioModule);
-if (audioModuleCtx == NULL)
-{
-<a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);  // this should not happen.
-status = STATUS_INTERNAL_ERROR;
-goto exit;
-}
+    audioModuleCtx = GetCodecAudioModule0Context(AudioModule);
+    if (audioModuleCtx == NULL)
+    {
+        <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);  // this should not happen.
+        status = STATUS_INTERNAL_ERROR;
+        goto exit;
+    }
 
-//
-// Basic parameter validation (module specific).
-//
-if (InBuffer == NULL || InBufferCb == 0)
-{
-return STATUS_INVALID_PARAMETER;
-}
+    //
+    // Basic parameter validation (module specific).
+    //
+    if (InBuffer == NULL || InBufferCb == 0)
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-if (InBufferCb &lt; sizeof(AUDIOMODULE_CUSTOM_COMMAND))
-{
-return STATUS_INVALID_PARAMETER;
-}
+    if (InBufferCb &lt; sizeof(AUDIOMODULE_CUSTOM_COMMAND))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-command = (AUDIOMODULE_CUSTOM_COMMAND*)InBuffer;
+    command = (AUDIOMODULE_CUSTOM_COMMAND*)InBuffer;
 
-if (command-&gt;ParameterId &gt;= SIZEOF_ARRAY(AudioModule0_ParameterInfo))
-{
-return STATUS_INVALID_PARAMETER;
-}
+    if (command-&gt;ParameterId &gt;= SIZEOF_ARRAY(AudioModule0_ParameterInfo))
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
 
-//
-// Validate the parameter referenced in the command.
-//
-switch (command-&gt;ParameterId)
-{
-case AudioModuleParameter1:
-currentValue = &amp;audioModuleCtx-&gt;Parameter1;
-parameterInfo = &amp;AudioModule0_ParameterInfo[AudioModuleParameter1];
-break;
-case AudioModuleParameter2:
-currentValue = &amp;audioModuleCtx-&gt;Parameter2;
-parameterInfo = &amp;AudioModule0_ParameterInfo[AudioModuleParameter2];
-break;
-default:
-status = STATUS_INVALID_PARAMETER;
-goto exit;
-}
+    //
+    // Validate the parameter referenced in the command.
+    //
+    switch (command-&gt;ParameterId)
+    {
+        case AudioModuleParameter1:
+            currentValue = &amp;audioModuleCtx-&gt;Parameter1;
+            parameterInfo = &amp;AudioModule0_ParameterInfo[AudioModuleParameter1];
+            break;
+        case AudioModuleParameter2:
+            currentValue = &amp;audioModuleCtx-&gt;Parameter2;
+            parameterInfo = &amp;AudioModule0_ParameterInfo[AudioModuleParameter2];
+            break;
+        default:
+            status = STATUS_INVALID_PARAMETER;
+            goto exit;
+    }
 
-//
-// Update input buffer ptr/size.
-//
-inBuffer = (PVOID)((<a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a>)InBuffer + sizeof(AUDIOMODULE_CUSTOM_COMMAND));
-inBufferCb = InBufferCb - sizeof(AUDIOMODULE_CUSTOM_COMMAND);
+    //
+    // Update input buffer ptr/size.
+    //
+    inBuffer = (PVOID)((<a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a>)InBuffer + sizeof(AUDIOMODULE_CUSTOM_COMMAND));
+    inBufferCb = InBufferCb - sizeof(AUDIOMODULE_CUSTOM_COMMAND);
 
-if (inBufferCb == 0)
-{
-inBuffer = NULL;
-}
+    if (inBufferCb == 0)
+    {
+        inBuffer = NULL;
+    }
 
-status = AudioModule_GenericHandler(
-command-&gt;Verb,
-command-&gt;ParameterId,
-parameterInfo,
-currentValue,
-inBuffer,
-inBufferCb,
-OutBuffer,
-OutBufferCb,
-&amp;fNewValue);
+    status = AudioModule_GenericHandler(
+                command-&gt;Verb,
+                command-&gt;ParameterId,
+                parameterInfo,
+                currentValue,
+                inBuffer,
+                inBufferCb,
+                OutBuffer,
+                OutBufferCb,
+                &amp;fNewValue);
 
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
-{
-goto exit;
-}
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
+    {
+        goto exit;
+    }
 
-if (fNewValue &amp;&amp;
-(parameterInfo-&gt;Flags &amp; AUDIOMODULE_PARAMETER_FLAG_CHANGE_NOTIFICATION))
-{
-AUDIOMODULE_CUSTOM_NOTIFICATION customNotification = {0};
+    if (fNewValue &amp;&amp;
+        (parameterInfo-&gt;Flags &amp; AUDIOMODULE_PARAMETER_FLAG_CHANGE_NOTIFICATION))
+    {
+        AUDIOMODULE_CUSTOM_NOTIFICATION customNotification = {0};
 
-customNotification.Type = AudioModuleParameterChanged;
-customNotification.ParameterChanged.ParameterId = command-&gt;ParameterId;
+        customNotification.Type = AudioModuleParameterChanged;
+        customNotification.ParameterChanged.ParameterId = command-&gt;ParameterId;
 
-status = <a href="acxpnpeventgenerateevent" title="NTSTATUS AcxPnpEventGenerateEvent(&#10;  ACXPNPEVENT Event,&#10;  PVOID       Payload,&#10;  USHORT      Size&#10;);">AcxPnpEventGenerateEvent</a>(audioModuleCtx-&gt;Event, &amp;customNotification, (<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>)sizeof(customNotification));
-if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
-{
-goto exit;
-}
-}
+        status = <a href="acxpnpeventgenerateevent" title="NTSTATUS AcxPnpEventGenerateEvent(&#10;  ACXPNPEVENT Event,&#10;  PVOID       Payload,&#10;  USHORT      Size&#10;);">AcxPnpEventGenerateEvent</a>(audioModuleCtx-&gt;Event, &amp;customNotification, (<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>)sizeof(customNotification));
+        if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
+        {
+            goto exit;
+        }
+    }
 
-// Normalize error code.
-status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+    // Normalize error code.
+    status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
 
 exit:
-return status;
+    return status;
 }
 </code></pre>
 <h3>ACX requirements</h3>

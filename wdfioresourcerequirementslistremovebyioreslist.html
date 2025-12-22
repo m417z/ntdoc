@@ -82,61 +82,61 @@
 <p>The following code example searches the logical configurations in a device's resource requirements list to find a configuration that contains a specific port address. If the example finds that configuration, it removes the configuration.</p>
 <pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 Example_EvtDeviceFilterRemoveResourceRequirements(
-IN WDFDEVICE Device,
-IN WDFIORESREQLIST RequirementsList
-)
+    IN WDFDEVICE Device,
+    IN WDFIORESREQLIST RequirementsList
+    )
 {
-<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> i, j, reqCount, resCount;
-BOOLEAN descriptorFound = FALSE;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> i, j, reqCount, resCount;
+    BOOLEAN descriptorFound = FALSE;
 
-//
-// Obtain the number of logical configurations.
-//
-reqCount = <a href="wdfioresourcerequirementslistgetcount" title="ULONG WdfIoResourceRequirementsListGetCount(&#10;  [in] WDFIORESREQLIST RequirementsList&#10;);">WdfIoResourceRequirementsListGetCount</a>(RequirementsList);
+    //
+    // Obtain the number of logical configurations.
+    //
+    reqCount = <a href="wdfioresourcerequirementslistgetcount" title="ULONG WdfIoResourceRequirementsListGetCount(&#10;  [in] WDFIORESREQLIST RequirementsList&#10;);">WdfIoResourceRequirementsListGetCount</a>(RequirementsList);
 
-//
-// Search each logical configuration.
-//
-for (i = 0; i &lt; reqCount; i++) {
-WDFIORESLIST reslist;
+    //
+    // Search each logical configuration.
+    //
+    for (i = 0; i &lt; reqCount; i++) {
+        WDFIORESLIST reslist;
 
-if (descriptorFound) {
-break;
-}
-reslist = <a href="wdfioresourcerequirementslistgetioreslist" title="WDFIORESLIST WdfIoResourceRequirementsListGetIoResList(&#10;  [in] WDFIORESREQLIST RequirementsList,&#10;  [in] ULONG           Index&#10;);">WdfIoResourceRequirementsListGetIoResList</a>(RequirementsList, i);
+        if (descriptorFound) {
+            break;
+        }
+        reslist = <a href="wdfioresourcerequirementslistgetioreslist" title="WDFIORESLIST WdfIoResourceRequirementsListGetIoResList(&#10;  [in] WDFIORESREQLIST RequirementsList,&#10;  [in] ULONG           Index&#10;);">WdfIoResourceRequirementsListGetIoResList</a>(RequirementsList, i);
 
-//
-// Get the number of resource descriptors that
-// are in this logical configuration.
-//
-resCount = <a href="wdfioresourcelistgetcount" title="ULONG WdfIoResourceListGetCount(&#10;  [in] WDFIORESLIST ResourceList&#10;);">WdfIoResourceListGetCount</a>(reslist);
+        //
+        // Get the number of resource descriptors that
+        // are in this logical configuration.
+        //
+        resCount = <a href="wdfioresourcelistgetcount" title="ULONG WdfIoResourceListGetCount(&#10;  [in] WDFIORESLIST ResourceList&#10;);">WdfIoResourceListGetCount</a>(reslist);
 
-for (j = 0; j &lt; resCount; j++) {
-<a href="io_resource_descriptor" title="typedef struct _IO_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Option;&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  UCHAR  Spare1;&#10;  USHORT Flags;&#10;  USHORT Spare2;&#10;  union {&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Port;&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Memory;&#10;...">PIO_RESOURCE_DESCRIPTOR</a> descriptor;
+        for (j = 0; j &lt; resCount; j++) {
+            <a href="io_resource_descriptor" title="typedef struct _IO_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Option;&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  UCHAR  Spare1;&#10;  USHORT Flags;&#10;  USHORT Spare2;&#10;  union {&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Port;&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Memory;&#10;...">PIO_RESOURCE_DESCRIPTOR</a> descriptor;
 
-//
-// Get the next resource descriptor.
-//
-descriptor = <a href="wdfioresourcelistgetdescriptor" title="PIO_RESOURCE_DESCRIPTOR WdfIoResourceListGetDescriptor(&#10;  [in] WDFIORESLIST ResourceList,&#10;  [in] ULONG        Index&#10;);">WdfIoResourceListGetDescriptor</a>(
-reslist,
-j
-);
+            //
+            // Get the next resource descriptor.
+            //
+            descriptor = <a href="wdfioresourcelistgetdescriptor" title="PIO_RESOURCE_DESCRIPTOR WdfIoResourceListGetDescriptor(&#10;  [in] WDFIORESLIST ResourceList,&#10;  [in] ULONG        Index&#10;);">WdfIoResourceListGetDescriptor</a>(
+                                 reslist,
+                                 j
+                                 );
 
-//
-// Stop if this descriptor is the port descriptor
-// that we're looking for.
-//
-if (descriptor-&gt;Type == CmResourceTypePort) {
-if ((descriptor-&gt;u.Port.MinimumAddress) == PORT_RANGE_A) {
-WdfIoResourceRequirementsListRemoveByIoResList(
-RequirementsList,
-reslist
-);
-descriptorFound = TRUE;
-break;
-}
-}
-}
+            //
+            // Stop if this descriptor is the port descriptor
+            // that we're looking for.
+            //
+            if (descriptor-&gt;Type == CmResourceTypePort) {
+                if ((descriptor-&gt;u.Port.MinimumAddress) == PORT_RANGE_A) {
+                    WdfIoResourceRequirementsListRemoveByIoResList(
+                                 RequirementsList,
+                                 reslist
+                                 );
+                    descriptorFound = TRUE;
+                    break;
+            }
+        }
+    }
 ...
 }
 </code></pre>

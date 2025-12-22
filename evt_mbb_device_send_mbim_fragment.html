@@ -84,8 +84,8 @@ EVT_MBB_DEVICE_SEND_MBIM_FRAGMENT EvtMbbDeviceSendMbimFragment;
 
 VOID EvtMbbDeviceSendMbimFragment
 (
-WDFDEVICE Device
-MBBREQUEST SendRequest
+	WDFDEVICE Device
+	MBBREQUEST SendRequest
 )
 {...}
 
@@ -99,51 +99,51 @@ MBBREQUEST SendRequest
 <p>Error handling code has been left out of this example for brevity and clarity.</p>
 <pre><code>VOID
 EvtMbbDeviceSendMbimFragment(
-WDFDEVICE  Device,
-MBBREQUEST SendRequest
+    WDFDEVICE  Device,
+    MBBREQUEST SendRequest
 )
 {
-// The client driver-specified framework object context
-PMY_DEVICE_CONTEXT myContext = GetMyDeviceContext(Device);
+    // The client driver-specified framework object context
+    PMY_DEVICE_CONTEXT myContext = GetMyDeviceContext(Device);
 
-<a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> bufferSize = 0;
-PVOID buffer = <a href="mbbrequestgetbuffer" title="PVOID MbbRequestGetBuffer(&#10;  MBBREQUEST Request,&#10;  size_t     *BufferSize&#10;);">MbbRequestGetBuffer</a>(SendRequest, &amp;bufferSize);
+    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> bufferSize = 0;
+    PVOID buffer = <a href="mbbrequestgetbuffer" title="PVOID MbbRequestGetBuffer(&#10;  MBBREQUEST Request,&#10;  size_t     *BufferSize&#10;);">MbbRequestGetBuffer</a>(SendRequest, &amp;bufferSize);
 
-// This client driver example uses asynchronous completion
-auto myDeviceSendCompletionRoutine = [](MBBREQUEST SendRequest, <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NtStatus)
-{
-//Acknowledge back to MBBCx
-<a href="mbbrequestcomplete" title="VOID MbbRequestComplete(&#10;  MBBREQUEST Request,&#10;  NTSTATUS   NtStatus&#10;);">MbbRequestComplete</a>(SendRequest, NtStatus);
-};
+    // This client driver example uses asynchronous completion
+    auto myDeviceSendCompletionRoutine = [](MBBREQUEST SendRequest, <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NtStatus)
+    {
+        //Acknowledge back to MBBCx
+        <a href="mbbrequestcomplete" title="VOID MbbRequestComplete(&#10;  MBBREQUEST Request,&#10;  NTSTATUS   NtStatus&#10;);">MbbRequestComplete</a>(SendRequest, NtStatus);
+    };
 
-// The client driver-specified function call into its device
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> sendStatus = MyDeviceAsyncSend(
+    // The client driver-specified function call into its device
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> sendStatus = MyDeviceAsyncSend(
 
-// The client driver-specific handle
-myContext-&gt;MyDeviceHandle,
+        // The client driver-specific handle
+        myContext-&gt;MyDeviceHandle,
 
-// The context for completion
-SendRequest,
+        // The context for completion
+        SendRequest,
 
-// MBIM message
-buffer,
+        // MBIM message
+        buffer,
 
-// MBIM message size
-bufferSize,
+        // MBIM message size
+        bufferSize,
 
-// Can be used for logging purpose, for example
-MbbRequestGetActivityId(SendRequest),
+        // Can be used for logging purpose, for example
+        MbbRequestGetActivityId(SendRequest),
 
-// The client driver-specific completion routine
-myDeviceSendCompletionRoutine);
+        // The client driver-specific completion routine
+        myDeviceSendCompletionRoutine);
 
-if (sendStatus != STATUS_PENDING)
-{
-// Acknowledge back to MBBCx
-myDeviceSendCompletionRoutine(
-SendRequest,
-sendStatus);
-}
+    if (sendStatus != STATUS_PENDING)
+    {
+        // Acknowledge back to MBBCx
+        myDeviceSendCompletionRoutine(
+            SendRequest,
+            sendStatus);
+    }
 }
 </code></pre>
 <h2>See also</h2>

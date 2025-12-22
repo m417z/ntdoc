@@ -114,16 +114,21 @@
 <p>To forward an I/O request that your driver received in an I/O queue:</p>
 <ol>
 <li>
-Specify the received request's handle for the <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> method's <em>Request</em> parameter.
+<p>Specify the received request's handle for the <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> method's <em>Request</em> parameter.</p>
 </li>
-<li><p>Use the received request's input or output buffer for the <em>TransferMemory</em> parameter.</p>
-<p>The driver must call <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a> or <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> to obtain a handle to a framework memory object that represents the request's input or output buffer, and use that handle as the value for <em>TransferMemory</em>.</p></li>
+<li>
+<p>Use the received request's input or output buffer for the <em>TransferMemory</em> parameter.</p>
+<p>The driver must call <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a> or <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> to obtain a handle to a framework memory object that represents the request's input or output buffer, and use that handle as the value for <em>TransferMemory</em>.</p>
+</li>
 </ol>
 <p>To create a new I/O request and a new buffer:</p>
 <ol>
-<li><p>Create a new request object and supply its handle for the <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> method's <em>Request</em> parameter.</p>
-<p>Call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> to preallocate one or more request objects. You can reuse these request objects by calling <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>. Your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function can preallocate request objects for a device.</p></li>
-<li><p>Provide buffer space, and supply the buffer's handle for the <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> method's <em>TransferMemory</em> parameter.</p>
+<li>
+<p>Create a new request object and supply its handle for the <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> method's <em>Request</em> parameter.</p>
+<p>Call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> to preallocate one or more request objects. You can reuse these request objects by calling <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>. Your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function can preallocate request objects for a device.</p>
+</li>
+<li>
+<p>Provide buffer space, and supply the buffer's handle for the <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> method's <em>TransferMemory</em> parameter.</p>
 <p>Your driver must specify this buffer space as a WDFMEMORY handle to framework-managed memory. Your driver can do either of the following:</p>
 <ul>
 <li>
@@ -132,7 +137,8 @@ Call <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optio
 <li>
 Call <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a> or <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> to obtain a handle to the memory object that represents a received I/O request's buffer, if you want the driver to pass that buffer's contents to the I/O target.Note that if your driver calls <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a> or <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> and passes the memory handle to <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong>, the driver must not complete the received I/O request until after the driver deletes, reuses, or reformats the new, driver-created request object. (<strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> increments the memory object's reference count. Deleting, reusing, or reformatting a request object decrements the memory object's reference count.)
 </li>
-</ul></li>
+</ul>
+</li>
 </ol>
 <p>After calling <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> to format an I/O request, the driver must call <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a> to send the request (either synchronously or asynchronously) to an I/O target.</p>
 <p>Multiple calls to <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> that use the same request do not cause additional resource allocations. Therefore, to reduce the chance that <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> will return STATUS_INSUFFICIENT_RESOURCES, your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function can call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> to preallocate one or more request objects for a device. The driver can subsequently reuse (call <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>), reformat (call <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong>), and resend (call <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>) each request object without risking a STATUS_INSUFFICIENT_RESOURCES return value from a later call to <strong><a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a></strong>. All subsequent calls to <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> for the reused request object will return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, if parameter values do not change. (If the driver does not call the same request-formatting method each time, additional resources might be allocated.)</p>
@@ -140,7 +146,7 @@ Call <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveI
 <p>For information about obtaining status information after an I/O request completes, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">Obtaining Completion Information</a>.</p>
 <p>For more information about the <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> method and USB I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/usb-i-o-targets">USB I/O Targets</a>.</p>
 <h4>Examples</h4>
-<p>The following code example creates a request object and a memory object, and then it initializes a <a href="wdf_usb_control_setup_packet" title="typedef union _WDF_USB_CONTROL_SETUP_PACKET {&#10;  struct {&#10;    union {&#10;      struct {&#10;        BYTE Recipient : 2;&#10;        BYTE Reserved : 3;&#10;        BYTE Type : 2;&#10;        BYTE Dir : 1;&#10;      } Request;&#10;      BYTE   Byte;&#10;    } bm;&#10;    BYTE   bRequest;&#10;    union {&#10;      struct {&#10;        BYTE LowByte;&#10;        BYTE HiByte;&#10;      } Bytes;&#10;      USHORT Value;&#10;    } wValue;&#10;    union {&#10;...">WDF_USB_CONTROL_SETUP_PACKET</a> structure for a "get status" control transfer. Next, the example calls <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> to format the request. Then, the example sets a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function and sends the request to an I/O target.</p>
+<p>The following code example creates a request object and a memory object, and then it initializes a <a href="wdf_usb_control_setup_packet" title="typedef union _WDF_USB_CONTROL_SETUP_PACKET {&#10;  struct {&#10;    union {&#10;      struct {&#10;        BYTE Recipient : 2;&#10;        BYTE Reserved : 3;&#10;        BYTE Type : 2;&#10;        BYTE Dir : 1;&#10;      } Request;&#10;      BYTE   Byte;&#10;    } bm;&#10;    BYTE   bRequest;&#10;    union {&#10;      struct {&#10;        BYTE LowByte;&#10;        BYTE HiByte;&#10;      } Bytes;&#10;      USHORT Value;&#10;    } wValue;&#10;    union {&#10;...">WDF_USB_CONTROL_SETUP_PACKET</a> structure for a &quot;get status&quot; control transfer. Next, the example calls <strong>WdfUsbTargetDeviceFormatRequestForControlTransfer</strong> to format the request. Then, the example sets a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function and sends the request to an I/O target.</p>
 <pre><code><a href="wdf_usb_control_setup_packet" title="typedef union _WDF_USB_CONTROL_SETUP_PACKET {&#10;  struct {&#10;    union {&#10;      struct {&#10;        BYTE Recipient : 2;&#10;        BYTE Reserved : 3;&#10;        BYTE Type : 2;&#10;        BYTE Dir : 1;&#10;      } Request;&#10;      BYTE   Byte;&#10;    } bm;&#10;    BYTE   bRequest;&#10;    union {&#10;      struct {&#10;        BYTE LowByte;&#10;        BYTE HiByte;&#10;      } Bytes;&#10;      USHORT Value;&#10;    } wValue;&#10;    union {&#10;...">WDF_USB_CONTROL_SETUP_PACKET</a> packet;
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
 <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> attributes;
@@ -149,56 +155,56 @@ WDFMEMORY memHandle;
 <a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a>(&amp;attributes);
 
 status = <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a>(
-&amp;attributes,
-<a href="wdfusbtargetdevicegetiotarget" title="WDFIOTARGET WdfUsbTargetDeviceGetIoTarget(&#10;  [in] WDFUSBDEVICE UsbDevice&#10;);">WdfUsbTargetDeviceGetIoTarget</a>(
-UsbTargetDevice,
-&amp;request
-)
-);
+                          &amp;attributes,
+                          <a href="wdfusbtargetdevicegetiotarget" title="WDFIOTARGET WdfUsbTargetDeviceGetIoTarget(&#10;  [in] WDFUSBDEVICE UsbDevice&#10;);">WdfUsbTargetDeviceGetIoTarget</a>(
+                              UsbTargetDevice,
+                              &amp;request
+                              )
+                          );
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-return status;
+    return status;
 }
 
 <a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a>(&amp;attributes);
 attributes.ParentObject = request;
 status = <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a>(
-&amp;attributes,
-NonPagedPool,
-0,
-sizeof(<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>),
-&amp;memHandle,
-NULL
-);
+                         &amp;attributes,
+                         NonPagedPool,
+                         0,
+                         sizeof(<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a>),
+                         &amp;memHandle,
+                         NULL
+                         );
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-return status;
+    return status;
 }
 
 <a href="wdf_usb_control_setup_packet_init_get_status" title="VOID WDF_USB_CONTROL_SETUP_PACKET_INIT_GET_STATUS(&#10;  [out] PWDF_USB_CONTROL_SETUP_PACKET Packet,&#10;  [in]  WDF_USB_BMREQUEST_RECIPIENT   BmRequestRecipient,&#10;  [in]  USHORT                        Index&#10;);">WDF_USB_CONTROL_SETUP_PACKET_INIT_GET_STATUS</a>(
-&amp;packet,
-BmRequestToDevice,
-0
-);
+                                             &amp;packet,
+                                             BmRequestToDevice,
+                                             0
+                                             );
 status = WdfUsbTargetDeviceFormatRequestForControlTransfer(
-UsbTargetDevice,
-request,
-&amp;packet,
-memHandle,
-NULL
-);
+                         UsbTargetDevice,
+                         request,
+                         &amp;packet,
+                         memHandle,
+                         NULL
+                         );
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-return status;
+    return status;
 }
 <a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a>(
-request,
-MyCompletionRoutine,
-NULL
-);
+                               request,
+                               MyCompletionRoutine,
+                               NULL
+                               );
 if (<a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>(
-request,
-<a href="wdfusbtargetdevicegetiotarget" title="WDFIOTARGET WdfUsbTargetDeviceGetIoTarget(&#10;  [in] WDFUSBDEVICE UsbDevice&#10;);">WdfUsbTargetDeviceGetIoTarget</a>(UsbTargetDevice),
-NULL
-) == FALSE) {
-status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(request);
+                   request,
+                   <a href="wdfusbtargetdevicegetiotarget" title="WDFIOTARGET WdfUsbTargetDeviceGetIoTarget(&#10;  [in] WDFUSBDEVICE UsbDevice&#10;);">WdfUsbTargetDeviceGetIoTarget</a>(UsbTargetDevice),
+                   NULL
+                   ) == FALSE) {
+    status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(request);
 }
 </code></pre>
 <h2>See also</h2>

@@ -81,71 +81,70 @@
 <h4>Examples</h4>
 <p>The following code example shows how an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_read">EvtIoRead</a> callback function, running in an arbitrary context, might call <strong>WdfInterruptTryToAcquireLock</strong> before performing interrupt-related work. If the method returns FALSE, the driver queues a work item to perform the work in a non-arbitrary thread. The driver also supplies an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function that calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff547340(v=vs.85)">WdfInterruptAcquireLock</a> before it performs the work.</p>
 <p>In this example, the driver has specified <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dispatching-methods-for-i-o-requests">sequential</a> dispatching for the queue. If the driver specified <em>any other dispatching method</em> for the queue, the driver should use an additional manual queue to retain requests for processing in the work item. Code comments describe where to add such support.</p>
-<pre><code>
-VOID EvtIoRead(
-__in  WDFQUEUE Queue,
-__in  WDFREQUEST Request,
-__in  <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> Length
-)
+<pre><code>VOID EvtIoRead(
+  __in  WDFQUEUE Queue,
+  __in  WDFREQUEST Request,
+  __in  <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> Length
+    )
 {
-DEVICE_CONTEXT    devCtx;
-devCtx = GetDeviceContext(<a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue));
+    DEVICE_CONTEXT    devCtx;
+    devCtx = GetDeviceContext(<a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue));
 
-//
-// Do any pre-acquiring interrupt lock work here.
-//
+    //
+    // Do any pre-acquiring interrupt lock work here.
+    //
 
-//
-// Check if we can acquire the lock.
-//
-if (WdfInterruptTryToAcquireLock(devCtx-&gt;InterruptObject) {
-ReadFunctionLocked(Request);
-WdfInterruptReleaseLock(devCtx-&gt;InterruptObject);
-//
-// Do any post-releasing interrupt lock work here.
-// For example: complete the request, and so on.
-//
-ReadFunctionFinish(Request);
-}
-else {
-WORK_ITEM_CONTEXT ctx;
+    //
+    // Check if we can acquire the lock.
+    //
+    if (WdfInterruptTryToAcquireLock(devCtx-&gt;InterruptObject) {
+        ReadFunctionLocked(Request);
+        WdfInterruptReleaseLock(devCtx-&gt;InterruptObject);
+        //
+        // Do any post-releasing interrupt lock work here.
+        // For example: complete the request, and so on.
+        //
+        ReadFunctionFinish(Request);
+    }
+    else {
+        WORK_ITEM_CONTEXT ctx;
 
-ctx = GetWorkItemContext(ReadWorkItem);
-ctx-&gt;Request = Request;
+        ctx = GetWorkItemContext(ReadWorkItem);
+        ctx-&gt;Request = Request;
 
-// If previous queue is non-sequential, call <a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a>
-// to store request in an additional manual queue.
+        // If previous queue is non-sequential, call <a href="wdfrequestforwardtoioqueue" title="NTSTATUS WdfRequestForwardToIoQueue(&#10;  [in] WDFREQUEST Request,&#10;  [in] WDFQUEUE   DestinationQueue&#10;);">WdfRequestForwardToIoQueue</a>
+        // to store request in an additional manual queue.
 
-<a href="wdfworkitemenqueue" title="VOID WdfWorkItemEnqueue(&#10;  [in] WDFWORKITEM WorkItem&#10;);">WdfWorkItemEnqueue</a>(ReadWorkItem);
-}
+        <a href="wdfworkitemenqueue" title="VOID WdfWorkItemEnqueue(&#10;  [in] WDFWORKITEM WorkItem&#10;);">WdfWorkItemEnqueue</a>(ReadWorkItem);
+    }
 }
 
 VOID
 EvtReadWorkItemCallback(
-WDFWORKITEM WorkItem
-)
+    WDFWORKITEM WorkItem
+    )
 {
-WORK_ITEM_CONTEXT wiCtx;
-DEVICE_CONTEXT    devCtx;
+    WORK_ITEM_CONTEXT wiCtx;
+    DEVICE_CONTEXT    devCtx;
 
-wiCtx = GetWorkItemContext(ReadWorkItem);
-devCtx = GetDeviceContext(<a href="wdfworkitemgetparentobject" title="WDFOBJECT WdfWorkItemGetParentObject(&#10;  [in] WDFWORKITEM WorkItem&#10;);">WdfWorkItemGetParentObject</a>(WorkItem));
+    wiCtx = GetWorkItemContext(ReadWorkItem);
+    devCtx = GetDeviceContext(<a href="wdfworkitemgetparentobject" title="WDFOBJECT WdfWorkItemGetParentObject(&#10;  [in] WDFWORKITEM WorkItem&#10;);">WdfWorkItemGetParentObject</a>(WorkItem));
 
-// If delivery queue is non-sequential, call <a href="wdfioqueueretrievenextrequest" title="NTSTATUS WdfIoQueueRetrieveNextRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveNextRequest</a>
-// to retrieve request that we stored in EvtIoRead.
+    // If delivery queue is non-sequential, call <a href="wdfioqueueretrievenextrequest" title="NTSTATUS WdfIoQueueRetrieveNextRequest(&#10;  [in]  WDFQUEUE   Queue,&#10;  [out] WDFREQUEST *OutRequest&#10;);">WdfIoQueueRetrieveNextRequest</a>
+    // to retrieve request that we stored in EvtIoRead.
 
-//
-// Acquire interrupt lock.
-//
-WdfInterruptAcquireLock(devCtx-&gt;InterruptObject);
-ReadFunctionLocked(wiCtx-&gt;Request);
-WdfInterruptReleaseLock(devCtx-&gt;InterruptObject);
+    //
+    // Acquire interrupt lock.
+    //
+    WdfInterruptAcquireLock(devCtx-&gt;InterruptObject);
+    ReadFunctionLocked(wiCtx-&gt;Request);
+    WdfInterruptReleaseLock(devCtx-&gt;InterruptObject);
 
-//
-// Do any post-releasing interrupt lock work here.
-// For example: complete the request, and so on.
-//
-ReadFunctionFinish(wiCtx-&gt;Request);
+    //
+    // Do any post-releasing interrupt lock work here.
+    // For example: complete the request, and so on.
+    //
+    ReadFunctionFinish(wiCtx-&gt;Request);
 }
 </code></pre>
 <h2>See also</h2>

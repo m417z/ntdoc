@@ -79,45 +79,45 @@
 <p>The following example shows how a driver might call <strong>WdfInterruptReportInactive</strong> from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-po_fx_component_idle_state_callback">ComponentIdleStateCallback</a> routine of a KMDF driver. The driver registers a single component by calling <a href="wdfdevicewdmassignpowerframeworksettings" title="NTSTATUS WdfDeviceWdmAssignPowerFrameworkSettings(&#10;  [in] WDFDEVICE                     Device,&#10;  [in] PWDF_POWER_FRAMEWORK_SETTINGS PowerFrameworkSettings&#10;);">WdfDeviceWdmAssignPowerFrameworkSettings</a>.</p>
 <pre><code>VOID
 MyComponentIdleStateCallback(
-_In_ PVOID Context,
-_In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Component,
-_In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> State
-)
+    _In_ PVOID Context,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Component,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> State
+    )
 {
-PFDO_DEVICE_DATA deviceData;
-PFDO_INTERRUPT_CONTEXT interruptContext;
+    PFDO_DEVICE_DATA deviceData;
+    PFDO_INTERRUPT_CONTEXT interruptContext;
 
-deviceData = FdoGetData((WDFDEVICE)Context);
-interruptContext = InterruptGetData(deviceData-&gt;Interrupt);
+    deviceData = FdoGetData((WDFDEVICE)Context);
+    interruptContext = InterruptGetData(deviceData-&gt;Interrupt);
 
-switch (State) {
-case 0:
-…
-break;
+    switch (State) {
+        case 0:
+             …
+            break;
 
-//
-// PoFx may make us go to any of the F-states directly, hence we execute
-// F0Exit code for all of the Fx states. Note that transition to any Fx
-// state happens from F0 (and not another Fx state).
-//
-default:
-//
-// Disable interrupt generation at hardware if needed.
-//
-WdfInterruptAcquireLock(deviceData-&gt;Interrupt);
-DisableInterruptInHardware();
-WdfInterruptReleaseLock(deviceData-&gt;Interrupt);
+        //
+        // PoFx may make us go to any of the F-states directly, hence we execute
+        // F0Exit code for all of the Fx states. Note that transition to any Fx
+        // state happens from F0 (and not another Fx state).
+        //
+        default:
+            //
+            // Disable interrupt generation at hardware if needed.
+            //
+            WdfInterruptAcquireLock(deviceData-&gt;Interrupt);
+            DisableInterruptInHardware();
+            WdfInterruptReleaseLock(deviceData-&gt;Interrupt);
 
-//
-// Report that interrupt is now inactive.
-//
-WdfInterruptReportInactive(deviceData-&gt;Interrupt);
+            //
+            // Report that interrupt is now inactive.
+            //
+            WdfInterruptReportInactive(deviceData-&gt;Interrupt);
 
-interruptContext-&gt;ReportedInactive = TRUE;
+            interruptContext-&gt;ReportedInactive = TRUE;
 
-break;
+        break;
 
-…
+    …
 
 }
 

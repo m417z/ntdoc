@@ -82,54 +82,54 @@
 <h4>Examples</h4>
 <pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 UsbLowerFilter_GetAttachAction(
-__in PVOID Context,
-__out <a href="usbfn_on_attach" title="typedef struct _USBFN_ON_ATTACH {&#10;  USBFN_PORT_TYPE     PortType;&#10;  USBFN_ATTACH_ACTION AttachAction;&#10;} USBFN_ON_ATTACH, *PUSBFN_ON_ATTACH;">PUSBFN_ON_ATTACH</a> OnAttach
-)
+    __in PVOID Context,
+    __out <a href="usbfn_on_attach" title="typedef struct _USBFN_ON_ATTACH {&#10;  USBFN_PORT_TYPE     PortType;&#10;  USBFN_ATTACH_ACTION AttachAction;&#10;} USBFN_ON_ATTACH, *PUSBFN_ON_ATTACH;">PUSBFN_ON_ATTACH</a> OnAttach
+    )
 {
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status;
-PPDCP_CONTEXT PdcpContext = NULL;
-LARGE_INTEGER Timeout;
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status;
+    PPDCP_CONTEXT PdcpContext = NULL;
+    LARGE_INTEGER Timeout;
 
-PAGED_CODE();
+    PAGED_CODE();
 
-// Get driver context
-PdcpContext = DeviceGetUsbLowerFilterContext((WDFDEVICE)Context);
+    // Get driver context
+    PdcpContext = DeviceGetUsbLowerFilterContext((WDFDEVICE)Context);
 
-// Clear the event
-<a href="keclearevent" title="VOID KeClearEvent(&#10;  [in, out] PRKEVENT Event&#10;);">KeClearEvent</a>(&amp;PdcpContext-&gt;AbortAttachOperation);
+    // Clear the event
+    <a href="keclearevent" title="VOID KeClearEvent(&#10;  [in, out] PRKEVENT Event&#10;);">KeClearEvent</a>(&amp;PdcpContext-&gt;AbortAttachOperation);
 
-// Wait for a while
-Timeout.QuadPart = <a href="wdf_rel_timeout_in_ms" title="LONGLONG WDF_REL_TIMEOUT_IN_MS(&#10;  [in] ULONGLONG Time&#10;);">WDF_REL_TIMEOUT_IN_MS</a>(PdcpContext-&gt;DetectionDelayInms);
+    // Wait for a while
+    Timeout.QuadPart = <a href="wdf_rel_timeout_in_ms" title="LONGLONG WDF_REL_TIMEOUT_IN_MS(&#10;  [in] ULONGLONG Time&#10;);">WDF_REL_TIMEOUT_IN_MS</a>(PdcpContext-&gt;DetectionDelayInms);
 
-Status = <a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a>(
-&amp;PdcpContext-&gt;AbortAttachOperation,
-Executive,
-KernelMode,
-FALSE,
-&amp;Timeout);
+    Status = <a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a>(
+        &amp;PdcpContext-&gt;AbortAttachOperation,
+        Executive,
+        KernelMode,
+        FALSE,
+        &amp;Timeout);
 
-switch (Status)
-{
-case <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>:
-// The abort event was set.
-Status = STATUS_REQUEST_ABORTED;
-break;
+    switch (Status)
+    {
+    case <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>:
+        // The abort event was set.
+        Status = STATUS_REQUEST_ABORTED;
+        break;
 
-case STATUS_TIMEOUT:
-Status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-break;
+    case STATUS_TIMEOUT:
+        Status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+        break;
 
-default:
-break;
-}
+    default:
+        break;
+    }
 
-if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status))
-{
-OnAttach-&gt;AttachAction = PdcpContext-&gt;CurrentAttachAction;
-OnAttach-&gt;PortType = PdcpContext-&gt;CurrentPortType;
-}
+    if (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status))
+    {
+        OnAttach-&gt;AttachAction = PdcpContext-&gt;CurrentAttachAction;
+        OnAttach-&gt;PortType = PdcpContext-&gt;CurrentPortType;
+    }
 
-return Status;
+    return Status;
 
 </code></pre>
 <h2>See also</h2>

@@ -79,41 +79,41 @@
 <h2>Remarks</h2>
 <h3>Example</h3>
 <p>The code below shows the use of AcxObjectBagAddGuid.</p>
-<pre><code>    // Object bag
-//
-// This obj-bag config setting is shared by all composite/circuit templates.
-<a href="acx_objectbag_config" title="typedef struct _ACX_OBJECTBAG_CONFIG {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  WDFKEY           ParentKey;&#10;  PCUNICODE_STRING Name;&#10;  HANDLE           Handle;&#10;} ACX_OBJECTBAG_CONFIG, *PACX_OBJECTBAG_CONFIG;">ACX_OBJECTBAG_CONFIG</a> objBagCfg;
-<a href="acx_objectbag_config_init" title="VOID ACX_OBJECTBAG_CONFIG_INIT(&#10;  PACX_OBJECTBAG_CONFIG Config&#10;);">ACX_OBJECTBAG_CONFIG_INIT</a>(&amp;objBagCfg);
+<pre><code>// Object bag
+    //
+    // This obj-bag config setting is shared by all composite/circuit templates.
+    <a href="acx_objectbag_config" title="typedef struct _ACX_OBJECTBAG_CONFIG {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  WDFKEY           ParentKey;&#10;  PCUNICODE_STRING Name;&#10;  HANDLE           Handle;&#10;} ACX_OBJECTBAG_CONFIG, *PACX_OBJECTBAG_CONFIG;">ACX_OBJECTBAG_CONFIG</a> objBagCfg;
+    <a href="acx_objectbag_config_init" title="VOID ACX_OBJECTBAG_CONFIG_INIT(&#10;  PACX_OBJECTBAG_CONFIG Config&#10;);">ACX_OBJECTBAG_CONFIG_INIT</a>(&amp;objBagCfg);
 
-<a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> attributes;
-<a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a>(&amp;attributes);
-attributes.ParentObject = <a href="acxgetmanager" title="ACXMANAGER AcxGetManager(&#10;  [in] ACXCONTEXT Context&#10;);">AcxGetManager</a>(NULL);
+    <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> attributes;
+    <a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a>(&amp;attributes);
+    attributes.ParentObject = <a href="acxgetmanager" title="ACXMANAGER AcxGetManager(&#10;  [in] ACXCONTEXT Context&#10;);">AcxGetManager</a>(NULL);
 
-ACXOBJECTBAG objBag = NULL;
-RETURN_NTSTATUS_IF_FAILED(<a href="acxobjectbagcreate" title="NTSTATUS AcxObjectBagCreate(&#10;  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  PACX_OBJECTBAG_CONFIG  Config,&#10;  ACXOBJECTBAG           *ObjectBag&#10;);">AcxObjectBagCreate</a>(&amp;attributes, &amp;objBagCfg, &amp;objBag));
+    ACXOBJECTBAG objBag = NULL;
+    RETURN_NTSTATUS_IF_FAILED(<a href="acxobjectbagcreate" title="NTSTATUS AcxObjectBagCreate(&#10;  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  PACX_OBJECTBAG_CONFIG  Config,&#10;  ACXOBJECTBAG           *ObjectBag&#10;);">AcxObjectBagCreate</a>(&amp;attributes, &amp;objBagCfg, &amp;objBag));
 
-// Enable deletion of the object bag when the function completes and goes out of scope
-auto objBag_scope = scope_exit([&amp;objBag]() {
-if (objBag != NULL)
-{
-<a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(objBag);
-}
-});
+    // Enable deletion of the object bag when the function completes and goes out of scope
+    auto objBag_scope = scope_exit([&amp;objBag]() {
+        if (objBag != NULL)
+        {
+            <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(objBag);
+        }
+    });
 
-//
-// Add a test unsigned int 4 bytes to the object bag
-//
-RETURN_NTSTATUS_IF_FAILED(ObjBagAddTestUI4(objBag, 0));
+    //
+    // Add a test unsigned int 4 bytes to the object bag
+    //
+    RETURN_NTSTATUS_IF_FAILED(ObjBagAddTestUI4(objBag, 0));
 
-//
-// Add unique circuit ID to the object bag
-// This unique Id will be picked up by DSP circuit
-//
-<a href="declare_const_acxobjectbag_system_property_name" title="void DECLARE_CONST_ACXOBJECTBAG_SYSTEM_PROPERTY_NAME(&#10;  name&#10;);">DECLARE_CONST_ACXOBJECTBAG_SYSTEM_PROPERTY_NAME</a>(UniqueID);
-GUID uniqueID = { 0 };
-RETURN_NTSTATUS_IF_FAILED(<a href="rtlguidfromstring" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlGUIDFromString(&#10;    _In_ PCUNICODE_STRING GuidString,&#10;    _Out_ PGUID Guid&#10;    );">RtlGUIDFromString</a>(&amp;circuit_IDs[compositeType], &amp;uniqueID));
+    //
+    // Add unique circuit ID to the object bag
+    // This unique Id will be picked up by DSP circuit
+    //
+    <a href="declare_const_acxobjectbag_system_property_name" title="void DECLARE_CONST_ACXOBJECTBAG_SYSTEM_PROPERTY_NAME(&#10;  name&#10;);">DECLARE_CONST_ACXOBJECTBAG_SYSTEM_PROPERTY_NAME</a>(UniqueID);
+    GUID uniqueID = { 0 };
+    RETURN_NTSTATUS_IF_FAILED(<a href="rtlguidfromstring" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlGUIDFromString(&#10;    _In_ PCUNICODE_STRING GuidString,&#10;    _Out_ PGUID Guid&#10;    );">RtlGUIDFromString</a>(&amp;circuit_IDs[compositeType], &amp;uniqueID));
 
-RETURN_NTSTATUS_IF_FAILED(AcxObjectBagAddGuid(objBag, &amp;UniqueID, uniqueID));
+    RETURN_NTSTATUS_IF_FAILED(AcxObjectBagAddGuid(objBag, &amp;UniqueID, uniqueID));
 </code></pre>
 <h3>ACX requirements</h3>
 <p><strong>Minimum ACX version:</strong> 1.0</p>

@@ -106,14 +106,14 @@
 <p>Given a file handle, retrieves a data structure that describes the allocation and location on disk of a specific file, or, given a volume handle, the locations of bad clusters on a volume.</p>
 <p>To perform this operation, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> function with the following parameters.</p>
 <pre><code>DeviceIoControl(
-(HANDLE) hDevice,                 // handle to file, directory, or volume
-FSCTL_GET_RETRIEVAL_POINTERS,     // dwIoControlCode
-(LPVOID) lpInBuffer,              // input buffer
-(<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) nInBufferSize,            // size of input buffer
-(LPVOID) lpOutBuffer,             // output buffer
-(<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) nOutBufferSize,           // size of output buffer
-(LPDWORD) lpBytesReturned,        // number of bytes returned
-(LPOVERLAPPED) lpOverlapped       // OVERLAPPED structure
+  (HANDLE) hDevice,                 // handle to file, directory, or volume
+  FSCTL_GET_RETRIEVAL_POINTERS,     // dwIoControlCode
+  (LPVOID) lpInBuffer,              // input buffer
+  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) nInBufferSize,            // size of input buffer
+  (LPVOID) lpOutBuffer,             // output buffer
+  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) nOutBufferSize,           // size of output buffer
+  (LPDWORD) lpBytesReturned,        // number of bytes returned
+  (LPOVERLAPPED) lpOverlapped       // OVERLAPPED structure
 );
 </code></pre>
 <h2>Parameters</h2>
@@ -124,7 +124,7 @@ FSCTL_GET_RETRIEVAL_POINTERS,     // dwIoControlCode
 <h3>Input/output buffer</h3>
 <h3>Input/output buffer length</h3>
 <h3>Status block</h3>
-<p>Irp->IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
+<p>Irp-&gt;IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
 <p>Otherwise, Status to the appropriate error condition as a <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code.</p>
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS Values</a>.</p>
 <h2>Remarks</h2>
@@ -223,8 +223,12 @@ FSCTL_GET_RETRIEVAL_POINTERS,     // dwIoControlCode
 <li>
 <p><strong>FsControlCode</strong> [in]: The control code for the operation. Use FSCTL_GET_RETRIEVAL_POINTER for this operation.</p>
 </li>
-<li><p><strong>InputBuffer</strong> [in]: A pointer to a <strong><a href="starting_vcn_input_buffer" title="typedef struct {&#10;  LARGE_INTEGER StartingVcn;&#10;} STARTING_VCN_INPUT_BUFFER, *PSTARTING_VCN_INPUT_BUFFER;">STARTING_VCN_INPUT_BUFFER</a></strong> structure that indicates the virtual cluster number (VCN) that marks the beginning of the alternate stream, file, or directory. <strong>StartingVcn</strong> is the VCN at which FSCTL_GET_RETRIEVAL_POINTERS begins enumerating extents and the associated virtual and logical cluster numbers. On the first call to <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff566462(v=vs.85)"><strong>ZwFsControlFile</strong></a> with a file system control code of FSCTL_GET_RETRIEVAL_POINTERS, <strong>StartingVcn</strong> should be set to zero.</p>
-<p>If <strong>OutputBuffer</strong> is not large enough to hold the entire map of VCNs and extents for the file, the caller must request more map data by using the value returned in the <strong>NextVcn</strong> member of the <strong><a href="retrieval_pointers_buffer" title="typedef struct RETRIEVAL_POINTERS_BUFFER {&#10;  DWORD                    ExtentCount;&#10;  LARGE_INTEGER            StartingVcn;&#10;  struct {&#10;    LARGE_INTEGER NextVcn;&#10;    LARGE_INTEGER Lcn;&#10;  };&#10;  __unnamed_struct_0436_64 Extents[1];&#10;} RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;">RETRIEVAL_POINTERS_BUFFER</a></strong> structure as the starting VCN.</p></li>
+<li>
+<p><strong>InputBuffer</strong> [in]: A pointer to a <strong><a href="starting_vcn_input_buffer" title="typedef struct {&#10;  LARGE_INTEGER StartingVcn;&#10;} STARTING_VCN_INPUT_BUFFER, *PSTARTING_VCN_INPUT_BUFFER;">STARTING_VCN_INPUT_BUFFER</a></strong> structure that indicates the virtual cluster number (VCN) that marks the beginning of the alternate stream, file, or directory. <strong>StartingVcn</strong> is the VCN at which FSCTL_GET_RETRIEVAL_POINTERS begins enumerating extents and the associated virtual and logical cluster numbers. On the first call to <strong><a href="fltfscontrolfile" title="NTSTATUS FLTAPI FltFsControlFile(&#10;  [in]            PFLT_INSTANCE Instance,&#10;  [in]            PFILE_OBJECT  FileObject,&#10;  [in]            ULONG         FsControlCode,&#10;  [in, optional]  PVOID         InputBuffer,&#10;  [in]            ULONG         InputBufferLength,&#10;  [out, optional] PVOID         OutputBuffer,&#10;  [in]            ULONG         OutputBufferLength,&#10;  [out, optional] PULONG        LengthReturned&#10;);">FltFsControlFile</a></strong> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff566462(v=vs.85)"><strong>ZwFsControlFile</strong></a> with a file system control code of FSCTL_GET_RETRIEVAL_POINTERS, <strong>StartingVcn</strong> should be set to zero.</p>
+</li>
+</ul>
+<p>If <strong>OutputBuffer</strong> is not large enough to hold the entire map of VCNs and extents for the file, the caller must request more map data by using the value returned in the <strong>NextVcn</strong> member of the <strong><a href="retrieval_pointers_buffer" title="typedef struct RETRIEVAL_POINTERS_BUFFER {&#10;  DWORD                    ExtentCount;&#10;  LARGE_INTEGER            StartingVcn;&#10;  struct {&#10;    LARGE_INTEGER NextVcn;&#10;    LARGE_INTEGER Lcn;&#10;  };&#10;  __unnamed_struct_0436_64 Extents[1];&#10;} RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;">RETRIEVAL_POINTERS_BUFFER</a></strong> structure as the starting VCN.</p>
+<ul>
 <li>
 <p><strong>InputBufferLength</strong> [in]: Length, in bytes, of the input buffer at <em><strong>InputBuffer</strong>.</em></p>
 </li>

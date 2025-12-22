@@ -82,94 +82,112 @@ BOOLEAN HwBuildio(
 <pre><code>typedef
 BOOLEAN
 HW_BUILDIO (
-_In_ PVOID DeviceExtension,
-_In_ <a href="scsi_request_block" title="typedef struct _SCSI_REQUEST_BLOCK {&#10;  USHORT                     Length;&#10;  UCHAR                      Function;&#10;  UCHAR                      SrbStatus;&#10;  UCHAR                      ScsiStatus;&#10;  UCHAR                      PathId;&#10;  UCHAR                      TargetId;&#10;  UCHAR                      Lun;&#10;  UCHAR                      QueueTag;&#10;  UCHAR                      QueueAction;&#10;  UCHAR                      CdbLength;&#10;  UCHAR                      SenseInfoBufferLength;&#10;  ULONG                      SrbFlags;&#10;  ULONG                      DataTransferLength;&#10;  ULONG                      TimeOutValue;&#10;  PVOID                      DataBuffer;&#10;  PVOID                      SenseInfoBuffer;&#10;  struct _SCSI_REQUEST_BLOCK *NextSrb;&#10;  PVOID                      OriginalRequest;&#10;  PVOID                      SrbExtension;&#10;...">PSCSI_REQUEST_BLOCK</a>  Srb
-);
+  _In_ PVOID DeviceExtension,
+  _In_ <a href="scsi_request_block" title="typedef struct _SCSI_REQUEST_BLOCK {&#10;  USHORT                     Length;&#10;  UCHAR                      Function;&#10;  UCHAR                      SrbStatus;&#10;  UCHAR                      ScsiStatus;&#10;  UCHAR                      PathId;&#10;  UCHAR                      TargetId;&#10;  UCHAR                      Lun;&#10;  UCHAR                      QueueTag;&#10;  UCHAR                      QueueAction;&#10;  UCHAR                      CdbLength;&#10;  UCHAR                      SenseInfoBufferLength;&#10;  ULONG                      SrbFlags;&#10;  ULONG                      DataTransferLength;&#10;  ULONG                      TimeOutValue;&#10;  PVOID                      DataBuffer;&#10;  PVOID                      SenseInfoBuffer;&#10;  struct _SCSI_REQUEST_BLOCK *NextSrb;&#10;  PVOID                      OriginalRequest;&#10;  PVOID                      SrbExtension;&#10;...">PSCSI_REQUEST_BLOCK</a>  Srb
+  );
 </code></pre>
 <p>The port driver calls the <strong>HwStorBuildIo</strong> routine at DISPATCH IRQL without holding any spin locks. Because of this, memory allocation using <strong><a href="storportallocatepool" title="ULONG StorPortAllocatePool(&#10;  [in]  PVOID HwDeviceExtension,&#10;  [in]  ULONG NumberOfBytes,&#10;  [in]  ULONG Tag,&#10;  [out] PVOID *BufferPointer&#10;);">StorPortAllocatePool</a></strong> and mutual exclusion via <strong><a href="storportacquirespinlock" title="VOID StorPortAcquireSpinLock(&#10;  [in]     PVOID             DeviceExtension,&#10;  [in]     STOR_SPINLOCK     SpinLock,&#10;  [in]     PVOID             LockContext,&#10;  [in/out] PSTOR_LOCK_HANDLE LockHandle&#10;);">StorPortAcquireSpinLock</a></strong> are allowed in <strong>HwStorBuildIo</strong>. In a multiprocessor environment, more than one <strong>HwStorBuildIo</strong> can be active at a time, so the miniport driver is required to synchronize access to system resources, which may be in contention if more than one instance of <strong>HwStorBuildIo</strong> is active at any given time.</p>
 <p>By completed time-consuming I/O setup activities in <strong>HwStorBuildIo</strong> instead of in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/storport/nc-storport-hw_startio"><strong>HwStorStartIo</strong></a>, the miniport driver enables greater I/O concurrency and therefore improves I/O throughput. For highest performance, miniport drivers are expected to do as much preprocessing as possible in <strong>HwStorBuildIo</strong> so that it can send requests to the HBA via <strong>HwStorStartIo</strong> in as short amount of time as possible. Preprocessed data and state can be stored in either the <em>DeviceExtension</em> or <em>SrbExtension</em> structures. Only modifications to unique portions of the <em>DeviceExtension</em> must occur since no locks are held. <strong>HwStorBuildIo</strong> and <strong>HwStorStartIo</strong> receive the following Srb function types:</p>
 <ul>
-<li><p>SRB_FUNCTION_EXECUTE_SCSI: Sends a CDB to the specified bus/target/lun.</p>
+<li>
+<p>SRB_FUNCTION_EXECUTE_SCSI: Sends a CDB to the specified bus/target/lun.</p>
 <ul>
 <li>
-Srb->DataTransferLength is valid for all Cdbs.
+Srb-&gt;DataTransferLength is valid for all Cdbs.
 </li>
 <li>
-Srb->DataBuffer is <strong>NULL</strong> for read and write requests. To access the associated data, either use <strong><a href="storportgetscattergatherlist" title="STORPORT_API PSTOR_SCATTER_GATHER_LIST StorPortGetScatterGatherList(&#10;  [in] PVOID               HwDeviceExtension,&#10;  [in] PSCSI_REQUEST_BLOCK Srb&#10;);">StorPortGetScatterGatherList</a></strong> (for Dma transfers) or <strong><a href="storportgetsystemaddress" title="ULONG StorPortGetSystemAddress(&#10;  [in]  PVOID               HwDeviceExtension,&#10;  [in]  PSCSI_REQUEST_BLOCK Srb,&#10;  [out] PVOID               *SystemAddress&#10;);">StorPortGetSystemAddress</a></strong> (for program controlled I/O ) to get the Scatter Gather list or the virtual address of the buffer. For other requests, Srb->Databuffer points to the data that is associated with the Srb.
+Srb-&gt;DataBuffer is <strong>NULL</strong> for read and write requests. To access the associated data, either use <strong><a href="storportgetscattergatherlist" title="STORPORT_API PSTOR_SCATTER_GATHER_LIST StorPortGetScatterGatherList(&#10;  [in] PVOID               HwDeviceExtension,&#10;  [in] PSCSI_REQUEST_BLOCK Srb&#10;);">StorPortGetScatterGatherList</a></strong> (for Dma transfers) or <strong><a href="storportgetsystemaddress" title="ULONG StorPortGetSystemAddress(&#10;  [in]  PVOID               HwDeviceExtension,&#10;  [in]  PSCSI_REQUEST_BLOCK Srb,&#10;  [out] PVOID               *SystemAddress&#10;);">StorPortGetSystemAddress</a></strong> (for program controlled I/O ) to get the Scatter Gather list or the virtual address of the buffer. For other requests, Srb-&gt;Databuffer points to the data that is associated with the Srb.
 </li>
 <li>
-Srb->PathId is valid and represents the pathid given to Storport in <strong><a href="storportnotification" title="STORPORT_API VOID StorPortNotification(&#10;  SCSI_NOTIFICATION_TYPE NotificationType,&#10;  PVOID                  HwDeviceExtension,&#10;  ...                    &#10;);">StorPortNotification</a></strong> (BusChange). Writers of miniport drivers need to use pathid as an index into a table of busses within the miniport.
+Srb-&gt;PathId is valid and represents the pathid given to Storport in <strong><a href="storportnotification" title="STORPORT_API VOID StorPortNotification(&#10;  SCSI_NOTIFICATION_TYPE NotificationType,&#10;  PVOID                  HwDeviceExtension,&#10;  ...                    &#10;);">StorPortNotification</a></strong> (BusChange). Writers of miniport drivers need to use pathid as an index into a table of busses within the miniport.
 </li>
 <li>
-Srb->TargetId and Srb->Lun are valid.
+Srb-&gt;TargetId and Srb-&gt;Lun are valid.
 </li>
-</ul></li>
-<li><p>SRB_FUNCTION_IO_CONTROL: Miniport defined.</p>
+</ul>
+</li>
+<li>
+<p>SRB_FUNCTION_IO_CONTROL: Miniport defined.</p>
 <ul>
 <li>
-Srb->DataTransferLength and Srb->DataBuffer are valid if set by the requester.
+Srb-&gt;DataTransferLength and Srb-&gt;DataBuffer are valid if set by the requester.
 </li>
 <li>
-Srb->PathId, Srb->TargetId, and Srb->Lun are all valid.
+Srb-&gt;PathId, Srb-&gt;TargetId, and Srb-&gt;Lun are all valid.
 </li>
-</ul></li>
-<li><p>SRB_FUNCTION_RESET_LOGICAL_UNIT: Reset the specified logical unit (if the device is capable).</p>
+</ul>
+</li>
+<li>
+<p>SRB_FUNCTION_RESET_LOGICAL_UNIT: Reset the specified logical unit (if the device is capable).</p>
 <ul>
 <li>
-Srb->DataTransferLength and Srb->DataBuffer are invalid.
+Srb-&gt;DataTransferLength and Srb-&gt;DataBuffer are invalid.
 </li>
 <li>
-Srb->PathId, Srb->TargetId, and Srb->Lun are all valid.
+Srb-&gt;PathId, Srb-&gt;TargetId, and Srb-&gt;Lun are all valid.
 </li>
-</ul></li>
-<li><p>SRB_FUNCTION_RESET_DEVICE: Reset the specified Scsi Target.</p>
+</ul>
+</li>
+<li>
+<p>SRB_FUNCTION_RESET_DEVICE: Reset the specified Scsi Target.</p>
 <ul>
 <li>
-Srb->DataTransferLength and Srb->DataBuffer, Srb->Lun are invalid.
+Srb-&gt;DataTransferLength and Srb-&gt;DataBuffer, Srb-&gt;Lun are invalid.
 </li>
 <li>
-Srb->PathId and Srb->TargetId are valid.
+Srb-&gt;PathId and Srb-&gt;TargetId are valid.
 </li>
-</ul></li>
-<li><p>SRB_FUNCTION_RESET_BUS: Reset all of the targets on the specified SCSI bus.</p>
+</ul>
+</li>
+<li>
+<p>SRB_FUNCTION_RESET_BUS: Reset all of the targets on the specified SCSI bus.</p>
 <ul>
 <li>
-Only Srb->PathId is valid.
+Only Srb-&gt;PathId is valid.
 </li>
-</ul></li>
-<li><p>SRB_FUNCTION_FLUSH: Instructs the miniport driver to flush all cached data.</p>
+</ul>
+</li>
+<li>
+<p>SRB_FUNCTION_FLUSH: Instructs the miniport driver to flush all cached data.</p>
 <ul>
 <li>
 Only performed by the miniport driver if it sets <strong>CachesData</strong> == <strong>TRUE</strong> in the <strong><a href="port_configuration_information" title="typedef struct _PORT_CONFIGURATION_INFORMATION {&#10;  ULONG           Length;&#10;  ULONG           SystemIoBusNumber;&#10;  INTERFACE_TYPE  AdapterInterfaceType;&#10;  ULONG           BusInterruptLevel;&#10;  ULONG           BusInterruptVector;&#10;  KINTERRUPT_MODE InterruptMode;&#10;  ULONG           MaximumTransferLength;&#10;  ULONG           NumberOfPhysicalBreaks;&#10;  ULONG           DmaChannel;&#10;  ULONG           DmaPort;&#10;  DMA_WIDTH       DmaWidth;&#10;  DMA_SPEED       DmaSpeed;&#10;  ULONG           AlignmentMask;&#10;  ULONG           NumberOfAccessRanges;&#10;  ACCESS_RANGE( )   *AccessRanges[];&#10;  PVOID           Reserved;&#10;  UCHAR           NumberOfBuses;&#10;  UCHAR           InitiatorBusId[8];&#10;  BOOLEAN         ScatterGather;&#10;...">PORT_CONFIGURATION_INFORMATION</a></strong> structure.
 </li>
 <li>
-Srb->PathId, Srb->TargetId, and Srb->Lun are all valid.
+Srb-&gt;PathId, Srb-&gt;TargetId, and Srb-&gt;Lun are all valid.
 </li>
-</ul></li>
-<li><p>SRB_FUNCTION_SHUTDOWN: Instructs the miniport driver to flush all cached data preparatory to shut down.</p>
+</ul>
+</li>
+<li>
+<p>SRB_FUNCTION_SHUTDOWN: Instructs the miniport driver to flush all cached data preparatory to shut down.</p>
 <ul>
 <li>
 Only performed by the miniport driver if it sets <strong>CachesData</strong> == <strong>TRUE</strong> in the <strong><a href="port_configuration_information" title="typedef struct _PORT_CONFIGURATION_INFORMATION {&#10;  ULONG           Length;&#10;  ULONG           SystemIoBusNumber;&#10;  INTERFACE_TYPE  AdapterInterfaceType;&#10;  ULONG           BusInterruptLevel;&#10;  ULONG           BusInterruptVector;&#10;  KINTERRUPT_MODE InterruptMode;&#10;  ULONG           MaximumTransferLength;&#10;  ULONG           NumberOfPhysicalBreaks;&#10;  ULONG           DmaChannel;&#10;  ULONG           DmaPort;&#10;  DMA_WIDTH       DmaWidth;&#10;  DMA_SPEED       DmaSpeed;&#10;  ULONG           AlignmentMask;&#10;  ULONG           NumberOfAccessRanges;&#10;  ACCESS_RANGE( )   *AccessRanges[];&#10;  PVOID           Reserved;&#10;  UCHAR           NumberOfBuses;&#10;  UCHAR           InitiatorBusId[8];&#10;  BOOLEAN         ScatterGather;&#10;...">PORT_CONFIGURATION_INFORMATION</a></strong> structure.
 </li>
 <li>
-Srb->PathId, Srb->TargetId, and Srb->Lun are all valid.
+Srb-&gt;PathId, Srb-&gt;TargetId, and Srb-&gt;Lun are all valid.
 </li>
-</ul></li>
-<li><p>SRB_FUNCTION_DUMP_POINTERS: Supplies information needed for the miniport driver to support crash dump and hibernation.</p>
+</ul>
+</li>
+<li>
+<p>SRB_FUNCTION_DUMP_POINTERS: Supplies information needed for the miniport driver to support crash dump and hibernation.</p>
 <ul>
 <li>
 This request is sent to a Storport virtual miniport driver that is used to control the disk that holds the crash dump data. Starting with Windows 8, non-virtual miniport drivers can optionally receive this request.
 </li>
 <li>
-Srb->PathId, Srb->TargetId, and Srb->Lun are all valid.
+Srb-&gt;PathId, Srb-&gt;TargetId, and Srb-&gt;Lun are all valid.
 </li>
-</ul></li>
-<li><p>SRB_FUNCTION_FREE_DUMP_POINTERS: Starting with Windows 8, this request is sent to the miniport to free resources allocated during the SRB_FUNCTION_DUMP_POINTERS request.</p>
+</ul>
+</li>
+<li>
+<p>SRB_FUNCTION_FREE_DUMP_POINTERS: Starting with Windows 8, this request is sent to the miniport to free resources allocated during the SRB_FUNCTION_DUMP_POINTERS request.</p>
 <ul>
 <li>
-Srb->PathId, Srb->TargetId, and Srb->Lun are all valid.
+Srb-&gt;PathId, Srb-&gt;TargetId, and Srb-&gt;Lun are all valid.
 </li>
-</ul></li>
+</ul>
+</li>
 </ul>
 <p>Starting in Windows 8, the <em>Srb</em> parameter may point to either <strong><a href="scsi_request_block" title="typedef struct _SCSI_REQUEST_BLOCK {&#10;  USHORT                     Length;&#10;  UCHAR                      Function;&#10;  UCHAR                      SrbStatus;&#10;  UCHAR                      ScsiStatus;&#10;  UCHAR                      PathId;&#10;  UCHAR                      TargetId;&#10;  UCHAR                      Lun;&#10;  UCHAR                      QueueTag;&#10;  UCHAR                      QueueAction;&#10;  UCHAR                      CdbLength;&#10;  UCHAR                      SenseInfoBufferLength;&#10;  ULONG                      SrbFlags;&#10;  ULONG                      DataTransferLength;&#10;  ULONG                      TimeOutValue;&#10;  PVOID                      DataBuffer;&#10;  PVOID                      SenseInfoBuffer;&#10;  struct _SCSI_REQUEST_BLOCK *NextSrb;&#10;  PVOID                      OriginalRequest;&#10;  PVOID                      SrbExtension;&#10;...">SCSI_REQUEST_BLOCK</a></strong> or <strong><a href="storage_request_block" title="typedef struct _STORAGE_REQUEST_BLOCK {&#10;  USHORT                               Length;&#10;  UCHAR                                Function;&#10;  UCHAR                                SrbStatus;&#10;  ULONG                                ReservedUlong1;&#10;  ULONG                                Signature;&#10;  ULONG                                Version;&#10;  ULONG                                SrbLength;&#10;  ULONG                                SrbFunction;&#10;  ULONG                                SrbFlags;&#10;  ULONG                                ReservedUlong2;&#10;  ULONG                                RequestTag;&#10;  USHORT                               RequestPriority;&#10;  USHORT                               RequestAttribute;&#10;  ULONG                                TimeOutValue;&#10;  union {&#10;    ULONG SystemStatus;&#10;    ULONG RequestTagHigh4Bytes;&#10;  } DUMMYUNIONNAME;&#10;  ULONG                                SystemStatus;&#10;...">STORAGE_REQUEST_BLOCK</a></strong>. If the function identifier in the <strong>Function</strong> field of <em>Srb</em> is <strong>SRB_FUNCTION_STORAGE_REQUEST_BLOCK</strong>, the SRB is a <strong><a href="storage_request_block" title="typedef struct _STORAGE_REQUEST_BLOCK {&#10;  USHORT                               Length;&#10;  UCHAR                                Function;&#10;  UCHAR                                SrbStatus;&#10;  ULONG                                ReservedUlong1;&#10;  ULONG                                Signature;&#10;  ULONG                                Version;&#10;  ULONG                                SrbLength;&#10;  ULONG                                SrbFunction;&#10;  ULONG                                SrbFlags;&#10;  ULONG                                ReservedUlong2;&#10;  ULONG                                RequestTag;&#10;  USHORT                               RequestPriority;&#10;  USHORT                               RequestAttribute;&#10;  ULONG                                TimeOutValue;&#10;  union {&#10;    ULONG SystemStatus;&#10;    ULONG RequestTagHigh4Bytes;&#10;  } DUMMYUNIONNAME;&#10;  ULONG                                SystemStatus;&#10;...">STORAGE_REQUEST_BLOCK</a></strong> request structure.</p>
 <p>For more information about what you can and cannot do safely in this miniport driver routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/unsynchronized-hwstorbuildio-routine">Unsynchronized HwStorBuildIo Routine</a>.</p>
@@ -182,14 +200,14 @@ Srb->PathId, Srb->TargetId, and Srb->Lun are all valid.
 <pre><code>_Use_decl_annotations_
 BOOLEAN
 MyHwBuildIo (
-_In_ PVOID  DeviceExtension,
-_In_ <a href="scsi_request_block" title="typedef struct _SCSI_REQUEST_BLOCK {&#10;  USHORT                     Length;&#10;  UCHAR                      Function;&#10;  UCHAR                      SrbStatus;&#10;  UCHAR                      ScsiStatus;&#10;  UCHAR                      PathId;&#10;  UCHAR                      TargetId;&#10;  UCHAR                      Lun;&#10;  UCHAR                      QueueTag;&#10;  UCHAR                      QueueAction;&#10;  UCHAR                      CdbLength;&#10;  UCHAR                      SenseInfoBufferLength;&#10;  ULONG                      SrbFlags;&#10;  ULONG                      DataTransferLength;&#10;  ULONG                      TimeOutValue;&#10;  PVOID                      DataBuffer;&#10;  PVOID                      SenseInfoBuffer;&#10;  struct _SCSI_REQUEST_BLOCK *NextSrb;&#10;  PVOID                      OriginalRequest;&#10;  PVOID                      SrbExtension;&#10;...">PSCSI_REQUEST_BLOCK</a>  Srb
-);
-{
-...
-}
+  _In_ PVOID  DeviceExtension,
+  _In_ <a href="scsi_request_block" title="typedef struct _SCSI_REQUEST_BLOCK {&#10;  USHORT                     Length;&#10;  UCHAR                      Function;&#10;  UCHAR                      SrbStatus;&#10;  UCHAR                      ScsiStatus;&#10;  UCHAR                      PathId;&#10;  UCHAR                      TargetId;&#10;  UCHAR                      Lun;&#10;  UCHAR                      QueueTag;&#10;  UCHAR                      QueueAction;&#10;  UCHAR                      CdbLength;&#10;  UCHAR                      SenseInfoBufferLength;&#10;  ULONG                      SrbFlags;&#10;  ULONG                      DataTransferLength;&#10;  ULONG                      TimeOutValue;&#10;  PVOID                      DataBuffer;&#10;  PVOID                      SenseInfoBuffer;&#10;  struct _SCSI_REQUEST_BLOCK *NextSrb;&#10;  PVOID                      OriginalRequest;&#10;  PVOID                      SrbExtension;&#10;...">PSCSI_REQUEST_BLOCK</a>  Srb
+  );
+  {
+      ...
+  }
 </code></pre>
-<p>The <strong>HW_BUILDIO</strong> function type is defined in the Storport.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>HW_BUILDIO</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-storport-drivers">Declaring Functions Using Function Role Types for Storport Drivers</a>. For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+<p>The <strong>HW_BUILDIO</strong> function type is defined in the Storport.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>HW_BUILDIO</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-storport-drivers">Declaring Functions Using Function Role Types for Storport Drivers</a>. For information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
 <h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/storport/nc-storport-hw_startio"><strong>HwStorStartIo</strong></a></p>
 <p><strong><a href="port_configuration_information" title="typedef struct _PORT_CONFIGURATION_INFORMATION {&#10;  ULONG           Length;&#10;  ULONG           SystemIoBusNumber;&#10;  INTERFACE_TYPE  AdapterInterfaceType;&#10;  ULONG           BusInterruptLevel;&#10;  ULONG           BusInterruptVector;&#10;  KINTERRUPT_MODE InterruptMode;&#10;  ULONG           MaximumTransferLength;&#10;  ULONG           NumberOfPhysicalBreaks;&#10;  ULONG           DmaChannel;&#10;  ULONG           DmaPort;&#10;  DMA_WIDTH       DmaWidth;&#10;  DMA_SPEED       DmaSpeed;&#10;  ULONG           AlignmentMask;&#10;  ULONG           NumberOfAccessRanges;&#10;  ACCESS_RANGE( )   *AccessRanges[];&#10;  PVOID           Reserved;&#10;  UCHAR           NumberOfBuses;&#10;  UCHAR           InitiatorBusId[8];&#10;  BOOLEAN         ScatterGather;&#10;...">PORT_CONFIGURATION_INFORMATION</a></strong></p>
