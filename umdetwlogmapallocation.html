@@ -68,82 +68,112 @@
 <h1>Windows Driver Kit DDI reference (nf-umdprovider-umdetwlogmapallocation)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>UMDEtwLogMapAllocation function</h1>
-<h2>Description</h2>
+<h1 id="umdetwlogmapallocation-function">UMDEtwLogMapAllocation function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>Describes how a Microsoft DirectX graphics kernel subsystem (Dxgkrnl.sys) memory allocation, or a portion of the allocation, is being used.</p>
-<h2>Parameters</h2>
-<h3><code>hD3DAllocation</code></h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="hd3dallocation"><code>hD3DAllocation</code></h3>
+
 <p>A handle to the Direct3D allocation.</p>
+
 <p>For Direct3D 10 user-mode drivers, the handle will be the value of the <em>hResource</em> parameter of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_createresource">CreateResource(D3D10)</a> function. For Direct3D 9 user-mode drivers, the handle will be the value of the <em>pResource</em> parameter that the driver returns in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_createresource">CreateResource</a> function.</p>
+
 <p>The driver can set this value to <strong>NULL</strong> if it uses allocations internally.</p>
-<h3><code>hDxgAllocation</code></h3>
+
+<h3 id="hdxgallocation"><code>hDxgAllocation</code></h3>
+
 <p>A handle to the DirectX graphics kernel subsystem (Dxgkrnl.sys) allocation that the Direct3D allocation is mapped to.</p>
-<h3><code>Offset</code></h3>
+
+<h3 id="offset"><code>Offset</code></h3>
+
 <p>The starting address, in bytes, of the Direct3D allocation within the Dxgkrnl allocation.</p>
-<h3><code>Size</code></h3>
+
+<h3 id="size"><code>Size</code></h3>
+
 <p>The size, in bytes, of the Direct3D allocation within the Dxgkrnl allocation.</p>
-<h3><code>Usage</code></h3>
+
+<h3 id="usage"><code>Usage</code></h3>
+
 <p>A <a href="umdetw_allocation_usage" title="typedef struct _UMDETW_ALLOCATION_USAGE {&#10;  union {&#10;    struct {&#10;      UINT Packed : 1;&#10;      UINT Renamed : 1;&#10;      UINT Reserved : 14;&#10;      UINT DriverReserved : 16;&#10;    };&#10;    UINT Value;&#10;  };&#10;} UMDETW_ALLOCATION_USAGE;">UMDETW_ALLOCATION_USAGE</a> structure that indicates the reason for this mapping.</p>
-<h3><code>Semantic</code></h3>
+
+<h3 id="semantic"><code>Semantic</code></h3>
+
 <p>If the allocation is used internally by the user-mode driver, this is a <a href="umdetw_allocation_semantic" title="typedef enum _UMDETW_ALLOCATION_SEMANTIC {&#10;  UMDETW_ALLOCATION_SEMANTIC_NONE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DMA_BUFFER,&#10;  UMDETW_ALLOCATION_SEMANTIC_UPLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_DOWNLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_CONTEXT_SAVE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MIN,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MAX&#10;} UMDETW_ALLOCATION_SEMANTIC;">UMDETW_ALLOCATION_SEMANTIC</a> structure that indicates what the allocation is used for.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The user-mode display driver must completely account for the video memory it allocates, so it must call this function to log an event every time the allocation changes.</p>
+
 <p>Examples of when to call this function are:</p>
+
 <ul>
 <li>A Direct3D allocation is packed into a DirectX graphics kernel subsystem (Dxgkrnl.sys) allocation.</li>
 <li>A Dxgkrnl allocation is created as a scratch surface. In this case, set the <em>hD3DAllocation</em> parameter to <strong>NULL</strong>.</li>
 </ul>
+
 <p><strong>UMDEtwLogMapAllocation</strong> is defined inline in Umdprovider.h as:</p>
-<pre lang="cpp"><code>FORCEINLINE void LogMapAllocation(BOOLEAN Enter,
-                    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> hD3DAllocation,
-                    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> hDxgAllocation,
-                    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Offset,
-                    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Size,
-                    <a href="umdetw_allocation_usage" title="typedef struct _UMDETW_ALLOCATION_USAGE {&#10;  union {&#10;    struct {&#10;      UINT Packed : 1;&#10;      UINT Renamed : 1;&#10;      UINT Reserved : 14;&#10;      UINT DriverReserved : 16;&#10;    };&#10;    UINT Value;&#10;  };&#10;} UMDETW_ALLOCATION_USAGE;">UMDETW_ALLOCATION_USAGE</a> Usage,
-                    <a href="umdetw_allocation_semantic" title="typedef enum _UMDETW_ALLOCATION_SEMANTIC {&#10;  UMDETW_ALLOCATION_SEMANTIC_NONE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DMA_BUFFER,&#10;  UMDETW_ALLOCATION_SEMANTIC_UPLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_DOWNLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_CONTEXT_SAVE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MIN,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MAX&#10;} UMDETW_ALLOCATION_SEMANTIC;">UMDETW_ALLOCATION_SEMANTIC</a> Semantic)
-{
-    if (Enabled)
-    {
-        <a href="event_data_descriptor" title="typedef struct _EVENT_DATA_DESCRIPTOR EVENT_DATA_DESCRIPTOR, *PEVENT_DATA_DESCRIPTOR;">EVENT_DATA_DESCRIPTOR</a> Descriptors[6];
 
-        // Create a description of the event
-        EventDataDescCreate(&amp;Descriptors[0], &amp;hD3DAllocation, 8);
-        EventDataDescCreate(&amp;Descriptors[1], &amp;hDxgAllocation, 8);
-        EventDataDescCreate(&amp;Descriptors[2], &amp;Offset, 8);
-        EventDataDescCreate(&amp;Descriptors[3], &amp;Size, 8);
-        EventDataDescCreate(&amp;Descriptors[4], &amp;Usage, 4);
-        EventDataDescCreate(&amp;Descriptors[5], &amp;Semantic, 4);
+<div class="codehilite">
+<pre><span></span><code><span class="n">FORCEINLINE</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">LogMapAllocation</span><span class="p">(</span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">Enter</span><span class="p">,</span>
+<span class="w">                    </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">hD3DAllocation</span><span class="p">,</span>
+<span class="w">                    </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">hDxgAllocation</span><span class="p">,</span>
+<span class="w">                    </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">Offset</span><span class="p">,</span>
+<span class="w">                    </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">Size</span><span class="p">,</span>
+<span class="w">                    </span><span class="n"><a href="umdetw_allocation_usage" title="typedef struct _UMDETW_ALLOCATION_USAGE {&#10;  union {&#10;    struct {&#10;      UINT Packed : 1;&#10;      UINT Renamed : 1;&#10;      UINT Reserved : 14;&#10;      UINT DriverReserved : 16;&#10;    };&#10;    UINT Value;&#10;  };&#10;} UMDETW_ALLOCATION_USAGE;">UMDETW_ALLOCATION_USAGE</a></span><span class="w"> </span><span class="n">Usage</span><span class="p">,</span>
+<span class="w">                    </span><span class="n"><a href="umdetw_allocation_semantic" title="typedef enum _UMDETW_ALLOCATION_SEMANTIC {&#10;  UMDETW_ALLOCATION_SEMANTIC_NONE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DMA_BUFFER,&#10;  UMDETW_ALLOCATION_SEMANTIC_UPLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_DOWNLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_CONTEXT_SAVE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MIN,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MAX&#10;} UMDETW_ALLOCATION_SEMANTIC;">UMDETW_ALLOCATION_SEMANTIC</a></span><span class="w"> </span><span class="n">Semantic</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Enabled</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n"><a href="event_data_descriptor" title="typedef struct _EVENT_DATA_DESCRIPTOR EVENT_DATA_DESCRIPTOR, *PEVENT_DATA_DESCRIPTOR;">EVENT_DATA_DESCRIPTOR</a></span><span class="w"> </span><span class="n">Descriptors</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
 
-        // Log the event
-        EventWrite(
-            RegHandle,
-            Enter ? (InRundown ? &amp;RundownAllocationEvent : &amp;MapAllocationEvent) : &amp;UnmapAllocationEvent,
-            sizeof(Descriptors) / sizeof(Descriptors[0]),
-            Descriptors
-        );
-    }
-}
+<span class="w">        </span><span class="c1">// Create a description of the event</span>
+<span class="w">        </span><span class="n">EventDataDescCreate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Descriptors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="w"> </span><span class="o">&amp;</span><span class="n">hD3DAllocation</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
+<span class="w">        </span><span class="n">EventDataDescCreate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Descriptors</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="w"> </span><span class="o">&amp;</span><span class="n">hDxgAllocation</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
+<span class="w">        </span><span class="n">EventDataDescCreate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Descriptors</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Offset</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
+<span class="w">        </span><span class="n">EventDataDescCreate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Descriptors</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Size</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">);</span>
+<span class="w">        </span><span class="n">EventDataDescCreate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Descriptors</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Usage</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
+<span class="w">        </span><span class="n">EventDataDescCreate</span><span class="p">(</span><span class="o">&amp;</span><span class="n">Descriptors</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span><span class="w"> </span><span class="o">&amp;</span><span class="n">Semantic</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">);</span>
 
-FORCEINLINE void UMDEtwLogMapAllocation(<a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> hD3DAllocation,
-                            <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> hDxgAllocation,
-                            <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Offset,
-                            <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Size,
-                            <a href="umdetw_allocation_usage" title="typedef struct _UMDETW_ALLOCATION_USAGE {&#10;  union {&#10;    struct {&#10;      UINT Packed : 1;&#10;      UINT Renamed : 1;&#10;      UINT Reserved : 14;&#10;      UINT DriverReserved : 16;&#10;    };&#10;    UINT Value;&#10;  };&#10;} UMDETW_ALLOCATION_USAGE;">UMDETW_ALLOCATION_USAGE</a> Usage,
-                            <a href="umdetw_allocation_semantic" title="typedef enum _UMDETW_ALLOCATION_SEMANTIC {&#10;  UMDETW_ALLOCATION_SEMANTIC_NONE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DMA_BUFFER,&#10;  UMDETW_ALLOCATION_SEMANTIC_UPLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_DOWNLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_CONTEXT_SAVE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MIN,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MAX&#10;} UMDETW_ALLOCATION_SEMANTIC;">UMDETW_ALLOCATION_SEMANTIC</a> Semantic)
-{
-    LogMapAllocation(TRUE,
-                     hD3DAllocation,
-                     hDxgAllocation,
-                     Offset,
-                     Size,
-                     Usage,
-                     Semantic);
-}
+<span class="w">        </span><span class="c1">// Log the event</span>
+<span class="w">        </span><span class="n">EventWrite</span><span class="p">(</span>
+<span class="w">            </span><span class="n">RegHandle</span><span class="p">,</span>
+<span class="w">            </span><span class="n">Enter</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="p">(</span><span class="n">InRundown</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="o">&amp;</span><span class="n">RundownAllocationEvent</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="o">&amp;</span><span class="n">MapAllocationEvent</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="o">&amp;</span><span class="n">UnmapAllocationEvent</span><span class="p">,</span>
+<span class="w">            </span><span class="k">sizeof</span><span class="p">(</span><span class="n">Descriptors</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">Descriptors</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+<span class="w">            </span><span class="n">Descriptors</span>
+<span class="w">        </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">FORCEINLINE</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">UMDEtwLogMapAllocation</span><span class="p">(</span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">hD3DAllocation</span><span class="p">,</span>
+<span class="w">                            </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">hDxgAllocation</span><span class="p">,</span>
+<span class="w">                            </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">Offset</span><span class="p">,</span>
+<span class="w">                            </span><span class="n"><a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a></span><span class="w"> </span><span class="n">Size</span><span class="p">,</span>
+<span class="w">                            </span><span class="n"><a href="umdetw_allocation_usage" title="typedef struct _UMDETW_ALLOCATION_USAGE {&#10;  union {&#10;    struct {&#10;      UINT Packed : 1;&#10;      UINT Renamed : 1;&#10;      UINT Reserved : 14;&#10;      UINT DriverReserved : 16;&#10;    };&#10;    UINT Value;&#10;  };&#10;} UMDETW_ALLOCATION_USAGE;">UMDETW_ALLOCATION_USAGE</a></span><span class="w"> </span><span class="n">Usage</span><span class="p">,</span>
+<span class="w">                            </span><span class="n"><a href="umdetw_allocation_semantic" title="typedef enum _UMDETW_ALLOCATION_SEMANTIC {&#10;  UMDETW_ALLOCATION_SEMANTIC_NONE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DMA_BUFFER,&#10;  UMDETW_ALLOCATION_SEMANTIC_UPLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_DOWNLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_CONTEXT_SAVE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MIN,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MAX&#10;} UMDETW_ALLOCATION_SEMANTIC;">UMDETW_ALLOCATION_SEMANTIC</a></span><span class="w"> </span><span class="n">Semantic</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">LogMapAllocation</span><span class="p">(</span><span class="n">TRUE</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">hD3DAllocation</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">hDxgAllocation</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">Offset</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">Size</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">Usage</span><span class="p">,</span>
+<span class="w">                     </span><span class="n">Semantic</span><span class="p">);</span>
+<span class="p">}</span>
 </code></pre>
-<h2>See also</h2>
+</div>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_createresource">CreateResource</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_createresource">CreateResource(D3D10)</a></p>
+
 <p><a href="umdetw_allocation_semantic" title="typedef enum _UMDETW_ALLOCATION_SEMANTIC {&#10;  UMDETW_ALLOCATION_SEMANTIC_NONE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DMA_BUFFER,&#10;  UMDETW_ALLOCATION_SEMANTIC_UPLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_DOWNLOAD_STAGING,&#10;  UMDETW_ALLOCATION_SEMANTIC_CONTEXT_SAVE,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MIN,&#10;  UMDETW_ALLOCATION_SEMANTIC_DRIVER_OTHER_MAX&#10;} UMDETW_ALLOCATION_SEMANTIC;">UMDETW_ALLOCATION_SEMANTIC</a></p>
+
 <p><a href="umdetw_allocation_usage" title="typedef struct _UMDETW_ALLOCATION_USAGE {&#10;  union {&#10;    struct {&#10;      UINT Packed : 1;&#10;      UINT Renamed : 1;&#10;      UINT Reserved : 14;&#10;      UINT DriverReserved : 16;&#10;    };&#10;    UINT Value;&#10;  };&#10;} UMDETW_ALLOCATION_USAGE;">UMDETW_ALLOCATION_USAGE</a></p>
 <hr>
 <div class="ntdoc-description-links">

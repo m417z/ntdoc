@@ -64,28 +64,41 @@ RtlCheckTokenCapability(
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
 <p>Determines if a token can pass access checks that require the specified capability <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>.</p>
-<h1>Parameters</h1>
+
+<h1 id="parameters">Parameters</h1>
+
 <ul>
 <li><code>TokenHandle</code> - an optional handle to the token or one of the supported pseudo-handles (see below). The handle must grant <code>TOKEN_QUERY</code> access. The function uses (opens) the current thread's effective token if the caller passes <code>NULL</code> in this parameter.</li>
 <li><code>CapabilitySidToCheck</code> - a capability <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> to check. The <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> must satisfy the <code><a href="rtliscapabilitysid" title="NTSYSAPI&#10;BOOLEAN&#10;NTAPI&#10;RtlIsCapabilitySid(&#10;    _In_ PSID Sid&#10;    );">RtlIsCapabilitySid</a></code> check.</li>
 <li><code>HasCapability</code> - a pointer to a variable that receives a boolean indicating whether the token has the capability.</li>
 </ul>
-<h1>Pseudo-handles</h1>
+
+<h1 id="pseudo-handles">Pseudo-handles</h1>
+
 <p>This function supports the following pseudo-handle values:</p>
+
 <ul>
 <li><code><a href="ntcurrentprocesstoken" title="#define NtCurrentProcessToken() ((HANDLE)(LONG_PTR)-4) // NtOpenProcessToken(NtCurrentProcess())">NtCurrentProcessToken</a></code> - performs the query on the primary token of the calling process.</li>
 <li><code><a href="ntcurrentthreadtoken" title="#define NtCurrentThreadToken() ((HANDLE)(LONG_PTR)-5) // NtOpenThreadToken(NtCurrentThread())">NtCurrentThreadToken</a></code> - performs the query on the impersonation token of the calling thread. The function fails if the thread is not impersonating.</li>
 <li><code><a href="ntcurrentthreadeffectivetoken" title="#define NtCurrentThreadEffectiveToken() ((HANDLE)(LONG_PTR)-6) // NtOpenThreadToken(NtCurrentThread()) + NtOpenProcessToken(NtCurrentProcess())">NtCurrentThreadEffectiveToken</a></code> - performs the query on the impersonation token of the calling thread, if present. Otherwise, the function uses the primary token of the calling process.</li>
 </ul>
-<h1>Implementation details</h1>
+
+<h1 id="implementation-details">Implementation details</h1>
+
 <p>This function creates a security descriptor with a DACL that grants access to the user <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> and the capability <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> and performs an access checks against it via <code><a href="ntaccesscheck" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAccessCheck(&#10;    _In_ PSECURITY_DESCRIPTOR SecurityDescriptor,&#10;    _In_ HANDLE ClientToken,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PGENERIC_MAPPING GenericMapping,&#10;    _Out_writes_bytes_(*PrivilegeSetLength) PPRIVILEGE_SET PrivilegeSet,&#10;    _Inout_ PULONG PrivilegeSetLength,&#10;    _Out_ PACCESS_MASK GrantedAccess,&#10;    _Out_ PNTSTATUS AccessStatus&#10;    );">NtAccessCheck</a></code>. Therefore, unsandboxed tokens are considered to have any capability.</p>
-<h1>Required OS version</h1>
+
+<h1 id="required-os-version">Required OS version</h1>
+
 <p>This function was introduced in Windows 8.</p>
-<h1>Related Win32 API</h1>
+
+<h1 id="related-win32-api">Related Win32 API</h1>
+
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-checktokencapability"><code>CheckTokenCapability</code></a></li>
 </ul>
-<h1>See also</h1>
+
+<h1 id="see-also">See also</h1>
+
 <ul>
 <li><code><a href="rtlchecktokenmembership" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlCheckTokenMembership(&#10;    _In_opt_ HANDLE TokenHandle,&#10;    _In_ PSID SidToCheck,&#10;    _Out_ PBOOLEAN IsMember&#10;    );">RtlCheckTokenMembership</a></code></li>
 <li><code><a href="rtlchecktokenmembershipex" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlCheckTokenMembershipEx(&#10;    _In_opt_ HANDLE TokenHandle,&#10;    _In_ PSID SidToCheck,&#10;    _In_ ULONG Flags, // CTMF_VALID_FLAGS&#10;    _Out_ PBOOLEAN IsMember&#10;    );">RtlCheckTokenMembershipEx</a></code></li>

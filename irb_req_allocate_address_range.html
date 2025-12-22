@@ -77,105 +77,152 @@
 <h1>Windows Driver Kit DDI reference (ns-1394-_irb_req_allocate_address_range)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>_IRB_REQ_ALLOCATE_ADDRESS_RANGE structure</h1>
-<h2>Description</h2>
+<h1 id="_irb_req_allocate_address_range-structure">_IRB_REQ_ALLOCATE_ADDRESS_RANGE structure</h1>
+
+<h2 id="description">Description</h2>
+
 <p>This structure contains the fields necessary for the 1394 stack to carry out a request to allocate an address range.</p>
+
 <p>If the allocation is specified with no notification options and no <strong>RequiredOffset</strong>, the returned address will always be a physical address on the OHCI bus. As a result, during allocation, if <strong>Callback</strong> and <strong>Context</strong> are specified, because no notification is used, the callback will be used to notify the caller that the allocation is complete. This way, the issuer of the alloc does not have to block, but instead, the issuer's callback routine is called asynchronously when this is complete.</p>
+
 <p>The caller must create this <a href="irb" title="typedef struct _IRB {&#10;  ULONG     FunctionNumber;&#10;  ULONG     Flags;&#10;  ULONG_PTR BusReserved[IRB_BUS_RESERVED_SZ];&#10;  ULONG_PTR PortReserved[IRB_PORT_RESERVED_SZ];&#10;  union {&#10;    IRB_REQ_ASYNC_READ                          AsyncRead;&#10;    IRB_REQ_ASYNC_WRITE                         AsyncWrite;&#10;    IRB_REQ_ASYNC_LOCK                          AsyncLock;&#10;    IRB_REQ_ISOCH_ALLOCATE_BANDWIDTH            IsochAllocateBandwidth;&#10;    IRB_REQ_ISOCH_ALLOCATE_CHANNEL              IsochAllocateChannel;&#10;    IRB_REQ_ISOCH_ALLOCATE_RESOURCES            IsochAllocateResources;&#10;    IRB_REQ_ISOCH_ATTACH_BUFFERS                IsochAttachBuffers;&#10;    IRB_REQ_ISOCH_DETACH_BUFFERS                IsochDetachBuffers;&#10;    IRB_REQ_ISOCH_FREE_BANDWIDTH                IsochFreeBandwidth;&#10;    IRB_REQ_ISOCH_FREE_CHANNEL                  IsochFreeChannel;&#10;    IRB_REQ_ISOCH_FREE_RESOURCES                IsochFreeResources;&#10;    IRB_REQ_ISOCH_LISTEN                        IsochListen;&#10;    IRB_REQ_ISOCH_QUERY_CURRENT_CYCLE_TIME      IsochQueryCurrentCycleTime;&#10;    IRB_REQ_ISOCH_QUERY_RESOURCES               IsochQueryResources;&#10;...">IRB</a> as usual, but instead use the physical mapping routine provided by the port driver in order to use this request. If it uses <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong>, the caller cannot specify <strong>Context</strong> and <strong>Callback</strong> for a physical address, and it has to block.</p>
-<h2>Members</h2>
-<h3><code>Mdl</code></h3>
+
+<h2 id="members">Members</h2>
+
+<h3 id="mdl"><code>Mdl</code></h3>
+
 <p>If non-<strong>NULL</strong>, points to the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> that describes the application's buffer where asynchronous operations are to be read, written, or locked. The memory for the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> must be allocated from nonpaged pool or locked down by means of a call to <a href="mmprobeandlockpages" title="VOID MmProbeAndLockPages(&#10;  [in, out] PMDL            MemoryDescriptorList,&#10;  [in]      KPROCESSOR_MODE AccessMode,&#10;  [in]      LOCK_OPERATION  Operation&#10;);">MmProbeAndLockPages</a>. If the driver specifies <strong>u.AllocateAddressRange.Mdl</strong>, then <strong>u.AllocateAddressRange.FifoSListHead</strong> and <strong>u.AllocateAddressRange.FifoSpinLock</strong> must be <strong>NULL</strong>.</p>
-<h3><code>fulFlags</code></h3>
+
+<h3 id="fulflags"><code>fulFlags</code></h3>
+
 <p>Specifies whether the array entries in p1394AddressRange use big-endian byte order. If the caller specifies BIG_ENDIAN_ADDRESS_RANGE, the array entries are in big-endian byte order (the native byte order of the IEEE 1394 protocol), even if the local host is a little-endian machine. In order to specify a little-endian address range, the caller must explicitly guarantee that the BIG_ENDIAN_ADDRESS_RANGE flag is not set using a statement similar to the following:</p>
+
 <p>fulFlags = fulFlags &amp; ~(0x0ffffffff &amp; BIG_ENDIAN_ADDRESS_RANGE)</p>
-<h3><code>nLength</code></h3>
+
+<h3 id="nlength"><code>nLength</code></h3>
+
 <p>Specifies the number of the IEEE 1394 addresses to allocate.</p>
-<h3><code>MaxSegmentSize</code></h3>
+
+<h3 id="maxsegmentsize"><code>MaxSegmentSize</code></h3>
+
 <p>Specifies the maximum size for each range of addresses that the bus driver allocates. Use zero to indicate that the driver does not have a required maximum segment size. If a nonzero value is specified for <strong>MaxSegmentSize</strong>, the value must be less than 64 KB (65,536 bytes). In other words, it must be less than or equal to 65,535 (0xFFFF) due to the fact that the address range size is stored in a 16-bit word. This member is ignored if <strong>u.AllocateAddressRange.Required1394Offset</strong> is non-<strong>NULL</strong>.</p>
-<h3><code>fulAccessType</code></h3>
+
+<h3 id="fulaccesstype"><code>fulAccessType</code></h3>
+
 <p>Specifies access type using one or more of the following flags.</p>
+
 <table>
 <thead>
 <tr>
-<th>Access</th>
-<th>Description</th>
+  <th>Access</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>ACCESS_FLAGS_TYPE_READ</td>
-<td>Allocated addresses can be read.</td>
+  <td>ACCESS_FLAGS_TYPE_READ</td>
+  <td>Allocated addresses can be read.</td>
 </tr>
 <tr>
-<td>ACCESS_FLAGS_TYPE_WRITE</td>
-<td>Allocated addresses can be written to.</td>
+  <td>ACCESS_FLAGS_TYPE_WRITE</td>
+  <td>Allocated addresses can be written to.</td>
 </tr>
 <tr>
-<td>ACCESS_FLAGS_TYPE_LOCK</td>
-<td>Allocated addresses can be the target of a lock operation.</td>
+  <td>ACCESS_FLAGS_TYPE_LOCK</td>
+  <td>Allocated addresses can be the target of a lock operation.</td>
 </tr>
 <tr>
-<td>ACCESS_FLAGS_TYPE_BROADCAST</td>
-<td>Allocated addresses can receive asynchronous I/O requests from any node on the bus. (By default, only the device driver's device can send requests to the allocated addresses).</td>
+  <td>ACCESS_FLAGS_TYPE_BROADCAST</td>
+  <td>Allocated addresses can receive asynchronous I/O requests from any node on the bus. (By default, only the device driver's device can send requests to the allocated addresses).</td>
 </tr>
 </tbody>
 </table>
+
 <p>Special considerations apply to drivers of virtual devices. Virtual devices do not have node IDs, and so when a driver sends a request to a virtual device, the bus driver has no means of identifying which device is the target. Thus in order for a virtual device to receive requests, its driver must allocate a range of addresses with the ACCESS_FLAGS_TYPE_BROADCAST flag set in <strong>fulAccessType</strong>. This permits the virtual device to receive all request packets, no matter what node ID is indicated in the request packet.</p>
-<h3><code>fulNotificationOptions</code></h3>
+
+<h3 id="fulnotificationoptions"><code>fulNotificationOptions</code></h3>
+
 <p>If the device driver requests that the bus driver handle each request, and notifies the device driver upon completion, this specifies which asynchronous I/O request types will trigger the bus driver to the notify the device driver upon completion. See the <strong>Operation</strong> section for more details. The driver may specify one or more of the NOTIFY_FLAGS_AFTER_XXX flags.</p>
+
 <table>
 <thead>
 <tr>
-<th>Flag</th>
-<th>Description</th>
+  <th>Flag</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>NOTIFY_FLAGS_NEVER</td>
-<td>No notification.</td>
+  <td>NOTIFY_FLAGS_NEVER</td>
+  <td>No notification.</td>
 </tr>
 <tr>
-<td>NOTIFY_FLAGS_AFTER_READ</td>
-<td>Notify the device driver after carrying out an asynchronous read operation.</td>
+  <td>NOTIFY_FLAGS_AFTER_READ</td>
+  <td>Notify the device driver after carrying out an asynchronous read operation.</td>
 </tr>
 <tr>
-<td>NOTIFY_FLAGS_AFTER_WRITE</td>
-<td>Notify the device driver after carrying out an asynchronous write operation.</td>
+  <td>NOTIFY_FLAGS_AFTER_WRITE</td>
+  <td>Notify the device driver after carrying out an asynchronous write operation.</td>
 </tr>
 <tr>
-<td>NOTIFY_FLAGS_AFTER_LOCK</td>
-<td>Notify the device driver after carrying out an asynchronous lock operation.</td>
+  <td>NOTIFY_FLAGS_AFTER_LOCK</td>
+  <td>Notify the device driver after carrying out an asynchronous lock operation.</td>
 </tr>
 </tbody>
 </table>
-<h3><code>Callback</code></h3>
+
+<h3 id="callback"><code>Callback</code></h3>
+
 <p>Points to a device driver callback routine. If the device driver specifies that the bus driver notify the device driver for each asynchronous I/O request, <strong>u.AllocateAddressRange.Callback</strong> points to the device driver's notification routine, which must have the following prototype:</p>
+
 <pre><code>VOID DriverNotificationRoutine(IN PNOTIFICATION_INFO );
 </code></pre>
+
 <p>If the device driver specifies that it receives no notification, and submits this request at raised IRQL through the port driver's physical mapping routine, then <strong>u.AllocateAddressRange.Callback</strong> points to the device driver's allocation completion routine, which must have the following prototype:</p>
+
 <pre><code>VOID AllocationCompletionRoutine( IN PVOID );
 </code></pre>
+
 <p>Drivers that do not request notification, and submit this request in the normal way at PASSIVE_LEVEL, must set this member to <strong>NULL</strong>.</p>
-<h3><code>Context</code></h3>
+
+<h3 id="context"><code>Context</code></h3>
+
 <p>Points to any context data that the device driver wants to pass for this set of addresses. If the provided callback (see previous) is a notification routine, the bus driver passes <strong>u.AllocateAddressRange.Context</strong> within the NOTIFICATION_INFO the parameter. If the callback is an allocation completion routine, the bus driver passes <strong>u.AllocateAddressRange.Context</strong> as the sole parameter to the routine</p>
-<h3><code>Required1394Offset</code></h3>
+
+<h3 id="required1394offset"><code>Required1394Offset</code></h3>
+
 <p>Specifies a hard-coded address in the computer's IEEE 1394 address space. The bus driver allocates the addresses beginning at <strong>u.AllocateAddressRange.Required1394Offset</strong>. If no specific address is required, the driver should fill in each member of the <a href="address_offset" title="typedef struct _ADDRESS_OFFSET {&#10;  USHORT Off_High;&#10;  ULONG  Off_Low;&#10;} ADDRESS_OFFSET, *PADDRESS_OFFSET;">ADDRESS_OFFSET</a> with zero. The bus driver then chooses the addresses to allocate.</p>
-<h3><code>FifoSListHead</code></h3>
+
+<h3 id="fifoslisthead"><code>FifoSListHead</code></h3>
+
 <p>If non-<strong>NULL</strong>, specifies a properly initialized (for example, by <strong>ExInitializeSListHead</strong>) interlocked, singly-linked list of <a href="address_fifo" title="typedef struct _ADDRESS_FIFO {&#10;  SLIST_ENTRY FifoList;&#10;  PMDL        FifoMdl;&#10;} ADDRESS_FIFO, *PADDRESS_FIFO;">ADDRESS_FIFO</a> elements. Each <a href="address_fifo" title="typedef struct _ADDRESS_FIFO {&#10;  SLIST_ENTRY FifoList;&#10;  PMDL        FifoMdl;&#10;} ADDRESS_FIFO, *PADDRESS_FIFO;">ADDRESS_FIFO</a> contains an <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>. As the bus driver handles each incoming write request to the allocated addresses, it pops off the first element on the list and writes incoming data to the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>. It then calls the driver's notification routine.</p>
+
 <p>Each <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> provided must only span one page in memory. The driver can add or remove elements from the <a href="address_fifo" title="typedef struct _ADDRESS_FIFO {&#10;  SLIST_ENTRY FifoList;&#10;  PMDL        FifoMdl;&#10;} ADDRESS_FIFO, *PADDRESS_FIFO;">ADDRESS_FIFO</a> list by using <strong><a href="exinterlockedpushentryslist" title="NTKERNELAPI&#10;PSLIST_ENTRY&#10;FASTCALL&#10;ExInterlockedPushEntrySList (&#10;    _Inout_ PSLIST_HEADER ListHead,&#10;    _Inout_ __drv_aliasesMem PSLIST_ENTRY ListEntry,&#10;    _Inout_opt_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock&#10;    );">ExInterlockedPushEntrySList</a></strong> and <strong><a href="exinterlockedpopentryslist" title="NTKERNELAPI&#10;PSLIST_ENTRY&#10;FASTCALL&#10;ExInterlockedPopEntrySList (&#10;    _Inout_ PSLIST_HEADER ListHead,&#10;    _Inout_opt_ _Requires_lock_not_held_(*_Curr_) PKSPIN_LOCK Lock&#10;    );">ExInterlockedPopEntrySList</a></strong>.</p>
+
 <p>If this member is non-<strong>NULL</strong>, the <strong>Mdl</strong> member of <strong>u.AllocateAddress</strong> range must be <strong>NULL</strong>, the <strong>fulNotificationOptions</strong> member must be NOTIFY_FLAGS_AFTER_WRITE (no other flags must be specified), and the driver must provide a spin lock in <strong>FifoSpinLock</strong>. This implies that the order in which packets are filled and returned is guaranteed to be based on a FIFO algorithm. In fact, this SLIST-based mechanism acts more like a stack, or Last-In-First-Out (LIFO).</p>
-<h3><code>FifoSpinLock</code></h3>
+
+<h3 id="fifospinlock"><code>FifoSpinLock</code></h3>
+
 <p>If non-<strong>NULL</strong>, specifies a properly initialized spin lock (for example, by <strong><a href="keinitializespinlock" title="VOID KeInitializeSpinLock(&#10;  [out] PKSPIN_LOCK SpinLock&#10;);">KeInitializeSpinLock</a></strong>). The spin lock is used to serialize access to the SList provided in <strong>u.AllocateAddressRange.FifoSListHead</strong>.</p>
+
 <p>The <strong>u.AllocateAddressRange.FifoSpinLock</strong> member is non-<strong>NULL</strong> if and only if <strong>u.AllocateAddressRange.FifoSListHead</strong> is non-<strong>NULL</strong> as well.</p>
-<h3><code>AddressesReturned</code></h3>
+
+<h3 id="addressesreturned"><code>AddressesReturned</code></h3>
+
 <p>Number of addresses returned.</p>
-<h3><code>p1394AddressRange</code></h3>
+
+<h3 id="p1394addressrange"><code>p1394AddressRange</code></h3>
+
 <p>Points to an array of <a href="address_range" title="typedef struct _ADDRESS_RANGE {&#10;  USHORT AR_Off_High;&#10;  USHORT AR_Length;&#10;  ULONG  AR_Off_Low;&#10;} ADDRESS_RANGE, *PADDRESS_RANGE;">ADDRESS_RANGE</a> structures. The array must be large enough to hold the maximum number of structures the bus driver can return.</p>
+
 <p>If the driver specifies a required address offset, or if the driver does not provide any backing store, the bus driver only returns one address range. If the driver provides backing store in <strong>u.AllocateAddressRange.Mdl</strong> the bus driver segments the allocated addresses along physical memory boundaries. If the <strong>MaxSegmentSize</strong> of <strong>u.AllocateAddressRange</strong> is 0, or if <strong>MaxSegmentSize</strong> is bigger than the page size, the driver can use the <a href="address_and_size_to_span_pages" title="#define ADDRESS_AND_SIZE_TO_SPAN_PAGES(Address, Size) ((BYTE_OFFSET(Address) + ((SIZE_T)(Size)) + PAGE_MASK) &gt;&gt; PAGE_SHIFT)">ADDRESS_AND_SIZE_TO_SPAN_PAGES</a> macro to determine the worst case. Otherwise, the maximum number of addresses ranges returned by the bus driver is <strong>u.AllocateAddressRange.nLength</strong> / <strong>u.MaxSegmentSize</strong>. If a nonzero value is specified for <strong>MaxSegmentSize</strong>, the value must be less than 64 KB (65,536 bytes). In other words, it must be less than or equal to 65,535 (0xFFFF) due to the fact that the address range size is stored in a 16-bit word.</p>
-<h3><code>hAddressRange</code></h3>
+
+<h3 id="haddressrange"><code>hAddressRange</code></h3>
+
 <p>Handle to the address range.</p>
-<h3><code>DeviceExtension</code></h3>
+
+<h3 id="deviceextension"><code>DeviceExtension</code></h3>
+
 <p>Points to the device extension associated with the device object. Not setting this member can lead to unexpected behavior when the driver tries to access the allocated address space.</p>
 <hr>
 <div class="ntdoc-description-links">

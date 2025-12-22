@@ -69,43 +69,73 @@ PVOID PallocateCommonBuffer(
 <h1>Windows Driver Kit DDI reference (nc-wdm-pallocate_common_buffer)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>PALLOCATE_COMMON_BUFFER callback function</h1>
-<h2>Description</h2>
+<h1 id="pallocate_common_buffer-callback-function">PALLOCATE_COMMON_BUFFER callback function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>AllocateCommonBuffer</strong> routine allocates memory and maps it so that it is simultaneously accessible from both the processor and a device for DMA operations.</p>
-<h2>Parameters</h2>
-<h3><code>DmaAdapter</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="dmaadapter-in"><code>DmaAdapter</code> [in]</h3>
+
 <p>Pointer to the <a href="padapter_object" title="typedef struct _DMA_ADAPTER {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  PDMA_OPERATIONS DmaOperations;&#10;} *PADAPTER_OBJECT, DMA_ADAPTER, *PDMA_ADAPTER;">DMA_ADAPTER</a> structure returned by <a href="iogetdmaadapter" title="_DMA_ADAPTER * IoGetDmaAdapter(&#10;  [in, optional] PDEVICE_OBJECT      PhysicalDeviceObject,&#10;  [in]           _DEVICE_DESCRIPTION *DeviceDescription,&#10;  [out]          PULONG              NumberOfMapRegisters&#10;);">IoGetDmaAdapter</a> that represents the bus-master adapter or DMA controller.</p>
-<h3><code>Length</code> [in]</h3>
+
+<h3 id="length-in"><code>Length</code> [in]</h3>
+
 <p>Specifies the number of bytes of memory to allocate.</p>
-<h3><code>LogicalAddress</code> [out]</h3>
+
+<h3 id="logicaladdress-out"><code>LogicalAddress</code> [out]</h3>
+
 <p>Pointer to a variable that receives the logical address the device can use to access the allocated buffer. Use this address rather than calling <a href="mmgetphysicaladdress" title="PHYSICAL_ADDRESS MmGetPhysicalAddress(&#10;  [in] PVOID BaseAddress&#10;);">MmGetPhysicalAddress</a> because the system can take into account any platform-specific memory restrictions.</p>
-<h3><code>CacheEnabled</code> [in]</h3>
+
+<h3 id="cacheenabled-in"><code>CacheEnabled</code> [in]</h3>
+
 <p>Specifies whether the allocated memory can be cached.</p>
+
 <p>This parameter is ignored. The operating system determines whether to enable cached memory in the common buffer that is to be allocated. That decision is based on the processor architecture and device bus.</p>
+
 <p>On computers with x86-based, x64-based, and Itanium-based processors, cached memory is enabled. It is assumed that all DMA operations performed by a device are coherent with the relevant CPU caches, which might be caching that memory. If your driver needs to disable caching, call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pallocate_common_buffer_ex">AllocateCommonBufferEx</a> instead.</p>
+
 <p>On computers with ARM or ARM 64-based processors, the operating system does not automatically enable cached memory for all devices. The system relies on the <strong>ACPI_CCA</strong> method for each device to determine whether the device is cache-coherent.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>AllocateCommonBuffer</strong> returns the base virtual address of the allocated range. If the buffer cannot be allocated, it returns <strong>NULL</strong>.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p><strong>AllocateCommonBuffer</strong>
 is not a system routine that can be called directly by name. This routine is callable only by pointer from the address returned in a
 <strong><a href="dma_operations" title="typedef struct _DMA_OPERATIONS {&#10;  ULONG                                   Size;&#10;  PPUT_DMA_ADAPTER                        PutDmaAdapter;&#10;  PALLOCATE_COMMON_BUFFER                 AllocateCommonBuffer;&#10;  PFREE_COMMON_BUFFER                     FreeCommonBuffer;&#10;  PALLOCATE_ADAPTER_CHANNEL               AllocateAdapterChannel;&#10;  PFLUSH_ADAPTER_BUFFERS                  FlushAdapterBuffers;&#10;  PFREE_ADAPTER_CHANNEL                   FreeAdapterChannel;&#10;  PFREE_MAP_REGISTERS                     FreeMapRegisters;&#10;  PMAP_TRANSFER                           MapTransfer;&#10;  PGET_DMA_ALIGNMENT                      GetDmaAlignment;&#10;  PREAD_DMA_COUNTER                       ReadDmaCounter;&#10;  PGET_SCATTER_GATHER_LIST                GetScatterGatherList;&#10;  PPUT_SCATTER_GATHER_LIST                PutScatterGatherList;&#10;  PCALCULATE_SCATTER_GATHER_LIST_SIZE     CalculateScatterGatherList;&#10;  PBUILD_SCATTER_GATHER_LIST              BuildScatterGatherList;&#10;  PBUILD_MDL_FROM_SCATTER_GATHER_LIST     BuildMdlFromScatterGatherList;&#10;  PGET_DMA_ADAPTER_INFO                   GetDmaAdapterInfo;&#10;  PGET_DMA_TRANSFER_INFO                  GetDmaTransferInfo;&#10;  PINITIALIZE_DMA_TRANSFER_CONTEXT        InitializeDmaTransferContext;&#10;...">DMA_OPERATIONS</a></strong>
 structure. Drivers obtain the address of this routine by calling <a href="iogetdmaadapter" title="_DMA_ADAPTER * IoGetDmaAdapter(&#10;  [in, optional] PDEVICE_OBJECT      PhysicalDeviceObject,&#10;  [in]           _DEVICE_DESCRIPTION *DeviceDescription,&#10;  [out]          PULONG              NumberOfMapRegisters&#10;);">IoGetDmaAdapter</a>.</p>
+
 <p><strong>AllocateCommonBuffer</strong> supports DMA in which the device and the processor continuously communicate through system memory, as in a control structure for a bus-master DMA device.</p>
+
 <p><strong>AllocateCommonBuffer</strong> also supports subordinate devices whose drivers use a system DMA controller's autoinitialize mode.</p>
+
 <p><strong>AllocateCommonBuffer</strong> does the following:</p>
+
 <ul>
 <li>Allocates memory that can be reached from both the processor and the device. This memory appears contiguous to the device.</li>
 <li>Allocates map registers to map the buffer, if required by the system.</li>
 <li>Sets up a translation for the device, including loading map registers if necessary.</li>
 </ul>
+
 <p>To use resident system memory economically, drivers should allocate as few of these buffers per device as possible. <strong>AllocateCommonBuffer</strong> allocates at least a page of memory, regardless of the requested <em>Length</em>. After a successful allocation requesting fewer than <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> bytes, the caller can access only the requested <em>Length</em>. After a successful allocation requesting more than an integral multiple of <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> bytes, any remaining bytes on the last allocated page are inaccessible to the caller.</p>
+
 <p>If a driver needs several pages of common buffer space, but the pages need not be contiguous, the driver should make several one-page requests to <strong>AllocateCommonBuffer</strong> instead of one large request. This approach conserves contiguous memory.</p>
+
 <p>Drivers typically call <strong>AllocateCommonBuffer</strong> as part of device start-up, during their response to a PnP <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-start-device">IRP_MN_START_DEVICE</a> request. After startup, it is possible that only one-page requests will succeed, if any.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="padapter_object" title="typedef struct _DMA_ADAPTER {&#10;  USHORT          Version;&#10;  USHORT          Size;&#10;  PDMA_OPERATIONS DmaOperations;&#10;} *PADAPTER_OBJECT, DMA_ADAPTER, *PDMA_ADAPTER;">DMA_ADAPTER</a></p>
+
 <p><a href="dma_operations" title="typedef struct _DMA_OPERATIONS {&#10;  ULONG                                   Size;&#10;  PPUT_DMA_ADAPTER                        PutDmaAdapter;&#10;  PALLOCATE_COMMON_BUFFER                 AllocateCommonBuffer;&#10;  PFREE_COMMON_BUFFER                     FreeCommonBuffer;&#10;  PALLOCATE_ADAPTER_CHANNEL               AllocateAdapterChannel;&#10;  PFLUSH_ADAPTER_BUFFERS                  FlushAdapterBuffers;&#10;  PFREE_ADAPTER_CHANNEL                   FreeAdapterChannel;&#10;  PFREE_MAP_REGISTERS                     FreeMapRegisters;&#10;  PMAP_TRANSFER                           MapTransfer;&#10;  PGET_DMA_ALIGNMENT                      GetDmaAlignment;&#10;  PREAD_DMA_COUNTER                       ReadDmaCounter;&#10;  PGET_SCATTER_GATHER_LIST                GetScatterGatherList;&#10;  PPUT_SCATTER_GATHER_LIST                PutScatterGatherList;&#10;  PCALCULATE_SCATTER_GATHER_LIST_SIZE     CalculateScatterGatherList;&#10;  PBUILD_SCATTER_GATHER_LIST              BuildScatterGatherList;&#10;  PBUILD_MDL_FROM_SCATTER_GATHER_LIST     BuildMdlFromScatterGatherList;&#10;  PGET_DMA_ADAPTER_INFO                   GetDmaAdapterInfo;&#10;  PGET_DMA_TRANSFER_INFO                  GetDmaTransferInfo;&#10;  PINITIALIZE_DMA_TRANSFER_CONTEXT        InitializeDmaTransferContext;&#10;...">DMA_OPERATIONS</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pfree_common_buffer">FreeCommonBuffer</a></p>
+
 <p><a href="iogetdmaadapter" title="_DMA_ADAPTER * IoGetDmaAdapter(&#10;  [in, optional] PDEVICE_OBJECT      PhysicalDeviceObject,&#10;  [in]           _DEVICE_DESCRIPTION *DeviceDescription,&#10;  [out]          PULONG              NumberOfMapRegisters&#10;);">IoGetDmaAdapter</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -63,61 +63,88 @@
 <h1>Windows hardware development documentation (pfree-function)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>PFREE_FUNCTION function pointer</h1>
+<h1 id="pfree_function-function-pointer">PFREE_FUNCTION function pointer</h1>
+
 <p>A file system legacy filter driver can register a <strong>PFREE_FUNCTION</strong> typed routine as the filter's <em>FreeCallback</em> callback routine. The file system calls <em>FreeCallback</em> when the file system removes a file context object by using <strong><a href="fsrtlteardownperfilecontexts" title="VOID FsRtlTeardownPerFileContexts(&#10;  [in] PVOID *PerFileContextPointer&#10;);">FsRtlTeardownPerFileContexts</a></strong> or removes a stream context object by using <strong><a href="fsrtlteardownperstreamcontexts" title="VOID FsRtlTeardownPerStreamContexts(&#10;  [in] PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader&#10;);">FsRtlTeardownPerStreamContexts</a></strong>.</p>
+
 <p>You must declare the callback routine by using the <strong>FREE_FUNCTION</strong> type. For more information, see the example in the Remarks section.</p>
-<h2>Parameters</h2>
+
+<h2 id="parameters">Parameters</h2>
+
 <ul>
 <li><strong>Buffer</strong> [in]: A pointer to the <strong><a href="fsrtl_per_file_context" title="typedef struct _FSRTL_PER_FILE_CONTEXT {&#10;  LIST_ENTRY     Links;&#10;  PVOID          OwnerId;&#10;  PVOID          InstanceId;&#10;  PFREE_FUNCTION FreeCallback;&#10;} FSRTL_PER_FILE_CONTEXT, *PFSRTL_PER_FILE_CONTEXT;">FSRTL_PER_FILE_CONTEXT</a></strong> or the <strong><a href="fsrtl_per_stream_context" title="typedef struct _FSRTL_PER_STREAM_CONTEXT {&#10;  LIST_ENTRY     Links;&#10;  PVOID          OwnerId;&#10;  PVOID          InstanceId;&#10;  PFREE_FUNCTION FreeCallback;&#10;} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;">FSRTL_PER_STREAM_CONTEXT</a></strong> structure to be freed.</li>
 </ul>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>None</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>When a file system tears down the per-file context object for a file, it must call <strong><a href="fsrtlteardownperfilecontexts" title="VOID FsRtlTeardownPerFileContexts(&#10;  [in] PVOID *PerFileContextPointer&#10;);">FsRtlTeardownPerFileContexts</a></strong>. This routine calls the <em>FreeCallback</em> routines of all per-file context structures associated with the file. This callback routine must free any memory used for the <strong><a href="fsrtl_per_file_context" title="typedef struct _FSRTL_PER_FILE_CONTEXT {&#10;  LIST_ENTRY     Links;&#10;  PVOID          OwnerId;&#10;  PVOID          InstanceId;&#10;  PFREE_FUNCTION FreeCallback;&#10;} FSRTL_PER_FILE_CONTEXT, *PFSRTL_PER_FILE_CONTEXT;">FSRTL_PER_FILE_CONTEXT</a></strong> object and any associated context information. This is also the case for per-stream contexts when <strong><a href="fsrtlteardownperstreamcontexts" title="VOID FsRtlTeardownPerStreamContexts(&#10;  [in] PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader&#10;);">FsRtlTeardownPerStreamContexts</a></strong> is called and <em>FreeCallback</em> will free memory used for <strong><a href="fsrtl_per_stream_context" title="typedef struct _FSRTL_PER_STREAM_CONTEXT {&#10;  LIST_ENTRY     Links;&#10;  PVOID          OwnerId;&#10;  PVOID          InstanceId;&#10;  PFREE_FUNCTION FreeCallback;&#10;} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;">FSRTL_PER_STREAM_CONTEXT</a></strong> objects.</p>
+
 <p>For remarks about synchronizing access to per-file context objects or to per-stream context objects during a call to <em>FreeCallback</em>, see <strong><a href="fsrtlteardownperfilecontexts" title="VOID FsRtlTeardownPerFileContexts(&#10;  [in] PVOID *PerFileContextPointer&#10;);">FsRtlTeardownPerFileContexts</a></strong> and <strong><a href="fsrtlteardownperstreamcontexts" title="VOID FsRtlTeardownPerStreamContexts(&#10;  [in] PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader&#10;);">FsRtlTeardownPerStreamContexts</a></strong>.</p>
+
 <blockquote>
-<p>[!NOTE]
-The <em>FreeCallback</em> routine cannot recursively call down into the file system or acquire any file system resources.</p>
+  <p>[!NOTE]
+  The <em>FreeCallback</em> routine cannot recursively call down into the file system or acquire any file system resources.</p>
 </blockquote>
+
 <p>To define a <em>FreeCallback</em> callback function that is named <em>MyFreeFunction</em>, you must first provide a function declaration that the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV) and other verification tools require, as follows:</p>
-<pre lang="cpp"><code>FREE_FUNCTION MyFreeFunction;
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">FREE_FUNCTION</span><span class="w"> </span><span class="n">MyFreeFunction</span><span class="p">;</span>
 </code></pre>
+</div>
+
 <p>And then implement your callback function as follows:</p>
-<pre lang="cpp"><code>VOID
- MyFreeFunction (
- __in PVOID Buffer
-    )
-  {...}
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="w"> </span><span class="nf">MyFreeFunction</span><span class="w"> </span><span class="p">(</span>
+<span class="w"> </span><span class="n">__in</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Buffer</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">  </span><span class="p">{...}</span>
 </code></pre>
-<h2>Requirements</h2>
+</div>
+
+<h2 id="requirements">Requirements</h2>
+
 <table>
 <thead>
 <tr>
-<th>Requirement type</th>
-<th>Requirement</th>
+  <th>Requirement type</th>
+  <th>Requirement</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Minimum supported client</td>
-<td>Windows Vista</td>
+  <td>Minimum supported client</td>
+  <td>Windows Vista</td>
 </tr>
 <tr>
-<td>Header</td>
-<td><em>Wdm.h</em> (include <em>Wdm.h</em> or <em>Ntddk.h</em>)</td>
+  <td>Header</td>
+  <td><em>Wdm.h</em> (include <em>Wdm.h</em> or <em>Ntddk.h</em>)</td>
 </tr>
 <tr>
-<td>IRQL</td>
-<td>&lt;= APC_LEVEL</td>
+  <td>IRQL</td>
+  <td>&lt;= APC_LEVEL</td>
 </tr>
 </tbody>
 </table>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><strong><a href="fsrtlteardownperfilecontexts" title="VOID FsRtlTeardownPerFileContexts(&#10;  [in] PVOID *PerFileContextPointer&#10;);">FsRtlTeardownPerFileContexts</a></strong></p>
+
 <p><strong><a href="fsrtlteardownperstreamcontexts" title="VOID FsRtlTeardownPerStreamContexts(&#10;  [in] PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader&#10;);">FsRtlTeardownPerStreamContexts</a></strong></p>
+
 <p><strong><a href="fsrtl_per_file_context" title="typedef struct _FSRTL_PER_FILE_CONTEXT {&#10;  LIST_ENTRY     Links;&#10;  PVOID          OwnerId;&#10;  PVOID          InstanceId;&#10;  PFREE_FUNCTION FreeCallback;&#10;} FSRTL_PER_FILE_CONTEXT, *PFSRTL_PER_FILE_CONTEXT;">FSRTL_PER_FILE_CONTEXT</a></strong></p>
+
 <p><strong><a href="fsrtl_per_stream_context" title="typedef struct _FSRTL_PER_STREAM_CONTEXT {&#10;  LIST_ENTRY     Links;&#10;  PVOID          OwnerId;&#10;  PVOID          InstanceId;&#10;  PFREE_FUNCTION FreeCallback;&#10;} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;">FSRTL_PER_STREAM_CONTEXT</a></strong></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/tracking-per-file-context-in-a-legacy-file-system-filter-driver">Tracking Per-File Context in a Legacy File System Filter Driver</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/file-streams--stream-contexts--and-per-stream-contexts">Tracking Per-Stream Context in a Legacy File System Filter Driver</a></p>
 <hr>
 <div class="ntdoc-description-links">

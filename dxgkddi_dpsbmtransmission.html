@@ -67,56 +67,69 @@
 <h1>Windows Driver Kit DDI reference (nc-dispmprt-dxgkddi_dpsbmtransmission)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>DXGKDDI_DPSBMTRANSMISSION callback function</h1>
-<h2>Description</h2>
+<h1 id="dxgkddi_dpsbmtransmission-callback-function">DXGKDDI_DPSBMTRANSMISSION callback function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>DXGKDDI_DPSBMTRANSMISSION</strong> callback is used to communicate with DisplayPort (DP) branch devices and sink devices behind branch devices via the sideband channel.</p>
-<h2>Parameters</h2>
-<h3><code>Context</code></h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="context"><code>Context</code></h3>
+
 <p>Context pointer provided when querying the interface.</p>
-<h3><code>pArgs</code></h3>
+
+<h3 id="pargs"><code>pArgs</code></h3>
+
 <p>Pointer to a <strong><a href="dxgkarg_dpsbmtransmission" title="typedef struct _DXGKARG_DPSBMTRANSMISSION {&#10;  struct {&#10;    UINT CanUseCachedData : 1;&#10;    UINT Reserved : 31;&#10;  };&#10;  UINT   RootPortIndex;&#10;  UINT   BufferSizeSupplied;&#10;  UINT   RequestLength;&#10;  UINT   MaxReplyLength;&#10;  UINT   DPNativeError;&#10;  UINT   ActualReplyLength;&#10;  BYTE   Data[1];&#10;} DXGKARG_DPSBMTRANSMISSION, *PDXGKARG_DPSBMTRANSMISSION;">DXGKARG_DPSBMTRANSMISSION</a></strong> structure.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>DXGKDDI_DPSBMTRANSMISSION</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if it succeeds; otherwise it returns an error code such as one of the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Error Code</th>
-<th>Meaning</th>
+  <th>Error Code</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>STATUS_DRIVER_INTERNAL_ERROR</td>
-<td>An internal software error occurred.</td>
+  <td>STATUS_DRIVER_INTERNAL_ERROR</td>
+  <td>An internal software error occurred.</td>
 </tr>
 <tr>
-<td>STATUS_ACCESS_DENIED</td>
-<td>The request is not supported. For Windows 10 version 2004, only Sideband Message requests listed in the <strong>Remarks</strong> section below are supported.</td>
+  <td>STATUS_ACCESS_DENIED</td>
+  <td>The request is not supported. For Windows 10 version 2004, only Sideband Message requests listed in the <strong>Remarks</strong> section below are supported.</td>
 </tr>
 <tr>
-<td>STATUS_BUFFER_TOO_SMALL</td>
-<td>The buffer is too small for Sideband message reply or other operations.</td>
+  <td>STATUS_BUFFER_TOO_SMALL</td>
+  <td>The buffer is too small for Sideband message reply or other operations.</td>
 </tr>
 <tr>
-<td>STATUS_DEVICE_HARDWARE_ERROR</td>
-<td>A hardware error occurred.</td>
+  <td>STATUS_DEVICE_HARDWARE_ERROR</td>
+  <td>A hardware error occurred.</td>
 </tr>
 <tr>
-<td>STATUS_DEVICE_POWERED_OFF</td>
-<td>The device is powered off.</td>
+  <td>STATUS_DEVICE_POWERED_OFF</td>
+  <td>The device is powered off.</td>
 </tr>
 <tr>
-<td>STATUS_DEVICE_NOT_CONNECTED</td>
-<td>The device is not connected.</td>
+  <td>STATUS_DEVICE_NOT_CONNECTED</td>
+  <td>The device is not connected.</td>
 </tr>
 <tr>
-<td>STATUS_DEVICE_PROTOCOL_ERROR</td>
-<td>An error occurred at the DP AUX, I2C over AUX protocol level. The driver can use <strong>DPNativeError</strong> to encode more details about the error.</td>
+  <td>STATUS_DEVICE_PROTOCOL_ERROR</td>
+  <td>An error occurred at the DP AUX, I2C over AUX protocol level. The driver can use <strong>DPNativeError</strong> to encode more details about the error.</td>
 </tr>
 </tbody>
 </table>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>For Windows 10 version 2004, a driver is only required to support the following query type of Sideband Message (SBM) requests:</p>
+
 <ul>
 <li>GET_MESSAGE_TRANSACTION_VERSION</li>
 <li>LINK_ADDRESS</li>
@@ -125,14 +138,23 @@
 <li>REMOTE_I2C_READ</li>
 <li>QUERY_STREAM_ENCRYPTION_STATUS</li>
 </ul>
+
 <p>The display kernel runtime blocks other SBM requests.</p>
+
 <p>For a SBM Transaction, a request is written to and reply is read from fixed DPCD ranges per the DP spec (DOWN_REQ and UP_REP), so there is no address field.</p>
-<p><strong>DXGKDDI_DPSBMTRANSMISSION</strong> is “atomic”, so the driver should wait for and receive the reply of the SBM request before returning. The SBM request in <strong>pArgs-&gt;Data</strong> is fully packetized by the caller, so the driver can directly write the <strong>RequestLength</strong> of <strong>Data</strong> in SBM packet size sequentially into DPCD range for DOWN_REQ. The driver should receive the SBM reply packets directly into <strong>Data</strong> without processing/interpretation.</p>
+
+<p><strong>DXGKDDI_DPSBMTRANSMISSION</strong> is “atomic”, so the driver should wait for and receive the reply of the SBM request before returning. The SBM request in <strong>pArgs->Data</strong> is fully packetized by the caller, so the driver can directly write the <strong>RequestLength</strong> of <strong>Data</strong> in SBM packet size sequentially into DPCD range for DOWN_REQ. The driver should receive the SBM reply packets directly into <strong>Data</strong> without processing/interpretation.</p>
+
 <p>The driver should use the End_Of_Message bit in the SideBand_MSG_Header to decide if a full reply has been received but should avoid further processing. <strong>Data</strong> can hold a reply up to <strong>MaxReplyLength</strong> in bytes, so the driver needs to discard the overflowing packet. The driver should return the actual length of the reply in <strong>ActualReplyLength</strong>.</p>
+
 <p>The driver doesn’t need to specifically check for a NAK reply, which is decoded by the caller just as another ACK reply. For a NAK reply, driver should return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
+
 <p>The <strong>MaxReplyLength</strong> is at least 48 bytes, which is the maximum Sideband Message packet size. This allows the raw message to be copied directly for a single packet reply. For a reply with multiple packets, <strong>MaxReplyLength</strong> is calculated based on a packet size of 16 bytes and longest Relative Address in the SBM header to lower the possibility of insufficient buffer.</p>
+
 <p>The <strong>CanUseCachedData</strong> flag indicates that driver can return a cached reply data, but it needs to be in SBM packet format.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><strong><a href="dxgkarg_dpsbmtransmission" title="typedef struct _DXGKARG_DPSBMTRANSMISSION {&#10;  struct {&#10;    UINT CanUseCachedData : 1;&#10;    UINT Reserved : 31;&#10;  };&#10;  UINT   RootPortIndex;&#10;  UINT   BufferSizeSupplied;&#10;  UINT   RequestLength;&#10;  UINT   MaxReplyLength;&#10;  UINT   DPNativeError;&#10;  UINT   ActualReplyLength;&#10;  BYTE   Data[1];&#10;} DXGKARG_DPSBMTRANSMISSION, *PDXGKARG_DPSBMTRANSMISSION;">DXGKARG_DPSBMTRANSMISSION</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

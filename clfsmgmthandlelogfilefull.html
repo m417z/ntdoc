@@ -63,58 +63,77 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-clfsmgmthandlelogfilefull)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2>Description</h2>
+<h2 id="description">Description</h2>
+
 <p>The <strong>ClfsMgmtHandleLogFileFull</strong> routine attempts to make more space available in a log. It might make more space available by adding containers to the log, or it might ask clients to move their log tails.</p>
-<h2>Parameters</h2>
-<h3><code>Client</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="client-in"><code>Client</code> [in]</h3>
+
 <p>The client that is requesting CLFS management to make space available in the log. The value of this parameter should be the <strong>CLFS_MGMT_CLIENT</strong> structure that is obtained through a call to the <a href="clfsmgmtregistermanagedclient" title="CLFSUSER_API NTSTATUS ClfsMgmtRegisterManagedClient(&#10;  [in] PLOG_FILE_OBJECT               LogFile,&#10;  [in] PCLFS_MGMT_CLIENT_REGISTRATION RegistrationData,&#10;       PCLFS_MGMT_CLIENT              ClientCookie&#10;);">ClfsMgmtRegisterManagedClient</a> routine.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>The <strong>ClfsMgmtHandleLogFileFull</strong> routine returns one of the following <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> values:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INVALID_PARAMETER</strong></td>
-<td>The client is not managing a log.</td>
+  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
+  <td>The client is not managing a log.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INVALID_PARAMETER_1</strong></td>
-<td>The value that was supplied for the <em>Client</em> parameter either was <strong>NULL</strong> or does not represent a valid client.</td>
+  <td><strong>STATUS_INVALID_PARAMETER_1</strong></td>
+  <td>The value that was supplied for the <em>Client</em> parameter either was <strong>NULL</strong> or does not represent a valid client.</td>
 </tr>
 <tr>
-<td><strong>STATUS_LOG_FULL_HANDLER_IN_PROGRESS</strong></td>
-<td>CLFS management is already attempting to resolve a log file full condition for this client.</td>
+  <td><strong>STATUS_LOG_FULL_HANDLER_IN_PROGRESS</strong></td>
+  <td>CLFS management is already attempting to resolve a log file full condition for this client.</td>
 </tr>
 <tr>
-<td><strong>STATUS_UNSUCCESSFUL</strong></td>
-<td>CLFS management was not able to process the request.</td>
+  <td><strong>STATUS_UNSUCCESSFUL</strong></td>
+  <td>CLFS management was not able to process the request.</td>
 </tr>
 <tr>
-<td><strong>STATUS_PENDING</strong></td>
-<td>CLFS management is processing the request to create space in the log.</td>
+  <td><strong>STATUS_PENDING</strong></td>
+  <td>CLFS management is processing the request to create space in the log.</td>
 </tr>
 <tr>
-<td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
-<td>The requested amount of space is available in the log.</td>
+  <td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
+  <td>The requested amount of space is available in the log.</td>
 </tr>
 </tbody>
 </table>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>To make more space available in the log, the <strong>ClfsMgmtHandleLogFileFull</strong> routine first tries to add more containers to the log in accordance with the growth rate, new container size, and maximum size policies. If more containers cannot be added, then the <strong>ClfsMgmtHandleLogFileFull</strong> routine tries to free existing space by invoking one or more clients' <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pclfs_client_advance_tail_callback">ClfsAdvanceTailCallback</a> functions.</p>
+
 <p>If the <strong>ClfsMgmtHandleLogFileFull</strong> routine returns STATUS_PENDING, the client's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pclfs_client_lff_handler_complete_callback">ClfsLogGrowthCompleteCallback</a> function will be called when the request to make space in the log has been completed.</p>
+
 <p>If the <strong>ClfsMgmtHandleLogFileFull</strong> routine returns STATUS_LOG_FULL_HANDLER_IN_PROGRESS, the client has already requested CLFS management to handle a log file full condition. The client's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pclfs_client_lff_handler_complete_callback">ClfsLogGrowthCompleteCallback</a> function will not be called a second time.</p>
+
 <p>If the <strong>ClfsMgmtHandleLogFileFull</strong> routine returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, the call completed synchronously, and the client's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pclfs_client_lff_handler_complete_callback">ClfsLogGrowthCompleteCallback</a> function will not be invoked.</p>
+
 <p>If the <strong>ClfsMgmtHandleLogFileFull</strong> routine returns STATUS_PENDING, then CLFS management is in the process of trying to free space in the log, and will call the client's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pclfs_client_lff_handler_complete_callback">ClfsLogGrowthCompleteCallback</a> function when the log file full condition has been handled. If the log is pinned, CLFS management will call the client's <em>ClfsLogGrowthCompleteCallback</em> function with the <em>LogIsPinned</em> parameter set to <strong>TRUE</strong> before the <strong>ClfsMgmtHandleLogFileFull</strong> routine returns STATUS_PENDING.</p>
+
 <p>It is possible that the client's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pclfs_client_lff_handler_complete_callback">ClfsLogGrowthCompleteCallback</a> function could be called before the call to <strong>ClfsMgmtHandleLogFileFull</strong> returns.</p>
+
 <p>If the <strong>ClfsMgmtHandleLogFileFull</strong> routine returns STATUS_PENDING, you should not call the <strong>ClfsMgmtHandleLogFileFull</strong> routine again for this client until the client's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pclfs_client_lff_handler_complete_callback">ClfsLogGrowthCompleteCallback</a> function has been called.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pclfs_client_advance_tail_callback">ClfsAdvanceTailCallback</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-pclfs_client_lff_handler_complete_callback">ClfsLogGrowthCompleteCallback</a></p>
+
 <p><a href="clfsmgmtregistermanagedclient" title="CLFSUSER_API NTSTATUS ClfsMgmtRegisterManagedClient(&#10;  [in] PLOG_FILE_OBJECT               LogFile,&#10;  [in] PCLFS_MGMT_CLIENT_REGISTRATION RegistrationData,&#10;       PCLFS_MGMT_CLIENT              ClientCookie&#10;);">ClfsMgmtRegisterManagedClient</a></p>
 <hr>
 <div class="ntdoc-description-links">

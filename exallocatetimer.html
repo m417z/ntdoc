@@ -65,56 +65,85 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-exallocatetimer)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>ExAllocateTimer function</h1>
-<h2>Description</h2>
+<h1 id="exallocatetimer-function">ExAllocateTimer function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>ExAllocateTimer</strong> routine allocates and initializes a timer object.</p>
-<h2>Parameters</h2>
-<h3><code>Callback</code> [in, optional]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="callback-in-optional"><code>Callback</code> [in, optional]</h3>
+
 <p>A pointer to a driver-implemented <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-ext_callback">ExTimerCallback</a> callback routine. The operating system calls this routine when the timer expires. This parameter is optional and can be <strong>NULL</strong> if no callback routine is needed.</p>
-<h3><code>CallbackContext</code> [in, optional]</h3>
+
+<h3 id="callbackcontext-in-optional"><code>CallbackContext</code> [in, optional]</h3>
+
 <p>A context value for the callback routine pointed to by the <em>Callback</em> parameter. The operating system passes this value as a parameter to the <em>ExTimerCallback</em> callback routine, if one is specified. This parameter is typically a pointer to a caller-defined structure that contains context information used by the callback routine. This parameter is optional and can be set to <strong>NULL</strong> if no context information is needed.</p>
-<h3><code>Attributes</code> [in]</h3>
+
+<h3 id="attributes-in"><code>Attributes</code> [in]</h3>
+
 <p>The timer attributes. Set this parameter to zero or to the bitwise-OR of one or more of the following timer flag bits.</p>
+
 <table>
 <thead>
 <tr>
-<th>Timer flag bit</th>
-<th>Description</th>
+  <th>Timer flag bit</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>EX_TIMER_HIGH_RESOLUTION</td>
-<td>High-resolution timer. Make the timer more precise by using a higher-resolution clock to drive the timer.</td>
+  <td>EX_TIMER_HIGH_RESOLUTION</td>
+  <td>High-resolution timer. Make the timer more precise by using a higher-resolution clock to drive the timer.</td>
 </tr>
 <tr>
-<td>EX_TIMER_NO_WAKE</td>
-<td>No-wake timer. Make the timer delay waking the processor to expire until the timer's expiration time plus its delay tolerance is exceeded.</td>
+  <td>EX_TIMER_NO_WAKE</td>
+  <td>No-wake timer. Make the timer delay waking the processor to expire until the timer's expiration time plus its delay tolerance is exceeded.</td>
 </tr>
 <tr>
-<td>EX_TIMER_NOTIFICATION</td>
-<td>Notification timer. Make the timer a notification timer instead of a synchronization timer. If this flag is not set, the timer is a synchronization timer.</td>
+  <td>EX_TIMER_NOTIFICATION</td>
+  <td>Notification timer. Make the timer a notification timer instead of a synchronization timer. If this flag is not set, the timer is a synchronization timer.</td>
 </tr>
 </tbody>
 </table>
+
 <p>The EX_TIMER_NOTIFICATION flag bit can be set regardless of what other flag bits are set.</p>
+
 <p>The EX_TIMER_HIGH_RESOLUTION and EX_TIMER_NO_WAKE flag bits are mutually exclusive. If the caller sets both of these flag bits, the routine bug checks.</p>
+
 <p>For more information about timer attributes, see Remarks.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>This routine returns a pointer to an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/exxxxtimer-routines-and-ex-timer-objects">EX_TIMER</a> structure, if the call is successful. This structure is the timer object that the routine has allocated and initialized. If the call fails, the routine returns <strong>NULL</strong>.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>This routine returns a pointer to the new timer object. To use the timer, the calling driver supplies this pointer in subsequent calls to the <a href="exsettimer" title="BOOLEAN ExSetTimer(&#10;  [in]           PEX_TIMER           Timer,&#10;  [in]           LONGLONG            DueTime,&#10;  [in]           LONGLONG            Period,&#10;  [in, optional] PEXT_SET_PARAMETERS Parameters&#10;);">ExSetTimer</a>, <a href="excanceltimer" title="BOOLEAN ExCancelTimer(&#10;  [in, out]      PEX_TIMER              Timer,&#10;  [in, optional] PEXT_CANCEL_PARAMETERS Parameters&#10;);">ExCancelTimer</a>, and <a href="exdeletetimer" title="BOOLEAN ExDeleteTimer(&#10;  [in] PEX_TIMER              Timer,&#10;  [in] BOOLEAN                Cancel,&#10;  [in] BOOLEAN                Wait,&#10;  [in] PEXT_DELETE_PARAMETERS Parameters&#10;);">ExDeleteTimer</a> routines. If the driver supplies a pointer to an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-ext_callback">ExTimerCallback</a> callback routine as an input parameter to the <strong>ExAllocateTimer</strong> routine, the operating system passes this timer object as an input parameter to the <em>ExTimerCallback</em> routine.</p>
+
 <p>A timer can be a notification timer or a synchronization timer. When a notification timer is signaled, all waiting threads have their wait satisfied. The state of this timer remains signaled until it is explicitly reset. When a synchronization timer expires, its state is set to signaled until a single waiting thread is released. Then, the timer is reset to the not-signaled state.</p>
+
 <p>If the EX_TIMER_HIGH_RESOLUTION flag bit is set in <em>Attributes</em>, the operating system increases the resolution of the system clock, as necessary, so that the times at which the timer expires more precisely corresponds to the nominal expiration times specified in the <em>DueTime</em> and <em>Period</em> parameters to the <strong><a href="exsettimer" title="BOOLEAN ExSetTimer(&#10;  [in]           PEX_TIMER           Timer,&#10;  [in]           LONGLONG            DueTime,&#10;  [in]           LONGLONG            Period,&#10;  [in, optional] PEXT_SET_PARAMETERS Parameters&#10;);">ExSetTimer</a></strong> routine. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/high-resolution-timers">High-Resolution Timers</a>.</p>
+
 <p>If the EX_TIMER_NO_WAKE flag bit is set in <em>Attributes</em>, the timer avoids unnecessarily waking the processor from a low-power state. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/no-wake-timers">No-Wake Timers</a>.</p>
+
 <p><strong>ExAllocateTimer</strong> allocates the storage for the timer object. When this object is no longer needed, the caller is responsible for freeing this object by calling the <strong><a href="exdeletetimer" title="BOOLEAN ExDeleteTimer(&#10;  [in] PEX_TIMER              Timer,&#10;  [in] BOOLEAN                Cancel,&#10;  [in] BOOLEAN                Wait,&#10;  [in] PEXT_DELETE_PARAMETERS Parameters&#10;);">ExDeleteTimer</a></strong> routine.</p>
+
 <p>The <em>Callback</em> parameter is optional. A driver that does not supply an <em>ExTimerCallback</em> routine can instead initiate a wait operation on the timer object. A driver thread can call a routine such as <a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a> or <a href="kewaitformultipleobjects" title="NTSTATUS&#10;KeWaitForMultipleObjects (&#10;    ULONG Count,&#10;    PVOID Object[],&#10;    WaitType,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout,&#10;    PKWAIT_BLOCK WaitBlockArray&#10;    );">KeWaitForMultipleObjects</a> to wait for the timer to expire. When the timer expires, the timer object is signaled.</p>
+
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/exxxxtimer-routines-and-ex-timer-objects">ExXxxTimer Routines and EX_TIMER Objects</a>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/exxxxtimer-routines-and-ex-timer-objects">EX_TIMER</a></p>
+
 <p><a href="excanceltimer" title="BOOLEAN ExCancelTimer(&#10;  [in, out]      PEX_TIMER              Timer,&#10;  [in, optional] PEXT_CANCEL_PARAMETERS Parameters&#10;);">ExCancelTimer</a></p>
+
 <p><a href="exdeletetimer" title="BOOLEAN ExDeleteTimer(&#10;  [in] PEX_TIMER              Timer,&#10;  [in] BOOLEAN                Cancel,&#10;  [in] BOOLEAN                Wait,&#10;  [in] PEXT_DELETE_PARAMETERS Parameters&#10;);">ExDeleteTimer</a></p>
+
 <p><a href="exsettimer" title="BOOLEAN ExSetTimer(&#10;  [in]           PEX_TIMER           Timer,&#10;  [in]           LONGLONG            DueTime,&#10;  [in]           LONGLONG            Period,&#10;  [in, optional] PEXT_SET_PARAMETERS Parameters&#10;);">ExSetTimer</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-ext_callback">ExTimerCallback</a></p>
 <hr>
 <div class="ntdoc-description-links">

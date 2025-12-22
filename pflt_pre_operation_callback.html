@@ -68,103 +68,157 @@ FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(
 <h1>Windows Driver Kit DDI reference (nc-fltkernel-pflt_pre_operation_callback)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>PFLT_PRE_OPERATION_CALLBACK callback</h1>
-<h2>Description</h2>
+<h1 id="pflt_pre_operation_callback-callback">PFLT_PRE_OPERATION_CALLBACK callback</h1>
+
+<h2 id="description">Description</h2>
+
 <p>A minifilter driver's <strong>PFLT_PRE_OPERATION_CALLBACK</strong> routine performs pre-operation processing for I/O operations.</p>
-<h2>Parameters</h2>
-<h3><code>Data</code> [in, out]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="data-in-out"><code>Data</code> [in, out]</h3>
+
 <p>A pointer to the callback data (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>) structure for the I/O operation.</p>
-<h3><code>FltObjects</code> [in]</h3>
+
+<h3 id="fltobjects-in"><code>FltObjects</code> [in]</h3>
+
 <p>A pointer to an <strong><a href="flt_related_objects" title="typedef struct _FLT_RELATED_OBJECTS {&#10;  USHORT        Size;&#10;  USHORT        TransactionContext;&#10;  PFLT_FILTER   Filter;&#10;  PFLT_VOLUME   Volume;&#10;  PFLT_INSTANCE Instance;&#10;  PFILE_OBJECT  FileObject;&#10;  PKTRANSACTION Transaction;&#10;} FLT_RELATED_OBJECTS, *PFLT_RELATED_OBJECTS;">FLT_RELATED_OBJECTS</a></strong> structure that contains opaque pointers for the objects related to the current I/O request.</p>
-<h3><code>CompletionContext</code> [out]</h3>
+
+<h3 id="completioncontext-out"><code>CompletionContext</code> [out]</h3>
+
 <p>If this callback routine returns FLT_PREOP_SUCCESS_WITH_CALLBACK or FLT_PREOP_SYNCHRONIZE, this parameter is an optional context pointer to be passed to the corresponding post-operation callback routine. Otherwise, it must be NULL.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>This callback routine returns one of the following FLT_PREOP_CALLBACK_STATUS values.</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>FLT_PREOP_COMPLETE</td>
-<td>The minifilter is completing the I/O operation. See Remarks for details.</td>
+  <td>FLT_PREOP_COMPLETE</td>
+  <td>The minifilter is completing the I/O operation. See Remarks for details.</td>
 </tr>
 <tr>
-<td>FLT_PREOP_DISALLOW_FASTIO</td>
-<td>The operation is a fast I/O operation, and the minifilter is not allowing the fast I/O path to be used for this operation. See Remarks for details.</td>
+  <td>FLT_PREOP_DISALLOW_FASTIO</td>
+  <td>The operation is a fast I/O operation, and the minifilter is not allowing the fast I/O path to be used for this operation. See Remarks for details.</td>
 </tr>
 <tr>
-<td>FLT_PREOP_PENDING</td>
-<td>The minifilter has pended the I/O operation, and the operation is still pending. See Remarks for details.</td>
+  <td>FLT_PREOP_PENDING</td>
+  <td>The minifilter has pended the I/O operation, and the operation is still pending. See Remarks for details.</td>
 </tr>
 <tr>
-<td>FLT_PREOP_SUCCESS_NO_CALLBACK</td>
-<td>The minifilter is returning the I/O operation to <em>FltMgr</em> for further processing. In this case, <em>FltMgr</em> won't call the minifilter driver's post-operation callback, if one exists, during I/O completion.</td>
+  <td>FLT_PREOP_SUCCESS_NO_CALLBACK</td>
+  <td>The minifilter is returning the I/O operation to <em>FltMgr</em> for further processing. In this case, <em>FltMgr</em> won't call the minifilter driver's post-operation callback, if one exists, during I/O completion.</td>
 </tr>
 <tr>
-<td>FLT_PREOP_SUCCESS_WITH_CALLBACK</td>
-<td>The minifilter is returning the I/O operation to <em>FltMgr</em> for further processing. In this case, <em>FltMgr</em> calls the minifilter's post-operation callback during I/O completion.</td>
+  <td>FLT_PREOP_SUCCESS_WITH_CALLBACK</td>
+  <td>The minifilter is returning the I/O operation to <em>FltMgr</em> for further processing. In this case, <em>FltMgr</em> calls the minifilter's post-operation callback during I/O completion.</td>
 </tr>
 <tr>
-<td>FLT_PREOP_SYNCHRONIZE</td>
-<td>The minifilter is returning the I/O operation to <em>FltMgr</em> for further processing, but it is not completing the operation. See Remarks for details.</td>
+  <td>FLT_PREOP_SYNCHRONIZE</td>
+  <td>The minifilter is returning the I/O operation to <em>FltMgr</em> for further processing, but it is not completing the operation. See Remarks for details.</td>
 </tr>
 <tr>
-<td>FLT_PREOP_DISALLOW_FSFILTER_IO</td>
-<td>The minifilter is disallowing a fast QueryOpen operation and forcing the operation down the slow path. Doing so causes the I/O manager to service the request by performing an open/query/close of the file. Minifilter drivers should only return this status for QueryOpen.</td>
+  <td>FLT_PREOP_DISALLOW_FSFILTER_IO</td>
+  <td>The minifilter is disallowing a fast QueryOpen operation and forcing the operation down the slow path. Doing so causes the I/O manager to service the request by performing an open/query/close of the file. Minifilter drivers should only return this status for QueryOpen.</td>
 </tr>
 </tbody>
 </table>
-<h2>Remarks</h2>
-<p>See <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/writing-preoperation-callback-routines">Writing pre-operation callback routines</a> for additional information.</p>
-<p>A minifilter's pre-operation callback routine processes one or more types of I/O operations. (This callback routine is similar to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/writing-irp-dispatch-routines">dispatch routine in the legacy filter model</a>.)</p>
-<p>A minifilter registers a pre-operation callback routine for a particular type of I/O operation by storing the callback routine's entry point in the <strong>OperationRegistration</strong> array of the <strong><a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a></strong> structure. The minifilter passes this structure as a parameter to <strong><a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a></strong> in its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/writing-a-driverentry-routine-for-a-minifilter-driver"><strong>DriverEntry</strong></a> routine. A minifilter can register a pre-operation callback routine for a given type of I/O operation without registering a post-operation callback (<strong><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></strong>) routine and vice versa.</p>
-<p>A minifilter driver's pre-operation or post-operation callback routine can modify the contents of the callback data structure for the operation. If it does, it must then call <strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong>, unless it has changed the contents of the callback data structure's <strong>IoStatus</strong> field.</p>
-<p>The IRQL for this generic callback routine depends on its specific IO paths. You can quickly and cheaply call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-kegetcurrentirql"><strong>KeGetCurrentIRQL</strong></a> if you need to know the current IRQL. See <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/writing-preoperation-callback-routines">Writing pre-operation callback routines</a> for additional information about IRQL.</p>
-<p>File systems round up write and read operations at end of file to a multiple of the sector size of the underlying file storage device. When processing pre-read or pre-write operations, filters that allocate and swap buffers need to round the size of an allocated buffer up to a multiple of the sector size of the associated device. If they do not, the length of data transferred from the underlying file system will exceed the allocated length of the buffer. For more information about swapping buffers, see the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/samples/microsoft/windows-driver-samples/swapbuffer-file-system-minifilter-driver/">SwapBuffers Minifilter Sample</a>.</p>
-<p>Starting with Windows 8, <strong>CompletionContext</strong> uses the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/-flt-completioncontext-outptr--annotation"><strong><em>Flt_CompletionContext_Outptr</em></strong></a> annotation which defines valid context values based on the operation result. The following is a usage example for the callback with the annotation for <strong>CompletionContext</strong>.</p>
-<pre lang="cpp"><code>FLT_PREOP_CALLBACK_STATUS
-SwapPreReadBuffers(
-    _Inout_ <a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">PFLT_CALLBACK_DATA</a> Data,
-    _In_ PCFLT_RELATED_OBJECTS FltObjects,
-    _Flt_CompletionContext_Outptr_ PVOID *CompletionContext
-    );
 
+<h2 id="remarks">Remarks</h2>
+
+<p>See <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/writing-preoperation-callback-routines">Writing pre-operation callback routines</a> for additional information.</p>
+
+<p>A minifilter's pre-operation callback routine processes one or more types of I/O operations. (This callback routine is similar to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/writing-irp-dispatch-routines">dispatch routine in the legacy filter model</a>.)</p>
+
+<p>A minifilter registers a pre-operation callback routine for a particular type of I/O operation by storing the callback routine's entry point in the <strong>OperationRegistration</strong> array of the <strong><a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a></strong> structure. The minifilter passes this structure as a parameter to <strong><a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a></strong> in its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/writing-a-driverentry-routine-for-a-minifilter-driver"><strong>DriverEntry</strong></a> routine. A minifilter can register a pre-operation callback routine for a given type of I/O operation without registering a post-operation callback (<strong><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></strong>) routine and vice versa.</p>
+
+<p>A minifilter driver's pre-operation or post-operation callback routine can modify the contents of the callback data structure for the operation. If it does, it must then call <strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong>, unless it has changed the contents of the callback data structure's <strong>IoStatus</strong> field.</p>
+
+<p>The IRQL for this generic callback routine depends on its specific IO paths. You can quickly and cheaply call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-kegetcurrentirql"><strong>KeGetCurrentIRQL</strong></a> if you need to know the current IRQL. See <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/writing-preoperation-callback-routines">Writing pre-operation callback routines</a> for additional information about IRQL.</p>
+
+<p>File systems round up write and read operations at end of file to a multiple of the sector size of the underlying file storage device. When processing pre-read or pre-write operations, filters that allocate and swap buffers need to round the size of an allocated buffer up to a multiple of the sector size of the associated device. If they do not, the length of data transferred from the underlying file system will exceed the allocated length of the buffer. For more information about swapping buffers, see the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/samples/microsoft/windows-driver-samples/swapbuffer-file-system-minifilter-driver/">SwapBuffers Minifilter Sample</a>.</p>
+
+<p>Starting with Windows 8, <strong>CompletionContext</strong> uses the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/-flt-completioncontext-outptr--annotation"><strong>_Flt_CompletionContext_Outptr_</strong></a> annotation which defines valid context values based on the operation result. The following is a usage example for the callback with the annotation for <strong>CompletionContext</strong>.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">FLT_PREOP_CALLBACK_STATUS</span>
+<span class="nf">SwapPreReadBuffers</span><span class="p">(</span>
+<span class="w">    </span><span class="n">_Inout_</span><span class="w"> </span><span class="n"><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">PFLT_CALLBACK_DATA</a></span><span class="w"> </span><span class="n">Data</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">PCFLT_RELATED_OBJECTS</span><span class="w"> </span><span class="n">FltObjects</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_Flt_CompletionContext_Outptr_</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="o">*</span><span class="n">CompletionContext</span>
+<span class="w">    </span><span class="p">);</span>
 </code></pre>
-<h3>Returning FLT_PREOP_COMPLETE</h3>
+</div>
+
+<h3 id="returning-flt_preop_complete">Returning FLT_PREOP_COMPLETE</h3>
+
 <p>If this routine returns FLT_PREOP_COMPLETE, it must set the callback data structure's <strong>IoStatus.Status</strong> field to the final <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value for the I/O operation. This <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value cannot be STATUS_PENDING. For a cleanup or close operation, it must be a success <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value other than STATUS_PENDING because cleanup and close operations cannot fail.</p>
+
 <p>When this routine returns FLT_PREOP_COMPLETE, <em>FltMgr</em> won't send the I/O operation to any minifilter drivers below the caller in the driver stack or to the file system. In this case, <em>FltMgr</em> only calls the post-operation callback routines of the minifilter drivers above the caller in the driver stack.</p>
-<h3>Returning FLT_PREOP_DISALLOW_FASTIO</h3>
+
+<h3 id="returning-flt_preop_disallow_fastio">Returning FLT_PREOP_DISALLOW_FASTIO</h3>
+
 <p>If this routine returns FLT_PREOP_DISALLOW_FASTIO, it should not set the callback data structure's <strong>IoStatus.Status</strong> field because <em>FltMgr</em> automatically sets this field to STATUS_FLT_DISALLOW_FAST_IO.</p>
+
 <p>FLT_PREOP_DISALLOW_FASTIO can only be returned for a fast I/O operation. To determine whether a given callback data structure represents a fast I/O operation, use the <strong><a href="flt_is_fastio_operation" title="void FLT_IS_FASTIO_OPERATION(&#10;  [in] Data&#10;);">FLT_IS_FASTIO_OPERATION</a></strong> macro.</p>
+
 <p>When this routine returns FLT_PREOP_DISALLOW_FASTIO, <em>FltMgr</em> won't send the fast I/O operation to any minifilter drivers below the caller in the driver stack or to the file system. In this case, <em>FltMgr</em> only calls the post-operation callback routines of the minifilter drivers above the caller in the driver stack.</p>
-<h3>Returning FLT_PREOP_PENDING</h3>
+
+<h3 id="returning-flt_preop_pending">Returning FLT_PREOP_PENDING</h3>
+
 <p>FLT_PREOP_PENDING can only be returned for <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operations because only <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operations can be pended. To determine whether a given callback data structure represents an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operation, use the <strong><a href="flt_is_irp_operation" title="void FLT_IS_IRP_OPERATION(&#10;  Data&#10;);">FLT_IS_IRP_OPERATION</a></strong> macro.</p>
+
 <p>When this routine returns FLT_PREOP_PENDING, <em>FltMgr</em> won't process the I/O operation further until the minifilter driver calls <strong><a href="fltcompletependedpreoperation" title="VOID FLTAPI FltCompletePendedPreOperation(&#10;                 PFLT_CALLBACK_DATA        CallbackData,&#10;  [in]           FLT_PREOP_CALLBACK_STATUS CallbackStatus,&#10;  [in, optional] PVOID                     Context&#10;);">FltCompletePendedPreOperation</a></strong>.</p>
-<h3>Returning FLT_PREOP_SYNCHRONIZE</h3>
+
+<h3 id="returning-flt_preop_synchronize">Returning FLT_PREOP_SYNCHRONIZE</h3>
+
 <p>If a minifilter's pre-operation callback routine returns FLT_PREOP_SYNCHRONIZE, the minifilter must have registered a corresponding post-operation callback for the operation. When this routine returns FLT_PREOP_SYNCHRONIZE, <em>FltMgr</em> calls the minifilter's post-operation callback in the context of the current thread at IRQL &lt;= APC_LEVEL.</p>
+
 <p>FLT_PREOP_SYNCHRONIZE should only be returned for <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operations. If it is returned for an I/O operation that is not an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based operation, <em>FltMgr</em> treats this return value as if it were FLT_PREOP_SUCCESS_WITH_CALLBACK.</p>
+
 <p>Minifilter drivers should not return FLT_PREOP_SYNCHRONIZE for create operations, because these operations are already synchronized by <em>FltMgr</em>.</p>
+
 <p>Minifilters must never return FLT_PREOP_SYNCHRONIZE for asynchronous read and write operations. Doing so can severely degrade both minifilter driver and system performance.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong></p>
+
 <p><strong><a href="flt_io_parameter_block" title="typedef struct _FLT_IO_PARAMETER_BLOCK {&#10;  ULONG          IrpFlags;&#10;  UCHAR          MajorFunction;&#10;  UCHAR          MinorFunction;&#10;  UCHAR          OperationFlags;&#10;  UCHAR          Reserved;&#10;  PFILE_OBJECT   TargetFileObject;&#10;  PFLT_INSTANCE  TargetInstance;&#10;  FLT_PARAMETERS Parameters;&#10;} FLT_IO_PARAMETER_BLOCK, *PFLT_IO_PARAMETER_BLOCK;">FLT_IO_PARAMETER_BLOCK</a></strong></p>
+
 <p><strong><a href="flt_is_fastio_operation" title="void FLT_IS_FASTIO_OPERATION(&#10;  [in] Data&#10;);">FLT_IS_FASTIO_OPERATION</a></strong></p>
+
 <p><strong><a href="flt_is_irp_operation" title="void FLT_IS_IRP_OPERATION(&#10;  Data&#10;);">FLT_IS_IRP_OPERATION</a></strong></p>
+
 <p><strong><a href="flt_is_reissued_io" title="void FLT_IS_REISSUED_IO(&#10;  Data&#10;);">FLT_IS_REISSUED_IO</a></strong></p>
+
 <p><strong><a href="flt_is_system_buffer" title="void FLT_IS_SYSTEM_BUFFER(&#10;  Data&#10;);">FLT_IS_SYSTEM_BUFFER</a></strong></p>
+
 <p><strong><a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a></strong></p>
+
 <p><strong><a href="flt_related_objects" title="typedef struct _FLT_RELATED_OBJECTS {&#10;  USHORT        Size;&#10;  USHORT        TransactionContext;&#10;  PFLT_FILTER   Filter;&#10;  PFLT_VOLUME   Volume;&#10;  PFLT_INSTANCE Instance;&#10;  PFILE_OBJECT  FileObject;&#10;  PKTRANSACTION Transaction;&#10;} FLT_RELATED_OBJECTS, *PFLT_RELATED_OBJECTS;">FLT_RELATED_OBJECTS</a></strong></p>
+
 <p><strong><a href="fltcompletependedpostoperation" title="VOID FLTAPI FltCompletePendedPostOperation(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltCompletePendedPostOperation</a></strong></p>
+
 <p><strong><a href="fltcompletependedpreoperation" title="VOID FLTAPI FltCompletePendedPreOperation(&#10;                 PFLT_CALLBACK_DATA        CallbackData,&#10;  [in]           FLT_PREOP_CALLBACK_STATUS CallbackStatus,&#10;  [in, optional] PVOID                     Context&#10;);">FltCompletePendedPreOperation</a></strong></p>
+
 <p><strong><a href="fltqueuedeferredioworkitem" title="NTSTATUS FLTAPI FltQueueDeferredIoWorkItem(&#10;  [in] PFLT_DEFERRED_IO_WORKITEM         FltWorkItem,&#10;  [in] PFLT_CALLBACK_DATA                Data,&#10;  [in] PFLT_DEFERRED_IO_WORKITEM_ROUTINE WorkerRoutine,&#10;  [in] WORK_QUEUE_TYPE                   QueueType,&#10;  [in] PVOID                             Context&#10;);">FltQueueDeferredIoWorkItem</a></strong></p>
+
 <p><strong><a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a></strong></p>
+
 <p><strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong></p>
+
 <p><strong><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></strong></p>
-<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/-flt-completioncontext-outptr--annotation"><strong><em>Flt_CompletionContext_Outptr</em></strong></a></p>
+
+<p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/-flt-completioncontext-outptr--annotation"><strong>_Flt_CompletionContext_Outptr_</strong></a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-kegetcurrentirql"><strong>KeGetCurrentIRQL</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">

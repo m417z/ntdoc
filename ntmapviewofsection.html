@@ -132,80 +132,129 @@ ZwMapViewOfSection(
 <h1>Windows Driver Kit DDI reference (nf-wdm-zwmapviewofsection)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2>Description</h2>
+<h2 id="description">Description</h2>
+
 <p>The <strong>ZwMapViewOfSection</strong> routine maps a view of a section into the virtual address space of a subject process.</p>
-<h2>Parameters</h2>
-<h3><code>SectionHandle</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="sectionhandle-in"><code>SectionHandle</code> [in]</h3>
+
 <p>Handle to a section object. This handle is created by a successful call to <a href="ntcreatesection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PLARGE_INTEGER MaximumSize,&#10;    _In_ ULONG SectionPageProtection,&#10;    _In_ ULONG AllocationAttributes,&#10;    _In_opt_ HANDLE FileHandle&#10;    );">ZwCreateSection</a> or <a href="ntopensection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenSection</a>.</p>
-<h3><code>ProcessHandle</code> [in]</h3>
+
+<h3 id="processhandle-in"><code>ProcessHandle</code> [in]</h3>
+
 <p>Handle to the object that represents the process that the view should be mapped into. Use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/zwcurrentprocess">ZwCurrentProcess</a> macro to specify the current process. The handle must have been opened with <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/procthread/process-security-and-access-rights"><strong>PROCESS_VM_OPERATION</strong></a> access.</p>
-<h3><code>BaseAddress</code> [in, out]</h3>
+
+<h3 id="baseaddress-in-out"><code>BaseAddress</code> [in, out]</h3>
+
 <p>Pointer to a variable that receives the base address of the view. If the value of this parameter is not <strong>NULL</strong>, the view is allocated starting at the specified virtual address rounded down to the next 64-kilobyte address boundary.</p>
-<h3><code>ZeroBits</code> [in]</h3>
+
+<h3 id="zerobits-in"><code>ZeroBits</code> [in]</h3>
+
 <p>Specifies the number of high-order address bits that must be zero in the base address of the section view. The value of this parameter must be less than 21 and is used only if <em>BaseAddress</em> is <strong>NULL</strong>—in other words, when the caller allows the system to determine where to allocate the view.</p>
-<h3><code>CommitSize</code> [in]</h3>
+
+<h3 id="commitsize-in"><code>CommitSize</code> [in]</h3>
+
 <p>Specifies the size, in bytes, of the initially committed region of the view. <em>CommitSize</em> is meaningful only for page-file backed sections and is rounded up to the nearest multiple of <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a>. (For sections that map files, both the data and the image are committed at section-creation time.)</p>
-<h3><code>SectionOffset</code> [in, out, optional]</h3>
+
+<h3 id="sectionoffset-in-out-optional"><code>SectionOffset</code> [in, out, optional]</h3>
+
 <p>A pointer to a variable that receives the offset, in bytes, from the beginning of the section to the view. If this pointer is not <strong>NULL</strong>, the offset is rounded down to the next allocation-granularity size boundary.</p>
-<h3><code>ViewSize</code> [in, out]</h3>
+
+<h3 id="viewsize-in-out"><code>ViewSize</code> [in, out]</h3>
+
 <p>A pointer to a <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> variable. If the initial value of this variable is zero, <strong>ZwMapViewOfSection</strong> maps a view of the section that starts at <em>SectionOffset</em> and continues to the end of the section. Otherwise, the initial value specifies the view's size, in bytes. <strong>ZwMapViewOfSection</strong> always rounds this value up to the nearest multiple of <a href="page_size" title="#define PAGE_SIZE 0x1000">PAGE_SIZE</a> before mapping the view.</p>
+
 <p>On return, the value receives the actual size, in bytes, of the view.</p>
-<h3><code>InheritDisposition</code> [in]</h3>
+
+<h3 id="inheritdisposition-in"><code>InheritDisposition</code> [in]</h3>
+
 <p>Specifies how the view is to be shared with child processes. The possible values are:</p>
-<h4>ViewShare</h4>
+
+<h4 id="viewshare">ViewShare</h4>
+
 <p>The view will be mapped into any child processes that are created in the future.</p>
-<h4>ViewUnmap</h4>
+
+<h4 id="viewunmap">ViewUnmap</h4>
+
 <p>The view will not be mapped into child processes.</p>
+
 <p>Drivers should typically specify <strong>ViewUnmap</strong> for this parameter.</p>
-<h3><code>AllocationType</code> [in]</h3>
+
+<h3 id="allocationtype-in"><code>AllocationType</code> [in]</h3>
+
 <p>Specifies a set of flags that describes the type of allocation to be performed for the specified region of pages. The valid flags are <a href="mem_reserve" title="#define MEM_RESERVE 0x00002000">MEM_RESERVE</a>, <a href="mem_top_down" title="#define MEM_TOP_DOWN 0x00100000">MEM_TOP_DOWN</a>, <a href="mem_large_pages" title="#define MEM_LARGE_PAGES 0x20000000">MEM_LARGE_PAGES</a>, <a href="mem_different_image_base_ok" title="#define MEM_DIFFERENT_IMAGE_BASE_OK 0x00800000">MEM_DIFFERENT_IMAGE_BASE_OK</a> and <a href="mem_replace_placeholder" title="#define MEM_REPLACE_PLACEHOLDER 0x00004000">MEM_REPLACE_PLACEHOLDER</a>. Although <a href="mem_commit" title="#define MEM_COMMIT 0x00001000">MEM_COMMIT</a> is not allowed, it is implied unless <a href="mem_reserve" title="#define MEM_RESERVE 0x00002000">MEM_RESERVE</a> is specified. For more information about the MEM_<em>XXX</em> flags, see the description of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/memoryapi/nf-memoryapi-virtualalloc">VirtualAlloc</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile3">MapViewOfFile3</a> routines.</p>
-<h3><code>Win32Protect</code> [in]</h3>
+
+<h3 id="win32protect-in"><code>Win32Protect</code> [in]</h3>
+
 <p>Specifies the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/Memory/memory-protection-constants">page protection</a> to be applied to the mapped view.</p>
+
 <p>For section objects created with the <a href="sec_image" title="#define SEC_IMAGE 0x01000000">SEC_IMAGE</a> attribute, the Win32Protect parameter has no effect, and can be set to any valid value such as <a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a>.</p>
+
 <p>For section objects created with the <a href="sec_image_no_execute" title="#define SEC_IMAGE_NO_EXECUTE (SEC_IMAGE | SEC_NOCACHE)">SEC_IMAGE_NO_EXECUTE</a> attribute, the Win32Protect value must be set to <a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a>.</p>
+
 <p>For non-image sections, the value of the Win32Protect parameter must be compatible with the section's page protection that was specified when <a href="ntcreatesection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PLARGE_INTEGER MaximumSize,&#10;    _In_ ULONG SectionPageProtection,&#10;    _In_ ULONG AllocationAttributes,&#10;    _In_opt_ HANDLE FileHandle&#10;    );">ZwCreateSection</a> was called.</p>
+
 <p><strong>ZwMapViewOfSection</strong> sets the cache type of the mapped pages to match the cache type supplied when the section object was created. For example, if <a href="ntcreatesection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PLARGE_INTEGER MaximumSize,&#10;    _In_ ULONG SectionPageProtection,&#10;    _In_ ULONG AllocationAttributes,&#10;    _In_opt_ HANDLE FileHandle&#10;    );">ZwCreateSection</a> was called with the <a href="sec_nocache" title="#define SEC_NOCACHE 0x10000000">SEC_NOCACHE</a> flag, <strong>ZwMapViewOfSection</strong> will map the pages uncached, regardless of whether the Win32Protect parameter includes the <a href="page_nocache" title="#define PAGE_NOCACHE 0x200 // Sets all pages to be non-cachable. Applications should not use this attribute. Using interlocked functions with memory that is mapped with SEC_NOCACHE can result in an EXCEPTION_ILLEGAL_INSTRUCTION exception.">PAGE_NOCACHE</a> flag or not.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>ZwMapViewOfSection</strong> returns an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value. Possible return values include the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
-<td>The routine successfully performed the requested operation.</td>
+  <td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
+  <td>The routine successfully performed the requested operation.</td>
 </tr>
 <tr>
-<td><strong>STATUS_CONFLICTING_ADDRESSES</strong></td>
-<td>The specified address range conflicts with a range that is already reserved.</td>
+  <td><strong>STATUS_CONFLICTING_ADDRESSES</strong></td>
+  <td>The specified address range conflicts with a range that is already reserved.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INVALID_PAGE_PROTECTION</strong></td>
-<td>The value specified for the <em>Win32Protect</em> parameter is invalid.</td>
+  <td><strong>STATUS_INVALID_PAGE_PROTECTION</strong></td>
+  <td>The value specified for the <em>Win32Protect</em> parameter is invalid.</td>
 </tr>
 <tr>
-<td><strong>STATUS_SECTION_PROTECTION</strong></td>
-<td>The value specified for the <em>Win32Protect</em> parameter is incompatible with the page protection specified when the section was created.</td>
+  <td><strong>STATUS_SECTION_PROTECTION</strong></td>
+  <td>The value specified for the <em>Win32Protect</em> parameter is incompatible with the page protection specified when the section was created.</td>
 </tr>
 </tbody>
 </table>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>Several different views of a section can be concurrently mapped into the virtual address space of one or more processes.</p>
+
 <p>Do not use <strong>ZwMapViewOfSection</strong> to map a memory range from <strong>\Device\PhysicalMemory</strong> into user mode, unless your driver has directly allocated the memory range through <a href="mmallocatepagesformdlex" title="PMDL MmAllocatePagesForMdlEx(&#10;  [in] PHYSICAL_ADDRESS    LowAddress,&#10;  [in] PHYSICAL_ADDRESS    HighAddress,&#10;  [in] PHYSICAL_ADDRESS    SkipBytes,&#10;  [in] SIZE_T              TotalBytes,&#10;  [in] MEMORY_CACHING_TYPE CacheType,&#10;  [in] ULONG               Flags&#10;);">MmAllocatePagesForMdlEx</a> or another method guaranteeing that no other system component has mapped the same memory range with a different <a href="memory_caching_type" title="typedef enum _MEMORY_CACHING_TYPE {&#10;  MmNonCached,&#10;  MmCached,&#10;  MmWriteCombined,&#10;  MmHardwareCoherentCached,&#10;  MmNonCachedUnordered,&#10;  MmUSWCCached,&#10;  MmMaximumCacheType,&#10;  MmNotMapped&#10;} MEMORY_CACHING_TYPE;">MEMORY_CACHING_TYPE</a> value.</p>
+
 <p>User applications cannot access <strong>\Device\PhysicalMemory</strong> directly starting with Windows Server 2003 with Service Pack 1 (SP1) and can access it only if the driver passes a handle to the application.</p>
+
 <p>For more information about section objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/section-objects-and-views">Section Objects and Views</a>.</p>
-<p>If the call to this function occurs in user mode, you should use the name &quot;<strong>NtMapViewOfSection</strong>&quot; instead of &quot;<strong>ZwMapViewOfSection</strong>&quot;.</p>
-<p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
-<h2>See also</h2>
+
+<p>If the call to this function occurs in user mode, you should use the name "<strong>NtMapViewOfSection</strong>" instead of "<strong>ZwMapViewOfSection</strong>".</p>
+
+<p>For calls from kernel-mode drivers, the <strong>Nt*Xxx</strong>* and <strong>Zw*Xxx</strong>* versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt*Xxx</strong>* and <strong>Zw*Xxx</strong>* versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
+
 <p><a href="ntcreatesection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PLARGE_INTEGER MaximumSize,&#10;    _In_ ULONG SectionPageProtection,&#10;    _In_ ULONG AllocationAttributes,&#10;    _In_opt_ HANDLE FileHandle&#10;    );">ZwCreateSection</a></p>
+
 <p><a href="ntopensection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenSection</a></p>
+
 <p><a href="ntmapviewofsectionex" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtMapViewOfSectionEx(&#10;    _In_ HANDLE SectionHandle,&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*ViewSize) _Writable_bytes_(*ViewSize) _Post_readable_byte_size_(*ViewSize)) PVOID *BaseAddress,&#10;    _Inout_opt_ PLARGE_INTEGER SectionOffset,&#10;    _Inout_ PSIZE_T ViewSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection,&#10;    _Inout_updates_opt_(ExtendedParameterCount) PMEM_EXTENDED_PARAMETER ExtendedParameters,&#10;    _In_ ULONG ExtendedParameterCount&#10;    );">ZwMapViewOfSectionEx</a></p>
+
 <p><a href="ntunmapviewofsection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtUnmapViewOfSection(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_opt_ PVOID BaseAddress&#10;    );">ZwUnmapViewOfSection</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile3">MapViewOfFile3</a></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -220,32 +269,56 @@ ZwMapViewOfSection(
 </div>
 <div class="ntdoc-description">
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwmapviewofsection">documented in Windows Driver Kit</a>.</p>
+
 <hr />
+
 <p>Function <code>NtMapViewOfSection</code> maps specified part of Section Object into process memory.</p>
+
 <h3>SectionHandle</h3>
+
 <p><code>HANDLE</code> to Section Object opened with one or more from <code>SECTION_MAP_EXECUTE</code>, <code>SECTION_MAP_READ</code>, <code>SECTION_MAP_WRITE</code> attributes.</p>
+
 <h3>ProcessHandle</h3>
+
 <p><code>HANDLE</code> to Process Object opened with <code><a href="process_vm_operation" title="#define PROCESS_VM_OPERATION 0x0008">PROCESS_VM_OPERATION</a></code> access.</p>
+
 <h3>*BaseAddress</h3>
+
 <p>Pointer to variable receiving virtual address of mapped memory. If this value is not <em>NULL</em>, system tries to allocate memory from specified value.</p>
+
 <h3>ZeroBits</h3>
+
 <p>Indicates how many high bits must not be set in <code>BaseAddress</code>.</p>
+
 <h3>CommitSize</h3>
+
 <p>Size of initially committed memory, in bytes.</p>
+
 <h3>SectionOffset</h3>
+
 <p>Pointer to begin of mapped block in section. This value must be rounded up to <code>X64K</code> block size (<em>0x10000</em> on <strong>X86</strong>).</p>
+
 <h3>ViewSize</h3>
+
 <p>Pointer to size of mapped block, in bytes. This value is rounded up to page size (<em>0x1000</em> on <strong>x86</strong>).</p>
+
 <h3>InheritDisposition</h3>
+
 <p>How do child processes inherit mapped section. See description of enumeration type <code><a href="section_inherit" title="typedef enum _SECTION_INHERIT&#10;{&#10;    ViewShare = 1, // The mapped view of the section will be mapped into any child processes created by the process.&#10;    ViewUnmap = 2  // The mapped view of the section will not be mapped into any child processes created by the process.&#10;} SECTION_INHERIT;">SECTION_INHERIT</a></code>.</p>
+
 <h3>AllocationType</h3>
+
 <p>Can be one of:</p>
+
 <ul>
 <li><code><a href="mem_commit" title="#define MEM_COMMIT 0x00001000">MEM_COMMIT</a></code></li>
 <li><code><a href="mem_reserve" title="#define MEM_RESERVE 0x00002000">MEM_RESERVE</a></code></li>
 </ul>
+
 <h3>Protect</h3>
+
 <p>Page protection. Can be one of:</p>
+
 <ul>
 <li><code><a href="page_noaccess" title="#define PAGE_NOACCESS 0x01 // Disables all access to the committed region of pages. An attempt to read from, write to, or execute the committed region results in an access violation.">PAGE_NOACCESS</a></code></li>
 <li><code><a href="page_readonly" title="#define PAGE_READONLY 0x02 // Enables read-only access to the committed region of pages. An attempt to write or execute the committed region results in an access violation.">PAGE_READONLY</a></code></li>
@@ -259,11 +332,15 @@ ZwMapViewOfSection(
 <li><code><a href="page_nocache" title="#define PAGE_NOCACHE 0x200 // Sets all pages to be non-cachable. Applications should not use this attribute. Using interlocked functions with memory that is mapped with SEC_NOCACHE can result in an EXCEPTION_ILLEGAL_INSTRUCTION exception.">PAGE_NOCACHE</a></code></li>
 <li><code><a href="page_writecombine" title="#define PAGE_WRITECOMBINE 0x400 // Sets all pages to be write-combined. Applications should not use this attribute. Using interlocked functions with memory that is mapped with SEC_NOCACHE can result in an EXCEPTION_ILLEGAL_INSTRUCTION exception.">PAGE_WRITECOMBINE</a></code></li>
 </ul>
+
 <h1>Documented by</h1>
+
 <ul>
 <li>Tomasz Nowak</li>
 </ul>
+
 <h1>See also</h1>
+
 <ul>
 <li><code><a href="ntallocatevirtualmemory" title="_Must_inspect_result_&#10;_When_(return == 0, __drv_allocatesMem(mem))&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateVirtualMemory(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _Inout_ PSIZE_T RegionSize,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">NtAllocateVirtualMemory</a></code></li>
 <li><code><a href="ntcreatesection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PLARGE_INTEGER MaximumSize,&#10;    _In_ ULONG SectionPageProtection,&#10;    _In_ ULONG AllocationAttributes,&#10;    _In_opt_ HANDLE FileHandle&#10;    );">NtCreateSection</a></code></li>

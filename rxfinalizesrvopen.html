@@ -65,45 +65,84 @@
 <h1>Windows Driver Kit DDI reference (nf-fcb-rxfinalizesrvopen)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>RxFinalizeSrvOpen function</h1>
-<h2>Description</h2>
+<h1 id="rxfinalizesrvopen-function">RxFinalizeSrvOpen function</h1>
+
+<h2 id="description">Description</h2>
+
 <p><strong>RxFinalizeSrvOpen</strong> finalizes the given SRV_OPEN structure. The caller must have an exclusive lock on the FCB associated with the SRV_OPEN and either a shared or exclusive lock on the table lock of the NET_ROOT associated with the FCB.</p>
-<h2>Parameters</h2>
-<h3><code>ThisSrvOpen</code> [out]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="thissrvopen-out"><code>ThisSrvOpen</code> [out]</h3>
+
 <p>A pointer to the SRV_OPEN structure to finalize.</p>
-<h3><code>RecursiveFinalize</code> [in]</h3>
+
+<h3 id="recursivefinalize-in"><code>RecursiveFinalize</code> [in]</h3>
+
 <p>The value indicating whether the finalization should be done recursively.</p>
-<h3><code>ForceFinalize</code> [in]</h3>
+
+<h3 id="forcefinalize-in"><code>ForceFinalize</code> [in]</h3>
+
 <p>The value indicating whether the finalization should be forced, regardless of the reference count.</p>
+
 <p>If <em>ForceFinalize</em> is <strong>FALSE</strong>, then the <strong>NodeReferenceCount</strong> member of the SRV_OPEN structure pointed to by <em>ThisSrvOpen</em> must be 0 for the SRV_OPEN to be finalized.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>RxFinalizeSrvOpen</strong> returns <strong>TRUE</strong> on success or <strong>FALSE</strong> if the finalization did not occur:</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The <strong>RxFinalizeSrvOpen</strong> routine is not normally called by network mini-redirector drivers directly. RDBSS calls this routine internally when the reference count on the SRV_OPEN is decremented to 1. RDBSS also calls <strong>RxFinalizeSrvOpen</strong> when the <strong><a href="rxfinalizenetfcb" title="BOOLEAN RxFinalizeNetFcb(&#10;  [out] OUT PFCB   ThisFcb,&#10;  [in]  IN BOOLEAN RecursiveFinalize,&#10;  [in]  IN BOOLEAN ForceFinalize,&#10;  [in]  IN LONG    ReferenceCount&#10;);">RxFinalizeNetFcb</a></strong> routine is called with the <em>RecursiveFinalize</em> set to <strong>TRUE</strong>. RDBSS calls <strong><a href="rxfinalizenetfcb" title="BOOLEAN RxFinalizeNetFcb(&#10;  [out] OUT PFCB   ThisFcb,&#10;  [in]  IN BOOLEAN RecursiveFinalize,&#10;  [in]  IN BOOLEAN ForceFinalize,&#10;  [in]  IN LONG    ReferenceCount&#10;);">RxFinalizeNetFcb</a></strong> when an I/O request packet is received for <a href="irp_mj_close" title="#define IRP_MJ_CLOSE 0x02">IRP_MJ_CLOSE</a>. This <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> is normally received by RDBSS in response to a user-mode application requesting a file close operation. It is also possible for another kernel driver to issue such an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>.</p>
+
 <p>Before calling <strong>RxFinalizeSrvOpen</strong>, the caller must have acquired an exclusive lock on the FCB associated with the SRV_OPEN and acquired either a shared or exclusive lock on the table lock of the NET_ROOT associated with the FCB.</p>
+
 <p>If the <em>RecursiveFinalize</em> parameter is <strong>TRUE</strong>, then <strong>RxFinalizeSrvOpen</strong> will finalize any FOBX structures associated with this SRV_OPEN by calling <strong><a href="rxfinalizenetfobx" title="BOOLEAN RxFinalizeNetFobx(&#10;  [out] OUT PFOBX  ThisFobx,&#10;  [in]  IN BOOLEAN RecursiveFinalize,&#10;  [in]  IN BOOLEAN ForceFinalize&#10;);">RxFinalizeNetFobx</a></strong> with the <em>RecursiveFinalize</em> parameter set to <strong>TRUE</strong> and the <em>ForceFinalize</em> parameter.</p>
+
 <p>If the <strong>FcbState</strong> member of the associated FCB does not have the FCB_STATE_ORPHANED flag set, then <strong><a href="rxfinalizesrvcall" title="BOOLEAN RxFinalizeSrvCall(&#10;  [out] OUT PSRV_CALL ThisSrvCall,&#10;  [in]  IN BOOLEAN    ForceFinalize&#10;);">RxFinalizeSrvCall</a></strong> will call the <strong>MRxForceClosed</strong> routine provided by the network mini-redirector to finalize the SRV_CALL. If the SRV_CALL structure was not originally allocated as part of creating the FCB, then the memory for the SRV_CALL structure will also be released.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_forceclosed_calldown">MRxForceClosed</a></p>
+
 <p><a href="rxcreatenetfcb" title="PFCB RxCreateNetFcb(&#10;  [in] IN PRX_CONTEXT     RxContext,&#10;  [in] IN PIRP            Irp,&#10;  [in] IN PV_NET_ROOT     VNetRoot,&#10;  [in] IN PUNICODE_STRING Name&#10;);">RxCreateNetFcb</a></p>
+
 <p><a href="rxcreatenetfobx" title="PMRX_FOBX RxCreateNetFobx(&#10;  [out] OUT PRX_CONTEXT  RxContext,&#10;  [in]  IN PMRX_SRV_OPEN MrxSrvOpen&#10;);">RxCreateNetFobx</a></p>
+
 <p><a href="rxcreatenetroot" title="PNET_ROOT RxCreateNetRoot(&#10;  [in]           IN PSRV_CALL         SrvCall,&#10;  [in]           IN PUNICODE_STRING   Name,&#10;  [in]           IN ULONG             NetRootFlags,&#10;  [in, optional] IN PRX_CONNECTION_ID RxConnectionId&#10;);">RxCreateNetRoot</a></p>
+
 <p><a href="rxcreatesrvcall" title="PSRV_CALL RxCreateSrvCall(&#10;  IN PRX_CONTEXT       RxContext,&#10;  IN PUNICODE_STRING   Name,&#10;  IN PUNICODE_STRING   InnerNamePrefix,&#10;  IN PRX_CONNECTION_ID RxConnectionId&#10;);">RxCreateSrvCall</a></p>
+
 <p><a href="rxcreatesrvopen" title="PSRV_OPEN RxCreateSrvOpen(&#10;  [in]      IN PV_NET_ROOT VNetRoot,&#10;  [in, out] IN OUT PFCB    Fcb&#10;);">RxCreateSrvOpen</a></p>
+
 <p><a href="rxcreatevnetroot" title="PV_NET_ROOT RxCreateVNetRoot(&#10;  [in] IN PRX_CONTEXT       RxContext,&#10;  [in] IN PNET_ROOT         NetRoot,&#10;  [in] IN PUNICODE_STRING   CanonicalName,&#10;  [in] IN PUNICODE_STRING   LocalNetRootName,&#10;  [in] IN PUNICODE_STRING   FilePath,&#10;  [in] IN PRX_CONNECTION_ID RxConnectionId&#10;);">RxCreateVNetRoot</a></p>
+
 <p><a href="rxdereference" title="VOID RxDereference(&#10;  [in, out] IN OUT PVOID          Instance,&#10;  [in]      IN LOCK_HOLDING_STATE LockHoldingState&#10;);">RxDereference</a></p>
+
 <p><a href="rxfinalizeconnection" title="NTSTATUS RxFinalizeConnection(&#10;  IN OUT PNET_ROOT   NetRoot,&#10;  IN OUT PV_NET_ROOT VNetRoot,&#10;  IN LOGICAL         ForceFilesClosed&#10;);">RxFinalizeConnection</a></p>
+
 <p><a href="rxfinalizenetfcb" title="BOOLEAN RxFinalizeNetFcb(&#10;  [out] OUT PFCB   ThisFcb,&#10;  [in]  IN BOOLEAN RecursiveFinalize,&#10;  [in]  IN BOOLEAN ForceFinalize,&#10;  [in]  IN LONG    ReferenceCount&#10;);">RxFinalizeNetFcb</a></p>
+
 <p><a href="rxfinalizenetfobx" title="BOOLEAN RxFinalizeNetFobx(&#10;  [out] OUT PFOBX  ThisFobx,&#10;  [in]  IN BOOLEAN RecursiveFinalize,&#10;  [in]  IN BOOLEAN ForceFinalize&#10;);">RxFinalizeNetFobx</a></p>
+
 <p><a href="rxfinalizenetroot" title="BOOLEAN RxFinalizeNetRoot(&#10;  [out] OUT PNET_ROOT ThisNetRoot,&#10;  [in]  IN BOOLEAN    RecursiveFinalize,&#10;  [in]  IN BOOLEAN    ForceFinalize&#10;);">RxFinalizeNetRoot</a></p>
+
 <p><a href="rxfinalizesrvcall" title="BOOLEAN RxFinalizeSrvCall(&#10;  [out] OUT PSRV_CALL ThisSrvCall,&#10;  [in]  IN BOOLEAN    ForceFinalize&#10;);">RxFinalizeSrvCall</a></p>
+
 <p><a href="rxfinalizevnetroot" title="BOOLEAN RxFinalizeVNetRoot(&#10;  [out] OUT PV_NET_ROOT ThisVNetRoot,&#10;  [in]  IN BOOLEAN      RecursiveFinalize,&#10;  [in]  IN BOOLEAN      ForceFinalize&#10;);">RxFinalizeVNetRoot</a></p>
+
 <p><a href="rxfinishfcbinitialization" title="VOID RxFinishFcbInitialization(&#10;  IN OUT PMRX_FCB     Fcb,&#10;  IN RX_FILE_TYPE     FileType,&#10;  IN PFCB_INIT_PACKET InitPacket&#10;);">RxFinishFcbInitialization</a></p>
+
 <p><a href="rxforcefinalizeallvnetroots" title="VOID RxForceFinalizeAllVNetRoots(&#10;  PNET_ROOT NetRoot&#10;);">RxForceFinalizeAllVNetRoots</a></p>
+
 <p><a href="rxreference" title="VOID RxReference(&#10;  [in, out] IN OUT PVOID Instance&#10;);">RxReference</a></p>
+
 <p><a href="rxsetsrvcalldomainname" title="NTSTATUS RxSetSrvCallDomainName(&#10;  [in] IN PMRX_SRV_CALL   SrvCall,&#10;  [in] IN PUNICODE_STRING DomainName&#10;);">RxSetSrvCallDomainName</a></p>
+
 <p><a href="rxpdereferencenetfcb" title="LONG RxpDereferenceNetFcb(&#10;  PFCB Fcb&#10;);">RxpDereferenceNetFcb</a></p>
+
 <p><a href="rxpreferencenetfcb" title="LONG RxpReferenceNetFcb(&#10;  PFCB Fcb&#10;);">RxpReferenceNetFcb</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/the-srv-open-structure">The SRV_OPEN Structure</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -64,134 +64,163 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfrequest-wdfrequestretrieveinputmemory)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>WdfRequestRetrieveInputMemory function</h1>
-<h2>Description</h2>
+<h1 id="wdfrequestretrieveinputmemory-function">WdfRequestRetrieveInputMemory function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>[Applies to KMDF and UMDF]</p>
+
 <p>The <strong>WdfRequestRetrieveInputMemory</strong> method retrieves a handle to a framework memory object that represents an I/O request's input buffer.</p>
-<h2>Parameters</h2>
-<h3><code>Request</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="request-in"><code>Request</code> [in]</h3>
+
 <p>A handle to a framework request object.</p>
-<h3><code>Memory</code> [out]</h3>
+
+<h3 id="memory-out"><code>Memory</code> [out]</h3>
+
 <p>A pointer to a location that receives a handle to a framework memory object.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>WdfRequestRetrieveInputMemory</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, this method might return one of the following values:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INVALID_PARAMETER</strong></td>
-<td>An input parameter is invalid.</td>
+  <td><strong>STATUS_INVALID_PARAMETER</strong></td>
+  <td>An input parameter is invalid.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
-<td>The request type is not valid or the request is using <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/methods-for-accessing-data-buffers">neither buffered nor direct I/O</a>. For more information about supported methods for accessing data buffers, see the following Remarks section.</td>
+  <td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
+  <td>The request type is not valid or the request is using <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/methods-for-accessing-data-buffers">neither buffered nor direct I/O</a>. For more information about supported methods for accessing data buffers, see the following Remarks section.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INTERNAL_ERROR</strong></td>
-<td>The request has already been completed.</td>
+  <td><strong>STATUS_INTERNAL_ERROR</strong></td>
+  <td>The request has already been completed.</td>
 </tr>
 <tr>
-<td><strong>STATUS_BUFFER_TOO_SMALL</strong></td>
-<td>The input buffer's length is zero.</td>
+  <td><strong>STATUS_BUFFER_TOO_SMALL</strong></td>
+  <td>The input buffer's length is zero.</td>
 </tr>
 <tr>
-<td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
-<td>There is insufficient memory.</td>
+  <td><strong>STATUS_INSUFFICIENT_RESOURCES</strong></td>
+  <td>There is insufficient memory.</td>
 </tr>
 </tbody>
 </table>
+
 <p>This method might also return other <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS values</a>.</p>
+
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>A request's input buffer contains information, such as data to be written to a disk, that was supplied by the originator of the request. Your driver can call <strong>WdfRequestRetrieveInputMemory</strong> to obtain the input buffer for a write request or a device I/O control request, but not for a read request (because read requests do not provide input data).</p>
+
 <p>The <strong>WdfRequestRetrieveInputMemory</strong> method retrieves the input buffer for I/O requests that use the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/methods-for-accessing-data-buffers">buffered I/O</a> method or the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/methods-for-accessing-data-buffers">direct I/O</a> method for accessing data buffers. If the request's I/O control code is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-internal-device-control">IRP_MJ_INTERNAL_DEVICE_CONTROL</a>, or if the request came from another kernel-mode driver, <strong>WdfRequestRetrieveInputMemory</strong> also supports I/O requests that use <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/methods-for-accessing-data-buffers">neither buffered nor direct I/O</a>.</p>
+
 <p>If <strong>WdfRequestRetrieveInputMemory</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, the driver receives a handle to a framework memory object that represents the input buffer. To access the buffer, the driver must call <a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a>.</p>
+
 <p>The driver can access the retrieved framework memory object until it <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">completes the I/O request</a> that the <em>Request</em> parameter represents.</p>
+
 <p>Instead of calling <strong>WdfRequestRetrieveInputMemory</strong>, the driver can call <a href="wdfrequestretrieveinputbuffer" title="NTSTATUS WdfRequestRetrieveInputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;                  size_t     MinimumRequiredLength,&#10;  [out]           PVOID      *Buffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveInputBuffer</a>, which retrieves the buffer's address and length.</p>
+
 <p>For more information about <strong>WdfRequestRetrieveInputMemory</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/accessing-data-buffers-in-wdf-drivers">Accessing Data Buffers in Framework-Based Drivers</a>.</p>
-<h4>Examples</h4>
+
+<h4 id="examples">Examples</h4>
+
 <p>The following code example shows how an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_write">EvtIoWrite</a> callback function can obtain a handle to the framework memory object that represents a write request's input buffer. The example then formats and sends the write request to a USB I/O target.</p>
-<pre lang="cpp"><code>VOID
-MyEvtIoWrite(
-    IN WDFQUEUE  Queue,
-    IN WDFREQUEST  Request,
-    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  Length
-    )
-{
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
-    WDFUSBPIPE  pipe;
-    WDFMEMORY  reqMemory;
-    PDEVICE_CONTEXT  pDeviceContext;
 
-    //
-    // The driver previously stored a pipe handle in
-    // the device object's context space.
-    //
-    pDeviceContext = GetDeviceContext(<a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue));
-    pipe = pDeviceContext-&gt;BulkWritePipe;
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="nf">MyEvtIoWrite</span><span class="p">(</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFQUEUE</span><span class="w">  </span><span class="n">Queue</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w">  </span><span class="n">Length</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="p">;</span>
+<span class="w">    </span><span class="n">WDFUSBPIPE</span><span class="w">  </span><span class="n">pipe</span><span class="p">;</span>
+<span class="w">    </span><span class="n">WDFMEMORY</span><span class="w">  </span><span class="n">reqMemory</span><span class="p">;</span>
+<span class="w">    </span><span class="n">PDEVICE_CONTEXT</span><span class="w">  </span><span class="n">pDeviceContext</span><span class="p">;</span>
 
-    //
-    // Get input memory.
-    //
-    status = WdfRequestRetrieveInputMemory(
-                                           Request,
-                                           &amp;reqMemory
-                                           );
-    if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-        goto Exit;
-    }
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// The driver previously stored a pipe handle in</span>
+<span class="w">    </span><span class="c1">// the device object&#39;s context space.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="n">pDeviceContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetDeviceContext</span><span class="p">(</span><span class="n"><a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a></span><span class="p">(</span><span class="n">Queue</span><span class="p">));</span>
+<span class="w">    </span><span class="n">pipe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">pDeviceContext</span><span class="o">-&gt;</span><span class="n">BulkWritePipe</span><span class="p">;</span>
 
-    //
-    // Format the request.
-    //
-    status = <a href="wdfusbtargetpipeformatrequestforwrite" title="NTSTATUS WdfUsbTargetPipeFormatRequestForWrite(&#10;  [in]           WDFUSBPIPE        Pipe,&#10;  [in]           WDFREQUEST        Request,&#10;  [in, optional] WDFMEMORY         WriteMemory,&#10;  [in, optional] PWDFMEMORY_OFFSET WriteOffset&#10;);">WdfUsbTargetPipeFormatRequestForWrite</a>(
-                                          pipe,
-                                          Request,
-                                          reqMemory,
-                                          NULL
-                                          );
-    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        goto Exit;
-    }
-    <a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a>(
-                                   Request,
-                                   EvtRequestWriteCompletionRoutine,
-                                   pipe
-                                   );
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Get input memory.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfRequestRetrieveInputMemory</span><span class="p">(</span>
+<span class="w">                                           </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                                           </span><span class="o">&amp;</span><span class="n">reqMemory</span>
+<span class="w">                                           </span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">)){</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">Exit</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    //
-    // Send the request.
-    //
-    if (<a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>(
-                       Request,
-                       <a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>(pipe),
-                       WDF_NO_SEND_OPTIONS
-                       ) == FALSE) {
-        status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(Request);
-        goto Exit;
-    }
-Exit:
-    //
-    // Complete the request now if an error occurred.
-    //
-    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
-                                          Request,
-                                          status,
-                                          0
-                                          );
-    }
-    return;
-}
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Format the request.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfusbtargetpipeformatrequestforwrite" title="NTSTATUS WdfUsbTargetPipeFormatRequestForWrite(&#10;  [in]           WDFUSBPIPE        Pipe,&#10;  [in]           WDFREQUEST        Request,&#10;  [in, optional] WDFMEMORY         WriteMemory,&#10;  [in, optional] PWDFMEMORY_OFFSET WriteOffset&#10;);">WdfUsbTargetPipeFormatRequestForWrite</a></span><span class="p">(</span>
+<span class="w">                                          </span><span class="n">pipe</span><span class="p">,</span>
+<span class="w">                                          </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                                          </span><span class="n">reqMemory</span><span class="p">,</span>
+<span class="w">                                          </span><span class="nb">NULL</span>
+<span class="w">                                          </span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">Exit</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="n"><a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a></span><span class="p">(</span>
+<span class="w">                                   </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                                   </span><span class="n">EvtRequestWriteCompletionRoutine</span><span class="p">,</span>
+<span class="w">                                   </span><span class="n">pipe</span>
+<span class="w">                                   </span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Send the request.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a></span><span class="p">(</span>
+<span class="w">                       </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                       </span><span class="n"><a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a></span><span class="p">(</span><span class="n">pipe</span><span class="p">),</span>
+<span class="w">                       </span><span class="n">WDF_NO_SEND_OPTIONS</span>
+<span class="w">                       </span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">FALSE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a></span><span class="p">(</span><span class="n">Request</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">Exit</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="nl">Exit</span><span class="p">:</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Complete the request now if an error occurred.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n"><a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a></span><span class="p">(</span>
+<span class="w">                                          </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                                          </span><span class="n">status</span><span class="p">,</span>
+<span class="w">                                          </span><span class="mi">0</span>
+<span class="w">                                          </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
-<h2>See also</h2>
+</div>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a></p>
+
 <p><a href="wdfrequestretrieveinputbuffer" title="NTSTATUS WdfRequestRetrieveInputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;                  size_t     MinimumRequiredLength,&#10;  [out]           PVOID      *Buffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveInputBuffer</a></p>
+
 <p><a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a></p>
 <hr>
 <div class="ntdoc-description-links">

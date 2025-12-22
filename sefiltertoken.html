@@ -68,78 +68,117 @@
 <h1>Windows Driver Kit DDI reference (nf-ntifs-sefiltertoken)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>SeFilterToken function</h1>
-<h2>Description</h2>
+<h1 id="sefiltertoken-function">SeFilterToken function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>SeFilterToken</strong> routine creates a new access token that is a restricted version of an existing access token.</p>
-<h2>Parameters</h2>
-<h3><code>ExistingToken</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="existingtoken-in"><code>ExistingToken</code> [in]</h3>
+
 <p>Pointer to a primary or impersonation token. The token can also be a restricted token. This token must already be open for TOKEN_DUPLICATE access. This pointer can be obtained from an existing token handle by calling <strong><a href="obreferenceobjectbyhandle" title="NTSTATUS ObReferenceObjectByHandle(&#10;  [in]            HANDLE                     Handle,&#10;  [in]            ACCESS_MASK                DesiredAccess,&#10;  [in, optional]  POBJECT_TYPE               ObjectType,&#10;  [in]            KPROCESSOR_MODE            AccessMode,&#10;  [out]           PVOID                      *Object,&#10;  [out, optional] POBJECT_HANDLE_INFORMATION HandleInformation&#10;);">ObReferenceObjectByHandle</a></strong>, specifying TOKEN_DUPLICATE as the <strong>DesiredAccess</strong> type.</p>
-<h3><code>Flags</code> [in]</h3>
+
+<h3 id="flags-in"><code>Flags</code> [in]</h3>
+
 <p>Specifies additional privilege options. This parameter can be zero or a combination of the following values.</p>
+
 <table>
 <thead>
 <tr>
-<th>Value</th>
-<th>Meaning</th>
+  <th>Value</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="disable_max_privilege" title="#define DISABLE_MAX_PRIVILEGE 0x1 // Disables all privileges in the new token except SE_CHANGE_NOTIFY_PRIVILEGE.">DISABLE_MAX_PRIVILEGE</a></td>
-<td>Disables all privileges in the new token except <a href="se_change_notify_privilege" title="#define SE_CHANGE_NOTIFY_PRIVILEGE (23L) // Required to receive notifications of changes to files or directories and skip all traversal access checks. It is enabled by default for all users.">SE_CHANGE_NOTIFY_PRIVILEGE</a>. If this value is specified, the <strong>PrivilegesToDelete</strong> parameter is ignored.</td>
+  <td><a href="disable_max_privilege" title="#define DISABLE_MAX_PRIVILEGE 0x1 // Disables all privileges in the new token except SE_CHANGE_NOTIFY_PRIVILEGE.">DISABLE_MAX_PRIVILEGE</a></td>
+  <td>Disables all privileges in the new token except <a href="se_change_notify_privilege" title="#define SE_CHANGE_NOTIFY_PRIVILEGE (23L) // Required to receive notifications of changes to files or directories and skip all traversal access checks. It is enabled by default for all users.">SE_CHANGE_NOTIFY_PRIVILEGE</a>. If this value is specified, the <strong>PrivilegesToDelete</strong> parameter is ignored.</td>
 </tr>
 <tr>
-<td><a href="sandbox_inert" title="#define SANDBOX_INERT 0x2 // Stores the TOKEN_SANDBOX_INERT flag in the token.">SANDBOX_INERT</a></td>
-<td>Stores the TOKEN_SANDBOX_INERT flag in the token.</td>
+  <td><a href="sandbox_inert" title="#define SANDBOX_INERT 0x2 // Stores the TOKEN_SANDBOX_INERT flag in the token.">SANDBOX_INERT</a></td>
+  <td>Stores the TOKEN_SANDBOX_INERT flag in the token.</td>
 </tr>
 </tbody>
 </table>
-<h3><code>SidsToDisable</code> [in, optional]</h3>
+
+<h3 id="sidstodisable-in-optional"><code>SidsToDisable</code> [in, optional]</h3>
+
 <p>Pointer to a <a href="token_groups" title="typedef struct _TOKEN_GROUPS {&#10;  ULONG              GroupCount;&#10;#if ...&#10;  SID_AND_ATTRIBUTES *Groups[];&#10;#else&#10;  SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];&#10;#endif&#10;} TOKEN_GROUPS, *PTOKEN_GROUPS;">TOKEN_GROUPS</a> structure containing an array of <a href="sid_and_attributes" title="typedef struct _SID_AND_ATTRIBUTES {&#10;#if ...&#10;  PISID Sid;&#10;#else&#10;  PSID  Sid;&#10;#endif&#10;  ULONG Attributes;&#10;} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;">SID_AND_ATTRIBUTES</a> structures that specify the deny-only SIDs in the restricted token. The system uses a deny-only <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> to deny access to a securable object. The absence of a deny-only <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> does not allow access.</p>
+
 <p>Disabling a <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> <em>turns on</em> SE_GROUP_USE_FOR_DENY_ONLY and <em>turns off</em> SE_GROUP_ENABLED and SE_GROUP_ENABLED_BY_DEFAULT. All other attributes are ignored.</p>
+
 <p>Deny-only attributes apply to any combination of an existing token's SIDs, including the user <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> and group SIDs that have the SE_GROUP_MANDATORY attribute. To get the SIDs associated with the existing token, call <strong><a href="sequeryinformationtoken" title="NTSTATUS SeQueryInformationToken(&#10;  [in]  PACCESS_TOKEN           Token,&#10;  [in]  TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;  [out] PVOID                   *TokenInformation&#10;);">SeQueryInformationToken</a></strong> with the TokenUser and TokenGroups flags. <strong>SeFilterToken</strong> ignores any SIDs in the array that are not also found in the existing token.</p>
+
 <p><strong>SeFilterToken</strong> ignores the <strong>Attributes</strong> members of the <a href="sid_and_attributes" title="typedef struct _SID_AND_ATTRIBUTES {&#10;#if ...&#10;  PISID Sid;&#10;#else&#10;  PSID  Sid;&#10;#endif&#10;  ULONG Attributes;&#10;} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;">SID_AND_ATTRIBUTES</a> structures.</p>
+
 <p>This parameter is optional and can be NULL.</p>
-<h3><code>PrivilegesToDelete</code> [in, optional]</h3>
+
+<h3 id="privilegestodelete-in-optional"><code>PrivilegesToDelete</code> [in, optional]</h3>
+
 <p>Pointer to a <a href="token_privileges" title="typedef struct _TOKEN_PRIVILEGES {&#10;  ULONG               PrivilegeCount;&#10;  LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];&#10;} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES;">TOKEN_PRIVILEGES</a> structure containing an array of <a href="luid_and_attributes" title="typedef struct _LUID_AND_ATTRIBUTES {&#10;  LUID  Luid;&#10;  ULONG Attributes;&#10;} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;">LUID_AND_ATTRIBUTES</a> structures that specify the privileges to delete in the restricted token.</p>
+
 <p>To get the privileges held by the existing token, call <strong><a href="sequeryinformationtoken" title="NTSTATUS SeQueryInformationToken(&#10;  [in]  PACCESS_TOKEN           Token,&#10;  [in]  TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;  [out] PVOID                   *TokenInformation&#10;);">SeQueryInformationToken</a></strong> with the TokenPrivileges flag. <strong>SeFilterToken</strong> ignores any privileges in the array that are not held by the existing token.</p>
+
 <p><strong>SeFilterToken</strong> ignores the <strong>Attributes</strong> members of the <a href="luid_and_attributes" title="typedef struct _LUID_AND_ATTRIBUTES {&#10;  LUID  Luid;&#10;  ULONG Attributes;&#10;} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;">LUID_AND_ATTRIBUTES</a> structures.</p>
+
 <p>This parameter is optional and can be NULL.</p>
-<h3><code>RestrictedSids</code> [in, optional]</h3>
+
+<h3 id="restrictedsids-in-optional"><code>RestrictedSids</code> [in, optional]</h3>
+
 <p>Pointer to a <a href="token_groups" title="typedef struct _TOKEN_GROUPS {&#10;  ULONG              GroupCount;&#10;#if ...&#10;  SID_AND_ATTRIBUTES *Groups[];&#10;#else&#10;  SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];&#10;#endif&#10;} TOKEN_GROUPS, *PTOKEN_GROUPS;">TOKEN_GROUPS</a> structure containing an array of <a href="sid_and_attributes" title="typedef struct _SID_AND_ATTRIBUTES {&#10;#if ...&#10;  PISID Sid;&#10;#else&#10;  PSID  Sid;&#10;#endif&#10;  ULONG Attributes;&#10;} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;">SID_AND_ATTRIBUTES</a> structures that specify a list of restricting SIDs for the new token. If the existing token is a restricted token, the list of restricting SIDs for the new token is the intersection of this array and the list of restricting SIDs for the existing token.</p>
+
 <p>The <strong>Attributes</strong> members of the <a href="sid_and_attributes" title="typedef struct _SID_AND_ATTRIBUTES {&#10;#if ...&#10;  PISID Sid;&#10;#else&#10;  PSID  Sid;&#10;#endif&#10;  ULONG Attributes;&#10;} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;">SID_AND_ATTRIBUTES</a> structures must be zero. Restricting SIDs are always enabled for access checks.</p>
+
 <p>This parameter is optional and can be NULL.</p>
-<h3><code>FilteredToken</code></h3>
+
+<h3 id="filteredtoken"><code>FilteredToken</code></h3>
+
 <p>Pointer to a caller-allocated variable that receives the address of the new restricted token. The new token is the same type, primary or impersonation, as the existing token.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>If one or more of the parameter values were invalid, <strong>SeFilterToken</strong> returns STATUS_INVALID_PARAMETER. (This value is returned if the target token is not an impersonation token.) Otherwise, <strong>SeFilterToken</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p><strong>SeFilterToken</strong> can restrict the token in the following ways:</p>
+
 <ul>
-<li>
-<p>Apply the deny-only attribute to SIDs in the token so they cannot be used to access secured objects. For more information about the deny-only attribute, see <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> Attributes in an Access Token in the Microsoft Windows SDK documentation.</p>
-</li>
-<li>
-<p>Remove privileges from the token.</p>
-</li>
-<li>
-<p>Specify a list of restricting SIDs, which the system uses when it checks the token's access to a securable object. The system performs two access checks: one using the token's enabled SIDs, and another using the list of restricting SIDs. Access is granted only if both access checks allow the requested access rights.</p>
-</li>
+<li><p>Apply the deny-only attribute to SIDs in the token so they cannot be used to access secured objects. For more information about the deny-only attribute, see <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> Attributes in an Access Token in the Microsoft Windows SDK documentation.</p></li>
+<li><p>Remove privileges from the token.</p></li>
+<li><p>Specify a list of restricting SIDs, which the system uses when it checks the token's access to a securable object. The system performs two access checks: one using the token's enabled SIDs, and another using the list of restricting SIDs. Access is granted only if both access checks allow the requested access rights.</p></li>
 </ul>
+
 <p>The restricted token can be used together with <strong><a href="secreateclientsecurity" title="NTSTATUS SeCreateClientSecurity(&#10;  [in]  PETHREAD                     ClientThread,&#10;  [in]  PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,&#10;        BOOLEAN                      RemoteSession,&#10;  [out] PSECURITY_CLIENT_CONTEXT     ClientContext&#10;);">SeCreateClientSecurity</a></strong> and <strong><a href="seimpersonateclientex" title="NTSTATUS SeImpersonateClientEx(&#10;  [in]           PSECURITY_CLIENT_CONTEXT ClientContext,&#10;  [in, optional] PETHREAD                 ServerThread&#10;);">SeImpersonateClientEx</a></strong> to create a process that has restricted access rights and privileges.</p>
+
 <p>For more information about security and access control, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/driversecurity/windows-security-model">Windows security model for driver developers</a> and the documentation on these topics in the Windows SDK.</p>
+
 <p>When the token returned in <strong>NewToken</strong> is no longer needed, free it by calling <strong><a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a></strong>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><strong><a href="luid_and_attributes" title="typedef struct _LUID_AND_ATTRIBUTES {&#10;  LUID  Luid;&#10;  ULONG Attributes;&#10;} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;">LUID_AND_ATTRIBUTES</a></strong></p>
+
 <p><strong><a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a></strong></p>
+
 <p><strong><a href="obreferenceobjectbyhandle" title="NTSTATUS ObReferenceObjectByHandle(&#10;  [in]            HANDLE                     Handle,&#10;  [in]            ACCESS_MASK                DesiredAccess,&#10;  [in, optional]  POBJECT_TYPE               ObjectType,&#10;  [in]            KPROCESSOR_MODE            AccessMode,&#10;  [out]           PVOID                      *Object,&#10;  [out, optional] POBJECT_HANDLE_INFORMATION HandleInformation&#10;);">ObReferenceObjectByHandle</a></strong></p>
+
 <p><strong><a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a></strong></p>
+
 <p><strong><a href="sid_and_attributes" title="typedef struct _SID_AND_ATTRIBUTES {&#10;#if ...&#10;  PISID Sid;&#10;#else&#10;  PSID  Sid;&#10;#endif&#10;  ULONG Attributes;&#10;} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;">SID_AND_ATTRIBUTES</a></strong></p>
+
 <p><strong><a href="secreateclientsecurity" title="NTSTATUS SeCreateClientSecurity(&#10;  [in]  PETHREAD                     ClientThread,&#10;  [in]  PSECURITY_QUALITY_OF_SERVICE ClientSecurityQos,&#10;        BOOLEAN                      RemoteSession,&#10;  [out] PSECURITY_CLIENT_CONTEXT     ClientContext&#10;);">SeCreateClientSecurity</a></strong></p>
+
 <p><strong><a href="seimpersonateclientex" title="NTSTATUS SeImpersonateClientEx(&#10;  [in]           PSECURITY_CLIENT_CONTEXT ClientContext,&#10;  [in, optional] PETHREAD                 ServerThread&#10;);">SeImpersonateClientEx</a></strong></p>
+
 <p><strong><a href="sequeryinformationtoken" title="NTSTATUS SeQueryInformationToken(&#10;  [in]  PACCESS_TOKEN           Token,&#10;  [in]  TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;  [out] PVOID                   *TokenInformation&#10;);">SeQueryInformationToken</a></strong></p>
+
 <p><strong><a href="setokenisrestricted" title="BOOLEAN SeTokenIsRestricted(&#10;  [in] PACCESS_TOKEN Token&#10;);">SeTokenIsRestricted</a></strong></p>
+
 <p><strong><a href="token_groups" title="typedef struct _TOKEN_GROUPS {&#10;  ULONG              GroupCount;&#10;#if ...&#10;  SID_AND_ATTRIBUTES *Groups[];&#10;#else&#10;  SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];&#10;#endif&#10;} TOKEN_GROUPS, *PTOKEN_GROUPS;">TOKEN_GROUPS</a></strong></p>
+
 <p><strong><a href="token_privileges" title="typedef struct _TOKEN_PRIVILEGES {&#10;  ULONG               PrivilegeCount;&#10;  LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];&#10;} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES;">TOKEN_PRIVILEGES</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -64,76 +64,110 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfrequest-wdfrequestcomplete)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>WdfRequestComplete function</h1>
-<h2>Description</h2>
+<h1 id="wdfrequestcomplete-function">WdfRequestComplete function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>[Applies to KMDF and UMDF]</p>
+
 <p>The <strong>WdfRequestComplete</strong> method completes a specified I/O request and supplies a completion status.</p>
-<h2>Parameters</h2>
-<h3><code>Request</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="request-in"><code>Request</code> [in]</h3>
+
 <p>A handle to the framework request object that represents the I/O request that is being completed.</p>
-<h3><code>Status</code> [in]</h3>
+
+<h3 id="status-in"><code>Status</code> [in]</h3>
+
 <p>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS value</a> that represents the completion status of the request. Valid status values include, but are not limited to, the following:</p>
-<h4><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></h4>
+
+<h4 id="status_success"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></h4>
+
 <p>The driver is successfully completing the request.</p>
-<h4>STATUS_CANCELLED</h4>
+
+<h4 id="status_cancelled">STATUS_CANCELLED</h4>
+
 <p>The driver is canceling the request.</p>
-<h4>STATUS_UNSUCCESSFUL</h4>
+
+<h4 id="status_unsuccessful">STATUS_UNSUCCESSFUL</h4>
+
 <p>The driver has encountered an error while processing the request.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
+
 <p>After a driver calls <strong>WdfRequestComplete</strong>, higher-level drivers on the driver stack can call <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a> to obtain the completion status value that was specified for the <em>Status</em> parameter. Typically, drivers call <strong><a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a></strong> from within a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function.</p>
+
 <p>After a call to <strong>WdfRequestComplete</strong> returns, the request handle is no longer valid unless the driver has called <a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a> to add one or more additional reference counts to the request object. Note that after <strong>WdfRequestComplete</strong> returns, the driver must not attempt to access the associated WDM <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> structure, even if it has called <strong><a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a></strong>. This requirement extends to accessing the associated WDM <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> structure by calling methods on the WDFREQUEST, like <strong><a href="wdfrequestretrieveoutputbuffer" title="NTSTATUS WdfRequestRetrieveOutputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;  [in]            size_t     MinimumRequiredSize,&#10;  [out]           PVOID      *Buffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveOutputBuffer</a></strong> or <strong><a href="wdfrequestretrieveinputbuffer" title="NTSTATUS WdfRequestRetrieveInputBuffer(&#10;  [in]            WDFREQUEST Request,&#10;                  size_t     MinimumRequiredLength,&#10;  [out]           PVOID      *Buffer,&#10;  [out, optional] size_t     *Length&#10;);">WdfRequestRetrieveInputBuffer</a></strong>.</p>
+
 <p>After a driver calls <strong>WdfRequestComplete</strong>, the framework calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_cleanup">EvtCleanupCallback</a> function for the request, if the driver has supplied one.</p>
+
 <p>Instead of calling <strong>WdfRequestComplete</strong>, the driver can call <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a> or <a href="wdfrequestcompletewithpriorityboost" title="VOID WdfRequestCompleteWithPriorityBoost(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] CCHAR      PriorityBoost&#10;);">WdfRequestCompleteWithPriorityBoost</a>. See the Remarks of <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a> for more information.</p>
+
 <p>When your driver calls <strong>WdfRequestComplete</strong>, the framework supplies a default value that the system uses to boost the run-time priority of the thread that requested the I/O operation. For information about default priority boost values, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/specifying-priority-boosts-when-completing-i-o-requests">Specifying Priority Boosts When Completing I/O Requests</a>. Your driver can call <a href="wdfrequestcompletewithpriorityboost" title="VOID WdfRequestCompleteWithPriorityBoost(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] CCHAR      PriorityBoost&#10;);">WdfRequestCompleteWithPriorityBoost</a> to override the default priority boost value.</p>
+
 <p>For more information about calling <strong>WdfRequestComplete</strong>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-i-o-requests">Completing I/O Requests</a>.</p>
-<h4>Examples</h4>
+
+<h4 id="examples">Examples</h4>
+
 <p>The following code example is a section of a request handler. The request handler accepts only read and write requests, and it completes each request with an error status if the request type is not read or write.</p>
-<pre lang="cpp"><code>VOID
-MyEvtIoDefault(
-    IN WDFQUEUE  Queue,
-    IN WDFREQUEST  Request
-    )
-{
-    <a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
-    <a href="wdf_dma_direction" title="typedef enum _WDF_DMA_DIRECTION {&#10;  WdfDmaDirectionReadFromDevice = FALSE,&#10;  WdfDmaDirectionWriteToDevice = TRUE&#10;} WDF_DMA_DIRECTION;">WDF_DMA_DIRECTION</a>  direction;
 
-...
-    <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="nf">MyEvtIoDefault</span><span class="p">(</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFQUEUE</span><span class="w">  </span><span class="n">Queue</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">Request</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a></span><span class="w">  </span><span class="n">params</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="wdf_dma_direction" title="typedef enum _WDF_DMA_DIRECTION {&#10;  WdfDmaDirectionReadFromDevice = FALSE,&#10;  WdfDmaDirectionWriteToDevice = TRUE&#10;} WDF_DMA_DIRECTION;">WDF_DMA_DIRECTION</a></span><span class="w">  </span><span class="n">direction</span><span class="p">;</span>
 
-    <a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a>(
-                            Request,
-                            &amp;params
-                            );
+<span class="p">...</span>
+<span class="w">    </span><span class="n"><a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">params</span><span class="p">);</span>
 
-    //
-    // Validate and gather parameters.
-    //
-    switch (params.Type) {
-        case WdfRequestTypeRead:
-            length = params.Parameters.Read.Length;
-            direction = WdfDmaDirectionReadFromDevice;
-            break;
-        case WdfRequestTypeWrite:
-            length = params.Parameters.Write.Length;
-            direction = WdfDmaDirectionWriteToDevice;
-            break;
-        default:
-            WdfRequestComplete(
-                               Request,
-                               STATUS_INVALID_DEVICE_REQUEST
-                               );
-            return;
-    }
-...
-}
+<span class="w">    </span><span class="n"><a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a></span><span class="p">(</span>
+<span class="w">                            </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                            </span><span class="o">&amp;</span><span class="n">params</span>
+<span class="w">                            </span><span class="p">);</span>
+
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Validate and gather parameters.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">params</span><span class="p">.</span><span class="n">Type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">WdfRequestTypeRead</span><span class="p">:</span>
+<span class="w">            </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">Read</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span>
+<span class="w">            </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDmaDirectionReadFromDevice</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">WdfRequestTypeWrite</span><span class="p">:</span>
+<span class="w">            </span><span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">params</span><span class="p">.</span><span class="n">Parameters</span><span class="p">.</span><span class="n">Write</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span>
+<span class="w">            </span><span class="n">direction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDmaDirectionWriteToDevice</span><span class="p">;</span>
+<span class="w">            </span><span class="k">break</span><span class="p">;</span>
+<span class="w">        </span><span class="k">default</span><span class="o">:</span>
+<span class="w">            </span><span class="n">WdfRequestComplete</span><span class="p">(</span>
+<span class="w">                               </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">                               </span><span class="n">STATUS_INVALID_DEVICE_REQUEST</span>
+<span class="w">                               </span><span class="p">);</span>
+<span class="w">            </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">...</span>
+<span class="p">}</span>
 </code></pre>
-<h2>See also</h2>
+</div>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a></p>
+
 <p><a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a></p>
+
 <p><a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a></p>
+
 <p><a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a></p>
+
 <p><a href="wdfrequestcompletewithpriorityboost" title="VOID WdfRequestCompleteWithPriorityBoost(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] CCHAR      PriorityBoost&#10;);">WdfRequestCompleteWithPriorityBoost</a></p>
+
 <p><a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a></p>
 <hr>
 <div class="ntdoc-description-links">

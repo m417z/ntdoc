@@ -68,30 +68,51 @@
 <h1>Windows Driver Kit DDI reference (nc-wdm-pclfs_client_advance_tail_callback)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>PCLFS_CLIENT_ADVANCE_TAIL_CALLBACK callback function</h1>
-<h2>Description</h2>
+<h1 id="pclfs_client_advance_tail_callback-callback-function">PCLFS_CLIENT_ADVANCE_TAIL_CALLBACK callback function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <em>ClfsAdvanceTailCallback</em> function advances the base log sequence number (LSN) of the client's log.</p>
-<h2>Parameters</h2>
-<h3><code>LogFile</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="logfile-in"><code>LogFile</code> [in]</h3>
+
 <p>A pointer to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_file_object">LOG_FILE_OBJECT</a> structure that represents the CLFS log stream whose tail should be advanced.</p>
-<h3><code>TargetLsn</code> [in]</h3>
+
+<h3 id="targetlsn-in"><code>TargetLsn</code> [in]</h3>
+
 <p>A pointer to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/ns-wdm-_cls_lsn">CLFS_LSN</a> structure that contains the LSN that the client should advance its tail to or beyond.</p>
-<h3><code>ClientData</code> [in]</h3>
+
+<h3 id="clientdata-in"><code>ClientData</code> [in]</h3>
+
 <p>A pointer to client-supplied information. You specify this data in the <strong>AdvanceTailCallbackData</strong> member of the <a href="clfs_mgmt_client_registration" title="typedef struct _CLFS_MGMT_CLIENT_REGISTRATION {&#10;  ULONG                                      Version;&#10;  PCLFS_CLIENT_ADVANCE_TAIL_CALLBACK         AdvanceTailCallback;&#10;  PVOID                                      AdvanceTailCallbackData;&#10;  PCLFS_CLIENT_LFF_HANDLER_COMPLETE_CALLBACK LogGrowthCompleteCallback;&#10;  PVOID                                      LogGrowthCompleteCallbackData;&#10;  PCLFS_CLIENT_LOG_UNPINNED_CALLBACK         LogUnpinnedCallback;&#10;  PVOID                                      LogUnpinnedCallbackData;&#10;} CLFS_MGMT_CLIENT_REGISTRATION, *PCLFS_MGMT_CLIENT_REGISTRATION;">CLFS_MGMT_CLIENT_REGISTRATION</a> structure.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>The <em>ClfsAdvanceTailCallback</em> function should return either STATUS_PENDING or an error status. A return value of STATUS_PENDING indicates that the request to move the client's log tail will be completed asynchronously. The <strong>ClfsMgmtAdvanceTailCallback</strong> function must not return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, even if it completes synchronously.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The <em>ClfsAdvanceTailCallback</em> function is called when CLFS management requests that the client advance its log tail.</p>
+
 <p>The <em>ClfsAdvanceTailCallback</em> function must only perform a minimal amount of processing before returning. For example, the <em>ClfsAdvanceTailCallback</em> function might follow this procedure:</p>
+
 <ol>
 <li>If the request cannot be processed, return an error status.</li>
 <li>If the request can be processed, create and queue a work item to perform the actions that are required to move the client's tail, and then return STATUS_PENDING. For more information on queuing a worker thread, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/system-worker-threads">System Worker Threads</a>.</li>
 </ol>
+
 <p>When a client calls the <a href="clfsmgmtregistermanagedclient" title="CLFSUSER_API NTSTATUS ClfsMgmtRegisterManagedClient(&#10;  [in] PLOG_FILE_OBJECT               LogFile,&#10;  [in] PCLFS_MGMT_CLIENT_REGISTRATION RegistrationData,&#10;       PCLFS_MGMT_CLIENT              ClientCookie&#10;);">ClfsMgmtRegisterManagedClient</a> routine to register with CLFS management, the client provides both a pointer to the <em>ClfsAdvanceTailCallback</em> function and the custom data that will be passed as a parameter to the <em>ClfsAdvanceTailCallback</em> function when this function is called.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="clfs_mgmt_client_registration" title="typedef struct _CLFS_MGMT_CLIENT_REGISTRATION {&#10;  ULONG                                      Version;&#10;  PCLFS_CLIENT_ADVANCE_TAIL_CALLBACK         AdvanceTailCallback;&#10;  PVOID                                      AdvanceTailCallbackData;&#10;  PCLFS_CLIENT_LFF_HANDLER_COMPLETE_CALLBACK LogGrowthCompleteCallback;&#10;  PVOID                                      LogGrowthCompleteCallbackData;&#10;  PCLFS_CLIENT_LOG_UNPINNED_CALLBACK         LogUnpinnedCallback;&#10;  PVOID                                      LogUnpinnedCallbackData;&#10;} CLFS_MGMT_CLIENT_REGISTRATION, *PCLFS_MGMT_CLIENT_REGISTRATION;">CLFS_MGMT_CLIENT_REGISTRATION</a></p>
+
 <p><a href="clfsadvancelogbase" title="CLFSUSER_API NTSTATUS ClfsAdvanceLogBase(&#10;  [in, out] PVOID     pvMarshalContext,&#10;  [in]      PCLFS_LSN plsnBase,&#10;  [in]      ULONG     fFlags&#10;);">ClfsAdvanceLogBase</a></p>
+
 <p><a href="clfsmgmtregistermanagedclient" title="CLFSUSER_API NTSTATUS ClfsMgmtRegisterManagedClient(&#10;  [in] PLOG_FILE_OBJECT               LogFile,&#10;  [in] PCLFS_MGMT_CLIENT_REGISTRATION RegistrationData,&#10;       PCLFS_MGMT_CLIENT              ClientCookie&#10;);">ClfsMgmtRegisterManagedClient</a></p>
+
 <p><a href="clfsmgmttailadvancefailure" title="CLFSUSER_API NTSTATUS ClfsMgmtTailAdvanceFailure(&#10;  [in] CLFS_MGMT_CLIENT Client,&#10;  [in] NTSTATUS         Reason&#10;);">ClfsMgmtTailAdvanceFailure</a></p>
 <hr>
 <div class="ntdoc-description-links">

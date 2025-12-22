@@ -65,50 +65,67 @@
 <h1>Windows Driver Kit DDI reference (nf-mbbcx-mbbdevicereceivedeviceservicesessiondata)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>MbbDeviceReceiveDeviceServiceSessionData function</h1>
-<h2>Description</h2>
+<h1 id="mbbdevicereceivedeviceservicesessiondata-function">MbbDeviceReceiveDeviceServiceSessionData function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>Client drivers call the <strong>MbbDeviceReceiveServiceSessionData</strong> method to pass received device service session data up to an application through the MBBCx framework.</p>
-<h2>Parameters</h2>
-<h3><code>Device</code></h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="device"><code>Device</code></h3>
+
 <p>A handle to a framework device object the client driver obtained from a previous call to <strong><a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a></strong>.</p>
-<h3><code>SessionId</code></h3>
+
+<h3 id="sessionid"><code>SessionId</code></h3>
+
 <p>The ID of the device service session obtained from a previous call to <strong><a href="mbbadaptergetsessionid" title="ULONG MbbAdapterGetSessionId(&#10;  NETADAPTER Adapter&#10;);">MbbAdapterGetSessionId</a></strong>.</p>
-<h3><code>Data</code></h3>
+
+<h3 id="data"><code>Data</code></h3>
+
 <p>A driver-allocated WDFMEMORY object containing the data to pass to the application.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/netcx/writing-an-mbbcx-client-driver#handling-device-service-sessions">Handling device service sessions</a>.</p>
-<h3>Example</h3>
+
+<h3 id="example">Example</h3>
+
 <p>The following example shows how a client driver might pass received DSS data to the framework's DSS receive handler.</p>
-<pre lang="C++"><code>VOID
-MyReceiveDssData(
-    _In_ PMY_DEVICE_CONTEXT DeviceContext,
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SessionId,
-    _In_ PUCHAR InBuffer,
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> InBufferSize
-)
-{
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-    WDFMEMORY data;
 
-    // Allocate the WDFMEMORY object from the received data buffer
-    status = WdfMemoryAllocatePreallocated(WDF_NO_OBJECT_ATTRIBUTES,
-                                            InBuffer,
-                                            InBufferSize,
-                                            &amp;data);
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="nf">MyReceiveDssData</span><span class="p">(</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">PMY_DEVICE_CONTEXT</span><span class="w"> </span><span class="n">DeviceContext</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">SessionId</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">PUCHAR</span><span class="w"> </span><span class="n">InBuffer</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">InBufferSize</span>
+<span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
+<span class="w">    </span><span class="n">WDFMEMORY</span><span class="w"> </span><span class="n">data</span><span class="p">;</span>
 
-    // Pass the received data to the framework
-    if(<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
-    {
-        DeviceContext-&gt;DSSPacketsReceivedCount++;
+<span class="w">    </span><span class="c1">// Allocate the WDFMEMORY object from the received data buffer</span>
+<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfMemoryAllocatePreallocated</span><span class="p">(</span><span class="n">WDF_NO_OBJECT_ATTRIBUTES</span><span class="p">,</span>
+<span class="w">                                            </span><span class="n">InBuffer</span><span class="p">,</span>
+<span class="w">                                            </span><span class="n">InBufferSize</span><span class="p">,</span>
+<span class="w">                                            </span><span class="o">&amp;</span><span class="n">data</span><span class="p">);</span>
 
-        MbbDeviceReceiveServiceSessionData(DeviceContext-&gt;WdfDevice,
-                                            SessionId,
-                                            data);
-        <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(data);
-    }
-}
+<span class="w">    </span><span class="c1">// Pass the received data to the framework</span>
+<span class="w">    </span><span class="k">if</span><span class="p">(</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">DSSPacketsReceivedCount</span><span class="o">++</span><span class="p">;</span>
+
+<span class="w">        </span><span class="n">MbbDeviceReceiveServiceSessionData</span><span class="p">(</span><span class="n">DeviceContext</span><span class="o">-&gt;</span><span class="n">WdfDevice</span><span class="p">,</span>
+<span class="w">                                            </span><span class="n">SessionId</span><span class="p">,</span>
+<span class="w">                                            </span><span class="n">data</span><span class="p">);</span>
+<span class="w">        </span><span class="n"><a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a></span><span class="p">(</span><span class="n">data</span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
-<h2>See also</h2>
+</div>
+
+<h2 id="see-also">See also</h2>
 <hr>
 <div class="ntdoc-description-links">
 <p>

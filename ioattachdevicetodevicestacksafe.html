@@ -65,27 +65,48 @@
 <h1>Windows Driver Kit DDI reference (nf-ntddk-ioattachdevicetodevicestacksafe)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>IoAttachDeviceToDeviceStackSafe function</h1>
-<h2>Description</h2>
+<h1 id="ioattachdevicetodevicestacksafe-function">IoAttachDeviceToDeviceStackSafe function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>IoAttachDeviceToDeviceStackSafe</strong> routine attaches the caller's device object to the topmost device object in a driver stack.</p>
-<h2>Parameters</h2>
-<h3><code>SourceDevice</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="sourcedevice-in"><code>SourceDevice</code> [in]</h3>
+
 <p>Pointer to a caller-created device object.</p>
-<h3><code>TargetDevice</code> [in]</h3>
+
+<h3 id="targetdevice-in"><code>TargetDevice</code> [in]</h3>
+
 <p>Pointer to the device object in the stack to which the <em>SourceDevice</em> object is to be attached.</p>
-<h3><code>AttachedToDeviceObject</code> [out]</h3>
-<p>On input, this parameter specifies the address of <em>SourceDevice-&gt;DeviceExtension-&gt;AttachedToDeviceObject</em>, which must contain a <strong>NULL</strong> pointer. On output, this parameter receives a pointer to the device object to which the <em>SourceDevice</em> was attached.</p>
-<h2>Return value</h2>
+
+<h3 id="attachedtodeviceobject-out"><code>AttachedToDeviceObject</code> [out]</h3>
+
+<p>On input, this parameter specifies the address of <em>SourceDevice->DeviceExtension->AttachedToDeviceObject</em>, which must contain a <strong>NULL</strong> pointer. On output, this parameter receives a pointer to the device object to which the <em>SourceDevice</em> was attached.</p>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>IoAttachDeviceToDeviceStackSafe</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if <em>SourceDevice</em> is successfully attached above the <em>TargetDevice</em>; otherwise it returns STATUS_NO_SUCH_DEVICE.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>Like <a href="ioattachdevicetodevicestack" title="PDEVICE_OBJECT IoAttachDeviceToDeviceStack(&#10;  [in] PDEVICE_OBJECT SourceDevice,&#10;  [in] PDEVICE_OBJECT TargetDevice&#10;);">IoAttachDeviceToDeviceStack</a>, <strong>IoAttachDeviceToDeviceStackSafe</strong> establishes layering between drivers so that the same IRPs are sent to each driver in the stack. However, unlike <strong><a href="ioattachdevicetodevicestack" title="PDEVICE_OBJECT IoAttachDeviceToDeviceStack(&#10;  [in] PDEVICE_OBJECT SourceDevice,&#10;  [in] PDEVICE_OBJECT TargetDevice&#10;);">IoAttachDeviceToDeviceStack</a></strong>, <strong>IoAttachDeviceToDeviceStackSafe</strong> has an additional parameter, <em>AttachedToDeviceObject</em>, which the filter driver uses to pass the address of the <em>SourceDevice</em> object's AttachedToDeviceObject field. <strong>IoAttachDeviceToDeviceStackSafe</strong> updates this field while holding the I/O system database lock. Because it holds this lock, <strong>IoAttachDeviceToDeviceStackSafe</strong> avoids a race condition that could otherwise occur if the <em>SourceDevice</em> object received an <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> before its AttachedToDeviceObject field was updated.</p>
+
 <p>A file system filter driver calls <strong>IoAttachDeviceToDeviceStackSafe</strong> to attach its own filter device object (<em>SourceDevice</em>) above a device object (<em>TargetDevice</em>) belonging to a file system or another filter driver. Subsequent I/O requests sent to <em>AttachedToDeviceObject</em> are received first by the filter driver, which processes them and forwards them down to the next driver in the stack by calling <a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a>.</p>
+
 <p>If the device object specified by <em>TargetDevice</em> is currently at the top of the driver stack, the <em>SourceDevice</em> is attached directly to the <em>TargetDevice</em>. In this case, <em>TargetDevice</em> and the returned <em>AttachedToDeviceObject</em> pointer are equal.</p>
+
 <p>If one or more filter device objects are already attached above the <em>TargetDevice</em> in the driver stack, <strong>IoAttachDeviceToDeviceStackSafe</strong> attaches the <em>SourceDevice</em> to the topmost filter device object. A pointer to the latter is returned in <em>AttachedToDeviceObject</em>.</p>
+
 <p>At the moment immediately after it is attached to the top of the stack, the <em>SourceDevice</em> occupies the top of the driver stack. Note, however, that this does not necessarily mean that the <em>SourceDevice</em> will remain at the top of the driver stack. Other filters can attach their own filter device objects above the <em>SourceDevice</em> in the stack.</p>
+
 <p><strong>IoAttachDeviceToDeviceStackSafe</strong> sets the <strong>AlignmentRequirement</strong> member of the device object pointed to by <em>SourceDevice</em> to the value of the corresponding in the next-lower device object and sets the <strong>StackSize</strong> in <em>SourceDevice</em> to the value in the next-lower-object plus one.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="ioattachdevicetodevicestack" title="PDEVICE_OBJECT IoAttachDeviceToDeviceStack(&#10;  [in] PDEVICE_OBJECT SourceDevice,&#10;  [in] PDEVICE_OBJECT TargetDevice&#10;);">IoAttachDeviceToDeviceStack</a></p>
+
 <p><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></p>
 <hr>
 <div class="ntdoc-description-links">

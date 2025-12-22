@@ -66,68 +66,77 @@
 <h1>Windows Driver Kit DDI reference (nf-usermode_accessors-copytomodenontemporal)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2>Description</h2>
+<h2 id="description">Description</h2>
+
 <p>The <strong>CopyToModeNonTemporal</strong> function safely copies data from kernel memory to either kernel or user-mode memory using non-temporal instructions based on the specified processor mode.</p>
-<h2>Parameters</h2>
-<h3><code>Destination</code></h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="destination"><code>Destination</code></h3>
+
 <p>[out] A pointer to the memory location where the data will be copied.</p>
-<h3><code>Source</code></h3>
+
+<h3 id="source"><code>Source</code></h3>
+
 <p>[in] A pointer to the kernel memory location from which to copy the data.</p>
-<h3><code>Length</code></h3>
+
+<h3 id="length"><code>Length</code></h3>
+
 <p>[in] The number of bytes to copy.</p>
-<h3><code>Mode</code></h3>
+
+<h3 id="mode"><code>Mode</code></h3>
+
 <p>[in] The processor mode that determines how the memory access is performed. <strong>Mode</strong> can be one of the following values.</p>
+
 <table>
 <thead>
 <tr>
-<th>Value</th>
-<th>Meaning</th>
+  <th>Value</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>KernelMode</strong></td>
-<td><strong>Destination</strong> points to kernel-mode memory. The function performs a direct memory copy using non-temporal instructions with <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/standard-library/atomic-enums?view=msvc-170#memory_order_enum">memory_order_relaxed semantics</a>.</td>
+  <td><strong>KernelMode</strong></td>
+  <td><strong>Destination</strong> points to kernel-mode memory. The function performs a direct memory copy using non-temporal instructions with <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/standard-library/atomic-enums?view=msvc-170#memory_order_enum">memory_order_relaxed semantics</a>.</td>
 </tr>
 <tr>
-<td><strong>UserMode</strong></td>
-<td><strong>Destination</strong> points to user-mode memory. The function raises an exception if <strong>Destination</strong> doesn't point to user-mode memory; otherwise it performs a copy to the specified address using non-temporal instructions with <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/standard-library/atomic-enums?view=msvc-170#memory_order_enum">memory_order_relaxed semantics</a>.</td>
+  <td><strong>UserMode</strong></td>
+  <td><strong>Destination</strong> points to user-mode memory. The function raises an exception if <strong>Destination</strong> doesn't point to user-mode memory; otherwise it performs a copy to the specified address using non-temporal instructions with <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/standard-library/atomic-enums?view=msvc-170#memory_order_enum">memory_order_relaxed semantics</a>.</td>
 </tr>
 </tbody>
 </table>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>This function provides a safe way to copy data from kernel memory to either kernel or user-mode memory using non-temporal (streaming) instructions, with the copy mechanism determined by the specified processor mode. This allows for flexible memory operations that can adapt to different execution contexts while optimizing cache performance for large data transfers.</p>
+
 <p>When <strong>Mode</strong> is <strong>KernelMode</strong>:</p>
+
 <ul>
-<li>
-<p>The function performs a volatile copy using <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/standard-library/atomic-enums?view=msvc-170#memory_order_enum">memory_order_relaxed semantics</a> with non-temporal instructions.</p>
-</li>
-<li>
-<p>The function isn't recognized as a compiler intrinsic so the compiler will never optimize away the call (either entirely or replace the call with an equivalent sequence of instructions).</p>
-</li>
-<li>
-<p>When the call returns, the data has been copied from <strong>Source</strong> to <strong>Destination</strong>. This function's memory accesses to the <strong>Source</strong> and <strong>Destination</strong> will only be performed within the function (for example, the compiler can't move memory accesses out of this function).</p>
-</li>
-<li>
-<p>The function might perform unaligned memory accesses if the platform allows for it.</p>
-</li>
-<li>
-<p>The function might access memory locations more than once as part of its copy operation.</p>
-</li>
-<li>
-<p>The function doesn't support copy operations when <strong>Source</strong> and <strong>Destination</strong> overlap each other.</p>
-</li>
-<li>
-<p>The function uses non-temporal instructions that can improve performance for large data transfers by bypassing the processor cache, reducing cache pollution.</p>
-</li>
+<li><p>The function performs a volatile copy using <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/standard-library/atomic-enums?view=msvc-170#memory_order_enum">memory_order_relaxed semantics</a> with non-temporal instructions.</p></li>
+<li><p>The function isn't recognized as a compiler intrinsic so the compiler will never optimize away the call (either entirely or replace the call with an equivalent sequence of instructions).</p></li>
+<li><p>When the call returns, the data has been copied from <strong>Source</strong> to <strong>Destination</strong>. This function's memory accesses to the <strong>Source</strong> and <strong>Destination</strong> will only be performed within the function (for example, the compiler can't move memory accesses out of this function).</p></li>
+<li><p>The function might perform unaligned memory accesses if the platform allows for it.</p></li>
+<li><p>The function might access memory locations more than once as part of its copy operation.</p></li>
+<li><p>The function doesn't support copy operations when <strong>Source</strong> and <strong>Destination</strong> overlap each other.</p></li>
+<li><p>The function uses non-temporal instructions that can improve performance for large data transfers by bypassing the processor cache, reducing cache pollution.</p></li>
 </ul>
+
 <p>This function is particularly useful when copying large amounts of data that are unlikely to be accessed again soon, as it avoids evicting other useful data from the cache.</p>
+
 <p>If you are copying a fixed-sized structure, you should use <strong><a href="writestructtomode" title="void WriteStructToMode(&#10;  Destination,&#10;  Source,&#10;  Mode&#10;);">WriteStructToMode</a></strong> instead to avoid the risk of passing the wrong size.</p>
+
 <p>This function will never be optimized away by the compiler, nor will the compiler create additional accesses to this memory location before the function is called or after the function returns (unless the source code explicitly performs these accesses).</p>
+
 <p>This function works on all versions of Windows, not just the latest. You need to consume the latest WDK to get the function declaration from the <em>usermode_accessors.h</em> header. You also need the library (<em>umaccess.lib</em>) from the latest WDK. However, the resulting driver will run fine on older versions of Windows.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><strong><a href="copytomode" title="VOID CopyToMode(&#10;  VOID            *Destination,&#10;  const VOID      *Source,&#10;  SIZE_T          Length,&#10;  KPROCESSOR_MODE Mode&#10;);">CopyToMode</a></strong></p>
+
 <p><strong><a href="copytousernontemporal" title="VOID CopyToUserNonTemporal(&#10;  volatile VOID *Destination,&#10;  const VOID    *Source,&#10;  SIZE_T        Length&#10;);">CopyToUserNonTemporal</a></strong></p>
+
 <p><strong><a href="copyfrommodenontemporal" title="VOID CopyFromModeNonTemporal(&#10;  VOID            *Destination,&#10;  const VOID      *Source,&#10;  SIZE_T          Length,&#10;  KPROCESSOR_MODE Mode&#10;);">CopyFromModeNonTemporal</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

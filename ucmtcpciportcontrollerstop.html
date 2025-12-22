@@ -63,20 +63,34 @@
 <h1>Windows Driver Kit DDI reference (nf-ucmtcpciportcontroller-ucmtcpciportcontrollerstop)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>UcmTcpciPortControllerStop function</h1>
-<h2>Description</h2>
+<h1 id="ucmtcpciportcontrollerstop-function">UcmTcpciPortControllerStop function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>Indicates to the UcmTcpciCx class extension to stop sending hardware requests to the port controller object.</p>
-<h2>Parameters</h2>
-<h3><code>PortControllerObject</code></h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="portcontrollerobject"><code>PortControllerObject</code></h3>
+
 <p>Handle to the port controller object that the client driver received in the previous call to <a href="ucmtcpciportcontrollercreate" title="NTSTATUS UcmTcpciPortControllerCreate(&#10;  WDFDEVICE                        WdfDevice,&#10;  PUCMTCPCI_PORT_CONTROLLER_CONFIG Config,&#10;  PWDF_OBJECT_ATTRIBUTES           Attributes,&#10;  UCMTCPCIPORTCONTROLLER           *PortControllerObject&#10;);">UcmTcpciPortControllerCreate</a>.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>After calling <strong>UcmTcpciPortControllerStop</strong>, the client driver stops processing all requests on the port controller object. This call is synchronous, so it is guaranteed that the class extension will not invoke callback functions or send requests after it returns. The driver must not call this method within a port controller callback, or while any non-cancelable hardware requests are pending.</p>
+
 <p>A client driver calls this method from its <a href="evt_wdf_device_release_hardware" title="EVT_WDF_DEVICE_RELEASE_HARDWARE EvtWdfDeviceReleaseHardware;&#10;&#10;NTSTATUS EvtWdfDeviceReleaseHardware(&#10;  [in] WDFDEVICE Device,&#10;  [in] WDFCMRESLIST ResourcesTranslated&#10;)&#10;{...}">EVT_WDF_DEVICE_RELEASE_HARDWARE</a> callback implementation. After doing so, it should also call <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>, in case <em><a href="evt_wdf_device_release_hardware" title="EVT_WDF_DEVICE_RELEASE_HARDWARE EvtWdfDeviceReleaseHardware;&#10;&#10;NTSTATUS EvtWdfDeviceReleaseHardware(&#10;  [in] WDFDEVICE Device,&#10;  [in] WDFCMRESLIST ResourcesTranslated&#10;)&#10;{...}">EVT_WDF_DEVICE_RELEASE_HARDWARE</a></em> is invoked to resource rebalancing. Failure to do so causes the driver to leak objects associated with the port controller object when a resource rebalance occurs. Parenting the UCMPORTCONTROLLER handle to the WDFDEVICE handle is not sufficient, because a WDFDEVICE is not deleted across a resource rebalance.</p>
+
 <p>If the driver is transitioning to a Dx state due to S0-Idle, the driver must not call this method from its <a href="evt_wdf_device_d0_exit" title="EVT_WDF_DEVICE_D0_EXIT EvtWdfDeviceD0Exit;&#10;&#10;NTSTATUS EvtWdfDeviceD0Exit(&#10;  [in] WDFDEVICE Device,&#10;  [in] WDF_POWER_DEVICE_STATE TargetState&#10;)&#10;{...}">EVT_WDF_DEVICE_D0_EXIT</a> callback function. Synchronization with the driver's power state can be achieved by using a power-managed queue to receive hardware requests.</p>
+
 <p>It is safe to call <strong>UcmTcpciPortControllerStop</strong> on a port controller that has already been stopped. After this method returns, no other method except for <a href="ucmtcpciportcontrollerstart" title="NTSTATUS UcmTcpciPortControllerStart(&#10;  UCMTCPCIPORTCONTROLLER PortControllerObject&#10;);">UcmTcpciPortControllerStart</a> can be called on the port controller.</p>
+
 <p>The client driver must call this method if it needs to stop all actions on the port controller so that it can perform error recovery if it detected any issues during its operation. After the recovery process has been completed, the driver must restart the port controller.</p>
+
 <p>Stopping the controller ends any active PD contract and the Type-C connection.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="ucmtcpciportcontrollerstart" title="NTSTATUS UcmTcpciPortControllerStart(&#10;  UCMTCPCIPORTCONTROLLER PortControllerObject&#10;);">UcmTcpciPortControllerStart</a></p>
 <hr>
 <div class="ntdoc-description-links">

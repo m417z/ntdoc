@@ -65,136 +65,170 @@
 <h1>Windows Driver Kit DDI reference (nf-ndis-filter_synchronous_oid_request)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>FILTER_SYNCHRONOUS_OID_REQUEST function</h1>
-<h2>Description</h2>
+<h1 id="filter_synchronous_oid_request-function">FILTER_SYNCHRONOUS_OID_REQUEST function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>NDIS calls a filter driver's <em>FilterSynchronousOidRequest</em> function to preview a Synchronous OID request before the request is given to the underlying miniport driver.</p>
+
 <p>This function is supported in NDIS 6.81 and later.</p>
-<h2>Parameters</h2>
-<h3><code>FilterModuleContext</code></h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="filtermodulecontext"><code>FilterModuleContext</code></h3>
+
 <p>A handle to the context area for the filter module that is the target of this request. The filter driver created and initialized this context area in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_attach"><strong>FilterAttach</strong></a> function.</p>
-<h3><code>OidRequest</code> [in, out]</h3>
+
+<h3 id="oidrequest-in-out"><code>OidRequest</code> [in, out]</h3>
+
 <p>A pointer to an <strong><a href="ndis_oid_request" title="typedef struct _NDIS_OID_REQUEST {&#10;  NDIS_OBJECT_HEADER       Header;&#10;  NDIS_REQUEST_TYPE        RequestType;&#10;  NDIS_PORT_NUMBER         PortNumber;&#10;  UINT                     Timeout;&#10;  PVOID                    RequestId;&#10;  NDIS_HANDLE              RequestHandle;&#10;  union {&#10;    NDIS_OID Oid;&#10;    struct {&#10;      NDIS_OID Oid;&#10;      PVOID    InformationBuffer;&#10;      UINT     InformationBufferLength;&#10;      UINT     BytesWritten;&#10;      UINT     BytesNeeded;&#10;    } QUERY_INFORMATION;&#10;    struct {&#10;      NDIS_OID Oid;&#10;      PVOID    InformationBuffer;&#10;      UINT     InformationBufferLength;&#10;...">NDIS_OID_REQUEST</a></strong> structure that specifies the operation requested.</p>
-<h3><code>CallContext</code> [out]</h3>
+
+<h3 id="callcontext-out"><code>CallContext</code> [out]</h3>
+
 <p>A PVOID-sized storage slot for the filter driver to share state between its <em>FilterSynchronousOidRequest</em> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nf-ndis-filter_synchronous_oid_request_complete"><em>FilterSynchronousOidRequestComplete</em></a> handlers. NDIS guarantees this initially points to a zero value. See the Remarks section for more information.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>This function returns one of the following appropriate NDIS_STATUS codes:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>NDIS_STATUS_SUCCESS</td>
-<td>Allow the OID request to continue propagating down to the miniport driver. Filter drivers must return this status code for any unrecognized type of OID.</td>
+  <td>NDIS_STATUS_SUCCESS</td>
+  <td>Allow the OID request to continue propagating down to the miniport driver. Filter drivers must return this status code for any unrecognized type of OID.</td>
 </tr>
 <tr>
-<td>NDIS_STATUS_ALREADY_COMPLETE</td>
-<td>Stop propagating the OID request down, and instead return it to the caller with the status NDIS_STATUS_SUCCESS.</td>
+  <td>NDIS_STATUS_ALREADY_COMPLETE</td>
+  <td>Stop propagating the OID request down, and instead return it to the caller with the status NDIS_STATUS_SUCCESS.</td>
+</tr>
+<tr>
+  <td></td>
 </tr>
 </tbody>
 </table>
-<p>|</p>
+
 <ul>
 <li>NDIS_STATUS_BUFFER_TOO_SHORT</li>
 <li>NDIS_STATUS_INVALID_LENGTH</li>
 <li>NDIS_STATUS_INVALID_DATA</li>
 </ul>
+
 <p>| Same as <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_direct_oid_request"><em>FilterDirectOidRequest</em></a>. |
 | NDIS_STATUS_RESOURCES | Same as <em>FilterDirectOidRequest</em>, but with a caution that Synchronous OID requests must be completed quickly, and so filter drivers should typically avoid allocating resources. |
 | NDIS_STATUS_NOT_SUPPORTED | Filter drivers must not return this code simply because the OID is unrecognized. Filter drivers may only return this if the filter recognizes the operation but cannot perform it for some reason. |</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p><em>FilterSynchronousOidRequest</em> is an optional function. If a filter driver does not need to observe or modify Synchronous OID requests sent to the miniport driver, the filter driver should set the entry point for this function to <strong>NULL</strong> when it calls <strong><a href="ndisfregisterfilterdriver" title="NDIS_STATUS NdisFRegisterFilterDriver(&#10;  [in]  PDRIVER_OBJECT                      DriverObject,&#10;  [in]  NDIS_HANDLE                         FilterDriverContext,&#10;        PNDIS_FILTER_DRIVER_CHARACTERISTICS FilterDriverCharacteristics,&#10;  [out] PNDIS_HANDLE                        NdisFilterDriverHandle&#10;);">NdisFRegisterFilterDriver</a></strong>.</p>
+
 <p>NDIS calls the filter driver’s <em>FilterSynchronousOidRequest</em> function to process Synchronous OID requests that are originated by overlying drivers. Filter drivers can read or modify some fields in the <strong><a href="ndis_oid_request" title="typedef struct _NDIS_OID_REQUEST {&#10;  NDIS_OBJECT_HEADER       Header;&#10;  NDIS_REQUEST_TYPE        RequestType;&#10;  NDIS_PORT_NUMBER         PortNumber;&#10;  UINT                     Timeout;&#10;  PVOID                    RequestId;&#10;  NDIS_HANDLE              RequestHandle;&#10;  union {&#10;    NDIS_OID Oid;&#10;    struct {&#10;      NDIS_OID Oid;&#10;      PVOID    InformationBuffer;&#10;      UINT     InformationBufferLength;&#10;      UINT     BytesWritten;&#10;      UINT     BytesNeeded;&#10;    } QUERY_INFORMATION;&#10;    struct {&#10;      NDIS_OID Oid;&#10;      PVOID    InformationBuffer;&#10;      UINT     InformationBufferLength;&#10;...">NDIS_OID_REQUEST</a></strong> structure as follows:</p>
+
 <table>
 <thead>
 <tr>
-<th>Field</th>
-<th>Filter access</th>
+  <th>Field</th>
+  <th>Filter access</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Header</td>
-<td>Read-only</td>
+  <td>Header</td>
+  <td>Read-only</td>
 </tr>
 <tr>
-<td>RequestType</td>
-<td>Read/write</td>
+  <td>RequestType</td>
+  <td>Read/write</td>
 </tr>
 <tr>
-<td>PortNumber</td>
-<td>Read/write</td>
+  <td>PortNumber</td>
+  <td>Read/write</td>
 </tr>
 <tr>
-<td>Timeout</td>
-<td>Do not access</td>
+  <td>Timeout</td>
+  <td>Do not access</td>
 </tr>
 <tr>
-<td>RequestId</td>
-<td>Do not access</td>
+  <td>RequestId</td>
+  <td>Do not access</td>
 </tr>
 <tr>
-<td>RequestHandle</td>
-<td>Read/write</td>
+  <td>RequestHandle</td>
+  <td>Read/write</td>
 </tr>
 <tr>
-<td>DATA</td>
-<td>Read/write</td>
+  <td>DATA</td>
+  <td>Read/write</td>
 </tr>
 <tr>
-<td>NdisReserved</td>
-<td>Do not access</td>
+  <td>NdisReserved</td>
+  <td>Do not access</td>
 </tr>
 <tr>
-<td>MiniportReserved</td>
-<td>Do not access</td>
+  <td>MiniportReserved</td>
+  <td>Do not access</td>
 </tr>
 <tr>
-<td>SourceReserved</td>
-<td>Do not access</td>
+  <td>SourceReserved</td>
+  <td>Do not access</td>
 </tr>
 <tr>
-<td>SupportedRevision</td>
-<td>Read/write</td>
+  <td>SupportedRevision</td>
+  <td>Read/write</td>
 </tr>
 <tr>
-<td>Reserved1, Reserved2</td>
-<td>Do not access</td>
+  <td>Reserved1, Reserved2</td>
+  <td>Do not access</td>
 </tr>
 <tr>
-<td>SwitchId</td>
-<td>Read/write</td>
+  <td>SwitchId</td>
+  <td>Read/write</td>
 </tr>
 <tr>
-<td>VPortId</td>
-<td>Read/write</td>
+  <td>VPortId</td>
+  <td>Read/write</td>
 </tr>
 <tr>
-<td>Flags</td>
-<td>Read/write</td>
+  <td>Flags</td>
+  <td>Read/write</td>
 </tr>
 </tbody>
 </table>
+
 <p>In addition to modifying the <strong><a href="ndis_oid_request" title="typedef struct _NDIS_OID_REQUEST {&#10;  NDIS_OBJECT_HEADER       Header;&#10;  NDIS_REQUEST_TYPE        RequestType;&#10;  NDIS_PORT_NUMBER         PortNumber;&#10;  UINT                     Timeout;&#10;  PVOID                    RequestId;&#10;  NDIS_HANDLE              RequestHandle;&#10;  union {&#10;    NDIS_OID Oid;&#10;    struct {&#10;      NDIS_OID Oid;&#10;      PVOID    InformationBuffer;&#10;      UINT     InformationBufferLength;&#10;      UINT     BytesWritten;&#10;      UINT     BytesNeeded;&#10;    } QUERY_INFORMATION;&#10;    struct {&#10;      NDIS_OID Oid;&#10;      PVOID    InformationBuffer;&#10;      UINT     InformationBufferLength;&#10;...">NDIS_OID_REQUEST</a></strong> structure, filter drivers can control the request using the return code from <em>FilterSynchronousOidRequest</em>:</p>
+
 <ul>
 <li>NDIS_STATUS_SUCCESS: the OID continues to propagate down to the miniport driver.</li>
 <li>NDIS_STATUS_ALREADY_COMPLETE: the OID is immediately completed back to the overlying drivers, without first propagating down to the miniport driver. The OID request is completed to the overlying driver with NDIS_STATUS_SUCCESS.</li>
 <li>Any other status code: the OID is immediately completed back to the overlying drivers, without first propagating down to the miniport driver. The OID request is completed to the overlying driver with the status code returned by the filter driver.</li>
 </ul>
+
 <p>If the filter driver also registers a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nf-ndis-filter_synchronous_oid_request_complete"><em>FilterSynchronousOidRequestComplete</em></a> handler, NDIS guarantees that the <em>FilterSynchronousOidRequestComplete</em> handler will be called if and only if the <em>FilterSynchronousOidRequest</em> handler returns NDIS_STATUS_SUCCESS.</p>
-<p>The <em>FilterSynchronousOidRequest</em> handler can write any PVOID-sized value to <em>*CallContext</em>, and the same value will be returned to the filter driver’s <em>FilterSynchronousOidRequestComplete</em> handler when the OID request is completed. Filter driver can use this to carry state across the two handlers. Since the <em>FilterSynchronousOidRequestComplete</em> handler is only invoked if the <em>FilterSynchronousOidRequest</em> handler returns NDIS_STATUS_SUCCESS, there’s no reason to write a value to <em>*CallContext</em> when returning any other code. Likewise, there’s no reason to write a value to <em>*CallContext</em> if the filter driver does not provide a <em>FilterSynchronousOidRequestComplete</em> handler.</p>
+
+<p>The <em>FilterSynchronousOidRequest</em> handler can write any PVOID-sized value to _<em>CallContext_, and the same value will be returned to the filter driver’s *FilterSynchronousOidRequestComplete</em> handler when the OID request is completed. Filter driver can use this to carry state across the two handlers. Since the <em>FilterSynchronousOidRequestComplete</em> handler is only invoked if the <em>FilterSynchronousOidRequest</em> handler returns NDIS_STATUS_SUCCESS, there’s no reason to write a value to _<em>CallContext_ when returning any other code. Likewise, there’s no reason to write a value to _</em>CallContext_ if the filter driver does not provide a <em>FilterSynchronousOidRequestComplete</em> handler.</p>
+
 <p>Filter drivers must not return NDIS_STATUS_PENDING from a <em>FilterSynchronousOidRequest</em> handler. Synchronous OID requests cannot be pended or cancelled.</p>
+
 <p>Filter drivers are expected to return from their <em>FilterSynchronousOidRequest</em> handler quickly, without blocking, waiting, or sleeping. Synchronous OID requests are only used for low-latency operations, and filter drivers should strive to continue or complete them within several milliseconds.
 NDIS does not serialize Synchronous OID requests against each other, against other OID requests, or against <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_pause"><em>FilterPause</em></a>. It is the responsibility of the filter driver to implement any needed synchronization.</p>
+
 <p>NDIS does serialize Synchronous OID requests against <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-filter_detach"><em>FilterDetach</em></a>: NDIS guarantees that no Synchronous OID requests will be active once <em>FilterDetach</em> is invoked.</p>
+
 <p>Filter drivers must not call <strong><a href="ndisallocatecloneoidrequest" title="NDIS_STATUS NdisAllocateCloneOidRequest(&#10;  [in] IN NDIS_HANDLE        SourceHandle,&#10;       IN PNDIS_OID_REQUEST  OidRequest,&#10;  [in] IN UINT               PoolTag,&#10;       OUT PNDIS_OID_REQUEST *ClonedOidRequest&#10;);">NdisAllocateCloneOidRequest</a></strong> or <strong><a href="ndiscanceloidrequest" title="VOID NdisCancelOidRequest(&#10;  [in] NDIS_HANDLE NdisBindingHandle,&#10;  [in] PVOID       RequestId&#10;);">NdisCancelOidRequest</a></strong> on a Synchronous OID request. Filter drivers must not call <strong><a href="ndisfsynchronousoidrequest" title="NDIS_STATUS NdisFSynchronousOidRequest(&#10;  [in] NDIS_HANDLE      NdisFilterModuleHandle,&#10;  [in] NDIS_OID_REQUEST *OidRequest&#10;);">NdisFSynchronousOidRequest</a></strong> on an OID request that is received through a <em>FilterSynchronousOidRequest</em> handler.</p>
+
 <p>If a filter driver raises the IRQL in its <em>FilterSynchronousOidRequest</em> handler, it must restore the IRQL to its initial level before returning from its <em>FilterSynchronousOidRequest</em> handler.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nf-ndis-filter_synchronous_oid_request_complete"><em>FilterSynchronousOidRequestComplete</em></a></p>
+
 <p><strong><a href="ndisfsynchronousoidrequest" title="NDIS_STATUS NdisFSynchronousOidRequest(&#10;  [in] NDIS_HANDLE      NdisFilterModuleHandle,&#10;  [in] NDIS_OID_REQUEST *OidRequest&#10;);">NdisFSynchronousOidRequest</a></strong></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/network/synchronous-oid-request-interface-in-ndis-6-80">Synchronous OID Request Interface in NDIS 6.80</a></p>
 <hr>
 <div class="ntdoc-description-links">

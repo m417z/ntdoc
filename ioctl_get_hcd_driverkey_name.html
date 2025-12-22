@@ -67,129 +67,153 @@
 <h1>Windows Driver Kit DDI reference (ni-usbioctl-ioctl_get_hcd_driverkey_name)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>IOCTL_GET_HCD_DRIVERKEY_NAME IOCTL</h1>
-<h2>Description</h2>
+<h1 id="ioctl_get_hcd_driverkey_name-ioctl">IOCTL_GET_HCD_DRIVERKEY_NAME IOCTL</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> I/O control request retrieves the driver key name in the registry for a USB host controller driver.</p>
+
 <p><strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> is a user-mode I/O control request. This request targets the USB host controller (GUID_DEVINTERFACE_USB_HOST_CONTROLLER).</p>
-<h2>Parameters</h2>
-<h3>Major code</h3>
-<h3>Input buffer</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="major-code">Major code</h3>
+
+<h3 id="input-buffer">Input buffer</h3>
+
 <p>None.</p>
-<h3>Input buffer length</h3>
+
+<h3 id="input-buffer-length">Input buffer length</h3>
+
 <p>None.</p>
-<h3>Output buffer</h3>
+
+<h3 id="output-buffer">Output buffer</h3>
+
 <p>The <strong>AssociatedIrp.SystemBuffer</strong> member specifies the address of a caller-allocated buffer that contains a <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a> structure. On output, this structure holds the driver key name. For more information, see Remarks.</p>
-<h3>Output buffer length</h3>
+
+<h3 id="output-buffer-length">Output buffer length</h3>
+
 <p>The size of this buffer is specified in the <strong>Parameters.DeviceIoControl.OutputBufferLength</strong> member.</p>
-<h3>Input/output buffer</h3>
-<h3>Input/output buffer length</h3>
-<h3>Status block</h3>
-<p>The USB stack sets <strong>Irp-&gt;IoStatus.Status</strong> to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, the USB stack sets <strong>Status</strong> to the appropriate error condition, such as STATUS_INVALID_PARAMETER or STATUS_INSUFFICIENT_RESOURCES.</p>
-<h2>Remarks</h2>
+
+<h3 id="inputoutput-buffer">Input/output buffer</h3>
+
+<h3 id="inputoutput-buffer-length">Input/output buffer length</h3>
+
+<h3 id="status-block">Status block</h3>
+
+<p>The USB stack sets <strong>Irp->IoStatus.Status</strong> to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, the USB stack sets <strong>Status</strong> to the appropriate error condition, such as STATUS_INVALID_PARAMETER or STATUS_INSUFFICIENT_RESOURCES.</p>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>To get the driver key name in the registry, you must perform the following tasks:</p>
+
 <ol>
 <li>Declare a variable of the type <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a>.</li>
 <li>Send an <strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> request by specifying the address and size of the variable in the output parameters. On return, the <strong>ActualLength</strong> member of <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a> contains the length required to allocate a buffer to hold a <strong><a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a></strong> that is populated with the driver key name.</li>
 <li>Allocate memory for a buffer to hold a <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a> structure. The size of the buffer must be the received <strong>ActualLength</strong> value.</li>
 <li>Send an <strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> request by passing a pointer to the allocated buffer and its size in the output parameters. On return, the <strong>DriverKeyName</strong> member of <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a> is a null-terminated Unicode string that contains the name of the driver key associated with the host controller driver.</li>
 </ol>
+
 <p>The following example code shows how to send the <strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> I/O control request.</p>
-<pre lang="cpp"><code>
-/*++
 
-Routine Description:
+<div class="codehilite">
+<pre><span></span><code><span class="cm">/*++</span>
 
-This routine prints the name of the driver key associated with
-the specified host controller driver.
+<span class="cm">Routine Description:</span>
 
-Arguments:
+<span class="cm">This routine prints the name of the driver key associated with</span>
+<span class="cm">the specified host controller driver.</span>
 
-HCD - Handle for host controller driver.
+<span class="cm">Arguments:</span>
 
-Return Value: Boolean that indicates success or failure.
+<span class="cm">HCD - Handle for host controller driver.</span>
 
---*/
+<span class="cm">Return Value: Boolean that indicates success or failure.</span>
 
-BOOL GetHCDDriverKeyName (HANDLE  HCD)
-{
-    BOOL                    success;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                   nBytes;
-    <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a>  driverKeyName;
-    <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">PUSB_HCD_DRIVERKEY_NAME</a> driverKeyNameW;
+<span class="cm">--*/</span>
 
-    driverKeyNameW = NULL;
+<span class="n">BOOL</span><span class="w"> </span><span class="nf">GetHCDDriverKeyName</span><span class="w"> </span><span class="p">(</span><span class="n">HANDLE</span><span class="w">  </span><span class="n">HCD</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">BOOL</span><span class="w">                    </span><span class="n">success</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">                   </span><span class="n">nBytes</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a></span><span class="w">  </span><span class="n">driverKeyName</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">PUSB_HCD_DRIVERKEY_NAME</a></span><span class="w"> </span><span class="n">driverKeyNameW</span><span class="p">;</span>
 
-    // 1. Get the length of the name of the driver key.
-    success = DeviceIoControl(HCD,
-        IOCTL_GET_HCD_DRIVERKEY_NAME,
-        NULL,
-        0,
-        &amp;driverKeyName,
-        sizeof(driverKeyName),
-        &amp;nBytes,
-        NULL);
+<span class="w">    </span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
-    if (!success)
-    {
-        printf(&quot;First IOCTL_GET_HCD_DRIVERKEY_NAME request failed\n&quot;);
-        goto GetHCDDriverKeyNameDone;
-    }
+<span class="w">    </span><span class="c1">// 1. Get the length of the name of the driver key.</span>
+<span class="w">    </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DeviceIoControl</span><span class="p">(</span><span class="n">HCD</span><span class="p">,</span>
+<span class="w">        </span><span class="n">IOCTL_GET_HCD_DRIVERKEY_NAME</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">NULL</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">        </span><span class="o">&amp;</span><span class="n">driverKeyName</span><span class="p">,</span>
+<span class="w">        </span><span class="k">sizeof</span><span class="p">(</span><span class="n">driverKeyName</span><span class="p">),</span>
+<span class="w">        </span><span class="o">&amp;</span><span class="n">nBytes</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">NULL</span><span class="p">);</span>
 
-    //2. Get the length of the driver key name.
-    nBytes = driverKeyName.ActualLength;
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;First IOCTL_GET_HCD_DRIVERKEY_NAME request failed</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">GetHCDDriverKeyNameDone</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    if (nBytes &lt;= sizeof(driverKeyName))
-    {
-        printf(&quot;Incorrect length received by IOCTL_GET_HCD_DRIVERKEY_NAME.\n&quot;);
-        goto GetHCDDriverKeyNameDone;
-    }
+<span class="w">    </span><span class="c1">//2. Get the length of the driver key name.</span>
+<span class="w">    </span><span class="n">nBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">driverKeyName</span><span class="p">.</span><span class="n">ActualLength</span><span class="p">;</span>
 
-    // 3. Allocate memory for a <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a>
-    //    to hold the driver key name.
-    driverKeyNameW = (<a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">PUSB_HCD_DRIVERKEY_NAME</a>) malloc(nBytes);
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">nBytes</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">driverKeyName</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Incorrect length received by IOCTL_GET_HCD_DRIVERKEY_NAME.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">GetHCDDriverKeyNameDone</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    if (driverKeyNameW == NULL)
-    {
-        printf(&quot;Failed to allocate memory.\n&quot;);
-        goto GetHCDDriverKeyNameDone;
-    }
+<span class="w">    </span><span class="c1">// 3. Allocate memory for a <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a></span>
+<span class="w">    </span><span class="c1">//    to hold the driver key name.</span>
+<span class="w">    </span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">PUSB_HCD_DRIVERKEY_NAME</a></span><span class="p">)</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="n">nBytes</span><span class="p">);</span>
 
-    // Get the name of the driver key of the device attached to
-    // the specified port.
-    success = DeviceIoControl(HCD,
-        IOCTL_GET_HCD_DRIVERKEY_NAME,
-        NULL,
-        0,
-        driverKeyNameW,
-        nBytes,
-        &amp;nBytes,
-        NULL);
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Failed to allocate memory.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">GetHCDDriverKeyNameDone</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    if (!success)
-    {
-        printf(&quot;Second IOCTL_GET_HCD_DRIVERKEY_NAME request failed.\n&quot;);
-        goto GetHCDDriverKeyNameDone;
-    }
+<span class="w">    </span><span class="c1">// Get the name of the driver key of the device attached to</span>
+<span class="w">    </span><span class="c1">// the specified port.</span>
+<span class="w">    </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DeviceIoControl</span><span class="p">(</span><span class="n">HCD</span><span class="p">,</span>
+<span class="w">        </span><span class="n">IOCTL_GET_HCD_DRIVERKEY_NAME</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">NULL</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">        </span><span class="n">driverKeyNameW</span><span class="p">,</span>
+<span class="w">        </span><span class="n">nBytes</span><span class="p">,</span>
+<span class="w">        </span><span class="o">&amp;</span><span class="n">nBytes</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">NULL</span><span class="p">);</span>
 
-    // print the driver key name.
-    printf(&quot;Driver Key Name: %s.\n&quot;, driverKeyNameW-&gt;DriverKeyName);
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Second IOCTL_GET_HCD_DRIVERKEY_NAME request failed.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">GetHCDDriverKeyNameDone</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-GetHCDDriverKeyNameDone:
+<span class="w">    </span><span class="c1">// print the driver key name.</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Driver Key Name: %s.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">driverKeyNameW</span><span class="o">-&gt;</span><span class="n">DriverKeyName</span><span class="p">);</span>
 
-    // Cleanup.
-    // Free the allocated memory for <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a>.
+<span class="nl">GetHCDDriverKeyNameDone</span><span class="p">:</span>
 
-    if (driverKeyNameW != NULL)
-    {
-        free(driverKeyNameW);
-        driverKeyNameW = NULL;
-    }
+<span class="w">    </span><span class="c1">// Cleanup.</span>
+<span class="w">    </span><span class="c1">// Free the allocated memory for <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a>.</span>
 
-    return success;
-}
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">free</span><span class="p">(</span><span class="n">driverKeyNameW</span><span class="p">);</span>
+<span class="w">        </span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">success</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
-<h2>See also</h2>
+</div>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -204,127 +228,150 @@ GetHCDDriverKeyNameDone:
 </div>
 <div class="ntdoc-description">
 <h1>IOCTL_GET_HCD_DRIVERKEY_NAME IOCTL</h1>
+
 <h2>Description</h2>
+
 <p>The <strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> I/O control request retrieves the driver key name in the registry for a USB host controller driver.</p>
+
 <p><strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> is a user-mode I/O control request. This request targets the USB host controller (GUID_DEVINTERFACE_USB_HOST_CONTROLLER).</p>
+
 <h2>Parameters</h2>
+
 <h3>Input buffer</h3>
+
 <p>None.</p>
+
 <h3>Input buffer length</h3>
+
 <p>None.</p>
+
 <h3>Output buffer</h3>
+
 <p>The <strong>AssociatedIrp.SystemBuffer</strong> member specifies the address of a caller-allocated buffer that contains a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/content/usbioctl/ns-usbioctl-_usb_hcd_driverkey_name">USB_HCD_DRIVERKEY_NAME</a> structure. On output, this structure holds the driver key name. For more information, see Remarks.</p>
+
 <h3>Output buffer length</h3>
+
 <p>The size of this buffer is specified in the <strong>Parameters.DeviceIoControl.OutputBufferLength</strong> member.</p>
+
 <h3>Input/output buffer</h3>
+
 <h3>Input/output buffer length</h3>
+
 <h3>Status block</h3>
-<p>The USB stack sets <strong>Irp-&gt;IoStatus.Status</strong> to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, the USB stack sets <strong>Status</strong> to the appropriate error condition, such as STATUS_INVALID_PARAMETER or STATUS_INSUFFICIENT_RESOURCES.</p>
+
+<p>The USB stack sets <strong>Irp->IoStatus.Status</strong> to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful. Otherwise, the USB stack sets <strong>Status</strong> to the appropriate error condition, such as STATUS_INVALID_PARAMETER or STATUS_INSUFFICIENT_RESOURCES.</p>
+
 <h2>Remarks</h2>
+
 <p>To get the driver key name in the registry, you must perform the following tasks:</p>
+
 <ol>
 <li>Declare a variable of the type <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/content/usbioctl/ns-usbioctl-_usb_hcd_driverkey_name">USB_HCD_DRIVERKEY_NAME</a>.</li>
 <li>Send an <strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> request by specifying the address and size of the variable in the output parameters. On return, the <strong>ActualLength</strong> member of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/content/usbioctl/ns-usbioctl-_usb_hcd_driverkey_name">USB_HCD_DRIVERKEY_NAME</a> contains the length required to allocate a buffer to hold a <strong><a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a></strong> that is populated with the driver key name.</li>
 <li>Allocate memory for a buffer to hold a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/content/usbioctl/ns-usbioctl-_usb_hcd_driverkey_name">USB_HCD_DRIVERKEY_NAME</a> structure. The size of the buffer must be the received <strong>ActualLength</strong> value.</li>
 <li>Send an <strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> request by passing a pointer to the allocated buffer and its size in the output parameters. On return, the <strong>DriverKeyName</strong> member of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/content/usbioctl/ns-usbioctl-_usb_hcd_driverkey_name">USB_HCD_DRIVERKEY_NAME</a> is a null-terminated Unicode string that contains the name of the driver key associated with the host controller driver.</li>
 </ol>
+
 <p>The following example code shows how to send the <strong>IOCTL_GET_HCD_DRIVERKEY_NAME</strong> I/O control request.</p>
-<pre lang="cpp"><code>
-/*++
 
-Routine Description:
+<div class="codehilite">
+<pre><span></span><code><span class="cm">/*++</span>
 
-This routine prints the name of the driver key associated with
-the specified host controller driver.
+<span class="cm">Routine Description:</span>
 
-Arguments:
+<span class="cm">This routine prints the name of the driver key associated with</span>
+<span class="cm">the specified host controller driver.</span>
 
-HCD - Handle for host controller driver.
+<span class="cm">Arguments:</span>
 
-Return Value: Boolean that indicates success or failure.
+<span class="cm">HCD - Handle for host controller driver.</span>
 
---*/
+<span class="cm">Return Value: Boolean that indicates success or failure.</span>
 
-BOOL GetHCDDriverKeyName (HANDLE  HCD)
-{
-    BOOL                    success;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                   nBytes;
-    <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a>  driverKeyName;
-    <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">PUSB_HCD_DRIVERKEY_NAME</a> driverKeyNameW;
+<span class="cm">--*/</span>
 
-    driverKeyNameW = NULL;
+<span class="n">BOOL</span><span class="w"> </span><span class="nf">GetHCDDriverKeyName</span><span class="w"> </span><span class="p">(</span><span class="n">HANDLE</span><span class="w">  </span><span class="n">HCD</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">BOOL</span><span class="w">                    </span><span class="n">success</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">                   </span><span class="n">nBytes</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a></span><span class="w">  </span><span class="n">driverKeyName</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">PUSB_HCD_DRIVERKEY_NAME</a></span><span class="w"> </span><span class="n">driverKeyNameW</span><span class="p">;</span>
 
-    // 1. Get the length of the name of the driver key.
-    success = DeviceIoControl(HCD,
-        IOCTL_GET_HCD_DRIVERKEY_NAME,
-        NULL,
-        0,
-        &amp;driverKeyName,
-        sizeof(driverKeyName),
-        &amp;nBytes,
-        NULL);
+<span class="w">    </span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
-    if (!success)
-    {
-        printf(&quot;First IOCTL_GET_HCD_DRIVERKEY_NAME request failed\n&quot;);
-        goto GetHCDDriverKeyNameDone;
-    }
+<span class="w">    </span><span class="c1">// 1. Get the length of the name of the driver key.</span>
+<span class="w">    </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DeviceIoControl</span><span class="p">(</span><span class="n">HCD</span><span class="p">,</span>
+<span class="w">        </span><span class="n">IOCTL_GET_HCD_DRIVERKEY_NAME</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">NULL</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">        </span><span class="o">&amp;</span><span class="n">driverKeyName</span><span class="p">,</span>
+<span class="w">        </span><span class="k">sizeof</span><span class="p">(</span><span class="n">driverKeyName</span><span class="p">),</span>
+<span class="w">        </span><span class="o">&amp;</span><span class="n">nBytes</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">NULL</span><span class="p">);</span>
 
-    //2. Get the length of the driver key name.
-    nBytes = driverKeyName.ActualLength;
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;First IOCTL_GET_HCD_DRIVERKEY_NAME request failed</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">GetHCDDriverKeyNameDone</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    if (nBytes &lt;= sizeof(driverKeyName))
-    {
-        printf(&quot;Incorrect length received by IOCTL_GET_HCD_DRIVERKEY_NAME.\n&quot;);
-        goto GetHCDDriverKeyNameDone;
-    }
+<span class="w">    </span><span class="c1">//2. Get the length of the driver key name.</span>
+<span class="w">    </span><span class="n">nBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">driverKeyName</span><span class="p">.</span><span class="n">ActualLength</span><span class="p">;</span>
 
-    // 3. Allocate memory for a <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a>
-    //    to hold the driver key name.
-    driverKeyNameW = (<a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">PUSB_HCD_DRIVERKEY_NAME</a>) malloc(nBytes);
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">nBytes</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">driverKeyName</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Incorrect length received by IOCTL_GET_HCD_DRIVERKEY_NAME.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">GetHCDDriverKeyNameDone</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    if (driverKeyNameW == NULL)
-    {
-        printf(&quot;Failed to allocate memory.\n&quot;);
-        goto GetHCDDriverKeyNameDone;
-    }
+<span class="w">    </span><span class="c1">// 3. Allocate memory for a <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a></span>
+<span class="w">    </span><span class="c1">//    to hold the driver key name.</span>
+<span class="w">    </span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">PUSB_HCD_DRIVERKEY_NAME</a></span><span class="p">)</span><span class="w"> </span><span class="n">malloc</span><span class="p">(</span><span class="n">nBytes</span><span class="p">);</span>
 
-    // Get the name of the driver key of the device attached to
-    // the specified port.
-    success = DeviceIoControl(HCD,
-        IOCTL_GET_HCD_DRIVERKEY_NAME,
-        NULL,
-        0,
-        driverKeyNameW,
-        nBytes,
-        &amp;nBytes,
-        NULL);
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Failed to allocate memory.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">GetHCDDriverKeyNameDone</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-    if (!success)
-    {
-        printf(&quot;Second IOCTL_GET_HCD_DRIVERKEY_NAME request failed.\n&quot;);
-        goto GetHCDDriverKeyNameDone;
-    }
+<span class="w">    </span><span class="c1">// Get the name of the driver key of the device attached to</span>
+<span class="w">    </span><span class="c1">// the specified port.</span>
+<span class="w">    </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">DeviceIoControl</span><span class="p">(</span><span class="n">HCD</span><span class="p">,</span>
+<span class="w">        </span><span class="n">IOCTL_GET_HCD_DRIVERKEY_NAME</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">NULL</span><span class="p">,</span>
+<span class="w">        </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">        </span><span class="n">driverKeyNameW</span><span class="p">,</span>
+<span class="w">        </span><span class="n">nBytes</span><span class="p">,</span>
+<span class="w">        </span><span class="o">&amp;</span><span class="n">nBytes</span><span class="p">,</span>
+<span class="w">        </span><span class="nb">NULL</span><span class="p">);</span>
 
-    // print the driver key name.
-    printf(&quot;Driver Key Name: %s.\n&quot;, driverKeyNameW-&gt;DriverKeyName);
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">success</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Second IOCTL_GET_HCD_DRIVERKEY_NAME request failed.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">GetHCDDriverKeyNameDone</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-GetHCDDriverKeyNameDone:
+<span class="w">    </span><span class="c1">// print the driver key name.</span>
+<span class="w">    </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;Driver Key Name: %s.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">driverKeyNameW</span><span class="o">-&gt;</span><span class="n">DriverKeyName</span><span class="p">);</span>
 
-    // Cleanup.
-    // Free the allocated memory for <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a>.
+<span class="nl">GetHCDDriverKeyNameDone</span><span class="p">:</span>
 
-    if (driverKeyNameW != NULL)
-    {
-        free(driverKeyNameW);
-        driverKeyNameW = NULL;
-    }
+<span class="w">    </span><span class="c1">// Cleanup.</span>
+<span class="w">    </span><span class="c1">// Free the allocated memory for <a href="usb_hcd_driverkey_name" title="typedef struct _USB_HCD_DRIVERKEY_NAME {&#10;  ULONG ActualLength;&#10;  WCHAR DriverKeyName[1];&#10;} USB_HCD_DRIVERKEY_NAME, *PUSB_HCD_DRIVERKEY_NAME;">USB_HCD_DRIVERKEY_NAME</a>.</span>
 
-    return success;
-}
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">free</span><span class="p">(</span><span class="n">driverKeyNameW</span><span class="p">);</span>
+<span class="w">        </span><span class="n">driverKeyNameW</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">success</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <h2>See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/content/usbioctl/ns-usbioctl-_usb_hcd_driverkey_name">USB_HCD_DRIVERKEY_NAME</a></p>
 <hr>
 <div class="ntdoc-description-links">

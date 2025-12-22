@@ -66,63 +66,79 @@
 <h1>Windows Driver Kit DDI reference (nf-ntifs-fsrtlchangebackingfileobject)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>FsRtlChangeBackingFileObject function</h1>
-<h2>Description</h2>
+<h1 id="fsrtlchangebackingfileobject-function">FsRtlChangeBackingFileObject function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>FsRtlChangeBackingFileObject</strong> routine replaces the current file object with a new file object.</p>
-<h2>Parameters</h2>
-<h3><code>CurrentFileObject</code></h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="currentfileobject"><code>CurrentFileObject</code></h3>
+
 <p><strong>[in, optional]</strong> The current file object. If <strong>CurrentFileObject</strong> is <strong>NULL</strong>, the operating system's current file object is set to <strong>NewFileObject</strong>. If it is non-NULL, the backing file object is changed to <strong>NewFileObject</strong> only if the OS's current backing file object is equal to this value. If this file object does not belong to the stream, the operation fails.</p>
-<h3><code>NewFileObject</code></h3>
+
+<h3 id="newfileobject"><code>NewFileObject</code></h3>
+
 <p><strong>[in]</strong> The new file object that the OS will reference and store internally.</p>
-<h3><code>ChangeBackingType</code></h3>
+
+<h3 id="changebackingtype"><code>ChangeBackingType</code></h3>
+
 <p><strong>[in]</strong> An <a href="fsrtl_change_backing_type" title="typedef enum _FSRTL_CHANGE_BACKING_TYPE {&#10;  ChangeDataControlArea,&#10;  ChangeImageControlArea,&#10;  ChangeSharedCacheMap&#10;} FSRTL_CHANGE_BACKING_TYPE, *PFSRTL_CHANGE_BACKING_TYPE;">FSRTL_CHANGE_BACKING_TYPE</a> enumeration value that indicates which internal structure should be changed to reference <strong>NewFileObject</strong>.</p>
-<h3><code>Flags</code></h3>
+
+<h3 id="flags"><code>Flags</code></h3>
+
 <p><strong>[in]</strong> Reserved for future use.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>The <strong>FsRtlChangeBackingFileObject</strong> routine returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the operation succeeds. Otherwise, <strong>FsRtlChangeBackingFileObject</strong> returns the appropriate error code.The following table contains error codes that <strong>FsRtlChangeBackingFileObject</strong> might return.</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>STATUS_INVALID_PARAMETER_2</td>
-<td>The change operation failed because the file object that <strong>NewFileObject</strong> specifies does not represent the same stream as CurrentFileObject.</td>
+  <td>STATUS_INVALID_PARAMETER_2</td>
+  <td>The change operation failed because the file object that <strong>NewFileObject</strong> specifies does not represent the same stream as CurrentFileObject.</td>
 </tr>
 <tr>
-<td>STATUS_INVALID_PARAMETER_3</td>
-<td>The change operation failed because the caller specified an invalid backing type in <strong>ChangeBackingType</strong>.</td>
+  <td>STATUS_INVALID_PARAMETER_3</td>
+  <td>The change operation failed because the caller specified an invalid backing type in <strong>ChangeBackingType</strong>.</td>
 </tr>
 <tr>
-<td>STATUS_INVALID_PARAMETER_4</td>
-<td>The change operation failed because the caller specified an invalid value in <strong>Flags</strong>.</td>
+  <td>STATUS_INVALID_PARAMETER_4</td>
+  <td>The change operation failed because the caller specified an invalid value in <strong>Flags</strong>.</td>
 </tr>
 <tr>
-<td>STATUS_NOT_SUPPORTED</td>
-<td>The change operation failed because the caller obtained the file object in a way that does not allow subsequent swapping of the file object. For example, if the caller obtained the file object with a call to <strong><a href="ccgetfileobjectfromsectionptrs" title="PFILE_OBJECT CcGetFileObjectFromSectionPtrs(&#10;  [in] PSECTION_OBJECT_POINTERS SectionObjectPointer&#10;);">CcGetFileObjectFromSectionPtrs</a></strong>, it is not safe to swap the file object.</td>
+  <td>STATUS_NOT_SUPPORTED</td>
+  <td>The change operation failed because the caller obtained the file object in a way that does not allow subsequent swapping of the file object. For example, if the caller obtained the file object with a call to <strong><a href="ccgetfileobjectfromsectionptrs" title="PFILE_OBJECT CcGetFileObjectFromSectionPtrs(&#10;  [in] PSECTION_OBJECT_POINTERS SectionObjectPointer&#10;);">CcGetFileObjectFromSectionPtrs</a></strong>, it is not safe to swap the file object.</td>
 </tr>
 </tbody>
 </table>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The <strong>FsRtlChangeBackingFileObject</strong> routine changes the file object for one of the following:</p>
+
 <ul>
-<li>
-<p>One of the memory manager's image control areas for the stream</p>
-</li>
-<li>
-<p>The memory manager's data control area for the stream</p>
-</li>
-<li>
-<p>The cache manager's shared cache map for the stream</p>
-</li>
+<li><p>One of the memory manager's image control areas for the stream</p></li>
+<li><p>The memory manager's data control area for the stream</p></li>
+<li><p>The cache manager's shared cache map for the stream</p></li>
 </ul>
+
 <p>The <strong>FsRtlChangeBackingFileObject</strong> routine is not synchronous. It processes the request for a change of file object and returns immediately. The cache manager and the memory manager synchronize the change of the file object and will not free the old file object until all incomplete operations that are associated with the old file object have finished. A return status of <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> from <strong>FsRtlChangeBackingFileObject</strong> does not mean that the operating system has already changed the file object.</p>
+
 <p>However, after <strong>FsRtlChangeBackingFileObject</strong> runs successfully, the operating system associates all future operations with the new file object.</p>
+
 <p>To change the file object for more than one backing type, the caller must call <strong>FsRtlChangeBackingFileObject</strong> multiple times, one time for each backing type to change.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="fsrtl_change_backing_type" title="typedef enum _FSRTL_CHANGE_BACKING_TYPE {&#10;  ChangeDataControlArea,&#10;  ChangeImageControlArea,&#10;  ChangeSharedCacheMap&#10;} FSRTL_CHANGE_BACKING_TYPE, *PFSRTL_CHANGE_BACKING_TYPE;">FSRTL_CHANGE_BACKING_TYPE</a></p>
 <hr>
 <div class="ntdoc-description-links">

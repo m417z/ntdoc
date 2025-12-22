@@ -63,18 +63,30 @@
 <h1>Windows Driver Kit DDI reference (ns-ntifs-_prefetch_open_ecp_context)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>PREFETCH_OPEN_ECP_CONTEXT structure</h1>
-<h2>Description</h2>
+<h1 id="prefetch_open_ecp_context-structure">PREFETCH_OPEN_ECP_CONTEXT structure</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>PREFETCH_OPEN_ECP_CONTEXT</strong> structure communicates whether the prefetcher performs a given open request on a file.</p>
-<h2>Members</h2>
-<h3><code>Context</code></h3>
+
+<h2 id="members">Members</h2>
+
+<h3 id="context"><code>Context</code></h3>
+
 <p>A pointer to an opaque context that is associated with the open request.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The prefetcher is a component of the operating system that is tightly integrated with the cache manager and the memory manager to make disk accesses more efficient and therefore improve performance. If other components interfere with the prefetcher, system performance decreases and might deadlock. Therefore, the prefetcher attaches the <strong>PREFETCH_OPEN_ECP_CONTEXT</strong> structure to a file to communicate that the prefetcher has performed an open request on that file. The prefetcher uses the <strong>GUID_ECP_PREFETCH_OPEN</strong> GUID in a call to the <strong><a href="fltcreatefileex2" title="NTSTATUS FLTAPI FltCreateFileEx2(&#10;  [in]            PFLT_FILTER               Filter,&#10;  [in, optional]  PFLT_INSTANCE             Instance,&#10;  [out]           PHANDLE                   FileHandle,&#10;  [out, optional] PFILE_OBJECT              *FileObject,&#10;  [in]            ACCESS_MASK               DesiredAccess,&#10;  [in]            POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]           PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional]  PLARGE_INTEGER            AllocationSize,&#10;  [in]            ULONG                     FileAttributes,&#10;  [in]            ULONG                     ShareAccess,&#10;  [in]            ULONG                     CreateDisposition,&#10;  [in]            ULONG                     CreateOptions,&#10;  [in, optional]  PVOID                     EaBuffer,&#10;  [in]            ULONG                     EaLength,&#10;  [in]            ULONG                     Flags,&#10;  [in, optional]  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">FltCreateFileEx2</a></strong> or <strong><a href="iocreatefileex" title="NTSTATUS IoCreateFileEx(&#10;  [out]          PHANDLE                   FileHandle,&#10;  [in]           ACCESS_MASK               DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER            AllocationSize,&#10;  [in]           ULONG                     FileAttributes,&#10;  [in]           ULONG                     ShareAccess,&#10;  [in]           ULONG                     Disposition,&#10;  [in]           ULONG                     CreateOptions,&#10;  [in, optional] PVOID                     EaBuffer,&#10;  [in]           ULONG                     EaLength,&#10;  [in]           CREATE_FILE_TYPE          CreateFileType,&#10;  [in, optional] PVOID                     InternalParameters,&#10;  [in]           ULONG                     Options,&#10;  [in, optional] PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">IoCreateFileEx</a></strong> routine to attach the <strong>PREFETCH_OPEN_ECP_CONTEXT</strong> structure. A file system filter driver (filter) can call <strong><a href="fltfindextracreateparameter" title="NTSTATUS FLTAPI FltFindExtraCreateParameter(&#10;  [in]            PFLT_FILTER Filter,&#10;  [in]            PECP_LIST   EcpList,&#10;  [in]            LPCGUID     EcpType,&#10;  [out, optional] PVOID       *EcpContext,&#10;  [out, optional] ULONG       *EcpContextSize&#10;);">FltFindExtraCreateParameter</a></strong> to determine whether <strong>PREFETCH_OPEN_ECP_CONTEXT</strong> is attached to the file and then take appropriate action. The filter should call the <strong><a href="fltisecpfromusermode" title="BOOLEAN FLTAPI FltIsEcpFromUserMode(&#10;  [in] PFLT_FILTER Filter,&#10;  [in] PVOID       EcpContext&#10;);">FltIsEcpFromUserMode</a></strong> routine to determine whether the <strong>PREFETCH_OPEN_ECP_CONTEXT</strong> context structure originated from kernel mode. To prevent malicious applications from spoofing the prefetcher, the filter shouldn't accept <strong>PREFETCH_OPEN_ECP_CONTEXT</strong> if it originated from user mode.</p>
+
 <p>After the prefetcher attaches the <strong>PREFETCH_OPEN_ECP_CONTEXT</strong> structure to a file, all additional prefetcher activity for the file involves the file object that has <strong>PREFETCH_OPEN_ECP_CONTEXT</strong> attached. If a filter must identify prefetcher file system requests other than create requests, the filter should maintain its own state (for example, filter manager handle contexts). The filter maintains its own state in order to determine whether a particular file object is a prefetcher file object.</p>
+
 <p>The memory manager can cache the prefetcher file object. The memory manager can then use the prefetcher file object for other applications that perform mapped I/O or cached I/O by using the cache manager. Therefore, the prefetcher file object can be used for paging I/O before or after the prefetcher closes its handle. This paging I/O can include paging writes, even though the prefetcher never writes any data. The paging writes are generated by other applications. The memory manager writes data from the applications by using its cached prefetcher file object. Therefore, filter performs work that is triggered by paging writes, the filter should still perform that work, even if the paging writes come on a prefetcher file object.</p>
+
 <p>When a filter determines that a cleanup operation occurred on a prefetcher file object, the filter should no longer consider that file object to be prefetcher-opened.</p>
+
 <p>The following are common operations that the prefetcher performs (however, in these operations, the prefetcher never changes file contents):</p>
+
 <ul>
 <li>Volume open and close</li>
 <li>File open and close</li>
@@ -83,17 +95,26 @@
 <li>Create image and data section</li>
 <li>Perform asynchronous paging I/O</li>
 </ul>
+
 <p>To avoid inducing a possible deadlock situation, a filter should:</p>
+
 <ul>
 <li>Never block any prefetcher operations.</li>
 <li>Pass prefetcher operations through without issuing other file system requests.</li>
 </ul>
+
 <p>For any application or driver to access any of the data that is being prefetched, it must open its own handle to the file or create a section or both.</p>
+
 <p>For information about how to use ECPs to associate additional information with an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a> operation on a file, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/using-extra-create-parameters-with-an-irp-mj-create-operation">Using Extra Create Parameters with an IRP_MJ_CREATE Operation</a>.</p>
+
 <p>The <strong>PREFETCH_OPEN_ECP_CONTEXT</strong> structure is read-only. You should use it to retrieve information about a prefetcher open ECP only. For more information about this issue, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/system-defined-ecps">System-Defined ECPs</a>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><strong><a href="fltcreatefileex2" title="NTSTATUS FLTAPI FltCreateFileEx2(&#10;  [in]            PFLT_FILTER               Filter,&#10;  [in, optional]  PFLT_INSTANCE             Instance,&#10;  [out]           PHANDLE                   FileHandle,&#10;  [out, optional] PFILE_OBJECT              *FileObject,&#10;  [in]            ACCESS_MASK               DesiredAccess,&#10;  [in]            POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]           PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional]  PLARGE_INTEGER            AllocationSize,&#10;  [in]            ULONG                     FileAttributes,&#10;  [in]            ULONG                     ShareAccess,&#10;  [in]            ULONG                     CreateDisposition,&#10;  [in]            ULONG                     CreateOptions,&#10;  [in, optional]  PVOID                     EaBuffer,&#10;  [in]            ULONG                     EaLength,&#10;  [in]            ULONG                     Flags,&#10;  [in, optional]  PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">FltCreateFileEx2</a></strong></p>
+
 <p><strong><a href="fltisecpfromusermode" title="BOOLEAN FLTAPI FltIsEcpFromUserMode(&#10;  [in] PFLT_FILTER Filter,&#10;  [in] PVOID       EcpContext&#10;);">FltIsEcpFromUserMode</a></strong></p>
+
 <p><strong><a href="iocreatefileex" title="NTSTATUS IoCreateFileEx(&#10;  [out]          PHANDLE                   FileHandle,&#10;  [in]           ACCESS_MASK               DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER            AllocationSize,&#10;  [in]           ULONG                     FileAttributes,&#10;  [in]           ULONG                     ShareAccess,&#10;  [in]           ULONG                     Disposition,&#10;  [in]           ULONG                     CreateOptions,&#10;  [in, optional] PVOID                     EaBuffer,&#10;  [in]           ULONG                     EaLength,&#10;  [in]           CREATE_FILE_TYPE          CreateFileType,&#10;  [in, optional] PVOID                     InternalParameters,&#10;  [in]           ULONG                     Options,&#10;  [in, optional] PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">IoCreateFileEx</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

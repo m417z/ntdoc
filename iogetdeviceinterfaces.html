@@ -66,65 +66,98 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-iogetdeviceinterfaces)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>IoGetDeviceInterfaces function</h1>
-<h2>Description</h2>
+<h1 id="iogetdeviceinterfaces-function">IoGetDeviceInterfaces function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>IoGetDeviceInterfaces</strong> routine returns a list of device interface instances of a particular device interface class (such as all devices on the system that support a HID interface).</p>
-<h2>Parameters</h2>
-<h3><code>InterfaceClassGuid</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="interfaceclassguid-in"><code>InterfaceClassGuid</code> [in]</h3>
+
 <p>Pointer to a class GUID specifying the device interface class. The GUIDs for a class should be in a device-specific header file.</p>
-<h3><code>PhysicalDeviceObject</code> [in, optional]</h3>
+
+<h3 id="physicaldeviceobject-in-optional"><code>PhysicalDeviceObject</code> [in, optional]</h3>
+
 <p>Pointer to an optional PDO that narrows the search to only the device interface instances of the device represented by the PDO.</p>
-<h3><code>Flags</code> [in]</h3>
+
+<h3 id="flags-in"><code>Flags</code> [in]</h3>
+
 <p>Specifies flags that modify the search for device interfaces. Only one flag is currently defined, and is described in the following table.</p>
+
 <table>
 <thead>
 <tr>
-<th>Flag</th>
-<th>Meaning</th>
+  <th>Flag</th>
+  <th>Meaning</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>DEVICE_INTERFACE_INCLUDE_NONACTIVE</td>
-<td>Return disabled device interface instances in addition to enabled interface instances.</td>
+  <td>DEVICE_INTERFACE_INCLUDE_NONACTIVE</td>
+  <td>Return disabled device interface instances in addition to enabled interface instances.</td>
 </tr>
 </tbody>
 </table>
+
 <p>When searching for a device that supports a particular interface class, the caller requires an enabled interface instance and thus does not set the DEVICE_INTERFACE_INCLUDE_NONACTIVE flag.</p>
+
 <p>A driver typically sets the DEVICE_INTERFACE_INCLUDE_NONACTIVE flag to locate disabled interface instances that the driver must enable. For example, the class installer for the device might have been directed by the INF file to register one or more interface instances for the device. The interface instances would be registered but are not usable until they are enabled by the driver (using <a href="iosetdeviceinterfacestate" title="NTSTATUS IoSetDeviceInterfaceState(&#10;  [in] PUNICODE_STRING SymbolicLinkName,&#10;  [in] BOOLEAN         Enable&#10;);">IoSetDeviceInterfaceState</a>). To narrow the list of interface instances returned to only those exposed by a given device, a driver can specify a <em>PhysicalDeviceObject</em>.</p>
-<h3><code>SymbolicLinkList</code> [out]</h3>
+
+<h3 id="symboliclinklist-out"><code>SymbolicLinkList</code> [out]</h3>
+
 <p>A pointer to a wide character pointer to which the routine, if successful, writes the base address of a buffer that contains a list of Unicode strings. These strings are symbolic link names that identify the device interface instances that match the search criteria. Each Unicode string in the list is null-terminated; the end of the whole list is marked by an additional null character. The routine allocates the buffer for these strings from paged system memory. The caller is responsible for freeing the buffer (by calling the <a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a> routine) when it is no longer needed.</p>
+
 <p>If no device interface instances match the search criteria, this routine returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> and the string contains a single NULL character.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>IoGetDeviceInterfaces</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call was successful. Possible error return values include the following.</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
-<td>Possibly indicates that <em>PhysicalDeviceObject</em> was not a valid PDO pointer.</td>
+  <td><strong>STATUS_INVALID_DEVICE_REQUEST</strong></td>
+  <td>Possibly indicates that <em>PhysicalDeviceObject</em> was not a valid PDO pointer.</td>
 </tr>
 </tbody>
 </table>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p><strong>IoGetDeviceInterfaces</strong> returns a list of device interface instances that match the search criteria. A kernel-mode component typically calls this routine to get a list of all enabled device interface instances of a particular device interface class. Such a component can get a pointer to the file object and/or the device object for an interface by calling the <a href="iogetdeviceobjectpointer" title="NTSTATUS IoGetDeviceObjectPointer(&#10;  [in]  PUNICODE_STRING ObjectName,&#10;  [in]  ACCESS_MASK     DesiredAccess,&#10;  [out] PFILE_OBJECT    *FileObject,&#10;  [out] PDEVICE_OBJECT  *DeviceObject&#10;);">IoGetDeviceObjectPointer</a> or <a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a> routine. The device object pointer returned by <strong><a href="iogetdeviceobjectpointer" title="NTSTATUS IoGetDeviceObjectPointer(&#10;  [in]  PUNICODE_STRING ObjectName,&#10;  [in]  ACCESS_MASK     DesiredAccess,&#10;  [out] PFILE_OBJECT    *FileObject,&#10;  [out] PDEVICE_OBJECT  *DeviceObject&#10;);">IoGetDeviceObjectPointer</a></strong> points to the top of the device stack for the device and can be used in calls to the <a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a> routine.</p>
+
 <p>If there is a default interface for the requested device interface class, it is listed first in <em>SymbolicLinkList</em>. Default interfaces can be set by user mode, but not by kernel mode.</p>
+
 <p>The format of a symbolic link name is opaque; the caller should not attempt to parse a symbolic link name.</p>
+
 <p>Symbolic links for device interface instances can be used across system boots.</p>
+
 <p>To be notified when additional device interface instances of a particular class are enabled on the system, register for notification of a device class change by calling the <a href="ioregisterplugplaynotification" title="NTSTATUS IoRegisterPlugPlayNotification(&#10;  [in]           IO_NOTIFICATION_EVENT_CATEGORY        EventCategory,&#10;  [in]           ULONG                                 EventCategoryFlags,&#10;  [in, optional] PVOID                                 EventCategoryData,&#10;  [in]           PDRIVER_OBJECT                        DriverObject,&#10;  [in]           PDRIVER_NOTIFICATION_CALLBACK_ROUTINE CallbackRoutine,&#10;  [in, optional] __drv_aliasesMem PVOID                Context,&#10;  [out]          PVOID                                 *NotificationEntry&#10;);">IoRegisterPlugPlayNotification</a> routine.</p>
+
 <p>Callers of <strong>IoGetDeviceInterfaces</strong> must be running at IRQL = PASSIVE_LEVEL in the context of a system thread.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a></p>
+
 <p><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></p>
+
 <p><a href="iogetdeviceobjectpointer" title="NTSTATUS IoGetDeviceObjectPointer(&#10;  [in]  PUNICODE_STRING ObjectName,&#10;  [in]  ACCESS_MASK     DesiredAccess,&#10;  [out] PFILE_OBJECT    *FileObject,&#10;  [out] PDEVICE_OBJECT  *DeviceObject&#10;);">IoGetDeviceObjectPointer</a></p>
+
 <p><a href="ioregisterdeviceinterface" title="NTSTATUS IoRegisterDeviceInterface(&#10;  [in]           PDEVICE_OBJECT  PhysicalDeviceObject,&#10;  [in]           const GUID      *InterfaceClassGuid,&#10;  [in, optional] PUNICODE_STRING ReferenceString,&#10;  [out]          PUNICODE_STRING SymbolicLinkName&#10;);">IoRegisterDeviceInterface</a></p>
+
 <p><a href="ioregisterplugplaynotification" title="NTSTATUS IoRegisterPlugPlayNotification(&#10;  [in]           IO_NOTIFICATION_EVENT_CATEGORY        EventCategory,&#10;  [in]           ULONG                                 EventCategoryFlags,&#10;  [in, optional] PVOID                                 EventCategoryData,&#10;  [in]           PDRIVER_OBJECT                        DriverObject,&#10;  [in]           PDRIVER_NOTIFICATION_CALLBACK_ROUTINE CallbackRoutine,&#10;  [in, optional] __drv_aliasesMem PVOID                Context,&#10;  [out]          PVOID                                 *NotificationEntry&#10;);">IoRegisterPlugPlayNotification</a></p>
+
 <p><a href="iosetdeviceinterfacestate" title="NTSTATUS IoSetDeviceInterfaceState(&#10;  [in] PUNICODE_STRING SymbolicLinkName,&#10;  [in] BOOLEAN         Enable&#10;);">IoSetDeviceInterfaceState</a></p>
+
 <p><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></p>
 <hr>
 <div class="ntdoc-description-links">

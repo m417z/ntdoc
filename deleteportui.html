@@ -65,50 +65,69 @@
 <h1>Windows Driver Kit DDI reference (nf-winsplp-deleteportui)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>DeletePortUI function</h1>
-<h2>Description</h2>
+<h1 id="deleteportui-function">DeletePortUI function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>A port monitor UI DLL's <strong>DeletePortUI</strong> function deletes a printer port.</p>
-<h2>Parameters</h2>
-<h3><code>pszServer</code> [in, optional]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="pszserver-in-optional"><code>pszServer</code> [in, optional]</h3>
+
 <p>Caller-supplied pointer to a string representing a server name, or <strong>NULL</strong> if the printer is local. (The port monitor can ignore this parameter.)</p>
-<h3><code>hWnd</code> [in]</h3>
+
+<h3 id="hwnd-in"><code>hWnd</code> [in]</h3>
+
 <p>Caller-supplied handle of the window that should be used as the parent for dialog boxes. If <strong>NULL</strong>, no dialog boxes should be displayed.</p>
-<h3><code>pszPortName</code> [in]</h3>
+
+<h3 id="pszportname-in"><code>pszPortName</code> [in]</h3>
+
 <p>Caller-supplied pointer to a string representing the name of the port to be deleted.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>If the operation succeeds, the function should return <strong>TRUE</strong>. Otherwise it should return <strong>FALSE</strong>. If the operation is canceled by the user or is unsupported, the function should call SetLastError(ERROR_CANCELLED), then return <strong>FALSE</strong>.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>Port monitor UI DLLs are required to define a <strong>DeletePortUI</strong> function and include the function's address in a <a href="monitorui" title="typedef struct _MONITORUI {&#10;  DWORD dwMonitorUISize;&#10;  BOOL()(PCWSTR pszServer,HWND hWnd,PCWSTR pszMonitorNameIn,PWSTR *ppszPortNameOut) * pfnAddPortUI;&#10;  BOOL( )(PCWSTR pName,HWND hWnd,PCWSTR pPortName) *pfnConfigurePortUI;&#10;  BOOL( )(PCWSTR pszServer,HWND hWnd,PCWSTR pszPortName) *pfnDeletePortUI;&#10;} MONITORUI, *PMONITORUI;">MONITORUI</a> structure.</p>
+
 <p>The spooler calls <strong>DeletePortUI</strong> from within its <strong>DeletePort</strong> function. The arguments received by <strong>DeletePortUI</strong> are the arguments received by <strong>DeletePort</strong>. (The <strong>DeletePort</strong> function is described in the Microsoft Windows SDK documentation.)</p>
+
 <p>The function should perform the following operations:</p>
+
 <ol>
-<li>
-<p>Call <strong>OpenPrinter</strong>, specifying a printer name with the following format:</p>
-<p><strong>\<em><strong>ServerName</strong></em>,XcvPort</strong><em>PortName</em></p>
+<li><p>Call <strong>OpenPrinter</strong>, specifying a printer name with the following format:</p>
+
+<p><strong>\</strong><em>ServerName</em><strong>\,XcvPort</strong><em>PortName</em></p>
+
 <p>where <em>ServerName</em> and <em>PortName</em> are the server and port names received as <strong>DeletePortUI</strong> function arguments.</p>
+
 <p>The call to <strong>OpenPrinter</strong> requires a PRINTER_DEFAULTS structure, which is described in the Windows SDK documentation. The structure's <strong>DesiredAccess</strong> member must be set to SERVER_ACCESS_ADMINISTER. Its <strong>pDatatype</strong> and <strong>pDevMode</strong> members can be <strong>NULL</strong>.</p>
-<p>This call causes the print monitor server DLL's <a href="xcvopenport" title="BOOL XcvOpenPort(&#10;  LPCWSTR     pszObject,&#10;  ACCESS_MASK GrantedAccess,&#10;  PHANDLE     phXcv&#10;);">XcvOpenPort</a> function to be called.</p>
-</li>
-<li>
-<p>Call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a>, specifying the following input arguments:</p>
+
+<p>This call causes the print monitor server DLL's <a href="xcvopenport" title="BOOL XcvOpenPort(&#10;  LPCWSTR     pszObject,&#10;  ACCESS_MASK GrantedAccess,&#10;  PHANDLE     phXcv&#10;);">XcvOpenPort</a> function to be called.</p></li>
+<li><p>Call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a>, specifying the following input arguments:</p>
+
 <ul>
 <li>The handle received from <strong>OpenPrinter</strong></li>
 <li>The port name received as a function argument</li>
-<li>A data name string of &quot;DeletePort&quot;</li>
+<li>A data name string of "DeletePort"</li>
 </ul>
-<p>This call causes the server DLL's <a href="xcvcloseport" title="BOOL XcvClosePort(&#10;  _In_ HANDLE hXcv&#10;);">XcvClosePort</a> function to be called.</p>
-</li>
-<li>
-<p>If user interaction is required, obtain information from the user by displaying a dialog box and then call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a>, specifying customized data name strings, to send the information to the server DLL. The <strong>XcvData</strong> call causes the server's <a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a> function to be called.</p>
-</li>
-<li>
-<p>Call <strong>ClosePrinter</strong>, specifying the handle received from <strong>OpenPrinter</strong>. This causes the server DLL's <a href="xcvcloseport" title="BOOL XcvClosePort(&#10;  _In_ HANDLE hXcv&#10;);">XcvClosePort</a> function to be called.</p>
-</li>
+
+<p>This call causes the server DLL's <a href="xcvcloseport" title="BOOL XcvClosePort(&#10;  _In_ HANDLE hXcv&#10;);">XcvClosePort</a> function to be called.</p></li>
+<li>If user interaction is required, obtain information from the user by displaying a dialog box and then call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a>, specifying customized data name strings, to send the information to the server DLL. The <strong>XcvData</strong> call causes the server's <a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a> function to be called.</li>
+<li>Call <strong>ClosePrinter</strong>, specifying the handle received from <strong>OpenPrinter</strong>. This causes the server DLL's <a href="xcvcloseport" title="BOOL XcvClosePort(&#10;  _In_ HANDLE hXcv&#10;);">XcvClosePort</a> function to be called.</li>
 </ol>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="xcvcloseport" title="BOOL XcvClosePort(&#10;  _In_ HANDLE hXcv&#10;);">XcvClosePort</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff564255(v=vs.85)">XcvData</a></p>
+
 <p><a href="xcvdataport" title="DWORD XcvDataPort(&#10;  _In_  HANDLE  hXcv,&#10;  _In_  LPCWSTR pszDataName,&#10;  _In_  PBYTE   pInputData,&#10;        DWORD   cbInputData,&#10;  _Out_ PBYTE   pOutputData,&#10;        DWORD   cbOutputData,&#10;  _Out_ PDWORD  pcbOutputNeeded&#10;);">XcvDataPort</a></p>
+
 <p><a href="xcvopenport" title="BOOL XcvOpenPort(&#10;  LPCWSTR     pszObject,&#10;  ACCESS_MASK GrantedAccess,&#10;  PHANDLE     phXcv&#10;);">XcvOpenPort</a></p>
 <hr>
 <div class="ntdoc-description-links">

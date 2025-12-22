@@ -69,44 +69,76 @@ VOID EvtSpbControllerWrite(
 <h1>Windows Driver Kit DDI reference (nc-spbcx-evt_spb_controller_write)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>EVT_SPB_CONTROLLER_WRITE callback function</h1>
-<h2>Description</h2>
+<h1 id="evt_spb_controller_write-callback-function">EVT_SPB_CONTROLLER_WRITE callback function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>An SPB controller driver's <em>EvtSpbControllerIoWrite</em> event callback function writes data to the specified target device from the buffers that are supplied with the write request.</p>
-<h2>Parameters</h2>
-<h3><code>Controller</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="controller-in"><code>Controller</code> [in]</h3>
+
 <p>A WDFDEVICE handle to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-device-object">framework device object</a> that represents the SPB controller.</p>
-<h3><code>Target</code> [in]</h3>
+
+<h3 id="target-in"><code>Target</code> [in]</h3>
+
 <p>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBTARGET</a> handle to the target for this I/O request. The target is a peripheral device or port that is attached to the bus. The SPB framework extension (SpbCx) previously assigned this handle to the target in the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a> callback that opened the connection to the target.</p>
-<h3><code>Request</code> [in]</h3>
+
+<h3 id="request-in"><code>Request</code> [in]</h3>
+
 <p>An <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBREQUEST</a> handle to the I/O request. Your SPB controller driver must complete this request either by performing the requested operation or by returning an error status. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_controller_write#remarks">Remarks</a>.</p>
-<h3><code>Length</code> [in]</h3>
+
+<h3 id="length-in"><code>Length</code> [in]</h3>
+
 <p>The number of bytes to write to the target device.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>SpbCx manages the I/O queue for the SPB controller. SpbCx calls the SPB controller driver's <em>EvtSpbControllerIoWrite</em> callback function when a client (peripheral driver) of the SPB controller sends an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-write">IRP_MJ_WRITE</a> request to a target device that is attached to the bus. The <em>Request</em> parameter value is a handle that encapsulates this request.</p>
+
 <p>An <em>EvtSpbControllerIoWrite</em> callback does not return a status value. Instead, the SPB controller driver indicates the status of the write operation in the completion status for the I/O request.</p>
+
 <p>An <em>EvtSpbControllerIoWrite</em> callback is asynchronous. That is, the callback function should initiate the requested write operation and then return without waiting for the operation to complete. Later, the SPB controller driver completes the write request during an interrupt DPC or a timer DPC.</p>
+
 <p>An <em>EvtSpbControllerIoWrite</em> callback does not return a status value. Instead, the SPB controller driver indicates the status of the write operation in the completion status for the I/O request.</p>
+
 <p>If the write operation completes in full, the callback function should set the completion status to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. If the target device indicates that it cannot accept any more data before a transmission completes, the driver should set the completion status to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> and specify the number of bytes transmitted.</p>
+
 <p>If a transmission error occurs during the write operation, the driver should set the completion status in the I/O request to an appropriate error code. Not all buses provide a mechanism for a target device to report a transport error or a partially completed transfer, and not all controllers can detect these conditions.</p>
+
 <p>To register an <em>EvtSpbControllerIoWrite</em> callback function, call the <a href="spbdeviceinitialize" title="NTSTATUS SpbDeviceInitialize(&#10;  [in] WDFDEVICE              FxDevice,&#10;  [in] PSPB_CONTROLLER_CONFIG Config&#10;);">SpbDeviceInitialize</a> method.</p>
-<h3>Examples</h3>
+
+<h3 id="examples">Examples</h3>
+
 <p>To define an <em>EvtSpbControllerIoWrite</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
+
 <p>For example, to define an <em>EvtSpbControllerIoWrite</em> callback function that is named <code>MyEvtSpbControllerIoWrite</code>, use the EVT_SPB_CONTROLLER_WRITE function type, as shown in this code example:</p>
-<pre lang="cpp"><code>EVT_SPB_CONTROLLER_WRITE  MyEvtSpbControllerIoWrite;
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">EVT_SPB_CONTROLLER_WRITE</span><span class="w">  </span><span class="n">MyEvtSpbControllerIoWrite</span><span class="p">;</span>
 </code></pre>
+</div>
+
 <p>Then, implement your callback function as follows:</p>
-<pre lang="cpp"><code>_Use_decl_annotations_
-VOID
-  MyEvtSpbControllerIoWrite(
-    WDFDEVICE Controller,
-    SPBTARGET Target,
-    SPBREQUEST Request,
-    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> Length
-    )
-{ ... }
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">_Use_decl_annotations_</span>
+<span class="n">VOID</span>
+<span class="w">  </span><span class="n">MyEvtSpbControllerIoWrite</span><span class="p">(</span>
+<span class="w">    </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Controller</span><span class="p">,</span>
+<span class="w">    </span><span class="n">SPBTARGET</span><span class="w"> </span><span class="n">Target</span><span class="p">,</span>
+<span class="w">    </span><span class="n">SPBREQUEST</span><span class="w"> </span><span class="n">Request</span><span class="p">,</span>
+<span class="w">    </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w"> </span><span class="n">Length</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
 </code></pre>
+</div>
+
 <p>The EVT_SPB_CONTROLLER_WRITE function type is defined in the Spbcx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the EVT_SPB_CONTROLLER_WRITE function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_controller_read">EvtSpbControllerIoRead</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a></li>

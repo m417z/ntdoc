@@ -69,78 +69,112 @@
 <h1>Windows Driver Kit DDI reference (nc-acxcircuit-evt_acx_circuit_prepare_hardware)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2>Description</h2>
+<h2 id="description">Description</h2>
+
 <p>The <strong>EVT_ACX_CIRCUIT_PREPARE_HARDWARE</strong> callback is used by the driver to add functionality when an ACXCIRCUIT is in the prepare hardware phase.</p>
-<h2>Parameters</h2>
-<h3><code>Device</code></h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="device"><code>Device</code></h3>
+
 <p>A WDFDEVICE object (described in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/summary-of-framework-objects">WDF - Summary of Framework Objects</a>) associated with the specified ACXCIRCUIT.</p>
-<h3><code>Circuit</code></h3>
+
+<h3 id="circuit"><code>Circuit</code></h3>
+
 <p>The ACXCIRCUIT object (described in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">Summary of ACX Objects</a>) in the prepare hardware phase.</p>
-<h3><code>ResourcesRaw</code></h3>
+
+<h3 id="resourcesraw"><code>ResourcesRaw</code></h3>
+
 <p>A handle to a framework resource-list object that identifies the raw hardware resources that the Plug and Play manager has assigned to the device. For more information about raw resources, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/raw-and-translated-resources">Raw and Translated Resources</a>.</p>
-<h3><code>ResourcesTranslated</code></h3>
+
+<h3 id="resourcestranslated"><code>ResourcesTranslated</code></h3>
+
 <p>A handle to a framework resource-list object that identifies the translated hardware resources that the Plug and Play manager has assigned to the device.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>Returns <code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> if the call was successful. Otherwise, it returns an appropriate error code. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">Using NTSTATUS Values</a>.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>To register an EvtAcxCircuitPrepareHardware callback function, a driver must call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxcircuit/nf-acxcircuit-acxcircuitinitsetacxcircuitpnppowercallbacks">AcxCircuitInitSetAcxCircuitPnpPowerCallbacks method</a>.</p>
+
 <p>If the driver has registered an EvtAcxCircuitPrepareHardware callback function for an ACXCIRCUIT, the ACX framework calls the function after WDF framework calls the driver's EvtDevicePrepareHardware callback function.</p>
+
 <p>The EvtAcxCircuitPrepareHardware callback function accesses the device's raw and translated hardware resources by using the ResourcesRaw and ResourcesTranslated handles that it receives. The callback function can call <a href="wdfcmresourcelistgetcount" title="ULONG WdfCmResourceListGetCount(&#10;  [in] WDFCMRESLIST List&#10;);">WdfCmResourceListGetCount</a> and <a href="wdfcmresourcelistgetdescriptor" title="PCM_PARTIAL_RESOURCE_DESCRIPTOR WdfCmResourceListGetDescriptor(&#10;  [in] WDFCMRESLIST List,&#10;  [in] ULONG        Index&#10;);">WdfCmResourceListGetDescriptor</a> to traverse the resource lists. This callback function cannot modify the resource lists.</p>
+
 <p>For more information about resource lists and the order in which the resources appear, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/raw-and-translated-resources">Raw and Translated Resources</a>.</p>
+
 <p>Typically, your driver's EvtAcxCircuitPrepareHardware callback function does the following, if necessary:</p>
+
 <ul>
 <li>Maps physical memory addresses to virtual addresses of the ACXCIRCUIT so the driver can access memory that is assigned to the device.</li>
 <li>Optionally, your driver's EvtAcxCircuitPrepareHardware callback function might queue a work item to complete any other time-intensive configuration tasks. Using a work item for such operations can help ensure that your device's start up time does not increase the system boot time. For more information, see Using Framework Work Items.</li>
 <li>Typically, all other hardware initialization operations, including loading firmware, should take place each time that the device enters its working (D0) state and should therefore take place in the driver's EvtDeviceD0Entry callback function.</li>
 </ul>
+
 <p>The ResourcesRaw and ResourcesTranslated handles that the EvtAcxCircuitPrepareHardware/EvtDevicePrepareHardware callback function receives remain valid until the driver's EvtDeviceReleaseHardware callback function returns.</p>
+
 <p>If the driver fails the EvtAcxCircuitPrepareHardware callback, the ACXCIRCUIT object is placed in the delete-pending state and associated ACXSTREAMS are shutdown.</p>
+
 <p>For more information about hardware resources, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/introduction-to-hardware-resources">Introduction to Hardware Resources</a>.</p>
+
 <p>For more information about when the ACX and WDF framework call these callback functions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/pnp-and-power-management-scenarios">PnP and Power Management Scenarios</a>.</p>
+
 <p>For more information about drivers that provide this callback function, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/supporting-pnp-and-power-management-in-function-drivers">Supporting PnP and Power Management in Function Driver</a>.</p>
-<h3>Example</h3>
+
+<h3 id="example">Example</h3>
+
 <p>Example usage is shown below.</p>
-<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-EvtCircuitPrepareHardware(
-    _In_ WDFDEVICE      Device,
-    _In_ ACXCIRCUIT     Circuit,
-    _In_ WDFCMRESLIST   ResourcesRaw,
-    _In_ WDFCMRESLIST   ResourcesTranslated
-    )
-{
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>            status      = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-    PCIRCUIT_CONTEXT    circuitCtx  = GetCircuitContext(Circuit);
-    CIpcEventReader *   eventReader = circuitCtx-&gt;EventReader;
 
-    PASSIVE_CODE();
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="nf">EvtCircuitPrepareHardware</span><span class="p">(</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="w">      </span><span class="n">Device</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">ACXCIRCUIT</span><span class="w">     </span><span class="n">Circuit</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">WDFCMRESLIST</span><span class="w">   </span><span class="n">ResourcesRaw</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">WDFCMRESLIST</span><span class="w">   </span><span class="n">ResourcesTranslated</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">            </span><span class="n">status</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
+<span class="w">    </span><span class="n">PCIRCUIT_CONTEXT</span><span class="w">    </span><span class="n">circuitCtx</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">GetCircuitContext</span><span class="p">(</span><span class="n">Circuit</span><span class="p">);</span>
+<span class="w">    </span><span class="n">CIpcEventReader</span><span class="w"> </span><span class="o">*</span><span class="w">   </span><span class="n">eventReader</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">circuitCtx</span><span class="o">-&gt;</span><span class="n">EventReader</span><span class="p">;</span>
 
-    UNREFERENCED_PARAMETER(Device);
-    UNREFERENCED_PARAMETER(ResourcesRaw);
-    UNREFERENCED_PARAMETER(ResourcesTranslated);
+<span class="w">    </span><span class="n">PASSIVE_CODE</span><span class="p">();</span>
 
-    //
-    // Enable 'remote' circuit notifications.
-    //
-    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(eventReader);
-    status = eventReader-&gt;EnableEvents();
-    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
-    {
-        DrvLogError(g_RecorderLog, FLAG_INIT,
-                    &quot;ACXCIRCUIT %p, CIpcEventReader::EnableEvents failed, %!STATUS!&quot;,
-                    Circuit, status);
-        goto exit;
-    }
+<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">Device</span><span class="p">);</span>
+<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">ResourcesRaw</span><span class="p">);</span>
+<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="n">ResourcesTranslated</span><span class="p">);</span>
 
-    status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Enable &#39;remote&#39; circuit notifications.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">eventReader</span><span class="p">);</span>
+<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">eventReader</span><span class="o">-&gt;</span><span class="n">EnableEvents</span><span class="p">();</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">DrvLogError</span><span class="p">(</span><span class="n">g_RecorderLog</span><span class="p">,</span><span class="w"> </span><span class="n">FLAG_INIT</span><span class="p">,</span>
+<span class="w">                    </span><span class="s">&quot;ACXCIRCUIT %p, CIpcEventReader::EnableEvents failed, %!STATUS!&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">Circuit</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">);</span>
+<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">exit</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-exit:
-    return status;
-}
+<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
+
+<span class="nl">exit</span><span class="p">:</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
-<h3>ACX requirements</h3>
+</div>
+
+<h3 id="acx-requirements">ACX requirements</h3>
+
 <p><strong>Minimum ACX version:</strong> 1.0</p>
+
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxcircuit/">acxcircuit.h header</a></li>
 </ul>

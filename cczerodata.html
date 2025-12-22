@@ -66,39 +66,66 @@
 <h1>Windows Driver Kit DDI reference (nf-ntifs-cczerodata)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>CcZeroData function</h1>
-<h2>Description</h2>
+<h1 id="cczerodata-function">CcZeroData function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>CcZeroData</strong> routine zeros the specified range of bytes in a cached or noncached file.</p>
+
 <blockquote>
-<p>[!NOTE]
-This routine should only be called to zero portions of a file beyond the file's valid data length. <strong>CcZeroData</strong> will not modify any previously written data of the file. To zero previously written data that is portion of the file up to the file’s valid data length, call <strong><a href="cccopywrite" title="BOOLEAN CcCopyWrite(&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] ULONG          Length,&#10;  [in] BOOLEAN        Wait,&#10;  [in] PVOID          Buffer&#10;);">CcCopyWrite</a></strong>, or one of the other cached write interfaces.</p>
+  <p>[!NOTE]
+  This routine should only be called to zero portions of a file beyond the file's valid data length. <strong>CcZeroData</strong> will not modify any previously written data of the file. To zero previously written data that is portion of the file up to the file’s valid data length, call <strong><a href="cccopywrite" title="BOOLEAN CcCopyWrite(&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] ULONG          Length,&#10;  [in] BOOLEAN        Wait,&#10;  [in] PVOID          Buffer&#10;);">CcCopyWrite</a></strong>, or one of the other cached write interfaces.</p>
 </blockquote>
-<h2>Parameters</h2>
-<h3><code>FileObject</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="fileobject-in"><code>FileObject</code> [in]</h3>
+
 <p>A pointer to a <strong><a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a></strong> for the file in which a range of bytes is to be zeroed.</p>
-<h3><code>StartOffset</code> [in]</h3>
+
+<h3 id="startoffset-in"><code>StartOffset</code> [in]</h3>
+
 <p>A pointer to a variable that specifies the byte offset within the file to the first byte that is to be zeroed.</p>
-<h3><code>EndOffset</code> [in]</h3>
+
+<h3 id="endoffset-in"><code>EndOffset</code> [in]</h3>
+
 <p>A pointer to a variable that specifies the byte offset within the file to the last byte that is to be zeroed.</p>
-<h3><code>Wait</code> [in]</h3>
+
+<h3 id="wait-in"><code>Wait</code> [in]</h3>
+
 <p>Set to <strong>TRUE</strong> if the caller should be put into a wait state until the entire byte range has been zeroed. Otherwise, this parameter is set to <strong>FALSE</strong>.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>CcZeroData</strong> returns <strong>TRUE</strong> if the data is zeroed successfully; otherwise, returns <strong>FALSE</strong>.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The file to be zeroed can be cached or noncached. However, if the file is noncached, the values of <em>StartOffset</em> and <em>EndOffset</em> must both be multiples of the volume's sector size.</p>
+
 <p>If a pool allocation failure occurs and <em>Wait</em> was specified as <strong>TRUE</strong>, <strong>CcZeroData</strong> raises a STATUS_INSUFFICIENT_RESOURCES exception. If a pool allocation failure occurs and <em>Wait</em> was specified as <strong>FALSE</strong>, <strong>CcZeroData</strong> returns <strong>FALSE</strong>, but does not raise an exception.</p>
+
 <p>If the <em>FileObject</em> supplied does not have caching enabled, but caching exists on the stream (that is, another file object for the same file has caching enabled), then zeroing will be treated as though write-through caching is enabled.</p>
+
 <p>If <em>Wait</em> is set to <strong>TRUE</strong>, <strong>CcZeroData</strong> is guaranteed to complete the zero data request and return <strong>TRUE</strong>. If the required pages of the cached file are already resident in memory, the data will be zeroed immediately and no blocking will occur. If any needed pages are not resident, the caller will be put in a wait state until all required pages have been made resident and the data can be zeroed.</p>
+
 <p>If <em>Wait</em> is <strong>FALSE</strong> and if the required pages of the cached file are not already resident in memory, <strong>CcZeroData</strong> will refuse to block and will return <strong>FALSE</strong>.</p>
+
 <p>If a pool allocation failure occurs, <strong>CcZeroData</strong> raises a STATUS_INSUFFICIENT_RESOURCES exception. If <strong>CcZeroData</strong> encounters any other errors, including IO errors, the errors will be raised to the caller.</p>
+
 <p>For Windows Vista and later Windows operating systems, the behavior of <strong>CcZeroData</strong> is as follows:</p>
+
 <ul>
 <li>If the stream is cached and write_through, <em>StartOffset</em> does not have to be sector aligned.</li>
 <li>If <em>EndOffset</em> is not aligned, it will be rounded up to the next sector size.</li>
 </ul>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><strong><a href="ccinitializecachemap" title="VOID CcInitializeCacheMap(&#10;  [in] PFILE_OBJECT             FileObject,&#10;  [in] PCC_FILE_SIZES           FileSizes,&#10;  [in] BOOLEAN                  PinAccess,&#10;  [in] PCACHE_MANAGER_CALLBACKS Callbacks,&#10;  [in] PVOID                    LazyWriteContext&#10;);">CcInitializeCacheMap</a></strong></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff539143(v=vs.85)"><strong>CcIsFileCached</strong></a></p>
+
 <p><strong><a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

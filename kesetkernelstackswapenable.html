@@ -63,47 +63,70 @@
 <h1>Windows Driver Kit DDI reference (nf-ntifs-kesetkernelstackswapenable)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>KeSetKernelStackSwapEnable function</h1>
-<h2>Description</h2>
+<h1 id="kesetkernelstackswapenable-function">KeSetKernelStackSwapEnable function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>KeSetKernelStackSwapEnable</strong> routine enables and disables swapping of the caller's stack to disk.</p>
-<h2>Parameters</h2>
-<h3><code>Enable</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="enable-in"><code>Enable</code> [in]</h3>
+
 <p>Specifies whether to enable swapping of the stack that belongs to the calling thread. If <strong>TRUE</strong>, swapping is enabled and the contents of the stack can be paged in and out of memory. If <strong>FALSE</strong>, swapping is disabled and the stack is memory-resident.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>KeSetKernelStackSwapEnable</strong> returns a BOOLEAN value that indicates whether stack swapping was enabled at the time that the call was initiated. This value is <strong>TRUE</strong> if stack swapping was previously enabled and is <strong>FALSE</strong> if it was disabled.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>A kernel-mode driver can call this routine to control whether its stack is pageable or locked in memory.</p>
+
 <p>Stack swapping can occur only if the thread is in a wait state that was caused by a request from a user-mode application. Stack swapping never occurs for wait states that are initiated by kernel-mode components, regardless of whether stack swapping is enabled.</p>
+
 <p>It is not typically necessary to disable stack swapping. Do this only in rare cases. For an example that discusses alternatives to disabling stack swapping, see the Example section below.</p>
+
 <p>In a call to a kernel-mode wait routine, such as <strong><a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a></strong>, the caller specifies a <em>WaitMode</em> parameter to indicate whether the caller waits in kernel mode or user mode. If <em>WaitMode</em> = <strong>UserMode</strong>, and if the wait duration is sufficiently long, the memory manager might page out sections of the stack that belongs to the waiting thread. However, if the stack contains data items that must remain memory-resident for the duration of the wait, the thread can prevent the stack from being paged out by calling <strong>KeSetKernelStackSwapEnable</strong> and specifying <em>Enable</em> = <strong>FALSE</strong>.</p>
+
 <p>A thread must not exit (terminate) while stack swapping is disabled or a system bug check will occur.</p>
-<h3>Example</h3>
+
+<h3 id="example">Example</h3>
+
 <p>In the following code example, a driver thread allocates an event on its stack and calls <strong>KeSetKernelStackSwap</strong> to temporarily lock the stack in memory until the event is signaled. The driver calls <strong><a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a></strong> with a <strong>WaitReason</strong> of <strong>UserRequest</strong> to indicate that its thread is in a wait state caused by a request from a user-mode application, and <strong>WaitMode</strong> set to <strong>KernelMode</strong> to indicate the wait is occurring in kernel mode. After the wait completes, the thread calls <strong>KeSetKernelStackSwap</strong> again, if necessary, to restore the original stack-swapping state of the thread.</p>
-<pre lang="cpp"><code>KEVENT event;
-BOOLEAN oldSwapEnable;
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
 
-oldSwapEnable = KeSetKernelStackSwapEnable(FALSE);
+<div class="codehilite">
+<pre><span></span><code><span class="n">KEVENT</span><span class="w"> </span><span class="n">event</span><span class="p">;</span>
+<span class="n">BOOLEAN</span><span class="w"> </span><span class="n">oldSwapEnable</span><span class="p">;</span>
+<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
 
-<a href="keinitializeevent" title="VOID KeInitializeEvent(&#10;  [out] PRKEVENT   Event,&#10;  [in]  EVENT_TYPE Type,&#10;  [in]  BOOLEAN    State&#10;);">KeInitializeEvent</a>(&amp;event, SynchronizationEvent, FALSE);
+<span class="n">oldSwapEnable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">KeSetKernelStackSwapEnable</span><span class="p">(</span><span class="n">FALSE</span><span class="p">);</span>
 
-//
-// TO DO: Insert code here to pass the event to another thread
-// that will set the event to the signaled state.
-//
-...
+<span class="n"><a href="keinitializeevent" title="VOID KeInitializeEvent(&#10;  [out] PRKEVENT   Event,&#10;  [in]  EVENT_TYPE Type,&#10;  [in]  BOOLEAN    State&#10;);">KeInitializeEvent</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">event</span><span class="p">,</span><span class="w"> </span><span class="n">SynchronizationEvent</span><span class="p">,</span><span class="w"> </span><span class="n">FALSE</span><span class="p">);</span>
 
-status = <a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a>(&amp;event, UserRequest, KernelMode, FALSE, NULL);
+<span class="c1">//</span>
+<span class="c1">// TO DO: Insert code here to pass the event to another thread</span>
+<span class="c1">// that will set the event to the signaled state.</span>
+<span class="c1">//</span>
+<span class="p">...</span>
 
-if (oldSwapEnable)
-{
-    KeSetKernelStackSwapEnable(TRUE);
-}
+<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">event</span><span class="p">,</span><span class="w"> </span><span class="n">UserRequest</span><span class="p">,</span><span class="w"> </span><span class="n">KernelMode</span><span class="p">,</span><span class="w"> </span><span class="n">FALSE</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">oldSwapEnable</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">KeSetKernelStackSwapEnable</span><span class="p">(</span><span class="n">TRUE</span><span class="p">);</span>
+<span class="p">}</span>
 </code></pre>
+</div>
+
 <p>An event object must be memory-resident while it can be set to a signaled or nonsignaled state, or while a thread waits on the event. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/defining-and-using-an-event-object">Defining and Using an Event Object</a>.</p>
+
 <p>Frequently, the use of the <strong>KeSetKernelStackSwap</strong> routine is unnecessary and can be avoided by allocating only pageable data items on the stack. In the previous example, the driver thread must lock the stack because the event object is allocated on the stack. A better alternative might be to simply allocate the event from nonpaged pool.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><strong><a href="keinitializeevent" title="VOID KeInitializeEvent(&#10;  [out] PRKEVENT   Event,&#10;  [in]  EVENT_TYPE Type,&#10;  [in]  BOOLEAN    State&#10;);">KeInitializeEvent</a></strong></p>
+
 <p><strong><a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

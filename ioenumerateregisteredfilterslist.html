@@ -65,47 +65,71 @@
 <h1>Windows Driver Kit DDI reference (nf-ntifs-ioenumerateregisteredfilterslist)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>IoEnumerateRegisteredFiltersList function</h1>
-<h2>Description</h2>
+<h1 id="ioenumerateregisteredfilterslist-function">IoEnumerateRegisteredFiltersList function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>IoEnumerateRegisteredFiltersList</strong> routine enumerates the file system filter drivers that have registered with the system.</p>
-<h2>Parameters</h2>
-<h3><code>DriverObjectList</code> [out]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="driverobjectlist-out"><code>DriverObjectList</code> [out]</h3>
+
 <p>A pointer to a caller-allocated array that receives the driver object pointers. This parameter is optional and can be <strong>NULL</strong>. (See the following Remarks section.)</p>
-<h3><code>DriverObjectListSize</code> [in]</h3>
+
+<h3 id="driverobjectlistsize-in"><code>DriverObjectListSize</code> [in]</h3>
+
 <p>Size, in bytes, of the <em>DriverObjectList</em> array. Can be zero. (See the following Remarks section.)</p>
-<h3><code>ActualNumberDriverObjects</code> [out]</h3>
+
+<h3 id="actualnumberdriverobjects-out"><code>ActualNumberDriverObjects</code> [out]</h3>
+
 <p>Actual number of driver objects found. Note that if the array at <em>DriverObjectList</em> is too small, the number of driver object pointers that are copied into the array will be less than <em>ActualNumberDriverObjects</em>.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>IoEnumerateRegisteredFiltersList</strong> can return one of the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
-<td>The call to <strong>IoEnumerateRegisteredFiltersList</strong> was successful.</td>
+  <td><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></td>
+  <td>The call to <strong>IoEnumerateRegisteredFiltersList</strong> was successful.</td>
 </tr>
 <tr>
-<td>STATUS_BUFFER_TOO_SMALL</td>
-<td>The array at <em>DriverObjectList</em> is too small to hold the entire driver object list. In this case, <strong>IoEnumerateRegisteredFiltersList</strong> copies as many driver object pointers into the array as possible.</td>
+  <td>STATUS_BUFFER_TOO_SMALL</td>
+  <td>The array at <em>DriverObjectList</em> is too small to hold the entire driver object list. In this case, <strong>IoEnumerateRegisteredFiltersList</strong> copies as many driver object pointers into the array as possible.</td>
 </tr>
 </tbody>
 </table>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>A file system filter driver calls <strong>IoEnumerateRegisteredFiltersList</strong> to obtain an array of pointers to the driver objects for all file system filter drivers that have called <strong><a href="ioregisterfsregistrationchange" title="NTSTATUS IoRegisterFsRegistrationChange(&#10;  [in] PDRIVER_OBJECT          DriverObject,&#10;  [in] PDRIVER_FS_NOTIFICATION DriverNotificationRoutine&#10;);">IoRegisterFsRegistrationChange</a></strong>.</p>
+
 <p>The filter drivers are enumerated in order of decreasing distance from the base file system. The first element (index zero) in the <em>DriverObjectList</em> array represents the filter that is attached farthest from the file system. The second entry is for the next-farthest filter, and so on. The last entry in the array is for the filter that is closest to the base file system.</p>
+
 <p><strong>IoEnumerateRegisteredFiltersList</strong> enumerates only legacy filter drivers; it does not enumerate minifilters. To enumerate both minifilters and legacy filters, or only minifilters, call <strong><a href="fltenumeratefilterinformation" title="NTSTATUS FLTAPI FltEnumerateFilterInformation(&#10;  [in]  ULONG                    Index,&#10;  [in]  FILTER_INFORMATION_CLASS InformationClass,&#10;  [out] PVOID                    Buffer,&#10;  [in]  ULONG                    BufferSize,&#10;  [out] PULONG                   BytesReturned&#10;);">FltEnumerateFilterInformation</a></strong>.</p>
+
 <p>The filter driver typically calls <strong>IoEnumerateRegisteredFiltersList</strong> twice: once to get the number of driver objects in the list, and once to get the driver object list itself. In the first call, the caller should set the <em>DriverObjectList</em> parameter to <strong>NULL</strong> and <em>DriverObjectListSize</em> to zero. In the second call, <em>DriverObjectList</em> should contain a pointer to an appropriately-sized pointer array, and <em>DriverObjectListSize</em> should contain the size, in bytes, of that array.</p>
+
 <p><strong>IoEnumerateRegisteredFiltersList</strong> increments the reference count on every driver object in the list pointed to by <em>DriverObjectList</em>. Thus every successful call to <strong>IoEnumerateRegisteredFiltersList</strong> must be matched by a subsequent call to <strong><a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a></strong> for each driver object in the list. Failure to do so prevents the system from freeing or deleting these driver objects because of an outstanding reference count.</p>
+
 <p>Minifilters should call <strong><a href="fltenumeratefilterinformation" title="NTSTATUS FLTAPI FltEnumerateFilterInformation(&#10;  [in]  ULONG                    Index,&#10;  [in]  FILTER_INFORMATION_CLASS InformationClass,&#10;  [out] PVOID                    Buffer,&#10;  [in]  ULONG                    BufferSize,&#10;  [out] PULONG                   BytesReturned&#10;);">FltEnumerateFilterInformation</a></strong> or <strong><a href="fltenumeratefilters" title="NTSTATUS FLTAPI FltEnumerateFilters(&#10;  [out] PFLT_FILTER *FilterList,&#10;  [in]  ULONG       FilterListSize,&#10;  [out] PULONG      NumberFiltersReturned&#10;);">FltEnumerateFilters</a></strong> instead of <strong>IoEnumerateRegisteredFiltersList</strong>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><strong><a href="fltenumeratefilterinformation" title="NTSTATUS FLTAPI FltEnumerateFilterInformation(&#10;  [in]  ULONG                    Index,&#10;  [in]  FILTER_INFORMATION_CLASS InformationClass,&#10;  [out] PVOID                    Buffer,&#10;  [in]  ULONG                    BufferSize,&#10;  [out] PULONG                   BytesReturned&#10;);">FltEnumerateFilterInformation</a></strong></p>
+
 <p><strong><a href="fltenumeratefilters" title="NTSTATUS FLTAPI FltEnumerateFilters(&#10;  [out] PFLT_FILTER *FilterList,&#10;  [in]  ULONG       FilterListSize,&#10;  [out] PULONG      NumberFiltersReturned&#10;);">FltEnumerateFilters</a></strong></p>
+
 <p><strong><a href="ioregisterfsregistrationchange" title="NTSTATUS IoRegisterFsRegistrationChange(&#10;  [in] PDRIVER_OBJECT          DriverObject,&#10;  [in] PDRIVER_FS_NOTIFICATION DriverNotificationRoutine&#10;);">IoRegisterFsRegistrationChange</a></strong></p>
+
 <p><strong><a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -65,36 +65,47 @@
 <h1>Windows Driver Kit DDI reference (nf-ntddk-ioraiseharderror)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2>Description</h2>
+<h2 id="description">Description</h2>
+
 <p>The <strong>IoRaiseHardError</strong> routine causes a dialog box to appears that warns the user that a device I/O error has occurred, which might indicate that a physical device is failing.</p>
-<h2>Parameters</h2>
-<h3><code>Irp</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="irp-in"><code>Irp</code> [in]</h3>
+
 <p>Pointer to the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> that failed because of a device I/O error.</p>
-<h3><code>Vpb</code> [in, optional]</h3>
+
+<h3 id="vpb-in-optional"><code>Vpb</code> [in, optional]</h3>
+
 <p>Pointer to the volume parameter block (<a href="vpb" title="typedef struct _VPB {&#10;  CSHORT                Type;&#10;  CSHORT                Size;&#10;  USHORT                Flags;&#10;  USHORT                VolumeLabelLength;&#10;  struct _DEVICE_OBJECT *DeviceObject;&#10;  struct _DEVICE_OBJECT *RealDevice;&#10;  ULONG                 SerialNumber;&#10;  ULONG                 ReferenceCount;&#10;  WCHAR                 VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];&#10;} VPB, *PVPB;">VPB</a>), if any, for the mounted file object. This parameter is <strong>NULL</strong> if no <a href="vpb" title="typedef struct _VPB {&#10;  CSHORT                Type;&#10;  CSHORT                Size;&#10;  USHORT                Flags;&#10;  USHORT                VolumeLabelLength;&#10;  struct _DEVICE_OBJECT *DeviceObject;&#10;  struct _DEVICE_OBJECT *RealDevice;&#10;  ULONG                 SerialNumber;&#10;  ULONG                 ReferenceCount;&#10;  WCHAR                 VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH / sizeof(WCHAR)];&#10;} VPB, *PVPB;">VPB</a> is associated with the device object.</p>
-<h3><code>RealDeviceObject</code> [in]</h3>
+
+<h3 id="realdeviceobject-in"><code>RealDeviceObject</code> [in]</h3>
+
 <p>Pointer to the device object that represents the physical device on which the I/O operation failed.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>Highest-level drivers, particularly file system drivers, call <strong>IoRaiseHardError</strong>.</p>
+
 <blockquote>
-<p>[!WARNING]
-Because <strong>IoRaiseHardError</strong> uses a normal kernel APC to create a user dialog box, a deadlock can occur if normal kernel APCs are disabled when a device error occurs. For example:</p>
-<ol>
-<li>
-<p>An upper-level filter driver calls <a href="keentercriticalregion" title="VOID KeEnterCriticalRegion();">KeEnterCriticalRegion</a> (which disables normal kernel APCs) and sends an I/O request to a file system driver. The filter driver waits on the completion of the request by the file system driver before the filter driver calls <a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a> (which reenables normal kernel APCs).</p>
-</li>
-<li>
-<p>An error occurs on the file system, and the file system driver calls <strong>IoRaiseHardError</strong> to report the error to the user. The file system driver waits on the dialog box.</p>
-</li>
-<li>
-<p>Deadlock now exists: The normal kernel APC created by <strong>IoRaiseHardError</strong> to create the dialog box waits for normal kernel APCs to be enabled. The file system waits on the dialog box before it completes the I/O request. The filter driver waits on completion of the I/O request before it calls <strong><a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a></strong> (which reenables normal kernel APCs).</p>
-</li>
-</ol>
+  <p>[!WARNING]
+  Because <strong>IoRaiseHardError</strong> uses a normal kernel APC to create a user dialog box, a deadlock can occur if normal kernel APCs are disabled when a device error occurs. For example:</p>
+  
+  <ol>
+  <li><p>An upper-level filter driver calls <a href="keentercriticalregion" title="VOID KeEnterCriticalRegion();">KeEnterCriticalRegion</a> (which disables normal kernel APCs) and sends an I/O request to a file system driver. The filter driver waits on the completion of the request by the file system driver before the filter driver calls <a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a> (which reenables normal kernel APCs).</p></li>
+  <li><p>An error occurs on the file system, and the file system driver calls <strong>IoRaiseHardError</strong> to report the error to the user. The file system driver waits on the dialog box.</p></li>
+  <li><p>Deadlock now exists: The normal kernel APC created by <strong>IoRaiseHardError</strong> to create the dialog box waits for normal kernel APCs to be enabled. The file system waits on the dialog box before it completes the I/O request. The filter driver waits on completion of the I/O request before it calls <strong><a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a></strong> (which reenables normal kernel APCs).</p></li>
+  </ol>
 </blockquote>
+
 <p>The behavior of this routine is dependent of the current state of hard errors for the running thread. If hard errors have been disabled by calling <a href="iosetthreadharderrormode" title="BOOLEAN IoSetThreadHardErrorMode(&#10;  [in] BOOLEAN EnableHardErrors&#10;);">IoSetThreadHardErrorMode</a>, this routine completes the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> specified by <em>Irp</em> without transferring any data into user buffers. In addition, no message is sent to notify the user of this failure.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="iogetrelateddeviceobject" title="PDEVICE_OBJECT IoGetRelatedDeviceObject(&#10;  [in] PFILE_OBJECT FileObject&#10;);">IoGetRelatedDeviceObject</a></p>
+
 <p><a href="iosetharderrororverifydevice" title="VOID IoSetHardErrorOrVerifyDevice(&#10;  [in] PIRP           Irp,&#10;  [in] PDEVICE_OBJECT DeviceObject&#10;);">IoSetHardErrorOrVerifyDevice</a></p>
+
 <p><a href="iosetthreadharderrormode" title="BOOLEAN IoSetThreadHardErrorMode(&#10;  [in] BOOLEAN EnableHardErrors&#10;);">IoSetThreadHardErrorMode</a></p>
 <hr>
 <div class="ntdoc-description-links">

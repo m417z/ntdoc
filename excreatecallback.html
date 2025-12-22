@@ -66,48 +66,73 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-excreatecallback)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>ExCreateCallback function</h1>
-<h2>Description</h2>
+<h1 id="excreatecallback-function">ExCreateCallback function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>ExCreateCallback</strong> routine either creates a new callback object or opens an existing callback object on behalf of the caller.</p>
-<h2>Parameters</h2>
-<h3><code>CallbackObject</code> [out]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="callbackobject-out"><code>CallbackObject</code> [out]</h3>
+
 <p>A pointer to a location that receives a pointer to a callback object, which is an opaque, system structure. If the <strong>ExCreateCallback</strong> call succeeds, the routine writes the address of the newly created or opened callback object to this location. The callback object pointer obtained from this routine can be supplied as a parameter to the <a href="exregistercallback" title="PVOID ExRegisterCallback(&#10;  [in, out]      PCALLBACK_OBJECT   CallbackObject,&#10;  [in]           PCALLBACK_FUNCTION CallbackFunction,&#10;  [in, optional] PVOID              CallbackContext&#10;);">ExRegisterCallback</a> or <a href="exnotifycallback" title="VOID ExNotifyCallback(&#10;  [in]           PVOID CallbackObject,&#10;  [in, optional] PVOID Argument1,&#10;  [in, optional] PVOID Argument2&#10;);">ExNotifyCallback</a> routine.</p>
-<h3><code>ObjectAttributes</code> [in]</h3>
+
+<h3 id="objectattributes-in"><code>ObjectAttributes</code> [in]</h3>
+
 <p>A pointer to an <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> structure that contains the callback object's attributes. This structure was previously initialized by the <a href="initializeobjectattributes" title="#define InitializeObjectAttributes(p, n, a, r, s) { \&#10;    (p)-&gt;Length = sizeof(OBJECT_ATTRIBUTES); \&#10;    (p)-&gt;RootDirectory = r; \&#10;    (p)-&gt;Attributes = a; \&#10;    (p)-&gt;ObjectName = n; \&#10;    (p)-&gt;SecurityDescriptor = s; \&#10;    (p)-&gt;SecurityQualityOfService = NULL; \&#10;    }">InitializeObjectAttributes</a> routine.</p>
-<h3><code>Create</code> [in]</h3>
+
+<h3 id="create-in"><code>Create</code> [in]</h3>
+
 <p>Whether to create a callback object. Set to <strong>TRUE</strong> to create a new callback object if the requested object cannot be opened. Otherwise, set to <strong>FALSE</strong>.</p>
-<h3><code>AllowMultipleCallbacks</code> [in]</h3>
+
+<h3 id="allowmultiplecallbacks-in"><code>AllowMultipleCallbacks</code> [in]</h3>
+
 <p>Whether a newly created callback object should allow multiple registered callback routines. Set to <strong>TRUE</strong> to allow multiple registered callback routines. Otherwise, set to <strong>FALSE</strong>. This parameter is ignored when <em>Create</em> is <strong>FALSE</strong> or when opening an existing object.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>ExCreateCallback</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if a callback object was opened or created. Otherwise, it returns an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code to indicate the nature of the failure.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>A driver calls <strong>ExCreateCallback</strong> to create a new callback object or to open an existing callback object. After the object has been created or opened, other components can call the <a href="exregistercallback" title="PVOID ExRegisterCallback(&#10;  [in, out]      PCALLBACK_OBJECT   CallbackObject,&#10;  [in]           PCALLBACK_FUNCTION CallbackFunction,&#10;  [in, optional] PVOID              CallbackContext&#10;);">ExRegisterCallback</a> routine to register callback routines with the callback object.</p>
+
 <p>Before calling <strong>ExCreateCallback</strong>, the driver must call <a href="initializeobjectattributes" title="#define InitializeObjectAttributes(p, n, a, r, s) { \&#10;    (p)-&gt;Length = sizeof(OBJECT_ATTRIBUTES); \&#10;    (p)-&gt;RootDirectory = r; \&#10;    (p)-&gt;Attributes = a; \&#10;    (p)-&gt;ObjectName = n; \&#10;    (p)-&gt;SecurityDescriptor = s; \&#10;    (p)-&gt;SecurityQualityOfService = NULL; \&#10;    }">InitializeObjectAttributes</a> to initialize the <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> structure for the callback object. Unnamed callback objects are not permitted. The caller must specify a name for the object; otherwise, the call fails with STATUS_UNSUCCESSFUL. The caller should specify the <a href="obj_permanent" title="#define OBJ_PERMANENT 0x00000010L">OBJ_PERMANENT</a> attribute in the callback object to prevent the object from being deleted before it can be registered with the object manager. The caller should also specify any other attributes, such as <a href="obj_case_insensitive" title="#define OBJ_CASE_INSENSITIVE 0x00000040L">OBJ_CASE_INSENSITIVE</a>, that might be needed.</p>
+
 <p>When all operations have been completed with the callback object, the driver must delete the object to prevent a memory leak. For information about deleting an object that was created with the <a href="obj_permanent" title="#define OBJ_PERMANENT 0x00000010L">OBJ_PERMANENT</a> object attribute, see <a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a>.</p>
+
 <p>The following table shows the callback objects that the operating system creates for use by drivers.</p>
+
 <table>
 <thead>
 <tr>
-<th>Callback object name</th>
-<th>Usage</th>
+  <th>Callback object name</th>
+  <th>Usage</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>\Callback\SetSystemTime</td>
-<td>The operating system calls any callback routines registered for this object whenever the system time changes.</td>
+  <td>\Callback\SetSystemTime</td>
+  <td>The operating system calls any callback routines registered for this object whenever the system time changes.</td>
 </tr>
 <tr>
-<td>\Callback\PowerState</td>
-<td>The operating system calls any callback routines registered for this object whenever certain system power characteristics change. When a driver registers for callback notification (by calling <strong><a href="exregistercallback" title="PVOID ExRegisterCallback(&#10;  [in, out]      PCALLBACK_OBJECT   CallbackObject,&#10;  [in]           PCALLBACK_FUNCTION CallbackFunction,&#10;  [in, optional] PVOID              CallbackContext&#10;);">ExRegisterCallback</a></strong>), it can specify the changes for which it should be notified.</td>
+  <td>\Callback\PowerState</td>
+  <td>The operating system calls any callback routines registered for this object whenever certain system power characteristics change. When a driver registers for callback notification (by calling <strong><a href="exregistercallback" title="PVOID ExRegisterCallback(&#10;  [in, out]      PCALLBACK_OBJECT   CallbackObject,&#10;  [in]           PCALLBACK_FUNCTION CallbackFunction,&#10;  [in, optional] PVOID              CallbackContext&#10;);">ExRegisterCallback</a></strong>), it can specify the changes for which it should be notified.</td>
 </tr>
 </tbody>
 </table>
+
 <p>For more information about callback objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/callback-objects">Callback Objects</a>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="exnotifycallback" title="VOID ExNotifyCallback(&#10;  [in]           PVOID CallbackObject,&#10;  [in, optional] PVOID Argument1,&#10;  [in, optional] PVOID Argument2&#10;);">ExNotifyCallback</a></p>
+
 <p><a href="exregistercallback" title="PVOID ExRegisterCallback(&#10;  [in, out]      PCALLBACK_OBJECT   CallbackObject,&#10;  [in]           PCALLBACK_FUNCTION CallbackFunction,&#10;  [in, optional] PVOID              CallbackContext&#10;);">ExRegisterCallback</a></p>
+
 <p><a href="initializeobjectattributes" title="#define InitializeObjectAttributes(p, n, a, r, s) { \&#10;    (p)-&gt;Length = sizeof(OBJECT_ATTRIBUTES); \&#10;    (p)-&gt;RootDirectory = r; \&#10;    (p)-&gt;Attributes = a; \&#10;    (p)-&gt;ObjectName = n; \&#10;    (p)-&gt;SecurityDescriptor = s; \&#10;    (p)-&gt;SecurityQualityOfService = NULL; \&#10;    }">InitializeObjectAttributes</a></p>
+
 <p><a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a></p>
 <hr>
 <div class="ntdoc-description-links">

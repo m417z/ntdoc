@@ -62,77 +62,108 @@
 <h1>Win32 API reference (ni-winioctl-fsctl_lock_volume)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>FSCTL_LOCK_VOLUME IOCTL</h1>
-<h2>Description</h2>
-<p>Locks a volume if it is not in use. A locked volume can be accessed only through handles to the file object (*<em>hDevice</em>) that locks the volume. For more information, see the Remarks section.</p>
+<h1 id="fsctl_lock_volume-ioctl">FSCTL_LOCK_VOLUME IOCTL</h1>
+
+<h2 id="description">Description</h2>
+
+<p>Locks a volume if it is not in use. A locked volume can be accessed only through handles to the file object (<em>*hDevice</em>) that locks the volume. For more information, see the Remarks section.</p>
+
 <p>To perform this operation, call the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a> function with the following parameters.</p>
-<pre lang="cpp"><code>BOOL DeviceIoControl(
-  (HANDLE) hVolume,            // handle to a volume
-  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) FSCTL_LOCK_VOLUME,   // dwIoControlCode
-  NULL,                        // lpInBuffer
-  0,                           // nInBufferSize
-  NULL,                        // lpOutBuffer
-  0,                           // nOutBufferSize
-  (LPDWORD) lpBytesReturned,   // number of bytes returned
-  NULL                         // OVERLAPPED structure
-);
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">BOOL</span><span class="w"> </span><span class="n">DeviceIoControl</span><span class="p">(</span>
+<span class="w">  </span><span class="p">(</span><span class="n">HANDLE</span><span class="p">)</span><span class="w"> </span><span class="n">hVolume</span><span class="p">,</span><span class="w">            </span><span class="c1">// handle to a volume</span>
+<span class="w">  </span><span class="p">(</span><span class="n"><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></span><span class="p">)</span><span class="w"> </span><span class="n">FSCTL_LOCK_VOLUME</span><span class="p">,</span><span class="w">   </span><span class="c1">// dwIoControlCode</span>
+<span class="w">  </span><span class="nb">NULL</span><span class="p">,</span><span class="w">                        </span><span class="c1">// lpInBuffer</span>
+<span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w">                           </span><span class="c1">// nInBufferSize</span>
+<span class="w">  </span><span class="nb">NULL</span><span class="p">,</span><span class="w">                        </span><span class="c1">// lpOutBuffer</span>
+<span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w">                           </span><span class="c1">// nOutBufferSize</span>
+<span class="w">  </span><span class="p">(</span><span class="n">LPDWORD</span><span class="p">)</span><span class="w"> </span><span class="n">lpBytesReturned</span><span class="p">,</span><span class="w">   </span><span class="c1">// number of bytes returned</span>
+<span class="w">  </span><span class="nb">NULL</span><span class="w">                         </span><span class="c1">// OVERLAPPED structure</span>
+<span class="p">);</span>
 </code></pre>
-<p>Irp-&gt;IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
+</div>
+
+<p>Irp->IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
+
 <p>Otherwise, Status to the appropriate error condition as a <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code.</p>
+
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS Values</a>.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The <em>hDevice</em> handle passed to <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a> must be a handle to a volume, opened for direct access. To retrieve this handle, call
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/fileapi/nf-fileapi-createfilea">CreateFile</a> with the <em>lpFileName</em> parameter set to a string of the following form:</p>
+
 <p>\.\X:</p>
+
 <p>where <em>X</em> is a hard-drive partition letter, floppy disk drive, or CD-ROM drive. The application must also specify the <strong><a href="file_share_read" title="#define FILE_SHARE_READ 0x00000001">FILE_SHARE_READ</a></strong> and <strong><a href="file_share_write" title="#define FILE_SHARE_WRITE 0x00000002">FILE_SHARE_WRITE</a></strong> flags in the <em>dwShareMode</em> parameter of <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/fileapi/nf-fileapi-createfilea">CreateFile</a>.</p>
+
 <p>If the specified volume is a system volume or contains a page file, the operation fails.</p>
+
 <p>If there are any open files on the volume, this operation will fail. Conversely, success of this operation indicates there are no open files.</p>
+
 <p>This operation is useful for applications that need exclusive access to a volume for a period of time—for example, disk utility and backup programs.</p>
+
 <p>A locked volume remains locked until one of the following occurs:</p>
+
 <ul>
 <li>The application uses the
 <a href="fsctl_unlock_volume" title="// CTL_CODE(0x0009, 0x007, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_UNLOCK_VOLUME 0x0009001C">FSCTL_UNLOCK_VOLUME</a> control code to unlock the volume.</li>
 <li>The handle closes, either directly through
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/handleapi/nf-handleapi-closehandle">CloseHandle</a>, or indirectly when a process terminates.</li>
 </ul>
+
 <p>The system flushes all cached data to the volume before locking it. For example, any data held in a lazy-write cache is written to the volume.</p>
+
 <p>The NTFS file system treats a locked volume as a dismounted volume. The <a href="fsctl_dismount_volume" title="// CTL_CODE(0x0009, 0x008, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_DISMOUNT_VOLUME 0x00090020">FSCTL_DISMOUNT_VOLUME</a> control code functions similarly but does not check for open files before dismounting. Note that without a successful lock operation, a dismounted volume may be remounted by any process at any time. This would not be an ideal state for performing a volume backup, for example.</p>
+
 <p>In Windows 8 and Windows Server 2012, this code is supported by the following technologies.</p>
+
 <table>
 <thead>
 <tr>
-<th>Technology</th>
-<th>Supported</th>
+  <th>Technology</th>
+  <th>Supported</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Server Message Block (SMB) 3.0 protocol</td>
-<td>No</td>
+  <td>Server Message Block (SMB) 3.0 protocol</td>
+  <td>No</td>
 </tr>
 <tr>
-<td>SMB 3.0 Transparent Failover (TFO)</td>
-<td>No</td>
+  <td>SMB 3.0 Transparent Failover (TFO)</td>
+  <td>No</td>
 </tr>
 <tr>
-<td>SMB 3.0 with Scale-out File Shares (SO)</td>
-<td>No</td>
+  <td>SMB 3.0 with Scale-out File Shares (SO)</td>
+  <td>No</td>
 </tr>
 <tr>
-<td>Cluster Shared Volume File System (CsvFS)</td>
-<td>See comment</td>
+  <td>Cluster Shared Volume File System (CsvFS)</td>
+  <td>See comment</td>
 </tr>
 </tbody>
 </table>
+
 <p>On CsvFs Lock Volume, PNP notification will be sent only on the node where the lock request was issued. A lock will succeed only if the CsvFs filter on top of NTFS does not see any opened files.</p>
+
 <p>After acquiring a lock on a CSV volume, you must close the handle used to lock that volume before opening a handle to the volume. Unlocking the volume by using <a href="fsctl_unlock_volume" title="// CTL_CODE(0x0009, 0x007, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_UNLOCK_VOLUME 0x0009001C">FSCTL_UNLOCK_VOLUME</a> is not sufficient.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/handleapi/nf-handleapi-closehandle">CloseHandle</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/fileapi/nf-fileapi-createfilea">CreateFile</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a></p>
+
 <p><a href="fsctl_dismount_volume" title="// CTL_CODE(0x0009, 0x008, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_DISMOUNT_VOLUME 0x00090020">FSCTL_DISMOUNT_VOLUME</a></p>
+
 <p><a href="fsctl_unlock_volume" title="// CTL_CODE(0x0009, 0x007, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_UNLOCK_VOLUME 0x0009001C">FSCTL_UNLOCK_VOLUME</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/FileIO/volume-management-control-codes">Volume Management Control Codes</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -66,27 +66,49 @@
 <h1>Windows Driver Kit DDI reference (nf-strmini-streamclassquerymasterclock)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>StreamClassQueryMasterClock function</h1>
-<h2>Description</h2>
+<h1 id="streamclassquerymasterclock-function">StreamClassQueryMasterClock function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>When the minidriver calls the <strong>StreamClassQueryMasterClock</strong> routine, the class driver queries the appropriate time value of the master clock asynchronously, and passes the result to the routine passed in the <em>ClockCallbackRoutine</em> parameter.</p>
-<h2>Parameters</h2>
-<h3><code>HwStreamObject</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="hwstreamobject-in"><code>HwStreamObject</code> [in]</h3>
+
 <p>Pointer to a <a href="hw_stream_object" title="typedef struct _HW_STREAM_OBJECT {&#10;  ULONG                          SizeOfThisPacket;&#10;  ULONG                          StreamNumber;&#10;  PVOID                          HwStreamExtension;&#10;  PHW_RECEIVE_STREAM_DATA_SRB    ReceiveDataPacket;&#10;  PHW_RECEIVE_STREAM_CONTROL_SRB ReceiveControlPacket;&#10;  HW_CLOCK_OBJECT                HwClockObject;&#10;  BOOLEAN                        Dma;&#10;  BOOLEAN                        Pio;&#10;  PVOID                          HwDeviceExtension;&#10;  ULONG                          StreamHeaderMediaSpecific;&#10;  ULONG                          StreamHeaderWorkspace;&#10;  BOOLEAN                        Allocator;&#10;  PHW_EVENT_ROUTINE              HwEventRoutine;&#10;  ULONG                          Reserved[2];&#10;} HW_STREAM_OBJECT, *PHW_STREAM_OBJECT;">HW_STREAM_OBJECT</a> indicating the stream that is querying its master clock. The stream may only have one query pending at a time. The class driver passes this value to the callback in the <strong>HwStreamObject</strong> member of the callback's <em>TimeContext</em> parameter.</p>
-<h3><code>MasterClockHandle</code> [in]</h3>
+
+<h3 id="masterclockhandle-in"><code>MasterClockHandle</code> [in]</h3>
+
 <p>Specifies the handle for the master clock that is being queried. The class driver passes this in the SRB_INDICATE_MASTER_CLOCK request to the minidriver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff568467(v=vs.85)">StrMiniReceiveStreamControlPacket</a> routine.</p>
-<h3><code>TimeFunction</code> [in]</h3>
+
+<h3 id="timefunction-in"><code>TimeFunction</code> [in]</h3>
+
 <p>Specifies what time function to query the master clock for. See <a href="hw_time_context" title="typedef struct _HW_TIME_CONTEXT {&#10;  struct _HW_DEVICE_EXTENSION *HwDeviceExtension;&#10;  struct _HW_STREAM_OBJECT    *HwStreamObject;&#10;  TIME_FUNCTION               Function;&#10;  ULONGLONG                   Time;&#10;  ULONGLONG                   SystemTime;&#10;} HW_TIME_CONTEXT, *PHW_TIME_CONTEXT;">HW_TIME_CONTEXT</a> for the possible values. The class driver passes this value to the callback in the <strong>Function</strong> member of the <em>TimeContext</em> parameter.</p>
-<h3><code>ClockCallbackRoutine</code> [in]</h3>
+
+<h3 id="clockcallbackroutine-in"><code>ClockCallbackRoutine</code> [in]</h3>
+
 <p>Specifies the routine to which the class driver passes the results. The function prototype must be:</p>
-<pre lang="cpp"><code>ClockCallbackRoutine(<a href="hw_time_context" title="typedef struct _HW_TIME_CONTEXT {&#10;  struct _HW_DEVICE_EXTENSION *HwDeviceExtension;&#10;  struct _HW_STREAM_OBJECT    *HwStreamObject;&#10;  TIME_FUNCTION               Function;&#10;  ULONGLONG                   Time;&#10;  ULONGLONG                   SystemTime;&#10;} HW_TIME_CONTEXT, *PHW_TIME_CONTEXT;">PHW_TIME_CONTEXT</a> TimeContext);
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">ClockCallbackRoutine</span><span class="p">(</span><span class="n"><a href="hw_time_context" title="typedef struct _HW_TIME_CONTEXT {&#10;  struct _HW_DEVICE_EXTENSION *HwDeviceExtension;&#10;  struct _HW_STREAM_OBJECT    *HwStreamObject;&#10;  TIME_FUNCTION               Function;&#10;  ULONGLONG                   Time;&#10;  ULONGLONG                   SystemTime;&#10;} HW_TIME_CONTEXT, *PHW_TIME_CONTEXT;">PHW_TIME_CONTEXT</a></span><span class="w"> </span><span class="n">TimeContext</span><span class="p">);</span>
 </code></pre>
-<h2>Remarks</h2>
+</div>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The class driver queries the master clock and passes the results in the <em>TimeContext</em> parameter (of type <a href="hw_time_context" title="typedef struct _HW_TIME_CONTEXT {&#10;  struct _HW_DEVICE_EXTENSION *HwDeviceExtension;&#10;  struct _HW_STREAM_OBJECT    *HwStreamObject;&#10;  TIME_FUNCTION               Function;&#10;  ULONGLONG                   Time;&#10;  ULONGLONG                   SystemTime;&#10;} HW_TIME_CONTEXT, *PHW_TIME_CONTEXT;">HW_TIME_CONTEXT</a>) of the callback. In particular, it sets the <strong>Time</strong> member of this structure to the time value requested in the <em>TimeFunction</em> parameter, the current system time in the <strong>SystemTime</strong> member of the same structure, and the minidriver's device extension in the <strong>HwDeviceExtension</strong> member of that structure.</p>
-<p>The class driver deallocates the <a href="hw_time_context" title="typedef struct _HW_TIME_CONTEXT {&#10;  struct _HW_DEVICE_EXTENSION *HwDeviceExtension;&#10;  struct _HW_STREAM_OBJECT    *HwStreamObject;&#10;  TIME_FUNCTION               Function;&#10;  ULONGLONG                   Time;&#10;  ULONGLONG                   SystemTime;&#10;} HW_TIME_CONTEXT, *PHW_TIME_CONTEXT;">HW_TIME_CONTEXT</a> structure after the clock callback routine terminates, so the callback must store any information the minidriver wishes to maintain. For that purpose, the callback routine may use previously-allocated space in either the minidriver's device extension (<em>TimeContext-</em>&gt;<strong>HwDeviceExtension</strong>), or the stream extension of the stream that queried its master clock (<em>TimeContext</em>-&gt;<strong>HwStreamObject</strong>-&gt;<strong>HwStreamExtension</strong>).</p>
+
+<p>The class driver deallocates the <a href="hw_time_context" title="typedef struct _HW_TIME_CONTEXT {&#10;  struct _HW_DEVICE_EXTENSION *HwDeviceExtension;&#10;  struct _HW_STREAM_OBJECT    *HwStreamObject;&#10;  TIME_FUNCTION               Function;&#10;  ULONGLONG                   Time;&#10;  ULONGLONG                   SystemTime;&#10;} HW_TIME_CONTEXT, *PHW_TIME_CONTEXT;">HW_TIME_CONTEXT</a> structure after the clock callback routine terminates, so the callback must store any information the minidriver wishes to maintain. For that purpose, the callback routine may use previously-allocated space in either the minidriver's device extension (<em>TimeContext-</em>&gt;<strong>HwDeviceExtension</strong>), or the stream extension of the stream that queried its master clock (<em>TimeContext</em>-><strong>HwStreamObject</strong>-><strong>HwStreamExtension</strong>).</p>
+
 <p>On rare occasions, the graph manager switches the master clock. The class driver exposes a race condition in handling the new master clock. If the minidriver calls a stream class master clock routine immediately after it receives a new clock from the class driver, the class driver may produce unexpected results.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="hw_time_context" title="typedef struct _HW_TIME_CONTEXT {&#10;  struct _HW_DEVICE_EXTENSION *HwDeviceExtension;&#10;  struct _HW_STREAM_OBJECT    *HwStreamObject;&#10;  TIME_FUNCTION               Function;&#10;  ULONGLONG                   Time;&#10;  ULONGLONG                   SystemTime;&#10;} HW_TIME_CONTEXT, *PHW_TIME_CONTEXT;">HW_TIME_CONTEXT</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff568467(v=vs.85)">StrMiniReceiveStreamControlPacket</a></p>
+
 <p><a href="streamclassquerymasterclocksync" title="VOID STREAMAPI StreamClassQueryMasterClockSync(&#10;  [in]      HANDLE           MasterClockHandle,&#10;  [in, out] PHW_TIME_CONTEXT TimeContext&#10;);">StreamClassQueryMasterClockSync</a></p>
 <hr>
 <div class="ntdoc-description-links">

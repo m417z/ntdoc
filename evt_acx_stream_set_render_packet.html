@@ -69,75 +69,109 @@
 <h1>Windows Driver Kit DDI reference (nc-acxstreams-evt_acx_stream_set_render_packet)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2>Description</h2>
+<h2 id="description">Description</h2>
+
 <p>The <strong>EvtAcxStreamSetRenderPacket</strong> event tells the driver which packet was just released by the client.</p>
+
 <p>If there are no glitches, this packet should be (CurrentRenderPacket + 1), where CurrentRenderPacket is the packet the driver is currently streaming from. The driver should continue to increase the CurrentRenderPacket as packets are rendered instead of changing its CurrentRenderPacket to match this value. The property will include the packet index (0-based) and, if appropriate, an EOS flag with the byte offset of the end of the stream in the current packet.</p>
-<h2>Parameters</h2>
-<h3><code>Stream</code></h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="stream"><code>Stream</code></h3>
+
 <p>An ACXSTREAM object represents an audio stream created by a circuit. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">ACX - Summary of ACX Objects</a>.</p>
-<h3><code>Packet</code></h3>
+
+<h3 id="packet"><code>Packet</code></h3>
+
 <p>The number of the packet written by the OS to the WaveRT buffer. Depending on the values provided by the driver to <a href="acxrtstreamnotifypacketcomplete" title="NTSTATUS AcxRtStreamNotifyPacketComplete(&#10;  ACXSTREAM Stream,&#10;  ULONGLONG CompletedPacket,&#10;  ULONGLONG QPCCompletion&#10;);">AcxRtStreamNotifyPacketComplete</a>, the Packet number may skip values.</p>
-<h3><code>Flags</code></h3>
-<p>Flags can be 0 or <code>KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM = 0x200</code>, indicating the Packet is the last packet in the stream, and EosPacketLength is a valid length in bytes for the packet. For more information see <em>OptionsFlags</em> in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ks/ns-ks-ksstream_header">KSSTREAM_HEADER structure (ks.h)</a>.</p>
-<h3><code>EosPacketLength</code></h3>
+
+<h3 id="flags"><code>Flags</code></h3>
+
+<p>Flags can be 0 or <code>KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM = 0x200</code>, indicating the Packet is the last packet in the stream, and EosPacketLength is a valid length in bytes for the packet. For more information see _OptionsFlags_ in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ks/ns-ks-ksstream_header">KSSTREAM_HEADER structure (ks.h)</a>.</p>
+
+<h3 id="eospacketlength"><code>EosPacketLength</code></h3>
+
 <p>The length of the EOS packet if <code>KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM = 0x200</code> is specified in Flags. Zero is a valid value. If <code>KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM</code> is not specified in Flags, this parameter should be ignored. The EosPacketLength is measured in bytes.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p>Returns <code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> if the call was successful. Otherwise, it returns an appropriate error code. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">Using NTSTATUS Values</a>.</p>
+
 <p>STATUS_DATA_LATE_ERROR – The driver returns this error if the OS passes a packet number that has already transferred or is currently transferring. In this case, a glitch condition has occurred. The driver may optionally use some of the data from the packet or continue playing out the data previously written to this packet number.</p>
+
 <p>STATUS_DATA_OVERRUN – The driver returns this error if the OS passes a packet number that is higher than can be stored in the WaveRT buffer. In this case, a glitch condition has occurred. The driver may optionally ignore the data in the packet.</p>
+
 <p>STATUS_INVALID_DEVICE_STATE – The driver returns this error if the OS calls this routine after previously setting the KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM flag.</p>
+
 <p>STATUS_INVALID_PARAMETER – The driver returns this error if it finds any other parameter invalid, aside from the specific cases for other error status. This includes any Flag values not specifically defined above.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>After the OS calls this routine, the driver may optionally use the provided information to optimize the hardware transfer. For example, the driver might optimize DMA transfers, or program hardware to stop transfer at the end of the specified packet in case the OS does not call this routine again to inform the driver of another packet. This can mitigate audible effects of underflow, for example introducing an audible gap rather than repeating a circular buffer. The driver however is still obligated to increase its internal packet counter and signal notification events at a nominal real time rate.</p>
+
 <p>Depending on hardware capabilities, if the KSSTREAM_HEADER_OPTIONSF_ENDOFSTREAM flag is specified, the driver may silence-fill a portion of the WaveRT buffer that follows the EOS packet in case the hardware transfers data beyond the EOS position.</p>
+
 <p>The client starts by pre-rolling a buffer. When the client calls ReleaseBuffer, this will translate to a call in AudioKSE that will call into the ACX layer, which will call EvtAcxStreamSetRenderPacket on the active ACXSTREAM. The property will include the packet index (0-based) and, if appropriate, an EOS flag with the byte offset of the end of the stream in the current packet. 
  </p>
-<h3>Example</h3>
+
+<h3 id="example">Example</h3>
+
 <p>Example usage is shown below.</p>
-<pre lang="cpp"><code>    //
-    // Init RT streaming callbacks.
-    //
-    <a href="acx_rt_stream_callbacks" title="typedef struct _ACX_RT_STREAM_CALLBACKS {&#10;  ULONG                                    Size;&#10;  PFN_ACX_STREAM_GET_HW_LATENCY            EvtAcxStreamGetHwLatency;&#10;  PFN_ACX_STREAM_ALLOCATE_RTPACKETS        EvtAcxStreamAllocateRtPackets;&#10;  PFN_ACX_STREAM_FREE_RTPACKETS            EvtAcxStreamFreeRtPackets;&#10;  PFN_ACX_STREAM_SET_RENDER_PACKET         EvtAcxStreamSetRenderPacket;&#10;  PFN_ACX_STREAM_GET_CURRENT_PACKET        EvtAcxStreamGetCurrentPacket;&#10;  PFN_ACX_STREAM_GET_CAPTURE_PACKET        EvtAcxStreamGetCapturePacket;&#10;  PFN_ACX_STREAM_GET_PRESENTATION_POSITION EvtAcxStreamGetPresentationPosition;&#10;} ACX_RT_STREAM_CALLBACKS, *PACX_RT_STREAM_CALLBACKS;">ACX_RT_STREAM_CALLBACKS</a> rtCallbacks;
-    <a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a>(&amp;rtCallbacks);
 
-    rtCallbacks.EvtAcxStreamSetRenderPacket = EvtStreamSetRenderPacket;
+<div class="codehilite">
+<pre><span></span><code><span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Init RT streaming callbacks.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="n"><a href="acx_rt_stream_callbacks" title="typedef struct _ACX_RT_STREAM_CALLBACKS {&#10;  ULONG                                    Size;&#10;  PFN_ACX_STREAM_GET_HW_LATENCY            EvtAcxStreamGetHwLatency;&#10;  PFN_ACX_STREAM_ALLOCATE_RTPACKETS        EvtAcxStreamAllocateRtPackets;&#10;  PFN_ACX_STREAM_FREE_RTPACKETS            EvtAcxStreamFreeRtPackets;&#10;  PFN_ACX_STREAM_SET_RENDER_PACKET         EvtAcxStreamSetRenderPacket;&#10;  PFN_ACX_STREAM_GET_CURRENT_PACKET        EvtAcxStreamGetCurrentPacket;&#10;  PFN_ACX_STREAM_GET_CAPTURE_PACKET        EvtAcxStreamGetCapturePacket;&#10;  PFN_ACX_STREAM_GET_PRESENTATION_POSITION EvtAcxStreamGetPresentationPosition;&#10;} ACX_RT_STREAM_CALLBACKS, *PACX_RT_STREAM_CALLBACKS;">ACX_RT_STREAM_CALLBACKS</a></span><span class="w"> </span><span class="n">rtCallbacks</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">rtCallbacks</span><span class="p">);</span>
 
-    status = <a href="acxstreaminitassignacxrtstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxRtStreamCallbacks(&#10;  PACXSTREAM_INIT          StreamInit,&#10;  PACX_RT_STREAM_CALLBACKS RtStreamCallbacks&#10;);">AcxStreamInitAssignAcxRtStreamCallbacks</a>(StreamInit, &amp;rtCallbacks);
+<span class="w">    </span><span class="n">rtCallbacks</span><span class="p">.</span><span class="n">EvtAcxStreamSetRenderPacket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EvtStreamSetRenderPacket</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="acxstreaminitassignacxrtstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxRtStreamCallbacks(&#10;  PACXSTREAM_INIT          StreamInit,&#10;  PACX_RT_STREAM_CALLBACKS RtStreamCallbacks&#10;);">AcxStreamInitAssignAcxRtStreamCallbacks</a></span><span class="p">(</span><span class="n">StreamInit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">rtCallbacks</span><span class="p">);</span>
 </code></pre>
-<pre lang="cpp"><code>#pragma code_seg(&quot;PAGE&quot;)
-<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-EvtStreamSetRenderPacket(
-    _In_ ACXSTREAM Stream,
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     Packet,
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     Flags,
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     EosPacketLength
-    )
-{
-    PSTREAM_CONTEXT ctx;
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>        status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+</div>
 
-    PAGED_CODE();
+<div class="codehilite">
+<pre><span></span><code><span class="cp">#pragma code_seg(&quot;PAGE&quot;)</span>
+<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="nf">EvtStreamSetRenderPacket</span><span class="p">(</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n">ACXSTREAM</span><span class="w"> </span><span class="n">Stream</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">     </span><span class="n">Packet</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">     </span><span class="n">Flags</span><span class="p">,</span>
+<span class="w">    </span><span class="n">_In_</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">     </span><span class="n">EosPacketLength</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">PSTREAM_CONTEXT</span><span class="w"> </span><span class="n">ctx</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
 
-    ctx = GetStreamContext(Stream);
+<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
 
-    currentPacket = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)<a href="interlockedcompareexchange" title="LONG InterlockedCompareExchange(&#10;  [in, out] LONG volatile *Destination,&#10;            LONG          ExChange,&#10;            LONG          Comperand&#10;);">InterlockedCompareExchange</a>((<a href="long" title="typedef long LONG;">LONG</a>*)&amp;ctx-&gt;m_CurrentPacket, -1, -1);
+<span class="w">    </span><span class="n">ctx</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetStreamContext</span><span class="p">(</span><span class="n">Stream</span><span class="p">);</span>
 
-    if (Packet &lt;= currentPacket)
-    {
-        status = STATUS_DATA_LATE_ERROR;
-    }
-    else if (Packet &gt; currentPacket + 1)
-    {
-        status = STATUS_DATA_OVERRUN;
-    }
+<span class="w">    </span><span class="n">currentPacket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="p">)</span><span class="n"><a href="interlockedcompareexchange" title="LONG InterlockedCompareExchange(&#10;  [in, out] LONG volatile *Destination,&#10;            LONG          ExChange,&#10;            LONG          Comperand&#10;);">InterlockedCompareExchange</a></span><span class="p">((</span><span class="n"><a href="long" title="typedef long LONG;">LONG</a></span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">m_CurrentPacket</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">,</span><span class="w"> </span><span class="mi">-1</span><span class="p">);</span>
 
-    return status;
-}
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Packet</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">currentPacket</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STATUS_DATA_LATE_ERROR</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Packet</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">currentPacket</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STATUS_DATA_OVERRUN</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre>
-<h3>ACX requirements</h3>
+</div>
+
+<h3 id="acx-requirements">ACX requirements</h3>
+
 <p><strong>Minimum ACX version:</strong> 1.0</p>
+
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/">acxstreams.h header</a></li>
 </ul>

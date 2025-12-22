@@ -75,53 +75,96 @@
 <h1>Windows Driver Kit DDI reference (ns-dmusicks-_dmus_kernel_event)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>_DMUS_KERNEL_EVENT structure</h1>
-<h2>Description</h2>
+<h1 id="_dmus_kernel_event-structure">_DMUS_KERNEL_EVENT structure</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The DMUS_KERNEL_EVENT structure is used to package time-stamped music events.</p>
-<h2>Members</h2>
-<h3><code>bReserved</code></h3>
+
+<h2 id="members">Members</h2>
+
+<h3 id="breserved"><code>bReserved</code></h3>
+
 <p>Miniport drivers should not modify this member. Reserved for future use. Do not use.</p>
-<h3><code>cbStruct</code></h3>
+
+<h3 id="cbstruct"><code>cbStruct</code></h3>
+
 <p>Miniport drivers should not modify this member.
 This member specifies the size of the DMUS_KERNEL_EVENT structure itself and could change in the future.</p>
-<h3><code>cbEvent</code></h3>
+
+<h3 id="cbevent"><code>cbEvent</code></h3>
+
 <p>Specifies the unrounded number of event bytes referred to by <strong>uData</strong>.</p>
-<h3><code>usChannelGroup</code></h3>
+
+<h3 id="uschannelgroup"><code>usChannelGroup</code></h3>
+
 <p>Specifies which channel group (set of 16 MIDI channels) receives or originated this event. This is unique only within the target MIDI device (miniport driver).</p>
-<h3><code>usFlags</code></h3>
+
+<h3 id="usflags"><code>usFlags</code></h3>
+
 <p>Specifies whether an event is a package and whether this event concludes the message. A package encapsulates a list of events that should be dealt with atomically. This member is a bitfield that can be set to the bitwise OR of one or more of the following flag bits:</p>
-<h4>DMUS_KEF_EVENT_COMPLETE (zero)</h4>
+
+<h4 id="dmus_kef_event_complete-zero">DMUS_KEF_EVENT_COMPLETE (zero)</h4>
+
 <p>Specifies messages in which the entire message is contained either in <strong>uData.abData</strong> or in the buffer pointed to by <strong>uData.pbData</strong>. The former includes all short messages, and potentially includes very brief SysEx messages (see Microsoft Windows SDK documentation) as well. Keep in mind that <strong>sizeof</strong>(PBYTE) can be 8 instead of 4 on 64-bit versions of Windows.</p>
-<h4>DMUS_KEF_EVENT_INCOMPLETE</h4>
-<p>Specifies that this event is an incomplete package or SysEx message (see Windows SDK documentation). This flag specifies that the message continues beyond this event. During MIDI capture, the miniport driver can send &quot;uncooked&quot; MIDI events (raw MIDI input data) to the capture sink by specifying this flag.</p>
-<h4>DMUS_KEF_PACKAGE_EVENT</h4>
+
+<h4 id="dmus_kef_event_incomplete">DMUS_KEF_EVENT_INCOMPLETE</h4>
+
+<p>Specifies that this event is an incomplete package or SysEx message (see Windows SDK documentation). This flag specifies that the message continues beyond this event. During MIDI capture, the miniport driver can send "uncooked" MIDI events (raw MIDI input data) to the capture sink by specifying this flag.</p>
+
+<h4 id="dmus_kef_package_event">DMUS_KEF_PACKAGE_EVENT</h4>
+
 <p>Specifies that this event is a package. The <strong>uData.pPackageEvt</strong> field contains a pointer to a chain of events which should be dealt with atomically.</p>
-<h3><code>ullPresTime100ns</code></h3>
+
+<h3 id="ullprestime100ns"><code>ullPresTime100ns</code></h3>
+
 <p>Specifies the presentation time for this event. This 64-bit value is expressed in 100-nanosecond units. The master clock should be used to evaluate this presentation time.</p>
-<h3><code>ullBytePosition</code></h3>
+
+<h3 id="ullbyteposition"><code>ullBytePosition</code></h3>
+
 <p>8 16</p>
-<h3><code>pNextEvt</code></h3>
+
+<h3 id="pnextevt"><code>pNextEvt</code></h3>
+
 <p>Pointer to the next event in the list, or <strong>NULL</strong> if no event follows. This facilitates passing chains of identically time-stamped messages to the miniport driver. Additionally, hardware that does its own mixing can receive or transmit groups of messages at one time.</p>
-<h3><code>uData</code></h3>
-<h3><code>uData.abData</code></h3>
+
+<h3 id="udata"><code>uData</code></h3>
+
+<h3 id="udataabdata"><code>uData.abData</code></h3>
+
 <p>A byte array containing <strong>cbEvent</strong> bytes of event data. The event data are typically MIDI status and data bytes. This member of <strong>uData</strong> is used if <strong>cbEvent</strong> is less than or equal to <strong>sizeof</strong>(PBYTE).</p>
-<h3><code>uData.pbData</code></h3>
+
+<h3 id="udatapbdata"><code>uData.pbData</code></h3>
+
 <p>Pointer to a buffer containing <strong>cbEvent</strong> bytes of event data. The event data are typically MIDI status and data bytes. This member of <strong>uData</strong> is used if <strong>uFlags</strong> is set to DMUS_KEF_EVENT_COMPLETE and <strong>cbEvent</strong> is greater than <strong>sizeof</strong>(PBYTE).</p>
-<h3><code>uData.pPackageEvt</code></h3>
+
+<h3 id="udatappackageevt"><code>uData.pPackageEvt</code></h3>
+
 <p>Pointer to a chain of events, which is in the form of a linked list of DMUS_KERNEL_EVENT structures. The event data typically consist of MIDI status and data bytes. The events in the list are to be handled together. This member of <strong>uData</strong> is used if <strong>uFlags</strong> is set to DMUS_KEF_PACKAGE_EVENT.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The DMUS_KERNEL_EVENT structure is used by WDM audio drivers that provide kernel streaming support for DirectMusic.</p>
+
 <p>While capturing a MIDI stream, the DMus port driver calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dmusicks/nf-dmusicks-iallocatormxf-getmessage">IAllocatorMXF::GetMessage</a> method to retrieve DMUS_KERNEL_EVENT structures to hold the captured data. While rendering a MIDI stream, the port driver calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dmusicks/nf-dmusicks-imxf-putmessage">IMXF::PutMessage</a> method to discard DMUS_KERNEL_EVENT structures as it finishes reading them. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/midi-transport">MIDI Transport</a>.</p>
+
 <p>In the case of MIDI capture, the DMUS_KERNEL_EVENT structure can be packaged with single, multiple, or fragmentary MIDI messages. The <strong>usFlags</strong> member should be set to DMUS_KEF_EVENT_INCOMPLETE unless it is a single complete MIDI message. This structure also contains:</p>
+
 <ul>
 <li>A time stamp relative to the master clock (ullPresTime100Ns)</li>
 <li>Extended channel information (usChannelGroup)</li>
 </ul>
+
 <p>Mapping to the correct DLS instrument is implicit in the triplet of</p>
+
 <p>&lt;<em>pin</em>, <em>channel_group</em>, <em>channel</em>&gt;</p>
+
 <p>Presentation time does not advance during the states KSSTATE_PAUSE and KSSTATE_STOP, and is reset during KSSTATE_STOP. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/stream/ks-clocks">KS Clocks</a>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dmusicks/nf-dmusicks-iallocatormxf-getmessage">IAllocatorMXF::GetMessage</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dmusicks/nf-dmusicks-imxf-putmessage">IMXF::PutMessage</a></p>
 <hr>
 <div class="ntdoc-description-links">

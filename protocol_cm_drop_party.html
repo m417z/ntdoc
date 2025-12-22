@@ -68,72 +68,95 @@ NDIS_STATUS ProtocolCmDropParty(
 <h1>Windows Driver Kit DDI reference (nc-ndis-protocol_cm_drop_party)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>PROTOCOL_CM_DROP_PARTY callback function</h1>
-<h2>Description</h2>
+<h1 id="protocol_cm_drop_party-callback-function">PROTOCOL_CM_DROP_PARTY callback function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The
 <em>ProtocolCmDropParty</em> function is required. NDIS calls
 <em>ProtocolCmDropParty</em> to request that the call manager remove a party from an existing multipoint
 call.</p>
+
 <p><strong>Note</strong> You must declare the function by using the <strong>PROTOCOL_CM_DROP_PARTY</strong> type.
 For more information, see the following Examples section.</p>
-<h2>Parameters</h2>
-<h3><code>CallMgrPartyContext</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="callmgrpartycontext-in"><code>CallMgrPartyContext</code> [in]</h3>
+
 <p>Specifies the handle to a call manager-allocated context area in which the call manager maintains
 its per-party state. This handle was provided to NDIS in the call managers
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cm_add_party">ProtocolCmAddParty</a> function.</p>
-<h3><code>CloseData</code> [in, optional]</h3>
+
+<h3 id="closedata-in-optional"><code>CloseData</code> [in, optional]</h3>
+
 <p>Pointer to a buffer containing connection-oriented client-specific data that should be sent across
 the connection before the party is dropped. This parameter is <strong>NULL</strong> if the underlying network medium does
 not support transfers of data when closing a connection.</p>
-<h3><code>Size</code> [in, optional]</h3>
+
+<h3 id="size-in-optional"><code>Size</code> [in, optional]</h3>
+
 <p>Specifies the length, in bytes, of the buffer at
 <em>CloseData</em>, zero if
 <em>CloseData</em> is <strong>NULL</strong>.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><em>ProtocolCmDropParty</em> returns the status of its operation(s) as one of the following values:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong>NDIS_STATUS_SUCCESS</strong></td>
-<td>Indicates that the call manager has successfully dropped the party, sent any close data, and free the resources that were allocated for its context area.</td>
+  <td><strong>NDIS_STATUS_SUCCESS</strong></td>
+  <td>Indicates that the call manager has successfully dropped the party, sent any close data, and free the resources that were allocated for its context area.</td>
 </tr>
 <tr>
-<td><strong>NDIS_STATUS_PENDING</strong></td>
-<td>Indicates that the call manager will complete the request to drop the party asynchronously. The call manager must call <a href="ndiscmdroppartycomplete" title="VOID NdisCmDropPartyComplete(&#10;  [in] NDIS_STATUS Status,&#10;  [in] NDIS_HANDLE NdisPartyHandle&#10;);">NdisCmDropPartyComplete</a> when all processing has been finished to notify NDIS and the requesting actor that the party has been dropped.</td>
+  <td><strong>NDIS_STATUS_PENDING</strong></td>
+  <td>Indicates that the call manager will complete the request to drop the party asynchronously. The call manager must call <a href="ndiscmdroppartycomplete" title="VOID NdisCmDropPartyComplete(&#10;  [in] NDIS_STATUS Status,&#10;  [in] NDIS_HANDLE NdisPartyHandle&#10;);">NdisCmDropPartyComplete</a> when all processing has been finished to notify NDIS and the requesting actor that the party has been dropped.</td>
 </tr>
 <tr>
-<td><strong>NDIS_STATUS_INVALID_DATA</strong></td>
-<td>Indicates that <em>CloseData</em> was specified to the call manager, but the media type does not support sending data concurrent with connection termination.</td>
+  <td><strong>NDIS_STATUS_INVALID_DATA</strong></td>
+  <td>Indicates that <em>CloseData</em> was specified to the call manager, but the media type does not support sending data concurrent with connection termination.</td>
 </tr>
 </tbody>
 </table>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p><em>ProtocolCmDropParty</em> communicates with network control devices or other media-specific agents, as
 necessary for its media, to drop a party from an existing multipoint call. If the call manager is
 required to communicated with network control agents (such as, a networking switch) it should use a
 virtual connection to the network control agents that it established in its
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_bind_adapter_ex">ProtocolBindAdapterEx</a> function.</p>
+
 <p>If
 <em>CloseData</em> is non-<strong>NULL</strong> and sending data at connection termination is supported by its media type,
 the call manager should transmit the data specified at
 <em>CloseData</em> before completing termination. If sending data concurrent with connection termination is
 not supported by the media type, the call manager should return control with
 NDIS_STATUS_INVALID_DATA.</p>
+
 <p>Call managers must also free any per-party resources that it allocated and stored at
 <em>CallMgrPartyContext</em> . In addition, the call manager must free the buffer stored
 <em>CallMgrPartyContext</em> itself. Failure to do so will result in a memory leak condition.</p>
-<h3>Examples</h3>
+
+<h3 id="examples">Examples</h3>
+
 <p>To define a <em>ProtocolCmDropParty</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-<p>For example, to define a <em>ProtocolCmDropParty</em> function that is named &quot;MyCmDropParty&quot;, use the <strong>PROTOCOL_CM_DROP_PARTY</strong> type as shown in this code example:</p>
+
+<p>For example, to define a <em>ProtocolCmDropParty</em> function that is named "MyCmDropParty", use the <strong>PROTOCOL_CM_DROP_PARTY</strong> type as shown in this code example:</p>
+
 <pre><code>PROTOCOL_CM_DROP_PARTY MyCmDropParty;
 </code></pre>
+
 <p>Then, implement your function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 NDIS_STATUS
  MyCmDropParty(
@@ -143,10 +166,15 @@ NDIS_STATUS
     )
   {...}
 </code></pre>
-<p>The <strong>PROTOCOL_CM_DROP_PARTY</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the <strong>PROTOCOL_CM_DROP_PARTY</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
-<p>For information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-<h2>See also</h2>
+
+<p>The <strong>PROTOCOL_CM_DROP_PARTY</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>PROTOCOL_CM_DROP_PARTY</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
+
+<p>For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="ndiscmdroppartycomplete" title="VOID NdisCmDropPartyComplete(&#10;  [in] NDIS_STATUS Status,&#10;  [in] NDIS_HANDLE NdisPartyHandle&#10;);">NdisCmDropPartyComplete</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-protocol_cm_add_party">ProtocolCmAddParty</a></p>
 <hr>
 <div class="ntdoc-description-links">

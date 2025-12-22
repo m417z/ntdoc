@@ -68,84 +68,131 @@ KeWaitForSingleObject (
 <h1>Windows Driver Kit DDI reference (nf-wdm-kewaitforsingleobject)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2>Description</h2>
+<h2 id="description">Description</h2>
+
 <p>The <strong>KeWaitForSingleObject</strong> routine puts the current thread into a wait state until the given dispatcher object is set to a signaled state or (optionally) until the wait times out.</p>
-<h2>Parameters</h2>
-<h3><code>Object</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="object-in"><code>Object</code> [in]</h3>
+
 <p>Pointer to an initialized dispatcher object (event, mutex, semaphore, thread, or timer) for which the caller supplies the storage. The dispatcher object must reside in nonpaged system memory. For more information, see Remarks.</p>
-<h3><code>WaitReason</code> [in]</h3>
+
+<h3 id="waitreason-in"><code>WaitReason</code> [in]</h3>
+
 <p>Specifies the reason for the wait. A driver should set this value to <strong>Executive</strong>, unless it is doing work on behalf of a user and is running in the context of a user thread, in which case it should set this value to <strong>UserRequest</strong>.</p>
-<h3><code>WaitMode</code> [in]</h3>
+
+<h3 id="waitmode-in"><code>WaitMode</code> [in]</h3>
+
 <p>Specifies whether the caller waits in <strong>KernelMode</strong> or <strong>UserMode</strong>. Lowest-level and intermediate drivers should specify <strong>KernelMode</strong>. If the given <em>Object</em> is a mutex, the caller must specify <strong>KernelMode</strong>.</p>
-<h3><code>Alertable</code> [in]</h3>
+
+<h3 id="alertable-in"><code>Alertable</code> [in]</h3>
+
 <p>Specifies a Boolean value that is <strong>TRUE</strong> if the wait is alertable and <strong>FALSE</strong> otherwise.</p>
-<h3><code>Timeout</code> [in, optional]</h3>
+
+<h3 id="timeout-in-optional"><code>Timeout</code> [in, optional]</h3>
+
 <p>Pointer to a time-out value that specifies the absolute or relative time, in 100-nanosecond units, at which the wait is to be completed.</p>
+
 <p>A positive value specifies an absolute time, relative to January 1, 1601. A negative value specifies an interval relative to the current time. Absolute expiration times track any changes in the system time; relative expiration times are not affected by system time changes.</p>
+
 <p>If <em>Timeout</em> = 0, the routine returns without waiting. If the caller supplies a <strong>NULL</strong> pointer, the routine waits indefinitely until the dispatcher object is set to the signaled state. For more information, see the following Remarks section.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>KeWaitForSingleObject</strong> can return one of the following.</p>
-<p>The <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> macro recognizes all of these status values as &quot;success&quot; values.</p>
+
+<p>The <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> macro recognizes all of these status values as "success" values.</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
-<td>The dispatcher object specified by the <em>Object</em> parameter satisfied the wait.</td>
+  <td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
+  <td>The dispatcher object specified by the <em>Object</em> parameter satisfied the wait.</td>
 </tr>
 <tr>
-<td><strong>STATUS_ALERTED</strong></td>
-<td>The wait was interrupted to deliver an alert to the calling thread.</td>
+  <td><strong>STATUS_ALERTED</strong></td>
+  <td>The wait was interrupted to deliver an alert to the calling thread.</td>
 </tr>
 <tr>
-<td><strong>STATUS_USER_APC</strong></td>
-<td>The wait was interrupted to deliver a user asynchronous procedure call (APC) to the calling thread.</td>
+  <td><strong>STATUS_USER_APC</strong></td>
+  <td>The wait was interrupted to deliver a user asynchronous procedure call (APC) to the calling thread.</td>
 </tr>
 <tr>
-<td><strong>STATUS_TIMEOUT</strong></td>
-<td>A time-out occurred before the object was set to a signaled state. This value can be returned when the specified set of wait conditions cannot be immediately met and <em>Timeout</em> is set to zero.</td>
+  <td><strong>STATUS_TIMEOUT</strong></td>
+  <td>A time-out occurred before the object was set to a signaled state. This value can be returned when the specified set of wait conditions cannot be immediately met and <em>Timeout</em> is set to zero.</td>
 </tr>
 </tbody>
 </table>
-<h2>Syntax</h2>
-<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-KeWaitForSingleObject (
-    PVOID Object,
-    <a href="kwait_reason" title="typedef enum _KWAIT_REASON&#10;{&#10;    Executive,               // Waiting for an executive event.&#10;    FreePage,                // Waiting for a free page.&#10;    PageIn,                  // Waiting for a page to be read in.&#10;    PoolAllocation,          // Waiting for a pool allocation.&#10;    DelayExecution,          // Waiting due to a delay execution.           // NtDelayExecution&#10;    Suspended,               // Waiting because the thread is suspended.    // NtSuspendThread&#10;    UserRequest,             // Waiting due to a user request.              // NtWaitForSingleObject&#10;    WrExecutive,             // Waiting for an executive event.&#10;    WrFreePage,              // Waiting for a free page.&#10;    WrPageIn,                // Waiting for a page to be read in.&#10;    WrPoolAllocation,        // Waiting for a pool allocation.              // 10&#10;    WrDelayExecution,        // Waiting due to a delay execution.&#10;    WrSuspended,             // Waiting because the thread is suspended.&#10;    WrUserRequest,           // Waiting due to a user request.&#10;    WrEventPair,             // Waiting for an event pair.                  // NtCreateEventPair&#10;    WrQueue,                 // Waiting for a queue.                        // NtRemoveIoCompletion&#10;    WrLpcReceive,            // Waiting for an LPC receive.                 // NtReplyWaitReceivePort&#10;    WrLpcReply,              // Waiting for an LPC reply.                   // NtRequestWaitReplyPort&#10;...">KWAIT_REASON</a> WaitReason,
-    KPROCESSOR_MODE WaitMode,
-    BOOLEAN Alertable,
-    PLARGE_INTEGER Timeout
-    );
+
+<h2 id="syntax">Syntax</h2>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="nf">KeWaitForSingleObject</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Object</span><span class="p">,</span>
+<span class="w">    </span><span class="n"><a href="kwait_reason" title="typedef enum _KWAIT_REASON&#10;{&#10;    Executive,               // Waiting for an executive event.&#10;    FreePage,                // Waiting for a free page.&#10;    PageIn,                  // Waiting for a page to be read in.&#10;    PoolAllocation,          // Waiting for a pool allocation.&#10;    DelayExecution,          // Waiting due to a delay execution.           // NtDelayExecution&#10;    Suspended,               // Waiting because the thread is suspended.    // NtSuspendThread&#10;    UserRequest,             // Waiting due to a user request.              // NtWaitForSingleObject&#10;    WrExecutive,             // Waiting for an executive event.&#10;    WrFreePage,              // Waiting for a free page.&#10;    WrPageIn,                // Waiting for a page to be read in.&#10;    WrPoolAllocation,        // Waiting for a pool allocation.              // 10&#10;    WrDelayExecution,        // Waiting due to a delay execution.&#10;    WrSuspended,             // Waiting because the thread is suspended.&#10;    WrUserRequest,           // Waiting due to a user request.&#10;    WrEventPair,             // Waiting for an event pair.                  // NtCreateEventPair&#10;    WrQueue,                 // Waiting for a queue.                        // NtRemoveIoCompletion&#10;    WrLpcReceive,            // Waiting for an LPC receive.                 // NtReplyWaitReceivePort&#10;    WrLpcReply,              // Waiting for an LPC reply.                   // NtRequestWaitReplyPort&#10;...">KWAIT_REASON</a></span><span class="w"> </span><span class="n">WaitReason</span><span class="p">,</span>
+<span class="w">    </span><span class="n">KPROCESSOR_MODE</span><span class="w"> </span><span class="n">WaitMode</span><span class="p">,</span>
+<span class="w">    </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">Alertable</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PLARGE_INTEGER</span><span class="w"> </span><span class="n">Timeout</span>
+<span class="w">    </span><span class="p">);</span>
 </code></pre>
-<h2>Remarks</h2>
+</div>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>The current state of the specified <em>Object</em> is examined to determine whether the wait can be satisfied immediately. If so, the necessary side effects are performed on the object. Otherwise, the current thread is put in a waiting state and a new thread is selected for execution on the current processor.</p>
+
 <p>The <em>Alertable</em> parameter determines when the thread can be alerted and its wait state consequently aborted. For additional information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/waits-and-apcs">Waits and APCs</a>.</p>
+
 <p>A special consideration applies when the <em>Object</em> parameter passed to <strong>KeWaitForSingleObject</strong> is a mutex. If the dispatcher object waited on is a mutex, APC delivery is the same as for all other dispatcher objects during the wait. However, after <strong>KeWaitForSingleObject</strong> returns with <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> and the thread actually holds the mutex, only special kernel-mode APCs are delivered. Delivery of all other APCs, both kernel-mode and user-mode, is disabled. This restriction on the delivery of APCs persists until the mutex is released.</p>
+
 <p>The dispatcher object pointed to by the <em>Object</em> parameter must reside in nonpaged system memory.</p>
+
 <p>If the <em>WaitMode</em> parameter is <strong>UserMode</strong>, the kernel stack can be swapped out during the wait. Consequently, a caller must never attempt to pass parameters on the stack when calling <strong>KeWaitForSingleObject</strong> using the <strong>UserMode</strong> argument. If you allocate the event on the stack, you must set the <em>WaitMode</em> parameter to <strong>KernelMode</strong>.</p>
+
 <p>It is especially important to check the return value of <strong>KeWaitForSingleObject</strong> when the <em>WaitMode</em> parameter is <strong>UserMode</strong> or <em>Alertable</em> is <strong>TRUE</strong>, because <strong>KeWaitForSingleObject</strong> might return early with a status of STATUS_USER_APC or STATUS_ALERTED.</p>
+
 <p>All long-term waits that can be aborted by a user should be <strong>UserMode</strong> waits and <em>Alertable</em> should be set to <strong>FALSE</strong>.</p>
+
 <p>Where possible, <em>Alertable</em> should be set to <strong>FALSE</strong> and <em>WaitMode</em> should be set to <strong>KernelMode</strong>, in order to reduce driver complexity. The principal exception to this is when the wait is a long-term wait.</p>
+
 <p>If a <strong>NULL</strong> pointer is supplied for <em>Timeout</em>, the calling thread remains in a wait state until the <em>Object</em> is signaled.</p>
+
 <p>A time-out value of zero allows the testing of a set of wait conditions and for the conditional performance of any side effects if the wait can be immediately satisfied, as in the acquisition of a mutex.</p>
+
 <p>Time-out intervals are measured relative to the system clock, and the accuracy with which the operating system can detect the end of a time-out interval is limited by the granularity of the system clock. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/timer-accuracy">Timer Accuracy</a>.</p>
+
 <p>A mutex can be recursively acquired only <a href="minlong" title="#define MINLONG 0x80000000 // winnt">MINLONG</a> times. If this limit is exceeded, the routine raises a STATUS_MUTANT_LIMIT_EXCEEDED exception.</p>
+
 <p>Callers of <strong>KeWaitForSingleObject</strong> must be running at IRQL &lt;= DISPATCH_LEVEL. However, if <em>Timeout</em> = <strong>NULL</strong> or <em>Timeout</em> != 0, the caller must be running at IRQL &lt;= APC_LEVEL and in a nonarbitrary thread context. If <em>Timeout</em> != <strong>NULL</strong> and <em>Timeout</em> = 0, the caller must be running at IRQL &lt;= DISPATCH_LEVEL.</p>
+
 <p><strong>KeWaitForMutexObject</strong> is a macro that converts to <strong>KeWaitForSingleObject</strong>, which can be used instead.</p>
+
 <p>For better performance, use fast mutexes or guarded mutexes. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/alternatives-to-mutex-objects">Alternatives to Mutex Objects</a>.</p>
+
 <p>For more information about mutex objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mutex-objects">Mutex Objects</a>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="exinitializefastmutex" title="VOID ExInitializeFastMutex(&#10;  [out] PFAST_MUTEX FastMutex&#10;);">ExInitializeFastMutex</a></p>
+
 <p><a href="kebugcheckex" title="VOID KeBugCheckEx(&#10;  [in] ULONG     BugCheckCode,&#10;  [in] ULONG_PTR BugCheckParameter1,&#10;  [in] ULONG_PTR BugCheckParameter2,&#10;  [in] ULONG_PTR BugCheckParameter3,&#10;  [in] ULONG_PTR BugCheckParameter4&#10;);">KeBugCheckEx</a></p>
+
 <p><a href="keinitializeevent" title="VOID KeInitializeEvent(&#10;  [out] PRKEVENT   Event,&#10;  [in]  EVENT_TYPE Type,&#10;  [in]  BOOLEAN    State&#10;);">KeInitializeEvent</a></p>
+
 <p><a href="keinitializemutex" title="VOID KeInitializeMutex(&#10;  [out] PRKMUTEX Mutex,&#10;  [in]  ULONG    Level&#10;);">KeInitializeMutex</a></p>
+
 <p><a href="keinitializesemaphore" title="VOID KeInitializeSemaphore(&#10;  [out] PRKSEMAPHORE Semaphore,&#10;  [in]  LONG         Count,&#10;  [in]  LONG         Limit&#10;);">KeInitializeSemaphore</a></p>
+
 <p><a href="keinitializetimer" title="VOID KeInitializeTimer(&#10;  [out] PKTIMER Timer&#10;);">KeInitializeTimer</a></p>
+
 <p><a href="kewaitformultipleobjects" title="NTSTATUS&#10;KeWaitForMultipleObjects (&#10;    ULONG Count,&#10;    PVOID Object[],&#10;    WaitType,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout,&#10;    PKWAIT_BLOCK WaitBlockArray&#10;    );">KeWaitForMultipleObjects</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -71,100 +71,152 @@ KeWaitForMultipleObjects (
 <h1>Windows Driver Kit DDI reference (nf-wdm-kewaitformultipleobjects)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>KeWaitForMultipleObjects function</h1>
-<h2>Description</h2>
+<h1 id="kewaitformultipleobjects-function">KeWaitForMultipleObjects function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <strong>KeWaitForMultipleObjects</strong> routine puts the current thread into an alertable or nonalertable wait state until any or all of a number of dispatcher objects are set to a signaled state or (optionally) until the wait times out.</p>
-<h2>Parameters</h2>
-<h3><code>Count</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="count-in"><code>Count</code> [in]</h3>
+
 <p>The number of objects to be waited on. This parameter specifies the number of elements in the array pointed to by the <em>Object</em> parameter.</p>
-<h3><code>Object</code> [in]</h3>
+
+<h3 id="object-in"><code>Object</code> [in]</h3>
+
 <p>A pointer to an array of pointers to dispatcher objects (events, mutexes, semaphores, threads, and timers) for which the caller supplies the storage. Both the pointer array and the dispatcher objects must reside in nonpaged system memory. For more information, see Remarks.</p>
-<h3><code>WaitType</code> [in]</h3>
+
+<h3 id="waittype-in"><code>WaitType</code> [in]</h3>
+
 <p>The type of wait operation to perform. Specify either <strong>WaitAll</strong>, indicating that all of the specified objects must attain a signaled state before the wait is satisfied; or <strong>WaitAny</strong>, indicating that any one of the objects must attain a signaled state before the wait is satisfied.</p>
-<h3><code>WaitReason</code> [in]</h3>
+
+<h3 id="waitreason-in"><code>WaitReason</code> [in]</h3>
+
 <p>The reason for the wait. Drivers should set this value to <strong>Executive</strong> or, if the driver is doing work on behalf of a user and is running in the context of a user thread, to <strong>UserRequest</strong>.</p>
-<h3><code>WaitMode</code> [in]</h3>
+
+<h3 id="waitmode-in"><code>WaitMode</code> [in]</h3>
+
 <p>Whether the caller waits in <strong>KernelMode</strong> or <strong>UserMode</strong>. Intermediate and lowest-level drivers should specify <strong>KernelMode</strong>. If the set of objects waited on includes a mutex, the caller must specify <strong>KernelMode</strong>.</p>
-<h3><code>Alertable</code> [in]</h3>
+
+<h3 id="alertable-in"><code>Alertable</code> [in]</h3>
+
 <p>A Boolean value that indicates whether the thread can be alerted while it is in the waiting state.</p>
-<h3><code>Timeout</code> [in, optional]</h3>
+
+<h3 id="timeout-in-optional"><code>Timeout</code> [in, optional]</h3>
+
 <p>A pointer to a time-out value that specifies the absolute or relative time, in 100-nanosecond units, at which the wait is to be completed.</p>
+
 <p>A positive value specifies an absolute time, relative to January 1, 1601. A negative value specifies an interval relative to the current time. Absolute expiration times track any changes in the system time; relative expiration times are not affected by system time changes.</p>
-<p>If *<em>Timeout</em> = 0, the routine returns without waiting. If the caller supplies a <strong>NULL</strong> pointer, the routine waits indefinitely until any or all of the dispatcher objects are set to the signaled state. For more information, see the following Remarks section.</p>
-<h3><code>WaitBlockArray</code> [out, optional]</h3>
+
+<p>If <strong>Timeout* = 0, the routine returns without waiting. If the caller supplies a **NULL</strong> pointer, the routine waits indefinitely until any or all of the dispatcher objects are set to the signaled state. For more information, see the following Remarks section.</p>
+
+<h3 id="waitblockarray-out-optional"><code>WaitBlockArray</code> [out, optional]</h3>
+
 <p>A pointer to a caller-allocated <strong>KWAIT_BLOCK</strong> array. If <em>Count</em> &lt;= THREAD_WAIT_OBJECTS, then <em>WaitBlockArray</em> can be <strong>NULL</strong>. Otherwise, this parameter must point to a memory buffer of <strong>sizeof</strong>(<strong>KWAIT_BLOCK</strong>) * <em>Count</em> bytes. The routine uses this buffer for record-keeping while performing the wait operation. The <em>WaitBlockArray</em> buffer must reside in nonpaged system memory. For more information, see Remarks.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>KeWaitForMultipleObjects</strong> can return one of the following:</p>
+
 <table>
 <thead>
 <tr>
-<th>Return code</th>
-<th>Description</th>
+  <th>Return code</th>
+  <th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
-<td>The caller specified <strong>WaitAll</strong> for the <em>WaitType</em> parameter and all dispatcher objects in the <em>Object</em> array have been set to the signaled state.</td>
+  <td><strong><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></strong></td>
+  <td>The caller specified <strong>WaitAll</strong> for the _WaitType_ parameter and all dispatcher objects in the _Object_ array have been set to the signaled state.</td>
 </tr>
 <tr>
-<td><strong>STATUS_ALERTED</strong></td>
-<td>The wait was interrupted to deliver an alert to the calling thread.</td>
+  <td><strong>STATUS_ALERTED</strong></td>
+  <td>The wait was interrupted to deliver an alert to the calling thread.</td>
 </tr>
 <tr>
-<td><strong>STATUS_USER_APC</strong></td>
-<td>The wait was interrupted to deliver a user asynchronous procedure call (APC) to the calling thread.</td>
+  <td><strong>STATUS_USER_APC</strong></td>
+  <td>The wait was interrupted to deliver a user asynchronous procedure call (APC) to the calling thread.</td>
 </tr>
 <tr>
-<td><strong>STATUS_TIMEOUT</strong></td>
-<td>A time-out occurred before the specified set of wait conditions was met. This value can be returned when an explicit time-out value of zero is specified, but the specified set of wait conditions cannot be met immediately.</td>
+  <td><strong>STATUS_TIMEOUT</strong></td>
+  <td>A time-out occurred before the specified set of wait conditions was met. This value can be returned when an explicit time-out value of zero is specified, but the specified set of wait conditions cannot be met immediately.</td>
 </tr>
 <tr>
-<td><strong>STATUS_WAIT_0</strong> through <strong>STATUS_WAIT_63</strong></td>
-<td>The caller specified <strong>WaitAny</strong> for <em>WaitType</em> and one of the dispatcher objects in the <em>Object</em> array has been set to the signaled state. The lower six bits of the return value encode the zero-based index of the object that satisfied the wait.</td>
+  <td><strong>STATUS_WAIT_0</strong> through <strong>STATUS_WAIT_63</strong></td>
+  <td>The caller specified <strong>WaitAny</strong> for _WaitType_ and one of the dispatcher objects in the _Object_ array has been set to the signaled state. The lower six bits of the return value encode the zero-based index of the object that satisfied the wait.</td>
 </tr>
 <tr>
-<td><strong>STATUS_ABANDONED_WAIT_0</strong> through <strong>STATUS_ABANDONED_WAIT_63</strong></td>
-<td>The caller attempted to wait for a mutex that has been abandoned. The lower six bits of the return value encode the zero-based index of the mutex in the <em>Object</em> array.</td>
+  <td><strong>STATUS_ABANDONED_WAIT_0</strong> through <strong>STATUS_ABANDONED_WAIT_63</strong></td>
+  <td>The caller attempted to wait for a mutex that has been abandoned. The lower six bits of the return value encode the zero-based index of the mutex in the _Object_ array.</td>
 </tr>
 </tbody>
 </table>
-<p>Note that the <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> macro recognizes all of these status values as &quot;success&quot; values.</p>
-<h2>Syntax</h2>
-<pre lang="cpp"><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
-KeWaitForMultipleObjects (
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Count,
-    PVOID Object[],
-    WaitType,
-    <a href="kwait_reason" title="typedef enum _KWAIT_REASON&#10;{&#10;    Executive,               // Waiting for an executive event.&#10;    FreePage,                // Waiting for a free page.&#10;    PageIn,                  // Waiting for a page to be read in.&#10;    PoolAllocation,          // Waiting for a pool allocation.&#10;    DelayExecution,          // Waiting due to a delay execution.           // NtDelayExecution&#10;    Suspended,               // Waiting because the thread is suspended.    // NtSuspendThread&#10;    UserRequest,             // Waiting due to a user request.              // NtWaitForSingleObject&#10;    WrExecutive,             // Waiting for an executive event.&#10;    WrFreePage,              // Waiting for a free page.&#10;    WrPageIn,                // Waiting for a page to be read in.&#10;    WrPoolAllocation,        // Waiting for a pool allocation.              // 10&#10;    WrDelayExecution,        // Waiting due to a delay execution.&#10;    WrSuspended,             // Waiting because the thread is suspended.&#10;    WrUserRequest,           // Waiting due to a user request.&#10;    WrEventPair,             // Waiting for an event pair.                  // NtCreateEventPair&#10;    WrQueue,                 // Waiting for a queue.                        // NtRemoveIoCompletion&#10;    WrLpcReceive,            // Waiting for an LPC receive.                 // NtReplyWaitReceivePort&#10;    WrLpcReply,              // Waiting for an LPC reply.                   // NtRequestWaitReplyPort&#10;...">KWAIT_REASON</a> WaitReason,
-    KPROCESSOR_MODE WaitMode,
-    BOOLEAN Alertable,
-    PLARGE_INTEGER Timeout,
-    PKWAIT_BLOCK WaitBlockArray
-    );
+
+<p>Note that the <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> macro recognizes all of these status values as "success" values.</p>
+
+<h2 id="syntax">Syntax</h2>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
+<span class="nf">KeWaitForMultipleObjects</span><span class="w"> </span><span class="p">(</span>
+<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">Count</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Object</span><span class="p">[],</span>
+<span class="w">    </span><span class="n">WaitType</span><span class="p">,</span>
+<span class="w">    </span><span class="n"><a href="kwait_reason" title="typedef enum _KWAIT_REASON&#10;{&#10;    Executive,               // Waiting for an executive event.&#10;    FreePage,                // Waiting for a free page.&#10;    PageIn,                  // Waiting for a page to be read in.&#10;    PoolAllocation,          // Waiting for a pool allocation.&#10;    DelayExecution,          // Waiting due to a delay execution.           // NtDelayExecution&#10;    Suspended,               // Waiting because the thread is suspended.    // NtSuspendThread&#10;    UserRequest,             // Waiting due to a user request.              // NtWaitForSingleObject&#10;    WrExecutive,             // Waiting for an executive event.&#10;    WrFreePage,              // Waiting for a free page.&#10;    WrPageIn,                // Waiting for a page to be read in.&#10;    WrPoolAllocation,        // Waiting for a pool allocation.              // 10&#10;    WrDelayExecution,        // Waiting due to a delay execution.&#10;    WrSuspended,             // Waiting because the thread is suspended.&#10;    WrUserRequest,           // Waiting due to a user request.&#10;    WrEventPair,             // Waiting for an event pair.                  // NtCreateEventPair&#10;    WrQueue,                 // Waiting for a queue.                        // NtRemoveIoCompletion&#10;    WrLpcReceive,            // Waiting for an LPC receive.                 // NtReplyWaitReceivePort&#10;    WrLpcReply,              // Waiting for an LPC reply.                   // NtRequestWaitReplyPort&#10;...">KWAIT_REASON</a></span><span class="w"> </span><span class="n">WaitReason</span><span class="p">,</span>
+<span class="w">    </span><span class="n">KPROCESSOR_MODE</span><span class="w"> </span><span class="n">WaitMode</span><span class="p">,</span>
+<span class="w">    </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">Alertable</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PLARGE_INTEGER</span><span class="w"> </span><span class="n">Timeout</span><span class="p">,</span>
+<span class="w">    </span><span class="n">PKWAIT_BLOCK</span><span class="w"> </span><span class="n">WaitBlockArray</span>
+<span class="w">    </span><span class="p">);</span>
 </code></pre>
-<h2>Remarks</h2>
+</div>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>Each thread object has a built-in array of wait blocks that can be used to wait for several objects to be set concurrently. Whenever possible, the built-in array of wait blocks should be used in a wait-multiple operation because no additional wait block storage needs to be allocated and later deallocated. However, if the number of objects that must be waited on concurrently is greater than the number of built-in wait blocks, use the <em>WaitBlockArray</em> parameter to specify an alternate set of wait blocks to be used in the wait operation. Drivers only need to allocate a sufficiently large memory buffer for <em>WaitBlockArray</em>. The buffer does not need to be initialized; however, it must be allocated from nonpaged system memory. If the <em>WaitMode</em> parameter is <strong>UserMode</strong>, the <em>WaitBlockArray</em> buffer must not be allocated on the local stack because the stack might be swapped out of memory. Drivers can treat this buffer as an opaque structure and can free it after the routine returns. If either <em>Count</em> &gt; MAXIMUM_WAIT_OBJECTS or if <em>WaitBlockArray</em> is <strong>NULL</strong> and <em>Count</em> &gt; THREAD_WAIT_OBJECTS, the system issues <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/debugger/bug-check-0xc--maximum-wait-objects-exceeded">Bug Check 0xC (MAXIMUM_WAIT_OBJECTS_EXCEEDED)</a>.</p>
+
 <p>The current state for each of the specified objects is examined to determine whether the wait can be satisfied immediately. If the necessary side effects are performed on the objects, an appropriate value is returned.</p>
+
 <p>If the wait cannot be satisfied immediately and either no time-out value or a nonzero time-out value has been specified, the current thread is put in a waiting state and a new thread is selected for execution on the current processor. If no <em>Timeout</em> is supplied, the calling thread will remain in a wait state until the conditions specified by <em>Object</em> and <em>WaitType</em> are satisfied.</p>
+
 <p>If <em>Timeout</em> is specified, the wait will be automatically satisfied if none of the specified wait conditions is met when the given interval expires.</p>
+
 <p>A time-out value of zero allows the testing of a set of wait conditions, conditionally performing any side effects if the wait can be immediately satisfied, as in the acquisition of a mutex.</p>
+
 <p>Time-out intervals are measured relative to the system clock, and the accuracy with which the operating system can detect the end of a time-out interval is limited by the granularity of the system clock. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/timer-accuracy">Timer Accuracy</a>.</p>
+
 <p>The <em>Alertable</em> parameter determines when the thread can be alerted and its wait state consequently aborted. For additional information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/waits-and-apcs">Waits and APCs</a>.</p>
+
 <p>The array pointed to by the <em>Objects</em> parameter must reside in nonpaged system memory. Typically, a driver allocates the storage for the <em>Objects</em> array on the local stack. The <em>Objects</em> array can be allocated on the local stack regardless of the value of the <em>WaitMode</em> parameter.</p>
+
 <p>The dispatcher objects pointed to by the elements in the <em>Objects</em> array must reside in nonpaged system memory. If the <em>WaitMode</em> parameter is <strong>UserMode</strong>, the kernel stack can be swapped out during the wait. Consequently, a caller must never attempt to pass parameters on the stack when calling <strong>KeWaitForMultipleObjects</strong> with the <strong>UserMode</strong> argument. If you allocate the event on the stack, you must set the <em>WaitMode</em> parameter to <strong>KernelMode</strong>.</p>
+
 <p>A special consideration applies when the <em>Object</em> parameter passed to <strong>KeWaitForMultipleObjects</strong> is a mutex. If the dispatcher object waited on is a mutex, APC delivery is the same as for all other dispatcher objects during the wait. However, after <strong>KeWaitForMultipleObjects</strong> returns with <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> and the thread actually holds the mutex, only special kernel-mode APCs are delivered. Delivery of all other APCs, both kernel-mode and user-mode, is disabled. This restriction on the delivery of APCs persists until the mutex is released.</p>
+
 <p>It is especially important to check the return value of <strong>KeWaitForMultipleObjects</strong> when the <em>WaitMode</em> parameter is <strong>UserMode</strong> or <em>Alertable</em> is <strong>TRUE</strong>, because <strong>KeWaitForMultipleObjects</strong> might return early with a status of STATUS_USER_APC or STATUS_ALERTED.</p>
+
 <p>All long term waits that can be aborted by a user should be <strong>UserMode</strong> waits and <em>Alertable</em> should be set to <strong>FALSE</strong>.</p>
+
 <p>Where possible, <em>Alertable</em> should be set to <strong>FALSE</strong> and <em>WaitMode</em> should be set to <strong>KernelMode</strong>, in order to reduce driver complexity. The principal exception to this is when the wait is a long-term wait.</p>
+
 <p>A mutex can be recursively acquired only <a href="minlong" title="#define MINLONG 0x80000000 // winnt">MINLONG</a> times. If this limit is exceeded, the routine raises a STATUS_MUTANT_LIMIT_EXCEEDED exception.</p>
-<p>Callers of <strong>KeWaitForMultipleObjects</strong> can be running at IRQL &lt;= DISPATCH_LEVEL. However, if <em>Timeout</em> = <strong>NULL</strong> or *<em>Timeout</em> != 0, the caller must be running at IRQL &lt;= APC_LEVEL and in a nonarbitrary thread context. (If <em>Timeout</em> != <strong>NULL</strong> and *<em>Timeout</em> = 0, the caller must be running at IRQL &lt;= DISPATCH_LEVEL.)</p>
-<h2>See also</h2>
+
+<p>Callers of <strong>KeWaitForMultipleObjects</strong> can be running at IRQL &lt;= DISPATCH_LEVEL. However, if <em>Timeout</em> = <strong>NULL</strong> or <strong>Timeout* != 0, the caller must be running at IRQL &lt;= APC_LEVEL and in a nonarbitrary thread context. (If <em>Timeout</em> != **NULL</strong> and **Timeout* = 0, the caller must be running at IRQL &lt;= DISPATCH_LEVEL.)</p>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="exinitializefastmutex" title="VOID ExInitializeFastMutex(&#10;  [out] PFAST_MUTEX FastMutex&#10;);">ExInitializeFastMutex</a></p>
+
 <p><a href="keinitializeevent" title="VOID KeInitializeEvent(&#10;  [out] PRKEVENT   Event,&#10;  [in]  EVENT_TYPE Type,&#10;  [in]  BOOLEAN    State&#10;);">KeInitializeEvent</a></p>
+
 <p><a href="keinitializemutex" title="VOID KeInitializeMutex(&#10;  [out] PRKMUTEX Mutex,&#10;  [in]  ULONG    Level&#10;);">KeInitializeMutex</a></p>
+
 <p><a href="keinitializesemaphore" title="VOID KeInitializeSemaphore(&#10;  [out] PRKSEMAPHORE Semaphore,&#10;  [in]  LONG         Count,&#10;  [in]  LONG         Limit&#10;);">KeInitializeSemaphore</a></p>
+
 <p><a href="keinitializetimer" title="VOID KeInitializeTimer(&#10;  [out] PKTIMER Timer&#10;);">KeInitializeTimer</a></p>
+
 <p><a href="kewaitforsingleobject" title="NTSTATUS&#10;KeWaitForSingleObject (&#10;    PVOID Object,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout&#10;    );">KeWaitForSingleObject</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -66,53 +66,74 @@ BOOLEAN MiniportSynchronizeInterrupt(
 <h1>Windows Driver Kit DDI reference (nc-ndis-miniport_synchronize_interrupt)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>MINIPORT_SYNCHRONIZE_INTERRUPT callback function</h1>
-<h2>Description</h2>
+<h1 id="miniport_synchronize_interrupt-callback-function">MINIPORT_SYNCHRONIZE_INTERRUPT callback function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>A miniport driver must provide a
 <em>MiniportSynchronizeInterrupt</em> handler if any driver function that runs at less than DIRQL shares
 resources with the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_isr">MiniportInterrupt</a> function.</p>
+
 <p>For message signaled interrupts, the miniport driver provides a <em>MiniportSynchronizeMessageInterrupt</em> handler if any driver function that runs at less than DIRQL shares resources for a message signaled interrupt with the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_message_interrupt">MiniportMessageInterrupt</a> function.</p>
+
 <p><strong>Note</strong> You must declare this function by using either the <strong>MINIPORT_SYNCHRONIZE_INTERRUPT</strong> type for non-message signaled interrupts, or by using the <strong>MINIPORT_SYNCHRONIZE_MESSAGE_INTERRUPT</strong> type for message signaled interrupts. For
 more information, see the following Examples section.</p>
-<h2>Parameters</h2>
-<h3><code>SynchronizeContext</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="synchronizecontext-in"><code>SynchronizeContext</code> [in]</h3>
+
 <p>A handle to a context area that is supplied when the miniport driver's
 <em>MiniportXxx</em> or internal function called the
 <a href="ndismsynchronizewithinterruptex" title="BOOLEAN NdisMSynchronizeWithInterruptEx(&#10;  [in] NDIS_HANDLE                            NdisInterruptHandle,&#10;  [in] ULONG                                  MessageId,&#10;  [in] MINIPORT_SYNCHRONIZE_INTERRUPT_HANDLER SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeContext&#10;);">NdisMSynchronizeWithInterruptEx</a> function.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><em>MiniportSynchronizeInterrupt</em> returns a Boolean value with a driver-determined meaning. NDIS
 returns the same value when NDIS returns from
 <strong><a href="ndismsynchronizewithinterruptex" title="BOOLEAN NdisMSynchronizeWithInterruptEx(&#10;  [in] NDIS_HANDLE                            NdisInterruptHandle,&#10;  [in] ULONG                                  MessageId,&#10;  [in] MINIPORT_SYNCHRONIZE_INTERRUPT_HANDLER SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeContext&#10;);">NdisMSynchronizeWithInterruptEx</a></strong>.</p>
-<h2>Remarks</h2>
-<p><strong>Note</strong> The information in this section can also apply to message signaled interrupts by substituting &quot;MiniportInterrupt&quot; for &quot;MiniportMessageInterrupt,&quot; and by substituting &quot;MiniportSynchronizeInterrupt&quot; for &quot;MiniportSynchronizeMessageInterrupt.&quot;</p>
+
+<h2 id="remarks">Remarks</h2>
+
+<p><strong>Note</strong> The information in this section can also apply to message signaled interrupts by substituting "MiniportInterrupt" for "MiniportMessageInterrupt," and by substituting "MiniportSynchronizeInterrupt" for "MiniportSynchronizeMessageInterrupt."</p>
+
 <p>If any miniport driver function that runs at less than DIRQL shares resources, such as NIC registers,
 with the driver's
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_isr">MiniportInterrupt</a> function, that
 driver cannot access those resources directly. If such a lower priority function attempts to access the
 shared resources directly, it might be preempted by
 <em>MiniportInterrupt</em>, which could override the state changes of the lower priority driver function.</p>
+
 <p>To synchronize access to shared resources with
 <em>MiniportInterrupt</em>, lower priority driver functions must call the
 <a href="ndismsynchronizewithinterruptex" title="BOOLEAN NdisMSynchronizeWithInterruptEx(&#10;  [in] NDIS_HANDLE                            NdisInterruptHandle,&#10;  [in] ULONG                                  MessageId,&#10;  [in] MINIPORT_SYNCHRONIZE_INTERRUPT_HANDLER SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeContext&#10;);">NdisMSynchronizeWithInterruptEx</a> function. The driver's
 <em>MiniportSynchronizeInterrupt</em> function accesses the shared resources at DIRQL. Calling
 <strong><a href="ndismsynchronizewithinterruptex" title="BOOLEAN NdisMSynchronizeWithInterruptEx(&#10;  [in] NDIS_HANDLE                            NdisInterruptHandle,&#10;  [in] ULONG                                  MessageId,&#10;  [in] MINIPORT_SYNCHRONIZE_INTERRUPT_HANDLER SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeContext&#10;);">NdisMSynchronizeWithInterruptEx</a></strong> prevents race conditions and deadlocks in such a miniport
 driver.</p>
+
 <p>Any lower priority driver functions that share resources among themselves (but not with any function
 that runs at DIRQL) should use a spin lock to protect those shared resources.</p>
+
 <p><em>MiniportSynchronizeInterrupt</em> runs at the DIRQL assigned when the driver's
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> function
 calls the
 <a href="ndismregisterinterruptex" title="NDIS_STATUS NdisMRegisterInterruptEx(&#10;  [in]  NDIS_HANDLE                              MiniportAdapterHandle,&#10;  [in]  NDIS_HANDLE                              MiniportInterruptContext,&#10;  [in]  PNDIS_MINIPORT_INTERRUPT_CHARACTERISTICS MiniportInterruptCharacteristics,&#10;  [out] PNDIS_HANDLE                             NdisInterruptHandle&#10;);">NdisMRegisterInterruptEx</a> function. Like any driver function that runs at DIRQL,
 <em>MiniportSynchronizeInterrupt</em> should return control back to the caller as quickly as possible, and
 it can call only those
-<strong>Ndis<em>Xxx</em></strong> functions that are safe to call at any IRQL.</p>
-<h3>Examples</h3>
+<strong>Ndis*Xxx</strong>* functions that are safe to call at any IRQL.</p>
+
+<h3 id="examples">Examples</h3>
+
 <p>To define a <em>MiniportSynchronizeInterrupt</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-<p>For example, to define a <em>MiniportSynchronizeInterrupt</em> function that is named &quot;MySynchronizeInterrupt&quot;, use the <strong>MINIPORT_SYNCHRONIZE_INTERRUPT</strong> type as shown in this code example:</p>
+
+<p>For example, to define a <em>MiniportSynchronizeInterrupt</em> function that is named "MySynchronizeInterrupt", use the <strong>MINIPORT_SYNCHRONIZE_INTERRUPT</strong> type as shown in this code example:</p>
+
 <pre><code>MINIPORT_SYNCHRONIZE_INTERRUPT MySynchronizeInterrupt;
 </code></pre>
+
 <p>Then, implement your function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 BOOLEAN
  MySynchronizeInterrupt(
@@ -120,10 +141,14 @@ BOOLEAN
     )
   {...}
 </code></pre>
+
 <p>To define a <em>MiniportSynchronizeMessageInterrupt</em> function for message signaled interrupts, use the <strong>MINIPORT_SYNCHRONIZE_MESSAGE_INTERRUPT</strong> type as shown in this code example:</p>
+
 <pre><code>MINIPORT_SYNCHRONIZE_MESSAGE_INTERRUPT MySynchronizeMessageInterrupt;
 </code></pre>
+
 <p>Then, implement your function as follows:</p>
+
 <pre><code>_Use_decl_annotations_
 BOOLEAN
  MySynchronizeMessageInterrupt(
@@ -131,13 +156,21 @@ BOOLEAN
     )
   {...}
 </code></pre>
-<p>The <strong>MINIPORT_SYNCHRONIZE_INTERRUPT</strong> and <strong>MINIPORT_SYNCHRONIZE_MESSAGE_INTERRUPT</strong> function types are defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definitions. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
-<p>For information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-<h2>See also</h2>
+
+<p>The <strong>MINIPORT_SYNCHRONIZE_INTERRUPT</strong> and <strong>MINIPORT_SYNCHRONIZE_MESSAGE_INTERRUPT</strong> function types are defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definitions. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
+
+<p>For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_isr">MiniportInetrrupt</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a></p>
+
 <p><a href="ndisallocatespinlock" title="VOID NdisAllocateSpinLock(&#10;  [out] PNDIS_SPIN_LOCK SpinLock&#10;);">NdisAllocateSpinLock</a></p>
+
 <p><a href="ndismregisterinterruptex" title="NDIS_STATUS NdisMRegisterInterruptEx(&#10;  [in]  NDIS_HANDLE                              MiniportAdapterHandle,&#10;  [in]  NDIS_HANDLE                              MiniportInterruptContext,&#10;  [in]  PNDIS_MINIPORT_INTERRUPT_CHARACTERISTICS MiniportInterruptCharacteristics,&#10;  [out] PNDIS_HANDLE                             NdisInterruptHandle&#10;);">NdisMRegisterInterruptEx</a></p>
+
 <p><a href="ndismsynchronizewithinterruptex" title="BOOLEAN NdisMSynchronizeWithInterruptEx(&#10;  [in] NDIS_HANDLE                            NdisInterruptHandle,&#10;  [in] ULONG                                  MessageId,&#10;  [in] MINIPORT_SYNCHRONIZE_INTERRUPT_HANDLER SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeFunction,&#10;  [in] PVOID                                  SynchronizeContext&#10;);">NdisMSynchronizeWithInterruptEx</a></p>
 <hr>
 <div class="ntdoc-description-links">

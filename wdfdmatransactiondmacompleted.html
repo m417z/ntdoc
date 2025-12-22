@@ -64,147 +64,186 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfdmatransaction-wdfdmatransactiondmacompleted)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>WdfDmaTransactionDmaCompleted function</h1>
-<h2>Description</h2>
+<h1 id="wdfdmatransactiondmacompleted-function">WdfDmaTransactionDmaCompleted function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>[Applies to KMDF only]</p>
+
 <p>The <strong>WdfDmaTransactionDmaCompleted</strong> method notifies the framework that a device's DMA transfer operation is completed.</p>
-<h2>Parameters</h2>
-<h3><code>DmaTransaction</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="dmatransaction-in"><code>DmaTransaction</code> [in]</h3>
+
 <p>A handle to a DMA transaction object that the driver obtained from a previous call to <a href="wdfdmatransactioncreate" title="NTSTATUS WdfDmaTransactionCreate(&#10;  [in]           WDFDMAENABLER          DmaEnabler,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]          WDFDMATRANSACTION      *DmaTransaction&#10;);">WdfDmaTransactionCreate</a>.</p>
-<h3><code>Status</code> [out]</h3>
+
+<h3 id="status-out"><code>Status</code> [out]</h3>
+
 <p>A pointer to a location that receives the status of the DMA transfer. For more information, see the following Remarks section.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><strong>WdfDmaTransactionDmaCompleted</strong> returns <strong>FALSE</strong> and <em>Status</em> receives STATUS_MORE_PROCESSING_REQUIRED if additional transfers are needed to complete the DMA transaction. The method returns <strong>TRUE</strong> if no additional transfers are required.</p>
+
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>Framework-based drivers must call one of the following methods whenever a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dma-transactions-and-dma-transfers">DMA transfer</a> is complete:</p>
+
 <ul>
 <li><strong>WdfDmaTransactionDmaCompleted</strong></li>
 <li><a href="wdfdmatransactiondmacompletedwithlength" title="BOOLEAN WdfDmaTransactionDmaCompletedWithLength(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [in]  size_t            TransferredLength,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompletedWithLength</a></li>
 <li><a href="wdfdmatransactiondmacompletedfinal" title="BOOLEAN WdfDmaTransactionDmaCompletedFinal(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [in]  size_t            FinalTransferredLength,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompletedFinal</a></li>
 </ul>
+
 <p>Typically, drivers call these methods from within an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> event callback function, after a device interrupt indicates the completion of a DMA transfer operation. A driver for a system-mode DMA device might call these methods from within an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdmatransaction/nc-wdfdmatransaction-evt_wdf_dma_transaction_dma_transfer_complete">EvtDmaTransactionDmaTransferComplete</a> event callback function.</p>
+
 <p>The framework might divide a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dma-transactions-and-dma-transfers">DMA transaction</a> into several DMA transfer operations. Therefore, the driver must examine the method's return value to determine if additional transfers are required.</p>
+
 <p>If the method returns <strong>FALSE</strong>, the <em>Status</em> location receives STATUS_MORE_PROCESSING_REQUIRED and additional DMA operations are required to complete the transaction. Typically, the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> event callback function does nothing else at this point. Instead, the framework calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdmatransaction/nc-wdfdmatransaction-evt_wdf_program_dma">EvtProgramDma</a> event callback function, so the callback function can begin the next transfer.</p>
+
 <p>If the method returns <strong>TRUE</strong>, no more transfers will occur for the specified transaction. In this case, a <em>Status</em> value of <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> means that the framework did not encounter any errors and the DMA transaction is complete.</p>
+
 <p>If the driver calls <a href="wdfdmatransactionstopsystemtransfer" title="VOID WdfDmaTransactionStopSystemTransfer(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionStopSystemTransfer</a> before calling <strong>WdfDmaTransactionDmaCompleted</strong>, <strong>WdfDmaTransactionDmaCompleted</strong> returns <strong>TRUE</strong> and a <em>Status</em> value of <strong>STATUS_CANCELLED</strong>.</p>
+
 <p>For transactions that were set for <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/">single transfer</a>, <strong>WdfDmaTransactionDmaCompleted</strong> returns <strong>TRUE</strong> and a <em>Status</em> value of <strong>STATUS_WDF_TOO_MANY_TRANSFERS</strong> if the hardware fails to complete the transaction in a single transfer, even though initialization succeeded.
 This could happen for hardware that reports residual transfers for each DMA operation. For example, the driver programs the device to write 64KB, but the device writes only 60KB.
 In this case, the driver might repeat the DMA operation or reset the device.</p>
+
 <p>Any other value for <em>Status</em> means that the framework detected an error and the DMA transaction might not have been completed.</p>
+
 <p>When <strong>WdfDmaTransactionDmaCompleted</strong> returns <strong>TRUE</strong>, the driver typically does the following:</p>
+
 <ul>
 <li>Calls <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a> or <a href="wdfdmatransactionrelease" title="NTSTATUS WdfDmaTransactionRelease(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionRelease</a> to delete or reuse the transaction object, respectively.</li>
 <li>Completes the I/O request, if the DMA transaction is associated with an I/O request. (Drivers complete requests by calling <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> or <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>.)</li>
 </ul>
+
 <p>For more information about completing DMA transfers, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-a-dma-transfer">Completing a DMA Transfer</a>.</p>
-<h4>Examples</h4>
+
+<h4 id="examples">Examples</h4>
+
 <p>The following code example is from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">AMCC5933</a> sample driver. This example shows an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback function. The example notifies the framework that a DMA transfer has completed. If the framework indicates that this transfer is the last one for the DMA transaction, the code deletes the DMA transaction object and completes the associated I/O request.</p>
-<pre lang="cpp"><code>VOID
-AmccPciEvtInterruptDpc(
-    IN WDFINTERRUPT  WdfInterrupt,
-    IN WDFOBJECT  WdfDevice
-    )
-{
-    PAMCC_DEVICE_EXTENSION  devExt;
-    WDFREQUEST  request;
-    REQUEST_CONTEXT  *transfer;
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
-    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  transferred;
-    BOOLEAN  transactionComplete;
 
-    UNREFERENCED_PARAMETER( WdfInterrupt );
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="nf">AmccPciEvtInterruptDpc</span><span class="p">(</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFINTERRUPT</span><span class="w">  </span><span class="n">WdfInterrupt</span><span class="p">,</span>
+<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFOBJECT</span><span class="w">  </span><span class="n">WdfDevice</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">PAMCC_DEVICE_EXTENSION</span><span class="w">  </span><span class="n">devExt</span><span class="p">;</span>
+<span class="w">    </span><span class="n">WDFREQUEST</span><span class="w">  </span><span class="n">request</span><span class="p">;</span>
+<span class="w">    </span><span class="n">REQUEST_CONTEXT</span><span class="w">  </span><span class="o">*</span><span class="n">transfer</span><span class="p">;</span>
+<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">  </span><span class="n">status</span><span class="p">;</span>
+<span class="w">    </span><span class="kt"><a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a></span><span class="w">  </span><span class="n">transferred</span><span class="p">;</span>
+<span class="w">    </span><span class="n">BOOLEAN</span><span class="w">  </span><span class="n">transactionComplete</span><span class="p">;</span>
 
-    //
-    // Retrieve request and transfer.
-    //
-    devExt = AmccPciGetDevExt(WdfDevice);
-    request  = devExt-&gt;CurrentRequest;
-    transfer = GetRequestContext(request);
+<span class="w">    </span><span class="n">UNREFERENCED_PARAMETER</span><span class="p">(</span><span class="w"> </span><span class="n">WdfInterrupt</span><span class="w"> </span><span class="p">);</span>
 
-    //
-    // Check to see if the request has been canceled.
-    //
-    if (<a href="wdfrequestiscanceled" title="BOOLEAN WdfRequestIsCanceled(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestIsCanceled</a>(request)) {
-        TraceEvents(
-                    TRACE_LEVEL_ERROR,
-                    AMCC_TRACE_IO,
-                    &quot;Aborted DMA transaction 0x%p&quot;,
-                    request
-                    );
-        <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>( transfer-&gt;DmaTransaction );
-        devExt-&gt;CurrentRequest = NULL;
-        <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
-                           request,
-                           STATUS_CANCELLED
-                           );
-        return;
-    }
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Retrieve request and transfer.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="n">devExt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AmccPciGetDevExt</span><span class="p">(</span><span class="n">WdfDevice</span><span class="p">);</span>
+<span class="w">    </span><span class="n">request</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="n">devExt</span><span class="o">-&gt;</span><span class="n">CurrentRequest</span><span class="p">;</span>
+<span class="w">    </span><span class="n">transfer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetRequestContext</span><span class="p">(</span><span class="n">request</span><span class="p">);</span>
 
-    //
-    // Notify the framework that a DMA transfer has completed.
-    //
-    transactionComplete = WdfDmaTransactionDmaCompleted(
-                                                    transfer-&gt;DmaTransaction,
-                                                    &amp;status
-                                                    );
-    if (transactionComplete) {
-        <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(status != STATUS_MORE_PROCESSING_REQUIRED);
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Check to see if the request has been canceled.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n"><a href="wdfrequestiscanceled" title="BOOLEAN WdfRequestIsCanceled(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestIsCanceled</a></span><span class="p">(</span><span class="n">request</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">TraceEvents</span><span class="p">(</span>
+<span class="w">                    </span><span class="n">TRACE_LEVEL_ERROR</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">AMCC_TRACE_IO</span><span class="p">,</span>
+<span class="w">                    </span><span class="s">&quot;Aborted DMA transaction 0x%p&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">request</span>
+<span class="w">                    </span><span class="p">);</span>
+<span class="w">        </span><span class="n"><a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a></span><span class="p">(</span><span class="w"> </span><span class="n">transfer</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="w"> </span><span class="p">);</span>
+<span class="w">        </span><span class="n">devExt</span><span class="o">-&gt;</span><span class="n">CurrentRequest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="n"><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></span><span class="p">(</span>
+<span class="w">                           </span><span class="n">request</span><span class="p">,</span>
+<span class="w">                           </span><span class="n">STATUS_CANCELLED</span>
+<span class="w">                           </span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
-        //
-        // No more data. The request is complete.
-        //
-        TraceEvents(
-                    TRACE_LEVEL_INFORMATION,
-                    AMCC_TRACE_IO,
-                    &quot;Request %p completed: status %X&quot;,
-                    request,
-                    status
-                    );
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="c1">// Notify the framework that a DMA transfer has completed.</span>
+<span class="w">    </span><span class="c1">//</span>
+<span class="w">    </span><span class="n">transactionComplete</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDmaTransactionDmaCompleted</span><span class="p">(</span>
+<span class="w">                                                    </span><span class="n">transfer</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">,</span>
+<span class="w">                                                    </span><span class="o">&amp;</span><span class="n">status</span>
+<span class="w">                                                    </span><span class="p">);</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">transactionComplete</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">status</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="n">STATUS_MORE_PROCESSING_REQUIRED</span><span class="p">);</span>
 
-        //
-        // Get the byte count.
-        //
-        transferred =
-                <a href="wdfdmatransactiongetbytestransferred" title="size_t WdfDmaTransactionGetBytesTransferred(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionGetBytesTransferred</a>(transfer-&gt;DmaTransaction);
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="c1">// No more data. The request is complete.</span>
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="n">TraceEvents</span><span class="p">(</span>
+<span class="w">                    </span><span class="n">TRACE_LEVEL_INFORMATION</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">AMCC_TRACE_IO</span><span class="p">,</span>
+<span class="w">                    </span><span class="s">&quot;Request %p completed: status %X&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">request</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">status</span>
+<span class="w">                    </span><span class="p">);</span>
 
-        TraceEvents(
-                    TRACE_LEVEL_INFORMATION,
-                    AMCC_TRACE_IO,
-                    &quot;Bytes transferred %d&quot;,
-                    (int) transferred
-                    );
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="c1">// Get the byte count.</span>
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="n">transferred</span><span class="w"> </span><span class="o">=</span>
+<span class="w">                </span><span class="n"><a href="wdfdmatransactiongetbytestransferred" title="size_t WdfDmaTransactionGetBytesTransferred(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionGetBytesTransferred</a></span><span class="p">(</span><span class="n">transfer</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">);</span>
 
-        //
-        // Delete this DmaTransaction object.
-        //
-        <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(transfer-&gt;DmaTransaction);
+<span class="w">        </span><span class="n">TraceEvents</span><span class="p">(</span>
+<span class="w">                    </span><span class="n">TRACE_LEVEL_INFORMATION</span><span class="p">,</span>
+<span class="w">                    </span><span class="n">AMCC_TRACE_IO</span><span class="p">,</span>
+<span class="w">                    </span><span class="s">&quot;Bytes transferred %d&quot;</span><span class="p">,</span>
+<span class="w">                    </span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="n">transferred</span>
+<span class="w">                    </span><span class="p">);</span>
 
-        //
-        // Clean up the device context for this request.
-        //
-        devExt-&gt;CurrentRequest = NULL;
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="c1">// Delete this DmaTransaction object.</span>
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="n"><a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a></span><span class="p">(</span><span class="n">transfer</span><span class="o">-&gt;</span><span class="n">DmaTransaction</span><span class="p">);</span>
 
-        //
-        // Complete this I/O request.
-        //
-        <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
-                                          request,
-                                          status,
-                                          (<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) ? transferred : 0
-                                          );
-    }
-}
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="c1">// Clean up the device context for this request.</span>
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="n">devExt</span><span class="o">-&gt;</span><span class="n">CurrentRequest</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="c1">// Complete this I/O request.</span>
+<span class="w">        </span><span class="c1">//</span>
+<span class="w">        </span><span class="n"><a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a></span><span class="p">(</span>
+<span class="w">                                          </span><span class="n">request</span><span class="p">,</span>
+<span class="w">                                          </span><span class="n">status</span><span class="p">,</span>
+<span class="w">                                          </span><span class="p">(</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">transferred</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="mi">0</span>
+<span class="w">                                          </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
 </code></pre>
-<h2>See also</h2>
+</div>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdmatransaction/nc-wdfdmatransaction-evt_wdf_program_dma">EvtProgramDma</a></p>
+
 <p><a href="wdfdmatransactioncreate" title="NTSTATUS WdfDmaTransactionCreate(&#10;  [in]           WDFDMAENABLER          DmaEnabler,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]          WDFDMATRANSACTION      *DmaTransaction&#10;);">WdfDmaTransactionCreate</a></p>
+
 <p><a href="wdfdmatransactiondmacompletedfinal" title="BOOLEAN WdfDmaTransactionDmaCompletedFinal(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [in]  size_t            FinalTransferredLength,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompletedFinal</a></p>
+
 <p><a href="wdfdmatransactiondmacompletedwithlength" title="BOOLEAN WdfDmaTransactionDmaCompletedWithLength(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [in]  size_t            TransferredLength,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompletedWithLength</a></p>
+
 <p><a href="wdfdmatransactionrelease" title="NTSTATUS WdfDmaTransactionRelease(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionRelease</a></p>
+
 <p><a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a></p>
+
 <p><a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a></p>
+
 <p><a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -66,41 +66,72 @@ VOID EvtSercxFilecleanup(
 <h1>Windows Driver Kit DDI reference (nc-sercx-evt_sercx_filecleanup)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>EVT_SERCX_FILECLEANUP callback function</h1>
-<h2>Description</h2>
+<h1 id="evt_sercx_filecleanup-callback-function">EVT_SERCX_FILECLEANUP callback function</h1>
+
+<h2 id="description">Description</h2>
+
 <p>The <em>EvtSerCxFileCleanup</em> event callback function notifies the serial controller driver that a client has closed the last handle to the file object that represents the serial controller device.</p>
-<h2>Parameters</h2>
-<h3><code>Device</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="device-in"><code>Device</code> [in]</h3>
+
 <p>A WDFDEVICE handle to the framework device object that represents the serial controller.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>This function can deallocate certain system resources that the driver previously allocated for the lifetime of the file object. In conjunction with the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nc-sercx-evt_sercx_fileclose">EvtSerCxFileClose</a> function, the <em>EvtSerCxFileCleanup</em> function should remove the serial controller device from the state in which it is ready to receive and transmit data. The <em>EvtSerCxFileCleanup</em> function should focus specifically on clean-up tasks, such as deallocating memory.</p>
+
 <p>If the serial controller driver previously allocated memory only for the lifetime of the file object that is now closed, the driver should deallocate this memory in either the <em>EvtSerCxFileCleanup</em> or <em>EvtSerCxFileClose</em> function.</p>
+
 <p>Typically, interrupts should be disabled only after the file object is released. Thus, the <em>EvtSerCxFileClose</em> function, and not the <em>EvtSerCxFileCleanup</em> function, should disable the interrupts.</p>
+
 <p>SerCx calls a driver's <em>EvtSerCxFileCleanup</em> function after the last handle to the file object is closed. Because of outstanding I/O requests, this object might not yet be released. After this call, the driver receives no new requests for I/O operations.</p>
+
 <p>SerCx calls a driver's <em>EvtSerCxFileClose</em> function after it calls the driver's <em>EvtSerCxFileCleanup</em> function. SerCx calls the <em>EvtSerCxFileClose</em> function after the file object is released, which occurs only when all outstanding I/O requests are either completed or canceled.</p>
+
 <p>The <em>EvtSerCxFileCleanup</em> function is optional. If a serial controller driver does not implement this function, the driver's <em>EvtSerCxFileClose</em> function must handle all clean-up tasks that are required after the last file handle is closed.</p>
+
 <p>To register an <em>EvtSerCxFileCleanup</em> callback function, the driver must call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a> method.</p>
+
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-file-objects">Framework File Objects</a>.</p>
-<h4>Examples</h4>
+
+<h4 id="examples">Examples</h4>
+
 <p>The function type for this callback is declared in Sercx.h, as follows.</p>
-<pre lang="cpp"><code>typedef VOID
-  EVT_SERCX_FILECLEANUP(
-    __in WDFDEVICE Device
-    );
+
+<div class="codehilite">
+<pre><span></span><code><span class="k">typedef</span><span class="w"> </span><span class="n">VOID</span>
+<span class="w">  </span><span class="nf">EVT_SERCX_FILECLEANUP</span><span class="p">(</span>
+<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span>
+<span class="w">    </span><span class="p">);</span>
 </code></pre>
+</div>
+
 <p>To define an <em>EvtSerCxFileCleanup</em> callback function that is named <code>MyEvtSerCxFileCleanup</code>, you must first provide a function declaration that <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV) and other verification tools require, as follows.</p>
-<pre lang="cpp"><code>EVT_SERCX_FILECLEANUP MyEvtSerCxFileCleanup;
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">EVT_SERCX_FILECLEANUP</span><span class="w"> </span><span class="n">MyEvtSerCxFileCleanup</span><span class="p">;</span>
 </code></pre>
+</div>
+
 <p>Then, implement your callback function as follows.</p>
-<pre lang="cpp"><code>VOID
-  MyEvtSerCxFileCleanup(
-    __in WDFDEVICE Device
-    )
-{ ... }
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">VOID</span>
+<span class="w">  </span><span class="nf">MyEvtSerCxFileCleanup</span><span class="p">(</span>
+<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span>
 </code></pre>
+</div>
+
 <p>For more information about SDV requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions Using Function Role Types for KMDF Drivers</a>.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nc-sercx-evt_sercx_fileclose">EvtSerCxFileClose</a></p>
+
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercxinitialize">SerCxInitialize</a></p>
 <hr>
 <div class="ntdoc-description-links">

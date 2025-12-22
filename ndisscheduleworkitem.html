@@ -63,25 +63,41 @@
 <h1>Windows Driver Kit DDI reference (nf-ndis-ndisscheduleworkitem)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>NdisScheduleWorkItem callback function</h1>
-<h2>Description</h2>
+<h1 id="ndisscheduleworkitem-callback-function">NdisScheduleWorkItem callback function</h1>
+
+<h2 id="description">Description</h2>
+
 <p><strong>Note</strong> NDIS 5. <em>x</em> has been deprecated and is superseded by NDIS 6. <em>x</em>. For new NDIS driver development, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_netvista/">Network Drivers Starting with Windows Vista</a>. For information about porting NDIS 5. <em>x</em> drivers to NDIS 6. <em>x</em>, see <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff570059">Porting NDIS 5.x Drivers to NDIS 6.0</a>.</p>
+
 <p><em>NdisScheduleWorkItem</em> inserts a given work item into a queue from which a system worker thread removes the item and gives control to the callback function that the driver previously supplied to <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552258/(v=vs.85/)"><strong>NdisInitializeWorkItem</strong></a>.</p>
-<h2>Parameters</h2>
-<h3><code>WorkItem</code> [in]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="workitem-in"><code>WorkItem</code> [in]</h3>
+
 <p>Pointer to the work item that was set up by a preceding call to <strong>NdisInitializeWorkItem</strong>.</p>
-<h2>Return value</h2>
+
+<h2 id="return-value">Return value</h2>
+
 <p><em>NdisScheduleWorkItem</em> always succeeds and therefore always returns NDIS_STATUS_SUCCESS.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>A call to <em>NdisScheduleWorkItem</em> allows an NDIS driver to defer some driver-determined operation that could or should be done at a lower IRQL than the raised IRQL at which it is currently running to its worker-thread callback function.</p>
+
 <p>The driver's callback is run within a system thread context at IRQL = PASSIVE_LEVEL later. This caller-supplied function is responsible for reclaiming the storage that the driver allocated for <em>WorkItem</em>. For example, if the driver called <strong>NdisAllocateMemoryWithTag</strong> to provide a context area to <strong>NdisInitializeWorkItem</strong>, its callback function should make the reciprocal call to <strong><a href="ndisfreememory" title="VOID NdisFreeMemory(&#10;  [in] PVOID VirtualAddress,&#10;  [in] UINT  Length,&#10;  [in] UINT  MemoryFlags&#10;);">NdisFreeMemory</a></strong> with <em>WorkItem</em> before it returns control.</p>
+
 <p>A driver must not wait for its callback routine to complete an operation if it is already holding one synchronization object and might attempt to acquire another. For example, a NDIS driver should release any currently held spin lock(s), and so forth before it calls <em>NdisScheduleWorkItem</em>. A highest level NDIS protocol driver also must release any currently held semaphores, mutexes, resource variables, and so forth before it calls <em>NdisScheduleWorkItem</em>. Releasing all synchronization resources before queuing a synchronous worker-thread operation prevents deadlocks.</p>
+
 <p>A serialized miniport driver should never attempt to queue a worker-thread callback routine, because there is no way for such a driver to synchronize access to its NIC context area(s) with a worker-thread callback. Consequently, such a serialized NDIS driver cannot share anything in its per-adapter context area with a worker-thread callback function without causing intermittent system crashes.</p>
+
 <ul>
 <li>Target platform: <a rel="noopener" target="_blank" href="https://go.microsoft.com/fwlink/p/?linkid=531356">Universal</a></li>
 <li>Version: Not supported for NDIS 6.0 drivers in Windows Vista. Use <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563775"><strong>NdisQueueIoWorkItem</strong></a>instead. Supported for NDIS 5.1 drivers in Windows Vista and Windows XP.</li>
 </ul>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <ul>
 <li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff550767/(v=vs.85/)"><strong>NdisAllocateMemoryWithTag</strong></a></li>
 <li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff562577"><strong>NdisFreeMemory</strong></a></li>

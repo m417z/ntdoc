@@ -65,73 +65,97 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-probeforwrite)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1>ProbeForWrite function</h1>
-<h2>Description</h2>
+<h1 id="probeforwrite-function">ProbeForWrite function</h1>
+
+<h2 id="description">Description</h2>
+
 <blockquote>
-<p>[!WARNING]
-The <strong>ProbeForWrite</strong> function is not recommended for use in current software, and is included for historical compatibility only. Use <strong><a href="probeforread" title="VOID ProbeForRead(&#10;  [in] const volatile VOID *Address,&#10;  [in] SIZE_T              Length,&#10;  [in] ULONG               Alignment&#10;);">ProbeForRead</a></strong> instead when validating user buffers. See Remarks for more info.</p>
+  <p>[!WARNING]
+  The <strong>ProbeForWrite</strong> function is not recommended for use in current software, and is included for historical compatibility only. Use <strong><a href="probeforread" title="VOID ProbeForRead(&#10;  [in] const volatile VOID *Address,&#10;  [in] SIZE_T              Length,&#10;  [in] ULONG               Alignment&#10;);">ProbeForRead</a></strong> instead when validating user buffers. See Remarks for more info.</p>
 </blockquote>
+
 <p>The <strong>ProbeForWrite</strong> routine checks that a user-mode buffer actually resides in the user-mode portion of the address space, is writable, and is correctly aligned.</p>
-<h2>Parameters</h2>
-<h3><code>Address</code> [in, out]</h3>
+
+<h2 id="parameters">Parameters</h2>
+
+<h3 id="address-in-out"><code>Address</code> [in, out]</h3>
+
 <p>Specifies the beginning of the user-mode buffer.</p>
-<h3><code>Length</code> [in]</h3>
+
+<h3 id="length-in"><code>Length</code> [in]</h3>
+
 <p>Specifies the length, in bytes, of the user-mode buffer. See additional information in the Remarks section.</p>
-<h3><code>Alignment</code> [in]</h3>
+
+<h3 id="alignment-in"><code>Alignment</code> [in]</h3>
+
 <p>Specifies the required alignment, in bytes, of the beginning of the user-mode buffer.</p>
-<h2>Remarks</h2>
+
+<h2 id="remarks">Remarks</h2>
+
 <p>This function typically provides no substantial benefit over <strong><a href="probeforread" title="VOID ProbeForRead(&#10;  [in] const volatile VOID *Address,&#10;  [in] SIZE_T              Length,&#10;  [in] ULONG               Alignment&#10;);">ProbeForRead</a></strong> because a robust driver must always be prepared to handle protection changes in the user mode virtual address space, including protection changes that remove write permission to a buffer passed to a driver after a <strong>ProbeForWrite</strong> call has executed. Because <strong>ProbeForWrite</strong> accesses each page in the supplied buffer, performance may be reduced due to the overhead of accessing each page, especially if the supplied buffer describes a large region of virtual address space. In addition, because <strong>ProbeForWrite</strong> writes to each page, the same buffer may not be used safely with multiple concurrent driver requests. For these reasons, new driver code should always use <strong><a href="probeforread" title="VOID ProbeForRead(&#10;  [in] const volatile VOID *Address,&#10;  [in] SIZE_T              Length,&#10;  [in] ULONG               Alignment&#10;);">ProbeForRead</a></strong> instead.</p>
+
 <p>The following table outlines the properties of each kernel mode buffer probing routine:</p>
+
 <table>
 <thead>
 <tr>
-<th>Behavior</th>
-<th><strong><a href="probeforread" title="VOID ProbeForRead(&#10;  [in] const volatile VOID *Address,&#10;  [in] SIZE_T              Length,&#10;  [in] ULONG               Alignment&#10;);">ProbeForRead</a></strong></th>
-<th><strong>ProbeForWrite</strong></th>
+  <th>Behavior</th>
+  <th><strong><a href="probeforread" title="VOID ProbeForRead(&#10;  [in] const volatile VOID *Address,&#10;  [in] SIZE_T              Length,&#10;  [in] ULONG               Alignment&#10;);">ProbeForRead</a></strong></th>
+  <th><strong>ProbeForWrite</strong></th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Confirms that buffer describes a region in user mode address space, if the length is non-zero</td>
-<td>x</td>
-<td>x</td>
+  <td>Confirms that buffer describes a region in user mode address space, if the length is non-zero</td>
+  <td>x</td>
+  <td>x</td>
 </tr>
 <tr>
-<td>Confirms that buffer base address and length do not wrap past maximum pointer value</td>
-<td>x</td>
-<td>x</td>
+  <td>Confirms that buffer base address and length do not wrap past maximum pointer value</td>
+  <td>x</td>
+  <td>x</td>
 </tr>
 <tr>
-<td>Confirms that buffer is aligned to requested alignment boundary, if the length is non-zero</td>
-<td>x</td>
-<td>x</td>
+  <td>Confirms that buffer is aligned to requested alignment boundary, if the length is non-zero</td>
+  <td>x</td>
+  <td>x</td>
 </tr>
 <tr>
-<td>Confirms that buffer is initially writable (may change at any time if user mode application reprotects its address space)</td>
-<td></td>
-<td>x</td>
+  <td>Confirms that buffer is initially writable (may change at any time if user mode application reprotects its address space)</td>
+  <td></td>
+  <td>x</td>
 </tr>
 <tr>
-<td>Accesses each page in the buffer (additional overhead)</td>
-<td></td>
-<td>x</td>
+  <td>Accesses each page in the buffer (additional overhead)</td>
+  <td></td>
+  <td>x</td>
 </tr>
 <tr>
-<td>Modifies each page in the buffer (may cause unexpected behavior if same buffer is used in parallel with multiple driver requests)</td>
-<td></td>
-<td>x</td>
+  <td>Modifies each page in the buffer (may cause unexpected behavior if same buffer is used in parallel with multiple driver requests)</td>
+  <td></td>
+  <td>x</td>
 </tr>
 </tbody>
 </table>
+
 <p>Historically, on certain processors which did not honor read only permissions for kernel mode code, there were meaningful functional differences between <strong>ProbeForWrite</strong> and <strong><a href="probeforread" title="VOID ProbeForRead(&#10;  [in] const volatile VOID *Address,&#10;  [in] SIZE_T              Length,&#10;  [in] ULONG               Alignment&#10;);">ProbeForRead</a></strong>. In these cases, the operating system previously relied on <strong>ProbeForWrite</strong> performing an explicit paging writability check. This distinction is no longer meaningful for any processors that are supported by Windows NT 4.0 or later.</p>
-<h3>Legacy remarks</h3>
-<p>Kernel-mode drivers may use <strong>ProbeForWrite</strong> to validate write access to buffers allocated in user space. It is most commonly used during METHOD_NEITHER I/O to validate the user buffer pointed to by <strong>Irp-&gt;UserBuffer</strong>.</p>
+
+<h3 id="legacy-remarks">Legacy remarks</h3>
+
+<p>Kernel-mode drivers may use <strong>ProbeForWrite</strong> to validate write access to buffers allocated in user space. It is most commonly used during METHOD_NEITHER I/O to validate the user buffer pointed to by <strong>Irp->UserBuffer</strong>.</p>
+
 <p>If the specified range of memory is not a valid user-mode address range or is not writable (no access, read-only, and so on), <strong>ProbeForWrite</strong> raises the STATUS_ACCESS_VIOLATION exception. If the beginning of the address range is not aligned on the byte boundary that is specified by <em>Alignment</em>, <strong>ProbeForWrite</strong> raises the STATUS_DATATYPE_MISALIGNMENT exception.</p>
+
 <p>Drivers must call <strong>ProbeForWrite</strong> inside a <strong>try/except</strong> block. If the routine raises an exception, the driver should complete the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with the appropriate error. Note that subsequent accesses by the driver to the user-mode buffer must also be encapsulated within a <strong>try/except</strong> block: a malicious application could have another thread deleting, substituting, or changing the protection of user address ranges at any time (even after or during a call to <strong><a href="probeforread" title="VOID ProbeForRead(&#10;  [in] const volatile VOID *Address,&#10;  [in] SIZE_T              Length,&#10;  [in] ULONG               Alignment&#10;);">ProbeForRead</a></strong> or <strong>ProbeForWrite</strong>). For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/handling-exceptions">Handling Exceptions</a>.</p>
+
 <p>Do not use this routine on kernel-mode addresses; it will raise an exception.</p>
-<p>If <strong>Irp-&gt;RequestorMode</strong> = <strong>KernelMode</strong>, the <strong>Irp-&gt;AssociatedIrp.SystemBuffer</strong> and <strong>Irp-&gt;UserBuffer</strong> fields do not contain user-mode addresses, and a call to <strong>ProbeForWrite</strong> to probe a buffer pointed to by either field will raise an exception.</p>
+
+<p>If <strong>Irp->RequestorMode</strong> = <strong>KernelMode</strong>, the <strong>Irp->AssociatedIrp.SystemBuffer</strong> and <strong>Irp->UserBuffer</strong> fields do not contain user-mode addresses, and a call to <strong>ProbeForWrite</strong> to probe a buffer pointed to by either field will raise an exception.</p>
+
 <p>If <em>Length</em> = 0, <strong>ProbeForWrite</strong> does no checking of the address. In this case, the routine does not raise an exception for an address that is misaligned or is outside the range of valid user addresses.</p>
-<h2>See also</h2>
+
+<h2 id="see-also">See also</h2>
+
 <p><a href="probeforread" title="VOID ProbeForRead(&#10;  [in] const volatile VOID *Address,&#10;  [in] SIZE_T              Length,&#10;  [in] ULONG               Alignment&#10;);">ProbeForRead</a></p>
 <hr>
 <div class="ntdoc-description-links">
