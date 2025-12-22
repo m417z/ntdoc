@@ -57,16 +57,16 @@ def chunk_to_html(chunk: Chunk) -> str:
 
     html = '<pre class="ntdoc-code-pre">'
     html += '<code class="ntdoc-code">'
-    html += '<span class="ntdoc-code-header">'
+    html += '<span class="ntdoc-code-header language-cpp">'
     html += html_before
     html += '</span>'
-    html += '<span class="ntdoc-code-intro">'
+    html += '<span class="ntdoc-code-intro language-cpp">'
     html += escape(intro)
     html += '</span>'
-    html += '<span class="ntdoc-code-body">'
+    html += '<span class="ntdoc-code-body language-cpp">'
     html += escape(body)
     html += '</span>'
-    html += '<span class="ntdoc-code-footer">'
+    html += '<span class="ntdoc-code-footer language-cpp">'
     html += html_after
     html += '</span>'
     html += '<span class="ntdoc-code-links">'
