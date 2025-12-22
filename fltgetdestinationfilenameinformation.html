@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -185,12 +186,8 @@
 <h2>Remarks</h2>
 <p>Minifilters typically call <strong>FltGetDestinationFileNameInformation</strong> in a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/nc-fltkernel-pflt_pre_operation_callback">preoperation callback routine</a> for a rename or hard-link-creation operation, which means that the destination file name most likely doesn't exist. The &quot;destination&quot; name is:</p>
 <ul>
-<li>
-For a file rename, the name the file will have if the rename succeeds. For example, when renaming <em>name1</em> to <em>name2</em>, <em>name2</em> is the destination name.
-</li>
-<li>
-For a hard-link-creation operation, the name being added to the file system. For example, when adding the hard link <em>name2</em> to the existing file named <em>name1</em>, <em>name2</em> is the destination name.
-</li>
+<li>For a file rename, the name the file will have if the rename succeeds. For example, when renaming <em>name1</em> to <em>name2</em>, <em>name2</em> is the destination name.</li>
+<li>For a hard-link-creation operation, the name being added to the file system. For example, when adding the hard link <em>name2</em> to the existing file named <em>name1</em>, <em>name2</em> is the destination name.</li>
 </ul>
 <p><strong>FltGetDestinationFileNameInformation</strong> returns the destination file name information in either normalized or &quot;opened file&quot; format. For more information on these formats, see the <strong><a href="flt_file_name_information" title="typedef struct _FLT_FILE_NAME_INFORMATION {&#10;  USHORT                     Size;&#10;  FLT_FILE_NAME_PARSED_FLAGS NamesParsed;&#10;  FLT_FILE_NAME_OPTIONS      Format;&#10;  UNICODE_STRING             Name;&#10;  UNICODE_STRING             Volume;&#10;  UNICODE_STRING             Share;&#10;  UNICODE_STRING             Extension;&#10;  UNICODE_STRING             Stream;&#10;  UNICODE_STRING             FinalComponent;&#10;  UNICODE_STRING             ParentDir;&#10;} FLT_FILE_NAME_INFORMATION, *PFLT_FILE_NAME_INFORMATION;">FLT_FILE_NAME_INFORMATION</a></strong> structure.</p>
 <p>The file object pointer that is passed for the <strong>FileObject</strong> parameter must be either the <strong>FileObject</strong> member of the <strong><a href="flt_related_objects" title="typedef struct _FLT_RELATED_OBJECTS {&#10;  USHORT        Size;&#10;  USHORT        TransactionContext;&#10;  PFLT_FILTER   Filter;&#10;  PFLT_VOLUME   Volume;&#10;  PFLT_INSTANCE Instance;&#10;  PFILE_OBJECT  FileObject;&#10;  PKTRANSACTION Transaction;&#10;} FLT_RELATED_OBJECTS, *PFLT_RELATED_OBJECTS;">FLT_RELATED_OBJECTS</a></strong> structure for the operation or the <strong>Data-&gt;Iopb-&gt;TargetFileObject</strong> pointer for the operation, where <strong>Data</strong> is the callback data structure for the operation (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>). The file object pointer can't be the <strong>Data-&gt;Iopb-&gt;Parameters.SetFileInformation.FileObject</strong> member, because this field isn't used uniformly across file systems.</p>
@@ -203,18 +200,10 @@ For a hard-link-creation operation, the name being added to the file system. For
 <p>File name tunneling affects only create, hard-link, and rename operations in this way. It doesn't affect other I/O operations, such as read and write.</p>
 <p>The following paired operations can cause the file name <em>name</em> to be tunneled:</p>
 <ul>
-<li>
-delete(<em>name</em>)/create(<em>name</em>)
-</li>
-<li>
-delete(<em>name</em>)/rename(<em>source</em>, <em>name</em>)
-</li>
-<li>
-rename(<em>name</em>, <em>newname</em>)/create(<em>name</em>)
-</li>
-<li>
-rename(<em>name</em>, <em>newname</em>)/rename(<em>source</em>, <em>name</em>)
-</li>
+<li>delete(<em>name</em>)/create(<em>name</em>)</li>
+<li>delete(<em>name</em>)/rename(<em>source</em>, <em>name</em>)</li>
+<li>rename(<em>name</em>, <em>newname</em>)/create(<em>name</em>)</li>
+<li>rename(<em>name</em>, <em>newname</em>)/rename(<em>source</em>, <em>name</em>)</li>
 </ul>
 <h2>See also</h2>
 <p><a href="file_rename_information" title="typedef struct _FILE_RENAME_INFORMATION&#10;{&#10;    BOOLEAN ReplaceIfExists;&#10;    HANDLE RootDirectory;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;">FILE_RENAME_INFORMATION</a></p>
@@ -265,6 +254,7 @@ rename(<em>name</em>, <em>newname</em>)/rename(<em>source</em>, <em>name</em>)
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

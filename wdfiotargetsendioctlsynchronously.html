@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -148,12 +149,8 @@
 <li>
 <p>Supply a <strong>NULL</strong> request handle for the <strong>WdfIoTargetSendIoctlSynchronously</strong> method's <em>Request</em> parameter, or create a new request object and supply its handle:</p>
 <ul>
-<li>
-If you supply a <strong>NULL</strong> request handle, the framework uses an internal request object. This technique is simple to use, but the driver cannot cancel the request.
-</li>
-<li>
-If you call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> to create one or more request objects, you can reuse these request objects by calling <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>. This technique enables your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function to preallocate request objects for a device. Additionally, another driver thread can call <a href="wdfrequestcancelsentrequest" title="BOOLEAN WdfRequestCancelSentRequest(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestCancelSentRequest</a> to cancel the request, if necessary.
-</li>
+<li>If you supply a <strong>NULL</strong> request handle, the framework uses an internal request object. This technique is simple to use, but the driver cannot cancel the request.</li>
+<li>If you call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> to create one or more request objects, you can reuse these request objects by calling <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>. This technique enables your driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function to preallocate request objects for a device. Additionally, another driver thread can call <a href="wdfrequestcancelsentrequest" title="BOOLEAN WdfRequestCancelSentRequest(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestCancelSentRequest</a> to cancel the request, if necessary.</li>
 </ul>
 <p>Your driver can specify a non-<strong>NULL</strong> <em>RequestOptions</em> parameter, whether the driver provides a non-<strong>NULL</strong> or a <strong>NULL</strong> <em>Request</em> parameter. You can, for example, use the <em>RequestOptions</em> parameter to specify a time-out value.</p>
 </li>
@@ -166,7 +163,7 @@ If you call <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [
 <li>
 <p>Supply local buffers.</p>
 <p>Because <strong>WdfIoTargetSendIoctlSynchronously</strong> handles I/O requests synchronously, the driver can create request buffers that are local to the calling routine, as the following code example shows.</p>
-<pre><code><a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a>  MemoryDescriptor;
+<pre><code class="language-cpp"><a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a>  MemoryDescriptor;
 MY_BUFFER_TYPE  MyBuffer;
 <a href="wdf_memory_descriptor_init_buffer" title="VOID WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(&#10;  [out] PWDF_MEMORY_DESCRIPTOR Descriptor,&#10;  [in]  PVOID                  Buffer,&#10;  [in]  ULONG                  BufferLength&#10;);">WDF_MEMORY_DESCRIPTOR_INIT_BUFFER</a>(&amp;MemoryDescriptor,
                                   (PVOID) &amp;MyBuffer,
@@ -176,7 +173,7 @@ MY_BUFFER_TYPE  MyBuffer;
 <li>
 <p>Supply WDFMEMORY handles.</p>
 <p>Call <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a> or <a href="wdfmemorycreatepreallocated" title="NTSTATUS WdfMemoryCreatePreallocated(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]           __drv_aliasesMem PVOID Buffer,&#10;  [in]           size_t                 BufferSize,&#10;  [out]          WDFMEMORY              *Memory&#10;);">WdfMemoryCreatePreallocated</a> to obtain a handle to framework-managed memory, as the following code example shows.</p>
-<pre><code><a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a>  MemoryDescriptor;
+<pre><code class="language-cpp"><a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a>  MemoryDescriptor;
 WDFMEMORY  MemoryHandle = NULL;
 status = <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a>(NULL,
                          NonPagedPool,
@@ -202,7 +199,7 @@ status = <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, o
 <p>For more information about I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-i-o-targets">Using I/O Targets</a>.</p>
 <h4>Examples</h4>
 <p>The following code example defines a local buffer, initializes a <a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a> structure, and calls <strong>WdfIoTargetSendIoctlSynchronously</strong>. This example specifies <strong>NULL</strong> for the request object handle, so the framework will create a new request object for the I/O target.</p>
-<pre><code><a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a>  outputDescriptor;
+<pre><code class="language-cpp"><a href="wdf_memory_descriptor" title="typedef struct _WDF_MEMORY_DESCRIPTOR {&#10;  WDF_MEMORY_DESCRIPTOR_TYPE Type;&#10;  union {&#10;    struct {&#10;      PVOID Buffer;&#10;      ULONG Length;&#10;    } BufferType;&#10;    struct {&#10;      PMDL  Mdl;&#10;      ULONG BufferLength;&#10;    } MdlType;&#10;    struct {&#10;      WDFMEMORY         Memory;&#10;      PWDFMEMORY_OFFSET Offsets;&#10;    } HandleType;&#10;  } u;&#10;} WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;">WDF_MEMORY_DESCRIPTOR</a>  outputDescriptor;
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
 <a href="hid_collection_information" title="typedef struct _HID_COLLECTION_INFORMATION {&#10;  ULONG   DescriptorSize;&#10;  BOOLEAN Polled;&#10;  UCHAR   Reserved1[1];&#10;  USHORT  VendorID;&#10;  USHORT  ProductID;&#10;  USHORT  VersionNumber;&#10;} HID_COLLECTION_INFORMATION, *PHID_COLLECTION_INFORMATION;">HID_COLLECTION_INFORMATION</a>  collectionInformation;
 
@@ -274,6 +271,7 @@ status = WdfIoTargetSendIoctlSynchronously(
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

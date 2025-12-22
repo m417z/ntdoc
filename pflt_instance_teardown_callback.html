@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -111,30 +112,16 @@ VOID PfltInstanceTeardownCallback(
 <p>The <em>InstanceTeardownStartCallback</em> routine is called when the filter manager starts tearing down a minifilter driver instance to allow the minifilter driver to complete any pended I/O operations and save state information.</p>
 <p>The <em>InstanceTeardownStartCallback</em> routine must:</p>
 <ul>
-<li>
-Call <strong><a href="fltcompletependedpreoperation" title="VOID FLTAPI FltCompletePendedPreOperation(&#10;                 PFLT_CALLBACK_DATA        CallbackData,&#10;  [in]           FLT_PREOP_CALLBACK_STATUS CallbackStatus,&#10;  [in, optional] PVOID                     Context&#10;);">FltCompletePendedPreOperation</a></strong> for each I/O operation that was pended in the minifilter driver's preoperation callback routine to complete the operation or return control of the operation to the filter manager.
-</li>
-<li>
-Not pend any new I/O operations. If the minifilter driver uses a callback data queue, it must call <strong><a href="fltcbdqdisable" title="VOID FLTAPI FltCbdqDisable(&#10;  [in, out] PFLT_CALLBACK_DATA_QUEUE Cbdq&#10;);">FltCbdqDisable</a></strong> to disable it.
-</li>
-<li>
-Call <strong><a href="fltcompletependedpostoperation" title="VOID FLTAPI FltCompletePendedPostOperation(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltCompletePendedPostOperation</a></strong> for each I/O operation that was pended in the minifilter driver's postoperation callback routine to return control of the operation to the filter manager.
-</li>
+<li>Call <strong><a href="fltcompletependedpreoperation" title="VOID FLTAPI FltCompletePendedPreOperation(&#10;                 PFLT_CALLBACK_DATA        CallbackData,&#10;  [in]           FLT_PREOP_CALLBACK_STATUS CallbackStatus,&#10;  [in, optional] PVOID                     Context&#10;);">FltCompletePendedPreOperation</a></strong> for each I/O operation that was pended in the minifilter driver's preoperation callback routine to complete the operation or return control of the operation to the filter manager.</li>
+<li>Not pend any new I/O operations. If the minifilter driver uses a callback data queue, it must call <strong><a href="fltcbdqdisable" title="VOID FLTAPI FltCbdqDisable(&#10;  [in, out] PFLT_CALLBACK_DATA_QUEUE Cbdq&#10;);">FltCbdqDisable</a></strong> to disable it.</li>
+<li>Call <strong><a href="fltcompletependedpostoperation" title="VOID FLTAPI FltCompletePendedPostOperation(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltCompletePendedPostOperation</a></strong> for each I/O operation that was pended in the minifilter driver's postoperation callback routine to return control of the operation to the filter manager.</li>
 </ul>
 <p>The <em>InstanceTeardownStartCallback</em> routine can optionally do the following to allow the minifilter driver to unload as quickly as possible:</p>
 <ul>
-<li>
-Close any opened files.
-</li>
-<li>
-Ensure that worker threads perform only the minimum necessary to complete processing of outstanding work items.
-</li>
-<li>
-Call <strong><a href="fltcancelio" title="BOOLEAN FLTAPI FltCancelIo(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltCancelIo</a></strong> to cancel any I/O operations that were initiated by the minifilter driver.
-</li>
-<li>
-Stop queuing new work items.
-</li>
+<li>Close any opened files.</li>
+<li>Ensure that worker threads perform only the minimum necessary to complete processing of outstanding work items.</li>
+<li>Call <strong><a href="fltcancelio" title="BOOLEAN FLTAPI FltCancelIo(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltCancelIo</a></strong> to cancel any I/O operations that were initiated by the minifilter driver.</li>
+<li>Stop queuing new work items.</li>
 </ul>
 <p>Once the minifilter driver's <em>InstanceTeardownStartCallback</em> routine is called, the minifilter driver's preoperation and postoperation callback routines are not called for any new I/O operations. However, they may be called for I/O operations that were started before instance teardown was initiated.</p>
 <p>The <em>InstanceTeardownCompleteCallback</em> routine is called when the teardown process is complete to allow the minifilter driver to close open files and perform any other necessary cleanup processing.</p>
@@ -144,12 +131,8 @@ Stop queuing new work items.
 <p>[!WARNING]
 The <em>InstanceTeardownCompleteCallback</em> routine will not be called if any of the following conditions are true:</p>
 <ul>
-<li>
-There are outstanding pended I/O operations.
-</li>
-<li>
-There are any outstanding I/O operations that were initiated by the minifilter driver.
-</li>
+<li>There are outstanding pended I/O operations.</li>
+<li>There are any outstanding I/O operations that were initiated by the minifilter driver.</li>
 </ul>
 </blockquote>
 <p>If the minifilter driver instance is being torn down because the minifilter driver is being unloaded, the unload operation appears to hang until the <em>InstanceTeardownCompleteCallback</em> routine returns. To debug these kinds of problems, you should enable the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/driver-verifier">Driver Verifier</a> on your minifilter driver. The Filter Verifier <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/i-o-verification">I/O Verification</a> option can help identify possible causes, such as unreleased references, that would prevent the minifilter driver from unloading. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/development-and-testing-tools">Filter Verifier</a>.</p>
@@ -201,6 +184,7 @@ There are any outstanding I/O operations that were initiated by the minifilter d
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

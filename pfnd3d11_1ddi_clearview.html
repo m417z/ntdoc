@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -80,15 +81,9 @@ VOID Pfnd3d111DdiClearview(
 <h3><code>viewType</code></h3>
 <p>A value of type <strong><a href="d3d11ddi_handletype" title="typedef enum D3D11DDI_HANDLETYPE {&#10;  D3D10DDI_HT_RESOURCE,&#10;  D3D10DDI_HT_SHADERRESOURCEVIEW,&#10;  D3D10DDI_HT_RENDERTARGETVIEW,&#10;  D3D10DDI_HT_DEPTHSTENCILVIEW,&#10;  D3D10DDI_HT_SHADER,&#10;  D3D10DDI_HT_ELEMENTLAYOUT,&#10;  D3D10DDI_HT_BLENDSTATE,&#10;  D3D10DDI_HT_DEPTHSTENCILSTATE,&#10;  D3D10DDI_HT_RASTERIZERSTATE,&#10;  D3D10DDI_HT_SAMPLERSTATE,&#10;  D3D10DDI_HT_QUERY,&#10;  D3D11DDI_HT_COMMANDLIST,&#10;  D3D11DDI_HT_UNORDEREDACCESSVIEW,&#10;  D3D11_1DDI_HT_DECODE,&#10;  D3D11_1DDI_HT_VIDEOPROCESSORENUM,&#10;  D3D11_1DDI_HT_VIDEOPROCESSOR,&#10;  D3D11_1DDI_HT_VIDEODECODEROUTPUTVIEW,&#10;  D3D11_1DDI_HT_VIDEOPROCESSORINPUTVIEW,&#10;  D3D11_1DDI_HT_VIDEOPROCESSOROUTPUTVIEW,&#10;...">D3D11DDI_HANDLETYPE</a></strong> that identifies the view handle type that supports this clear operation. Possible types are the following.</p>
 <ul>
-<li>
-D3D10DDI_HT_RENDERTARGETVIEW
-</li>
-<li>
-D3D11DDI_HT_UNORDEREDACCESSVIEW
-</li>
-<li>
-Any D3D11_1DDI_HT_VIDEO<em>XXX</em> type
-</li>
+<li>D3D10DDI_HT_RENDERTARGETVIEW</li>
+<li>D3D11DDI_HT_UNORDEREDACCESSVIEW</li>
+<li>Any D3D11_1DDI_HT_VIDEO<em>XXX</em> type</li>
 </ul>
 <h3><code>hView</code></h3>
 <p>A pointer to the resource view to clear.</p>
@@ -107,24 +102,16 @@ Any D3D11_1DDI_HT_VIDEO<em>XXX</em> type
 <p>If the format is integer, such as <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format">DXGI_FORMAT_R8G8B8A8_UINT</a>, take inputs as integral floats. Therefore, 235.0f maps to 235 (rounds to zero, out of range/INF values clamp to target range, and NaN to zero).</p>
 <p>Here are the color mappings:</p>
 <ul>
-<li>
-Color[0]: R (or Y for video)
-</li>
-<li>
-Color[1]: G (or U/Cb for video)
-</li>
-<li>
-Color[2]: B (or V/Cr for video)
-</li>
-<li>
-Color[3]: A
-</li>
+<li>Color[0]: R (or Y for video)</li>
+<li>Color[1]: G (or U/Cb for video)</li>
+<li>Color[2]: B (or V/Cr for video)</li>
+<li>Color[3]: A</li>
 </ul>
 <p>For video views with YUV or YCbBr formats, <strong>ClearView</strong> does not convert color values. In situations where the format name does not indicate _UNORM, _UINT, and so on, <strong>ClearView</strong> assumes _UINT. Therefore, 235.0f maps to 235 (rounds to zero, out of range/INF values clamp to target range, and NaN to zero).</p>
 <p>For Microsoft Direct3D views of the subsampled RTV or UAV video surfaces, note that the dimensions of the view are based on how many pixels are in the view format rather than the underlying logical number of video pixels. For example suppose the surface has format YUY2 with dimension 1920 by 1080 pixels and an RTV uses the format <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/dxgiformat/ne-dxgiformat-dxgi_format">DXGI_FORMAT_R8G8B8A8_UINT</a>. The view appears to Direct3D as having 1920/2 = 960 <strong>R8G8B8A8</strong> pixels in the horizontal direction. So any rectangles passed into <strong>ClearView</strong> are interpreted in this space. Furthermore, the clear value is taken for all 4 components, <strong>R8G8B8A8</strong>, as if it is no different from a true <strong>R8G8B8A8</strong> surface. In this case, R, G, B, and A do not mean standard RGBA color values; instead, they identify a location in memory, and the caller is responsible for understanding what it means to put data into that location in the context of a video surface.</p>
 <p>However, video views of a video surface (such as views provided to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d11_1ddi_createvideodecoderoutputview"><strong>CreateVideoDecoderOutputView</strong></a> function and other <strong>XxxInputView</strong> and <strong>XxxOutputView</strong> functions) appear at the full logical dimensions. In this case, the horizontal dimension is 1920 pixels wide, so <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/windef/ns-windef-rect"><strong>RECT</strong></a> structures passed into <strong>ClearView</strong> honor that. Such <strong>RECT</strong>s must be aligned so they do not straddle subsampled blocks, otherwise the runtime will drop the call to this function. For video views, YUV colors must be appropriately replicated for subsampled formats. For example, YUV in the <strong>ClearView</strong> call has the Y value duplicated for each block in a YUY2 surface.</p>
 <p>The <strong>D3D10_DDI_RECT</strong> structure is defined as a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/windef/ns-windef-rect"><strong>RECT</strong></a> structure.</p>
-<pre><code>typedef RECT D3D10_DDI_RECT;
+<pre><code class="language-cpp">typedef RECT D3D10_DDI_RECT;
 </code></pre>
 <h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d11_1ddi_createvideodecoderoutputview"><strong>CreateVideoDecoderOutputView</strong></a></p>
@@ -163,6 +150,7 @@ Color[3]: A
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

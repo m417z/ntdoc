@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -79,15 +80,9 @@
 <h2>Remarks</h2>
 <p>Framework-based drivers must call one of the following methods whenever a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dma-transactions-and-dma-transfers">DMA transfer</a> is complete:</p>
 <ul>
-<li>
-<strong>WdfDmaTransactionDmaCompleted</strong>
-</li>
-<li>
-<a href="wdfdmatransactiondmacompletedwithlength" title="BOOLEAN WdfDmaTransactionDmaCompletedWithLength(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [in]  size_t            TransferredLength,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompletedWithLength</a>
-</li>
-<li>
-<a href="wdfdmatransactiondmacompletedfinal" title="BOOLEAN WdfDmaTransactionDmaCompletedFinal(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [in]  size_t            FinalTransferredLength,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompletedFinal</a>
-</li>
+<li><strong>WdfDmaTransactionDmaCompleted</strong></li>
+<li><a href="wdfdmatransactiondmacompletedwithlength" title="BOOLEAN WdfDmaTransactionDmaCompletedWithLength(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [in]  size_t            TransferredLength,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompletedWithLength</a></li>
+<li><a href="wdfdmatransactiondmacompletedfinal" title="BOOLEAN WdfDmaTransactionDmaCompletedFinal(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [in]  size_t            FinalTransferredLength,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompletedFinal</a></li>
 </ul>
 <p>Typically, drivers call these methods from within an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> event callback function, after a device interrupt indicates the completion of a DMA transfer operation. A driver for a system-mode DMA device might call these methods from within an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdmatransaction/nc-wdfdmatransaction-evt_wdf_dma_transaction_dma_transfer_complete">EvtDmaTransactionDmaTransferComplete</a> event callback function.</p>
 <p>The framework might divide a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dma-transactions-and-dma-transfers">DMA transaction</a> into several DMA transfer operations. Therefore, the driver must examine the method's return value to determine if additional transfers are required.</p>
@@ -100,17 +95,13 @@ In this case, the driver might repeat the DMA operation or reset the device.</p>
 <p>Any other value for <em>Status</em> means that the framework detected an error and the DMA transaction might not have been completed.</p>
 <p>When <strong>WdfDmaTransactionDmaCompleted</strong> returns <strong>TRUE</strong>, the driver typically does the following:</p>
 <ul>
-<li>
-Calls <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a> or <a href="wdfdmatransactionrelease" title="NTSTATUS WdfDmaTransactionRelease(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionRelease</a> to delete or reuse the transaction object, respectively.
-</li>
-<li>
-Completes the I/O request, if the DMA transaction is associated with an I/O request. (Drivers complete requests by calling <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> or <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>.)
-</li>
+<li>Calls <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a> or <a href="wdfdmatransactionrelease" title="NTSTATUS WdfDmaTransactionRelease(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionRelease</a> to delete or reuse the transaction object, respectively.</li>
+<li>Completes the I/O request, if the DMA transaction is associated with an I/O request. (Drivers complete requests by calling <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> or <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>.)</li>
 </ul>
 <p>For more information about completing DMA transfers, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-a-dma-transfer">Completing a DMA Transfer</a>.</p>
 <h4>Examples</h4>
 <p>The following code example is from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">AMCC5933</a> sample driver. This example shows an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback function. The example notifies the framework that a DMA transfer has completed. If the framework indicates that this transfer is the last one for the DMA transaction, the code deletes the DMA transaction object and completes the associated I/O request.</p>
-<pre><code>VOID
+<pre><code class="language-cpp">VOID
 AmccPciEvtInterruptDpc(
     IN WDFINTERRUPT  WdfInterrupt,
     IN WDFOBJECT  WdfDevice
@@ -249,6 +240,7 @@ AmccPciEvtInterruptDpc(
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

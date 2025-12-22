@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -143,7 +144,7 @@ RtlQueryRegistryValues(
 <p>Pointer to either an absolute registry path or a path relative to the known location specified by the <em>RelativeTo</em> parameter. Note that the names of keys in such a path must be known to the caller, including the last key in the path. If the <a href="rtl_registry_handle" title="#define RTL_REGISTRY_HANDLE 0x40000000">RTL_REGISTRY_HANDLE</a> flag is specified, this parameter is a registry handle for an already opened key to be queried directly.</p>
 <h3><code>QueryTable</code> [in, out]</h3>
 <p>Pointer to a table of one or more value names and subkey names in which the caller is interested. Each table entry contains the address of a caller-supplied <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-rtl_query_registry_routine">QueryRoutine</a> function that will be called for each value name that exists in the registry. The table must be terminated with a <strong>NULL</strong> table entry, which is a table entry with a <strong>NULL</strong> <strong>QueryRoutine</strong> member and a <strong>NULL</strong> <strong>Name</strong> member. The structure for query table entries is defined as follows:</p>
-<pre><code>typedef <a href="rtl_query_registry_table" title="typedef struct _RTL_QUERY_REGISTRY_TABLE&#10;{&#10;    PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;&#10;    ULONG Flags;&#10;    PWSTR Name;&#10;    PVOID EntryContext;&#10;    ULONG DefaultType;&#10;    PVOID DefaultData;&#10;    ULONG DefaultLength;&#10;} RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;">struct _RTL_QUERY_REGISTRY_TABLE</a> {
+<pre><code class="language-cpp">typedef <a href="rtl_query_registry_table" title="typedef struct _RTL_QUERY_REGISTRY_TABLE&#10;{&#10;    PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;&#10;    ULONG Flags;&#10;    PWSTR Name;&#10;    PVOID EntryContext;&#10;    ULONG DefaultType;&#10;    PVOID DefaultData;&#10;    ULONG DefaultLength;&#10;} RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;">struct _RTL_QUERY_REGISTRY_TABLE</a> {
     <a href="prtl_query_registry_routine" title="typedef RTL_QUERY_REGISTRY_ROUTINE *PRTL_QUERY_REGISTRY_ROUTINE;">PRTL_QUERY_REGISTRY_ROUTINE</a> QueryRoutine;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;
     PWSTR Name;
@@ -157,7 +158,7 @@ RtlQueryRegistryValues(
 <h4>QueryRoutine</h4>
 <p>The address of a <em>QueryRoutine</em> function that is called with the name, type, data, and data length of a registry value. If this member and the <strong>Name</strong> member are both <strong>NULL</strong>, it marks the end of the table.</p>
 <p>A <em>QueryRoutine</em> function is declared as follows:</p>
-<pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+<pre><code class="language-cpp"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 QueryRoutine (
     IN PWSTR ValueName,
     IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ValueType,
@@ -268,7 +269,7 @@ QueryRoutine (
 If you use the <a href="rtl_query_registry_direct" title="#define RTL_QUERY_REGISTRY_DIRECT 0x00000020">RTL_QUERY_REGISTRY_DIRECT</a> flag, an untrusted user-mode application may be able to cause a buffer overflow. A buffer overflow can occur if a driver uses this flag to read a registry value to which the wrong type is assigned. In all cases, a driver that uses the <a href="rtl_query_registry_direct" title="#define RTL_QUERY_REGISTRY_DIRECT 0x00000020">RTL_QUERY_REGISTRY_DIRECT</a> flag should additionally use the <a href="rtl_query_registry_typecheck" title="#define RTL_QUERY_REGISTRY_TYPECHECK 0x00000100">RTL_QUERY_REGISTRY_TYPECHECK</a> flag to prevent such overflows.</p>
 </blockquote>
 <p>If the <a href="rtl_query_registry_typecheck" title="#define RTL_QUERY_REGISTRY_TYPECHECK 0x00000100">RTL_QUERY_REGISTRY_TYPECHECK</a> flag is set in a table entry, the caller must specify the expected REG_<em>XXX</em> type in the 8 most significant bits (MSBs) of the 32-bit <strong>DefaultType</strong> member of the table entry. As shown in the following code example, the <a href="rtl_query_registry_typecheck_shift" title="#define RTL_QUERY_REGISTRY_TYPECHECK_SHIFT 24">RTL_QUERY_REGISTRY_TYPECHECK_SHIFT</a> constant, which is defined to be 24, can be used as the shift count required to place the expected REG_<em>XXX</em> type in the 8 MSBs of the <strong>DefaultType</strong> member.</p>
-<pre><code><a href="rtl_query_registry_table" title="typedef struct _RTL_QUERY_REGISTRY_TABLE&#10;{&#10;    PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;&#10;    ULONG Flags;&#10;    PWSTR Name;&#10;    PVOID EntryContext;&#10;    ULONG DefaultType;&#10;    PVOID DefaultData;&#10;    ULONG DefaultLength;&#10;} RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;">RTL_QUERY_REGISTRY_TABLE</a> QueryRegTable[2];
+<pre><code class="language-cpp"><a href="rtl_query_registry_table" title="typedef struct _RTL_QUERY_REGISTRY_TABLE&#10;{&#10;    PRTL_QUERY_REGISTRY_ROUTINE QueryRoutine;&#10;    ULONG Flags;&#10;    PWSTR Name;&#10;    PVOID EntryContext;&#10;    ULONG DefaultType;&#10;    PVOID DefaultData;&#10;    ULONG DefaultLength;&#10;} RTL_QUERY_REGISTRY_TABLE, *PRTL_QUERY_REGISTRY_TABLE;">RTL_QUERY_REGISTRY_TABLE</a> QueryRegTable[2];
 ...
 QueryRegTable[0].DefaultType = (REG_SZ &lt;&lt; <a href="rtl_query_registry_typecheck_shift" title="#define RTL_QUERY_REGISTRY_TYPECHECK_SHIFT 24">RTL_QUERY_REGISTRY_TYPECHECK_SHIFT</a>) | REG_NONE;
 ...
@@ -298,7 +299,7 @@ QueryRegTable[1].DefaultType = (REG_DWORD &lt;&lt; <a href="rtl_query_registry_t
 </ul>
 <p>Support for the <a href="rtl_query_registry_typecheck" title="#define RTL_QUERY_REGISTRY_TYPECHECK 0x00000100">RTL_QUERY_REGISTRY_TYPECHECK</a> flag is available through Windows Update for Windows 7, Windows Vista, Windows Server 2003, and Windows XP. For more information about this update, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/security-updates/securitybulletins/2011/ms11-011">Vulnerabilities in Windows Kernel Could Allow Elevation of Privilege (2393802)</a>. In versions of these operating systems that do not have this update, the caller can use the <a href="rtl_query_registry_typecheck" title="#define RTL_QUERY_REGISTRY_TYPECHECK 0x00000100">RTL_QUERY_REGISTRY_TYPECHECK</a> flag. However, this flag is ignored by the <strong>RtlQueryRegistryValues</strong> routine.</p>
 <p>Starting with Windows Driver Kit (WDK) 8, the <a href="rtl_query_registry_typecheck" title="#define RTL_QUERY_REGISTRY_TYPECHECK 0x00000100">RTL_QUERY_REGISTRY_TYPECHECK</a> flag is defined in the Wdm.h header file as follows:</p>
-<pre><code>#define <a href="rtl_query_registry_typecheck" title="#define RTL_QUERY_REGISTRY_TYPECHECK 0x00000100">RTL_QUERY_REGISTRY_TYPECHECK</a> 0x00000100
+<pre><code class="language-cpp">#define <a href="rtl_query_registry_typecheck" title="#define RTL_QUERY_REGISTRY_TYPECHECK 0x00000100">RTL_QUERY_REGISTRY_TYPECHECK</a> 0x00000100
 </code></pre>
 <p>If an entry does not specify the <a href="rtl_query_registry_direct" title="#define RTL_QUERY_REGISTRY_DIRECT 0x00000020">RTL_QUERY_REGISTRY_DIRECT</a> flag, <strong>RtlQueryRegistryValues</strong> uses the specified <em>QueryRoutine</em> function to report the value name, type, data, and data length, in bytes, to the caller. If the <strong>Name</strong> member of the entry is <strong>NULL</strong>, <strong>RtlQueryRegistryValues</strong> reports every direct subkey of the key. If the key type is REG_MULTI_SZ and the <a href="rtl_query_registry_noexpand" title="#define RTL_QUERY_REGISTRY_NOEXPAND 0x00000010">RTL_QUERY_REGISTRY_NOEXPAND</a> flag not is specified, the routine calls <em>QueryRoutine</em> separately for each individual string; otherwise the routine reports it as a single value. If an entry specifies the <a href="rtl_query_registry_direct" title="#define RTL_QUERY_REGISTRY_DIRECT 0x00000020">RTL_QUERY_REGISTRY_DIRECT</a> flag, <strong>RtlQueryRegistryValues</strong> stores the value of the key in the buffer pointed to by the entry's <strong>EntryContext</strong> member. The format of the returned data is as follows.</p>
 <table>
@@ -369,6 +370,7 @@ QueryRegTable[1].DefaultType = (REG_DWORD &lt;&lt; <a href="rtl_query_registry_t
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

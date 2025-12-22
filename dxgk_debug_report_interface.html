@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -88,7 +89,7 @@
 <p>Creates an initial error report.</p>
 <p>If your display miniport driver detects a failure and then recovers from it, you can create an error report that can later be used for debugging. First, call <strong>DbgReportCreate</strong> to create an initial report. Then add data to the report by making one or more calls to <strong>DbgReportSecondaryData</strong>. When you have finished adding data to the report, call <strong>DbgReportComplete</strong>.</p>
 <p>The syntax for <strong>DbgReportComplete</strong> follows.</p>
-<pre><code>// IRQL: PASSIVE_LEVEL
+<pre><code class="language-cpp">// IRQL: PASSIVE_LEVEL
 DXGK_DEBUG_REPORT_HANDLE (*DbgReportCreate)(
   _In_ HANDLE    DeviceHandle,
   _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>     ulCode,
@@ -105,18 +106,10 @@ DXGK_DEBUG_REPORT_HANDLE (*DbgReportCreate)(
 <li>
 <p><em>ulCode</em> is a code for the error report. The following codes are supported:</p>
 <ul>
-<li>
-THREAD_STUCK_IN_DEVICE_DRIVER
-</li>
-<li>
-VIDEO_DRIVER_DEBUG_REPORT_REQUEST
-</li>
-<li>
-VIDEO_TDR_FATAL_ERROR
-</li>
-<li>
-VIDEO_TDR_SUCCESS
-</li>
+<li>THREAD_STUCK_IN_DEVICE_DRIVER</li>
+<li>VIDEO_DRIVER_DEBUG_REPORT_REQUEST</li>
+<li>VIDEO_TDR_FATAL_ERROR</li>
+<li>VIDEO_TDR_SUCCESS</li>
 </ul>
 </li>
 <li>
@@ -136,29 +129,15 @@ VIDEO_TDR_SUCCESS
 <p>Appends data to an initial error report that was previously created by <strong>DbgReportCreate</strong>.</p>
 <p>Call <strong>DbgReportSecondaryData</strong> to add data to an initial report that was created by a previous call to <strong>DbgReportCreate</strong>. You can call <strong>DbgReportSecondaryData</strong> several times, but with each call, the data written to the report overwrites the data written by the previous call. The following steps give a good strategy for incrementally adding data to the report.</p>
 <ol>
-<li>
-Obtain the data that is safest to collect.
-</li>
-<li>
-Call <strong>DbgReportSecondaryData</strong> to write that data to the report.
-</li>
-<li>
-Obtain data that is more risky to collect.
-</li>
-<li>
-Call <strong>DbgReportSecondaryData</strong> to write the original safe data along with the newly collected risky data to the report. You must include both the safe and the risky data in this call because the data written by this call overwrites the data written by the first call to <strong>DbgReportSecondaryData</strong>.
-</li>
-<li>
-Continue calling <strong>DbgReportSecondaryData</strong>, enhancing the data each time, until you have no more data to add.
-</li>
-<li>
-When you have finished adding data to the report, close the report by calling <strong>DbgReportComplete</strong>. The report is stored in a file and sent to Microsoft when the computer is rebooted.
-</li>
-<li>
-If the computer stops responding before you call <strong>DbgReportComplete</strong>, the data added to the report by the most recent successful call to <strong>DbgReportSecondaryData</strong> is saved and then sent to Microsoft when the computer is rebooted.
-</li>
+<li>Obtain the data that is safest to collect.</li>
+<li>Call <strong>DbgReportSecondaryData</strong> to write that data to the report.</li>
+<li>Obtain data that is more risky to collect.</li>
+<li>Call <strong>DbgReportSecondaryData</strong> to write the original safe data along with the newly collected risky data to the report. You must include both the safe and the risky data in this call because the data written by this call overwrites the data written by the first call to <strong>DbgReportSecondaryData</strong>.</li>
+<li>Continue calling <strong>DbgReportSecondaryData</strong>, enhancing the data each time, until you have no more data to add.</li>
+<li>When you have finished adding data to the report, close the report by calling <strong>DbgReportComplete</strong>. The report is stored in a file and sent to Microsoft when the computer is rebooted.</li>
+<li>If the computer stops responding before you call <strong>DbgReportComplete</strong>, the data added to the report by the most recent successful call to <strong>DbgReportSecondaryData</strong> is saved and then sent to Microsoft when the computer is rebooted.</li>
 </ol>
-<pre><code>BOOLEAN (*DbgReportSecondaryData)(
+<pre><code class="language-cpp">BOOLEAN (*DbgReportSecondaryData)(
   _Inout_ DXGK_DEBUG_REPORT_HANDLE hReport,
   _In_    PVOID                    pvData,
   _In_    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                    ulDataSize
@@ -179,15 +158,13 @@ If the computer stops responding before you call <strong>DbgReportComplete</stro
 <p>Closes an error report and frees any resources associated with the report.</p>
 <p><strong>DbgReportCreate</strong> creates an entry in the system event log and displays a dialog box that informs the user of the failure and presents the opportunity to upload an error report to Microsoft.</p>
 <p>The error report is saved in a file and scheduled to be sent to Microsoft when the computer is rebooted. The error report contains an error code and four arguments. The error code and the first three arguments are provided by the caller of DbgReportCreate. The fourth argument in the report is provided by the operating system and indicates the number of reports generated since the computer was started. For example, if the value of the fourth argument is 5, this means that four previous error reports were generated by the display miniport driver since the computer was last started. Only the fifth report is saved because each report overwrites the previous one.</p>
-<pre><code>// IRQL: PASSIVE_LEVEL
+<pre><code class="language-cpp">// IRQL: PASSIVE_LEVEL
 VOID DbgReportComplete(
    IN OUT DXGK_DEBUG_REPORT_HANDLE hReport
 );
 </code></pre>
 <ul>
-<li>
-<em>hReport</em> is a handle to the error report that is to be closed. The display miniport driver previously obtained this handle by calling <strong>DbgReportCreate</strong>.
-</li>
+<li><em>hReport</em> is a handle to the error report that is to be closed. The display miniport driver previously obtained this handle by calling <strong>DbgReportCreate</strong>.</li>
 </ul>
 <p><strong>IRQL:</strong> PASSIVE_LEVEL</p>
 <h2>Remarks</h2>
@@ -225,6 +202,7 @@ VOID DbgReportComplete(
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

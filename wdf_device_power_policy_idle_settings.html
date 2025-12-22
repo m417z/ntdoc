@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -107,15 +108,9 @@
 <p><strong>WdfTrue</strong> - The framework will move a device to a low-power D-state when the idle timeout period expires. If that D-state is D3, the device will be moved to D3hot. If <strong>ExcludeD3Cold</strong> is set to <strong>WdfTrue</strong>, then no further transition from D3hot to D3cold will be allowed.</p>
 <p><strong>WdfFalse</strong> - The device may enter the D3cold power state when the idle timeout period expires, if all of the following criteria are met:</p>
 <ul>
-<li>
-The <strong>DxState</strong> member of this structure specifies <strong>PowerDeviceD3</strong> or <strong>PowerDeviceMaximum</strong>.
-</li>
-<li>
-The ACPI firmware indicates that the device supports the D3cold power state.
-</li>
-<li>
-If the driver specified <strong>IdleCanWakeFromS0</strong> or <strong>IdleUsbSelectiveSuspend</strong> in the <strong>IdleCaps</strong> member of this structure, the device can respond to an external wake-up event while in the D3cold power state. Otherwise, this requirement does not apply.
-</li>
+<li>The <strong>DxState</strong> member of this structure specifies <strong>PowerDeviceD3</strong> or <strong>PowerDeviceMaximum</strong>.</li>
+<li>The ACPI firmware indicates that the device supports the D3cold power state.</li>
+<li>If the driver specified <strong>IdleCanWakeFromS0</strong> or <strong>IdleUsbSelectiveSuspend</strong> in the <strong>IdleCaps</strong> member of this structure, the device can respond to an external wake-up event while in the D3cold power state. Otherwise, this requirement does not apply.</li>
 </ul>
 <p><strong>WdfUseDefault</strong> - The framework examines the <em>DDInstall</em>**.HW** section of the driver's INF file. If the following lines are present, this value has the same meaning as <strong>WdfFalse</strong>:</p>
 <pre><code>Include = machine.inf
@@ -127,21 +122,13 @@ Needs = PciD3ColdSupported
 <p>The <strong>WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS</strong> structure is used as input to <a href="wdfdeviceassigns0idlesettings" title="NTSTATUS WdfDeviceAssignS0IdleSettings(&#10;  [in] WDFDEVICE                              Device,&#10;  [in] PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings&#10;);">WdfDeviceAssignS0IdleSettings</a>.</p>
 <p>The first time a driver calls <a href="wdfdeviceassigns0idlesettings" title="NTSTATUS WdfDeviceAssignS0IdleSettings(&#10;  [in] WDFDEVICE                              Device,&#10;  [in] PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings&#10;);">WdfDeviceAssignS0IdleSettings</a>, the following actions occur:</p>
 <ul>
-<li>
-The framework stores the values of all <strong>WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS</strong> structure members.
-</li>
-<li>
-If the <strong>UserControlOfIdleSettings</strong> member is set to <strong>IdleAllowUserControl</strong> and if the <strong>Enabled</strong> member is set to <strong>WdfUseDefault</strong>, the framework reads the registry to find out if the user has enabled powering down the device when it is idle.
-</li>
+<li>The framework stores the values of all <strong>WDF_DEVICE_POWER_POLICY_IDLE_SETTINGS</strong> structure members.</li>
+<li>If the <strong>UserControlOfIdleSettings</strong> member is set to <strong>IdleAllowUserControl</strong> and if the <strong>Enabled</strong> member is set to <strong>WdfUseDefault</strong>, the framework reads the registry to find out if the user has enabled powering down the device when it is idle.</li>
 </ul>
 <p>During subsequent calls to <a href="wdfdeviceassigns0idlesettings" title="NTSTATUS WdfDeviceAssignS0IdleSettings(&#10;  [in] WDFDEVICE                              Device,&#10;  [in] PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings&#10;);">WdfDeviceAssignS0IdleSettings</a>, the framework only stores the values of the <strong>DxState</strong>, <strong>IdleTimeout</strong>, and <strong>Enabled</strong> members. Also, in KMDF 1.9 and earlier, the framework stores the value of the <strong>IdleCaps</strong> member <em>unless</em> the value is <strong>IdleUsbSelectiveSuspend</strong>. Therefore, the driver must use the following rules:</p>
 <ul>
-<li>
-If the driver specifies <strong>IdleUsbSelectiveSuspend</strong> for the <strong>IdleCaps</strong> member's value, it must do so the first time that it calls <a href="wdfdeviceassigns0idlesettings" title="NTSTATUS WdfDeviceAssignS0IdleSettings(&#10;  [in] WDFDEVICE                              Device,&#10;  [in] PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings&#10;);">WdfDeviceAssignS0IdleSettings</a>, and it cannot subsequently change that value.
-</li>
-<li>
-If the driver specifies <strong>IdleCanWakeFromS0</strong> or <strong>IdleCannotWakeFromS0</strong> the first time it calls <a href="wdfdeviceassigns0idlesettings" title="NTSTATUS WdfDeviceAssignS0IdleSettings(&#10;  [in] WDFDEVICE                              Device,&#10;  [in] PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings&#10;);">WdfDeviceAssignS0IdleSettings</a>, it can subsequently call <strong><a href="wdfdeviceassigns0idlesettings" title="NTSTATUS WdfDeviceAssignS0IdleSettings(&#10;  [in] WDFDEVICE                              Device,&#10;  [in] PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings&#10;);">WdfDeviceAssignS0IdleSettings</a></strong> again to change that value (but it cannot change the value to <strong>IdleUsbSelectiveSuspend</strong>).
-</li>
+<li>If the driver specifies <strong>IdleUsbSelectiveSuspend</strong> for the <strong>IdleCaps</strong> member's value, it must do so the first time that it calls <a href="wdfdeviceassigns0idlesettings" title="NTSTATUS WdfDeviceAssignS0IdleSettings(&#10;  [in] WDFDEVICE                              Device,&#10;  [in] PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings&#10;);">WdfDeviceAssignS0IdleSettings</a>, and it cannot subsequently change that value.</li>
+<li>If the driver specifies <strong>IdleCanWakeFromS0</strong> or <strong>IdleCannotWakeFromS0</strong> the first time it calls <a href="wdfdeviceassigns0idlesettings" title="NTSTATUS WdfDeviceAssignS0IdleSettings(&#10;  [in] WDFDEVICE                              Device,&#10;  [in] PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings&#10;);">WdfDeviceAssignS0IdleSettings</a>, it can subsequently call <strong><a href="wdfdeviceassigns0idlesettings" title="NTSTATUS WdfDeviceAssignS0IdleSettings(&#10;  [in] WDFDEVICE                              Device,&#10;  [in] PWDF_DEVICE_POWER_POLICY_IDLE_SETTINGS Settings&#10;);">WdfDeviceAssignS0IdleSettings</a></strong> again to change that value (but it cannot change the value to <strong>IdleUsbSelectiveSuspend</strong>).</li>
 </ul>
 <p>Starting in KMDF 1.11 and UMDF 2.0, a KMDF driver can switch between <strong>IdleUsbSelectiveSuspend</strong> and <strong>IdleCannotWakeFromS0</strong> at any time.</p>
 <p>Starting in Windows 8, setting the <strong>IdleTimeoutType</strong> member to <strong>SystemManagedIdleTimeout</strong> or <strong>SystemManagedIdleTimeoutWithHint</strong> causes the framework to register with the power management framework (PoFx).</p>
@@ -149,18 +136,10 @@ If the driver specifies <strong>IdleCanWakeFromS0</strong> or <strong>IdleCannot
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/supporting-functional-power-states">Supporting Functional Power States</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/overview-of-the-power-management-framework">Overview of the Power Management Framework</a>.</p>
 <p>The following rules apply to the value that you specify for the <strong>DxState</strong> member:</p>
 <ul>
-<li>
-The value cannot be <strong>PowerDeviceD0</strong>.
-</li>
-<li>
-For USB devices, the value cannot be <strong>PowerDeviceD0</strong> or <strong>PowerDeviceD3</strong>.
-</li>
-<li>
-If you specify <strong>PowerDeviceMaximum</strong>, the framework uses the value that the driver for the device's bus supplied in the <strong>DeviceWake</strong> member of its <a href="wdf_device_power_capabilities" title="typedef struct _WDF_DEVICE_POWER_CAPABILITIES {&#10;  ULONG              Size;&#10;  WDF_TRI_STATE      DeviceD1;&#10;  WDF_TRI_STATE      DeviceD2;&#10;  WDF_TRI_STATE      WakeFromD0;&#10;  WDF_TRI_STATE      WakeFromD1;&#10;  WDF_TRI_STATE      WakeFromD2;&#10;  WDF_TRI_STATE      WakeFromD3;&#10;  DEVICE_POWER_STATE DeviceState[PowerSystemMaximum];&#10;  DEVICE_POWER_STATE DeviceWake;&#10;  SYSTEM_POWER_STATE SystemWake;&#10;  ULONG              D1Latency;&#10;  ULONG              D2Latency;&#10;  ULONG              D3Latency;&#10;  DEVICE_POWER_STATE IdealDxStateForSx;&#10;} WDF_DEVICE_POWER_CAPABILITIES, *PWDF_DEVICE_POWER_CAPABILITIES;">WDF_DEVICE_POWER_CAPABILITIES</a> structure.
-</li>
-<li>
-If the value of the <strong>IdleCaps</strong> member is <strong>IdleCanWakeFromS0</strong>, you cannot specify a device power state that is lower than the device power state in the <strong>DeviceWake</strong> member of the bus driver's <a href="wdf_device_power_capabilities" title="typedef struct _WDF_DEVICE_POWER_CAPABILITIES {&#10;  ULONG              Size;&#10;  WDF_TRI_STATE      DeviceD1;&#10;  WDF_TRI_STATE      DeviceD2;&#10;  WDF_TRI_STATE      WakeFromD0;&#10;  WDF_TRI_STATE      WakeFromD1;&#10;  WDF_TRI_STATE      WakeFromD2;&#10;  WDF_TRI_STATE      WakeFromD3;&#10;  DEVICE_POWER_STATE DeviceState[PowerSystemMaximum];&#10;  DEVICE_POWER_STATE DeviceWake;&#10;  SYSTEM_POWER_STATE SystemWake;&#10;  ULONG              D1Latency;&#10;  ULONG              D2Latency;&#10;  ULONG              D3Latency;&#10;  DEVICE_POWER_STATE IdealDxStateForSx;&#10;} WDF_DEVICE_POWER_CAPABILITIES, *PWDF_DEVICE_POWER_CAPABILITIES;">WDF_DEVICE_POWER_CAPABILITIES</a> structure. (In other words, if the bus driver's <strong>DeviceWake</strong> value is <strong>PowerDeviceD2</strong>, your function driver's <strong>DxState</strong> value cannot be <strong>PowerDeviceD3</strong>.)
-</li>
+<li>The value cannot be <strong>PowerDeviceD0</strong>.</li>
+<li>For USB devices, the value cannot be <strong>PowerDeviceD0</strong> or <strong>PowerDeviceD3</strong>.</li>
+<li>If you specify <strong>PowerDeviceMaximum</strong>, the framework uses the value that the driver for the device's bus supplied in the <strong>DeviceWake</strong> member of its <a href="wdf_device_power_capabilities" title="typedef struct _WDF_DEVICE_POWER_CAPABILITIES {&#10;  ULONG              Size;&#10;  WDF_TRI_STATE      DeviceD1;&#10;  WDF_TRI_STATE      DeviceD2;&#10;  WDF_TRI_STATE      WakeFromD0;&#10;  WDF_TRI_STATE      WakeFromD1;&#10;  WDF_TRI_STATE      WakeFromD2;&#10;  WDF_TRI_STATE      WakeFromD3;&#10;  DEVICE_POWER_STATE DeviceState[PowerSystemMaximum];&#10;  DEVICE_POWER_STATE DeviceWake;&#10;  SYSTEM_POWER_STATE SystemWake;&#10;  ULONG              D1Latency;&#10;  ULONG              D2Latency;&#10;  ULONG              D3Latency;&#10;  DEVICE_POWER_STATE IdealDxStateForSx;&#10;} WDF_DEVICE_POWER_CAPABILITIES, *PWDF_DEVICE_POWER_CAPABILITIES;">WDF_DEVICE_POWER_CAPABILITIES</a> structure.</li>
+<li>If the value of the <strong>IdleCaps</strong> member is <strong>IdleCanWakeFromS0</strong>, you cannot specify a device power state that is lower than the device power state in the <strong>DeviceWake</strong> member of the bus driver's <a href="wdf_device_power_capabilities" title="typedef struct _WDF_DEVICE_POWER_CAPABILITIES {&#10;  ULONG              Size;&#10;  WDF_TRI_STATE      DeviceD1;&#10;  WDF_TRI_STATE      DeviceD2;&#10;  WDF_TRI_STATE      WakeFromD0;&#10;  WDF_TRI_STATE      WakeFromD1;&#10;  WDF_TRI_STATE      WakeFromD2;&#10;  WDF_TRI_STATE      WakeFromD3;&#10;  DEVICE_POWER_STATE DeviceState[PowerSystemMaximum];&#10;  DEVICE_POWER_STATE DeviceWake;&#10;  SYSTEM_POWER_STATE SystemWake;&#10;  ULONG              D1Latency;&#10;  ULONG              D2Latency;&#10;  ULONG              D3Latency;&#10;  DEVICE_POWER_STATE IdealDxStateForSx;&#10;} WDF_DEVICE_POWER_CAPABILITIES, *PWDF_DEVICE_POWER_CAPABILITIES;">WDF_DEVICE_POWER_CAPABILITIES</a> structure. (In other words, if the bus driver's <strong>DeviceWake</strong> value is <strong>PowerDeviceD2</strong>, your function driver's <strong>DxState</strong> value cannot be <strong>PowerDeviceD3</strong>.)</li>
 </ul>
 <p>In operating systems earlier than Windows 8, the D3 power state signifies that the device is in a low-power state, but that some power to the bus is still maintained. Starting in Windows 8, the former D3 power state is called D3hot, and a new power state (D3cold) is available. A device can enter the D3cold state either while the system is in its working (S0) state or in a low-power state. When a device is in the D3cold power state, the bus is inactive and the device must trigger its own wake signal when an external action (for example plugging in a network cable) causes a hardware event.</p>
 <p>Starting in KMDF 1.11 and UMDF 2.0, a device that <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/supporting-idle-power-down">supports idle power-down</a> can use the <strong>ExcludeD3Cold</strong> member of this structure to specify whether the D3cold power state should be an allowable choice for the low <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/device-power-states">device power state</a> that the device will enter after the idle timeout period ends.</p>
@@ -199,6 +178,7 @@ If the value of the <strong>IdleCaps</strong> member is <strong>IdleCanWakeFromS
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

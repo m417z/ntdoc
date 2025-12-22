@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -97,24 +98,12 @@
 <p>Do not implement <em>DpWmiSetDataItem</em> unless you are sure that a system-supplied user-mode component requires this capability. If you implement a <em>DpWmiSetDataItem</em> routine, the driver must place the routine's address in the <strong>SetWmiDataItem</strong> member of the <a href="wmilib_context" title="typedef struct _WMILIB_CONTEXT {&#10;  ULONG                 GuidCount;&#10;  PWMIGUIDREGINFO       GuidList;&#10;  PWMI_QUERY_REGINFO    QueryWmiRegInfo;&#10;  PWMI_QUERY_DATABLOCK  QueryWmiDataBlock;&#10;  PWMI_SET_DATABLOCK    SetWmiDataBlock;&#10;  PWMI_SET_DATAITEM     SetWmiDataItem;&#10;  PWMI_EXECUTE_METHOD   ExecuteWmiMethod;&#10;  PWMI_FUNCTION_CONTROL WmiFunctionControl;&#10;} WMILIB_CONTEXT, *PWMILIB_CONTEXT;">WMILIB_CONTEXT</a> structure that it passes to <a href="wmisystemcontrol" title="NTSTATUS WmiSystemControl(&#10;  [in]      PWMILIB_CONTEXT         WmiLibInfo,&#10;  [in]      PDEVICE_OBJECT          DeviceObject,&#10;  [in, out] PIRP                    Irp,&#10;  [out]     PSYSCTL_IRP_DISPOSITION IrpDisposition&#10;);">WmiSystemControl</a>. If you do not implement a <em>DpWmiSetDataItem</em> routine, the driver must set <strong>SetWmiDataItem</strong> to <strong>NULL</strong>. In the latter case, WMI returns STATUS_READ_ONLY to the caller.</p>
 <p>The driver is responsible for validating all input arguments. Specifically, the driver must do the following:</p>
 <ul>
-<li>
-Verify that the <em>GuidIndex</em> value is between zero and GuidCount-1, based on the <strong>GuidCount</strong> member of the <a href="wmilib_context" title="typedef struct _WMILIB_CONTEXT {&#10;  ULONG                 GuidCount;&#10;  PWMIGUIDREGINFO       GuidList;&#10;  PWMI_QUERY_REGINFO    QueryWmiRegInfo;&#10;  PWMI_QUERY_DATABLOCK  QueryWmiDataBlock;&#10;  PWMI_SET_DATABLOCK    SetWmiDataBlock;&#10;  PWMI_SET_DATAITEM     SetWmiDataItem;&#10;  PWMI_EXECUTE_METHOD   ExecuteWmiMethod;&#10;  PWMI_FUNCTION_CONTROL WmiFunctionControl;&#10;} WMILIB_CONTEXT, *PWMILIB_CONTEXT;">WMILIB_CONTEXT</a> structure.
-</li>
-<li>
-Verify that the driver has not flagged the specified data block for removal. If the driver recently specified the WMIREG_FLAG_REMOVE_GUID flag in a <a href="wmiguidreginfo" title="typedef struct _WMIGUIDREGINFO {&#10;  LPCGUID Guid;&#10;  ULONG   InstanceCount;&#10;  ULONG   Flags;&#10;} WMIGUIDREGINFO, *PWMIGUIDREGINFO;">WMIGUIDREGINFO</a> structure that is contained in a <strong><a href="wmilib_context" title="typedef struct _WMILIB_CONTEXT {&#10;  ULONG                 GuidCount;&#10;  PWMIGUIDREGINFO       GuidList;&#10;  PWMI_QUERY_REGINFO    QueryWmiRegInfo;&#10;  PWMI_QUERY_DATABLOCK  QueryWmiDataBlock;&#10;  PWMI_SET_DATABLOCK    SetWmiDataBlock;&#10;  PWMI_SET_DATAITEM     SetWmiDataItem;&#10;  PWMI_EXECUTE_METHOD   ExecuteWmiMethod;&#10;  PWMI_FUNCTION_CONTROL WmiFunctionControl;&#10;} WMILIB_CONTEXT, *PWMILIB_CONTEXT;">WMILIB_CONTEXT</a></strong> structure, it is possible for a set request to arrive before the removal occurs.
-</li>
-<li>
-Verify that the <em>InstanceIndex</em> value is within the range of instance indexes that are supported by the driver for the data block.
-</li>
-<li>
-Verify that the <em>DataItemId</em> value is within the range of data item identifiers that are supported by the driver for the data block.
-</li>
-<li>
-Verify that <em>Buffer</em> and <em>BufferSize</em> describe a valid-sized data item, and that the contents of the buffer are valid for the data item.
-</li>
-<li>
-Verify that the specified data item is one for which the driver allows caller-initiated modifications. In other words, the driver should not allow modifications to data items that you intended to be read-only.
-</li>
+<li>Verify that the <em>GuidIndex</em> value is between zero and GuidCount-1, based on the <strong>GuidCount</strong> member of the <a href="wmilib_context" title="typedef struct _WMILIB_CONTEXT {&#10;  ULONG                 GuidCount;&#10;  PWMIGUIDREGINFO       GuidList;&#10;  PWMI_QUERY_REGINFO    QueryWmiRegInfo;&#10;  PWMI_QUERY_DATABLOCK  QueryWmiDataBlock;&#10;  PWMI_SET_DATABLOCK    SetWmiDataBlock;&#10;  PWMI_SET_DATAITEM     SetWmiDataItem;&#10;  PWMI_EXECUTE_METHOD   ExecuteWmiMethod;&#10;  PWMI_FUNCTION_CONTROL WmiFunctionControl;&#10;} WMILIB_CONTEXT, *PWMILIB_CONTEXT;">WMILIB_CONTEXT</a> structure.</li>
+<li>Verify that the driver has not flagged the specified data block for removal. If the driver recently specified the WMIREG_FLAG_REMOVE_GUID flag in a <a href="wmiguidreginfo" title="typedef struct _WMIGUIDREGINFO {&#10;  LPCGUID Guid;&#10;  ULONG   InstanceCount;&#10;  ULONG   Flags;&#10;} WMIGUIDREGINFO, *PWMIGUIDREGINFO;">WMIGUIDREGINFO</a> structure that is contained in a <strong><a href="wmilib_context" title="typedef struct _WMILIB_CONTEXT {&#10;  ULONG                 GuidCount;&#10;  PWMIGUIDREGINFO       GuidList;&#10;  PWMI_QUERY_REGINFO    QueryWmiRegInfo;&#10;  PWMI_QUERY_DATABLOCK  QueryWmiDataBlock;&#10;  PWMI_SET_DATABLOCK    SetWmiDataBlock;&#10;  PWMI_SET_DATAITEM     SetWmiDataItem;&#10;  PWMI_EXECUTE_METHOD   ExecuteWmiMethod;&#10;  PWMI_FUNCTION_CONTROL WmiFunctionControl;&#10;} WMILIB_CONTEXT, *PWMILIB_CONTEXT;">WMILIB_CONTEXT</a></strong> structure, it is possible for a set request to arrive before the removal occurs.</li>
+<li>Verify that the <em>InstanceIndex</em> value is within the range of instance indexes that are supported by the driver for the data block.</li>
+<li>Verify that the <em>DataItemId</em> value is within the range of data item identifiers that are supported by the driver for the data block.</li>
+<li>Verify that <em>Buffer</em> and <em>BufferSize</em> describe a valid-sized data item, and that the contents of the buffer are valid for the data item.</li>
+<li>Verify that the specified data item is one for which the driver allows caller-initiated modifications. In other words, the driver should not allow modifications to data items that you intended to be read-only.</li>
 </ul>
 <p>Do not assume the thread context is that of the initiating user-mode application—a higher-level driver might have changed it.</p>
 <p>This routine can be pageable.</p>
@@ -156,6 +145,7 @@ Verify that the specified data item is one for which the driver allows caller-in
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

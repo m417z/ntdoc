@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -163,12 +164,8 @@ ZwWriteFile(
 <p>If the call to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong> set only the <strong>DesiredAccess</strong> flag FILE_APPEND_DATA, <strong>ByteOffset</strong> is ignored. Data in the given <strong>Buffer</strong>, for <strong>Length</strong> bytes, is written starting at the current end of file.</p>
 <p>If the call to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong> set either of the <strong>CreateOptions</strong> flags, <a href="file_synchronous_io_alert" title="#define FILE_SYNCHRONOUS_IO_ALERT 0x00000010">FILE_SYNCHRONOUS_IO_ALERT</a> or <a href="file_synchronous_io_nonalert" title="#define FILE_SYNCHRONOUS_IO_NONALERT 0x00000020">FILE_SYNCHRONOUS_IO_NONALERT</a>, the I/O Manager maintains the current file position. If so, the caller of <strong>NtWriteFile</strong> can specify that the current file position offset be used instead of an explicit <strong>ByteOffset</strong> value. This specification can be made by using one of the following methods:</p>
 <ul>
-<li>
-Specify a pointer to a LARGE_INTEGER value with the <strong>HighPart</strong> member set to -1 and the <strong>LowPart</strong> member set to the system-defined value <a href="file_use_file_pointer_position" title="#define FILE_USE_FILE_POINTER_POSITION 0xfffffffe">FILE_USE_FILE_POINTER_POSITION</a>.
-</li>
-<li>
-Pass a NULL pointer for <strong>ByteOffset</strong>.
-</li>
+<li>Specify a pointer to a LARGE_INTEGER value with the <strong>HighPart</strong> member set to -1 and the <strong>LowPart</strong> member set to the system-defined value <a href="file_use_file_pointer_position" title="#define FILE_USE_FILE_POINTER_POSITION 0xfffffffe">FILE_USE_FILE_POINTER_POSITION</a>.</li>
+<li>Pass a NULL pointer for <strong>ByteOffset</strong>.</li>
 </ul>
 <p><strong>NtWriteFile</strong> updates the current file position by adding the number of bytes written when it completes the write operation, if it is using the current file position maintained by the I/O Manager.</p>
 <p>Even when the I/O Manager is maintaining the current file position, the caller can reset this position by passing an explicit <strong>ByteOffset</strong> value to <strong>NtWriteFile</strong>. Doing this automatically changes the current file position to that <strong>ByteOffset</strong> value, performs the write operation, and then updates the position according to the number of bytes actually written. This technique gives the caller atomic seek-and-write service.</p>
@@ -184,15 +181,9 @@ Pass a NULL pointer for <strong>ByteOffset</strong>.
 <p>If the caller opened the file with the <strong>DesiredAccess</strong> SYNCHRONIZE flag set, the caller can wait for this routine to set the given <strong>FileHandle</strong> to the signaled state.</p>
 <p>Drivers should call <strong>NtWriteFile</strong> in the context of the system process in three cases:</p>
 <ul>
-<li>
-The driver creates the file handle that it passes to <strong>NtWriteFile</strong>.
-</li>
-<li>
-<strong>NtWriteFile</strong> notifies the driver of I/O completion by means of an event created by the driver.
-</li>
-<li>
-<strong>NtWriteFile</strong> notifies the driver of I/O completion by means of an APC callback routine that the driver passes to <strong>NtWriteFile</strong>.
-</li>
+<li>The driver creates the file handle that it passes to <strong>NtWriteFile</strong>.</li>
+<li><strong>NtWriteFile</strong> notifies the driver of I/O completion by means of an event created by the driver.</li>
+<li><strong>NtWriteFile</strong> notifies the driver of I/O completion by means of an APC callback routine that the driver passes to <strong>NtWriteFile</strong>.</li>
 </ul>
 <p>File and event handles are only valid in the process context where the handles are created. Therefore, to avoid security holes, the driver should create any file or event handle that it passes to <strong>NtWriteFile</strong> in the context of the system process instead of the process context that the driver is in.</p>
 <p>Likewise, <strong>NtWriteFile</strong> should be called in the context of the system process if it notifies the driver of I/O completion by means of an APC, because APCs are always fired in the context of the thread issuing the I/O request. If the driver calls <strong>NtWriteFile</strong> in the context of a process other than the system process, the APC could be delayed indefinitely, or it might not fire at all as the originating thread may never enter an alertable wait state.</p>
@@ -318,27 +309,17 @@ The driver creates the file handle that it passes to <strong>NtWriteFile</strong
 <p>??? (See <code><a href="ntreadfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReadFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID Buffer,&#10;    _In_ ULONG Length,&#10;    _In_opt_ PLARGE_INTEGER ByteOffset,&#10;    _In_opt_ PULONG Key&#10;    );">NtReadFile</a></code>).</p>
 <h1>Related Win32 API</h1>
 <ul>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile"><code>WriteFile</code></a> (Although it does more than just forwarding the arguments and invoking this procedure.)
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile"><code>WriteFile</code></a> (Although it does more than just forwarding the arguments and invoking this procedure.)</li>
 </ul>
 <h1>Documented by</h1>
 <ul>
-<li>
-Tomasz Nowak
-</li>
+<li>Tomasz Nowak</li>
 </ul>
 <h1>See also</h1>
 <ul>
-<li>
-<code><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></code>
-</li>
-<li>
-<code><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></code>
-</li>
-<li>
-<code><a href="ntreadfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReadFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID Buffer,&#10;    _In_ ULONG Length,&#10;    _In_opt_ PLARGE_INTEGER ByteOffset,&#10;    _In_opt_ PULONG Key&#10;    );">NtReadFile</a></code>
-</li>
+<li><code><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></code></li>
+<li><code><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></code></li>
+<li><code><a href="ntreadfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReadFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID Buffer,&#10;    _In_ ULONG Length,&#10;    _In_opt_ PLARGE_INTEGER ByteOffset,&#10;    _In_opt_ PULONG Key&#10;    );">NtReadFile</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntwritefile.md">Edit description on GitHub</a>
@@ -369,6 +350,7 @@ Tomasz Nowak
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

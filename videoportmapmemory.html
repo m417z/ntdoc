@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -122,15 +123,11 @@
 <p><a href="videoportgetdevicebase" title="VIDEOPORT_DEPRECATED VIDEOPORT_API PVOID VideoPortGetDeviceBase(&#10;  PVOID            HwDeviceExtension,&#10;  PHYSICAL_ADDRESS IoAddress,&#10;  ULONG            NumberOfUchars,&#10;  UCHAR            InIoSpace&#10;);">VideoPortGetDeviceBase</a> and <strong>VideoPortMapMemory</strong> can both be called by the video miniport driver to map video memory into a virtual address space. If you call both of these functions to map the same physical addresses, or if you call one of the functions more than once to map the same physical addresses, you might have more than one virtual-address range that maps to the same physical-address range. In that case, you must set the VIDEO_MEMORY_SPACE_P6CACHE flag of the <em>InIoSpace</em> parameter to the same value in all of those calls.</p>
 <p>Every universal memory architecture (UMA) display device uses a frame buffer that is located in main memory rather than on a PCI bus. In this case, do not call <strong>VideoPortMapMemory</strong> to map the frame buffer. To map a UMA frame buffer into system space, call <a href="mmmapiospace" title="PVOID MmMapIoSpace(&#10;  [in] PHYSICAL_ADDRESS    PhysicalAddress,&#10;  [in] SIZE_T              NumberOfBytes,&#10;  [in] MEMORY_CACHING_TYPE CacheType&#10;);">MmMapIoSpace</a>. To map a UMA frame buffer into the virtual address space of a user-mode process, perform the following steps:</p>
 <ol>
-<li>
-Call <a href="ntopensection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenSection</a> to get a handle to the operating system's physical-memory section object, which is named <strong>\Device\PhysicalMemory</strong>.
-</li>
-<li>
-Call <a href="ntmapviewofsection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtMapViewOfSection(&#10;    _In_ HANDLE SectionHandle,&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*ViewSize) _Writable_bytes_(*ViewSize) _Post_readable_byte_size_(*ViewSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _In_ SIZE_T CommitSize,&#10;    _Inout_opt_ PLARGE_INTEGER SectionOffset,&#10;    _Inout_ PSIZE_T ViewSize,&#10;    _In_ SECTION_INHERIT InheritDisposition,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwMapViewOfSection</a> to map a view of the frame buffer into the virtual address space of the current process.
-</li>
+<li>Call <a href="ntopensection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenSection(&#10;    _Out_ PHANDLE SectionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenSection</a> to get a handle to the operating system's physical-memory section object, which is named <strong>\Device\PhysicalMemory</strong>.</li>
+<li>Call <a href="ntmapviewofsection" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtMapViewOfSection(&#10;    _In_ HANDLE SectionHandle,&#10;    _In_ HANDLE ProcessHandle,&#10;    _Inout_ _At_(*BaseAddress, _Readable_bytes_(*ViewSize) _Writable_bytes_(*ViewSize) _Post_readable_byte_size_(*ViewSize)) PVOID *BaseAddress,&#10;    _In_ ULONG_PTR ZeroBits,&#10;    _In_ SIZE_T CommitSize,&#10;    _Inout_opt_ PLARGE_INTEGER SectionOffset,&#10;    _Inout_ PSIZE_T ViewSize,&#10;    _In_ SECTION_INHERIT InheritDisposition,&#10;    _In_ ULONG AllocationType,&#10;    _In_ ULONG PageProtection&#10;    );">ZwMapViewOfSection</a> to map a view of the frame buffer into the virtual address space of the current process.</li>
 </ol>
 <p>The following example shows how to map a UMA frame buffer into the virtual address space of the current process.</p>
-<pre><code><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a>    UnicodeString;          // Name of the section object
+<pre><code class="language-cpp"><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a>    UnicodeString;          // Name of the section object
 <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> ObjectAttributes;       // Description for the section object
 HANDLE            hPhysicalMemoryHandle;  // Handle to the section object
 <a href="physical_address" title="typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;">PHYSICAL_ADDRESS</a>  MappedLength;           // Length of the frame buffer
@@ -216,6 +213,7 @@ if(<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) 
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

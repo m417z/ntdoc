@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -72,7 +73,7 @@
 <h3><code>Interrupt</code> [in]</h3>
 <p>A handle to a framework interrupt object.</p>
 <h2>Prototype</h2>
-<pre><code>VOID
+<pre><code class="language-cpp">VOID
 (*PFN_WDFINTERRUPTACQUIRELOCK)(
     IN PWDF_DRIVER_GLOBALS DriverGlobals,
     WDFINTERRUPT Interrupt
@@ -94,45 +95,21 @@
 <p>For passive-level interrupt objects, drivers must call <a href="wdfinterrupttrytoacquirelock" title="BOOLEAN WdfInterruptTryToAcquireLock(&#10;  [in] WDFINTERRUPT Interrupt&#10;);">WdfInterruptTryToAcquireLock</a> instead of <strong>WdfInterruptAcquireLock</strong>, when running in an arbitrary thread, such as a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/">queue object callback function</a>. For example, the driver might call <strong><a href="wdfinterrupttrytoacquirelock" title="BOOLEAN WdfInterruptTryToAcquireLock(&#10;  [in] WDFINTERRUPT Interrupt&#10;);">WdfInterruptTryToAcquireLock</a></strong> from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_read">EvtIoRead</a>.</p>
 <p>Doing so avoids the possibility of deadlock, as described in the following scenario.</p>
 <ol>
-<li>
-In order to determine if its device interrupted, the function driver for an SPB peripheral device sends I/O to its bus from within its ISR, with the passive-level interrupt lock held.
-</li>
-<li>
-The bus driver completes a second request in the same thread in which it received the above request.
-</li>
-<li>
-The completion routine of the second request sends a request to the peripheral driver.
-</li>
-<li>
-The peripheral driver's I/O dispatch routine calls <strong>WdfInterruptAcquireLock</strong>, which then deadlocks attempting to acquire the interrupt object's passive lock.
-</li>
+<li>In order to determine if its device interrupted, the function driver for an SPB peripheral device sends I/O to its bus from within its ISR, with the passive-level interrupt lock held.</li>
+<li>The bus driver completes a second request in the same thread in which it received the above request.</li>
+<li>The completion routine of the second request sends a request to the peripheral driver.</li>
+<li>The peripheral driver's I/O dispatch routine calls <strong>WdfInterruptAcquireLock</strong>, which then deadlocks attempting to acquire the interrupt object's passive lock.</li>
 </ol>
 <h2>See also</h2>
 <ul>
-<li>
-<a href="wdfinterruptsynchronize" title="BOOLEAN WdfInterruptSynchronize(&#10;  [in] WDFINTERRUPT                  Interrupt,&#10;  [in] PFN_WDF_INTERRUPT_SYNCHRONIZE Callback,&#10;  [in] WDFCONTEXT                    Context&#10;);">WdfInterruptSynchronize</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_synchronize">EvtInterruptSynchronize</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_disable">EvtInterruptDisable</a>
-</li>
-<li>
-<a href="wdfinterrupttrytoacquirelock" title="BOOLEAN WdfInterruptTryToAcquireLock(&#10;  [in] WDFINTERRUPT Interrupt&#10;);">WdfInterruptTryToAcquireLock</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_enable">EvtInterruptEnable</a>
-</li>
-<li>
-<a href="wdf_interrupt_config" title="typedef struct _WDF_INTERRUPT_CONFIG {&#10;  ULONG                           Size;&#10;  WDFSPINLOCK                     SpinLock;&#10;  WDF_TRI_STATE                   ShareVector;&#10;  BOOLEAN                         FloatingSave;&#10;  BOOLEAN                         AutomaticSerialization;&#10;  PFN_WDF_INTERRUPT_ISR           EvtInterruptIsr;&#10;  PFN_WDF_INTERRUPT_DPC           EvtInterruptDpc;&#10;  PFN_WDF_INTERRUPT_ENABLE        EvtInterruptEnable;&#10;  PFN_WDF_INTERRUPT_DISABLE       EvtInterruptDisable;&#10;  PFN_WDF_INTERRUPT_WORKITEM      EvtInterruptWorkItem;&#10;  PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptRaw;&#10;  PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptTranslated;&#10;  WDFWAITLOCK                     WaitLock;&#10;  BOOLEAN                         PassiveHandling;&#10;  WDF_TRI_STATE                   ReportInactiveOnPowerDown;&#10;  BOOLEAN                         CanWakeDevice;&#10;} WDF_INTERRUPT_CONFIG, *PWDF_INTERRUPT_CONFIG;">WDF_INTERRUPT_CONFIG</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_isr">EvtInterruptIsr</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff547376(v=vs.85)">WdfInterruptReleaseLock</a>
-</li>
+<li><a href="wdfinterruptsynchronize" title="BOOLEAN WdfInterruptSynchronize(&#10;  [in] WDFINTERRUPT                  Interrupt,&#10;  [in] PFN_WDF_INTERRUPT_SYNCHRONIZE Callback,&#10;  [in] WDFCONTEXT                    Context&#10;);">WdfInterruptSynchronize</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_synchronize">EvtInterruptSynchronize</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_disable">EvtInterruptDisable</a></li>
+<li><a href="wdfinterrupttrytoacquirelock" title="BOOLEAN WdfInterruptTryToAcquireLock(&#10;  [in] WDFINTERRUPT Interrupt&#10;);">WdfInterruptTryToAcquireLock</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_enable">EvtInterruptEnable</a></li>
+<li><a href="wdf_interrupt_config" title="typedef struct _WDF_INTERRUPT_CONFIG {&#10;  ULONG                           Size;&#10;  WDFSPINLOCK                     SpinLock;&#10;  WDF_TRI_STATE                   ShareVector;&#10;  BOOLEAN                         FloatingSave;&#10;  BOOLEAN                         AutomaticSerialization;&#10;  PFN_WDF_INTERRUPT_ISR           EvtInterruptIsr;&#10;  PFN_WDF_INTERRUPT_DPC           EvtInterruptDpc;&#10;  PFN_WDF_INTERRUPT_ENABLE        EvtInterruptEnable;&#10;  PFN_WDF_INTERRUPT_DISABLE       EvtInterruptDisable;&#10;  PFN_WDF_INTERRUPT_WORKITEM      EvtInterruptWorkItem;&#10;  PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptRaw;&#10;  PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptTranslated;&#10;  WDFWAITLOCK                     WaitLock;&#10;  BOOLEAN                         PassiveHandling;&#10;  WDF_TRI_STATE                   ReportInactiveOnPowerDown;&#10;  BOOLEAN                         CanWakeDevice;&#10;} WDF_INTERRUPT_CONFIG, *PWDF_INTERRUPT_CONFIG;">WDF_INTERRUPT_CONFIG</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_isr">EvtInterruptIsr</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff547376(v=vs.85)">WdfInterruptReleaseLock</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">
@@ -167,6 +144,7 @@ The peripheral driver's I/O dispatch routine calls <strong>WdfInterruptAcquireLo
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

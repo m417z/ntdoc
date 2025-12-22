@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -92,21 +93,17 @@ VOID EvtSpbControllerSequence(
 <p>If the target device signals a NACK during a transfer in a sequence, the SPB controller stops the sequence. (That is, the controller does not retry the failing transfer and does not try to perform the remaining transfers in the sequence.) If this occurs, the SPB controller driver should set the completion status of the I/O request to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, set the <strong>Information</strong> field in the I/O status block to the number of bytes actually transferred (not counting the data lost in the transfer that received the NACK), and complete the request.</p>
 <p>The SPB controller driver should complete the I/O request with an error status code only if one of the following conditions occurs:</p>
 <ul>
-<li>
-The SPB controller cannot select the target device (for example, a target device on an I2C bus signals a NACK when the controller transmits the address byte).
-</li>
-<li>
-The SPB controller driver gets an error status from a call to a WDF or WDM service while processing the sequence operation.
-</li>
+<li>The SPB controller cannot select the target device (for example, a target device on an I2C bus signals a NACK when the controller transmits the address byte).</li>
+<li>The SPB controller driver gets an error status from a call to a WDF or WDM service while processing the sequence operation.</li>
 </ul>
 <p>To register an <em>EvtSpbControllerIoSequence</em> callback function, call the <a href="spbdeviceinitialize" title="NTSTATUS SpbDeviceInitialize(&#10;  [in] WDFDEVICE              FxDevice,&#10;  [in] PSPB_CONTROLLER_CONFIG Config&#10;);">SpbDeviceInitialize</a> method.</p>
 <h3>Examples</h3>
 <p>To define an <em>EvtSpbControllerIoSequence</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
 <p>For example, to define an <em>EvtSpbControllerIoSequence</em> callback function that is named <code>MyEvtSpbControllerIoSequence</code>, use the EVT_SPB_CONTROLLER_SEQUENCE function type, as shown in this code example:</p>
-<pre><code>EVT_SPB_CONTROLLER_SEQUENCE  MyEvtSpbControllerIoSequence;
+<pre><code class="language-cpp">EVT_SPB_CONTROLLER_SEQUENCE  MyEvtSpbControllerIoSequence;
 </code></pre>
 <p>Then, implement your callback function as follows:</p>
-<pre><code>_Use_decl_annotations_
+<pre><code class="language-cpp">_Use_decl_annotations_
 VOID
   MyEvtSpbControllerIoSequence(
     WDFDEVICE Controller,
@@ -119,30 +116,14 @@ VOID
 <p>The EVT_SPB_CONTROLLER_SEQUENCE function type is defined in the Spbcx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the <em>Use_decl_annotations</em> annotation to your function definition. The <em>Use_decl_annotations</em> annotation ensures that the annotations that are applied to the EVT_SPB_CONTROLLER_SEQUENCE function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about <em>Use_decl_annotations</em>, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
 <h2>See also</h2>
 <ul>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spb-ioctls#ioctl_spb_execute_sequence">IOCTL_SPB_EXECUTE_SEQUENCE</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-read">IRP_MJ_READ</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-write">IRP_MJ_WRITE</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBREQUEST</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBTARGET</a>
-</li>
-<li>
-<a href="spbdeviceinitialize" title="NTSTATUS SpbDeviceInitialize(&#10;  [in] WDFDEVICE              FxDevice,&#10;  [in] PSPB_CONTROLLER_CONFIG Config&#10;);">SpbDeviceInitialize</a>
-</li>
-<li>
-<a href="spbrequestgettransferparameters" title="VOID SpbRequestGetTransferParameters(&#10;  [in]            SPBREQUEST              SpbRequest,&#10;  [in]            ULONG                   Index,&#10;  [out, optional] SPB_TRANSFER_DESCRIPTOR *TransferDescriptor,&#10;  [out, optional] PMDL                    *TransferBuffer&#10;);">SpbRequestGetTransferParameters</a>
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/spbcx/nc-spbcx-evt_spb_target_connect">EvtSpbTargetConnect</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spb-ioctls#ioctl_spb_execute_sequence">IOCTL_SPB_EXECUTE_SEQUENCE</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-read">IRP_MJ_READ</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-write">IRP_MJ_WRITE</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBREQUEST</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/spb/spbcx-object-handles">SPBTARGET</a></li>
+<li><a href="spbdeviceinitialize" title="NTSTATUS SpbDeviceInitialize(&#10;  [in] WDFDEVICE              FxDevice,&#10;  [in] PSPB_CONTROLLER_CONFIG Config&#10;);">SpbDeviceInitialize</a></li>
+<li><a href="spbrequestgettransferparameters" title="VOID SpbRequestGetTransferParameters(&#10;  [in]            SPBREQUEST              SpbRequest,&#10;  [in]            ULONG                   Index,&#10;  [out, optional] SPB_TRANSFER_DESCRIPTOR *TransferDescriptor,&#10;  [out, optional] PMDL                    *TransferBuffer&#10;);">SpbRequestGetTransferParameters</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">
@@ -177,6 +158,7 @@ VOID
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -176,12 +177,8 @@ ZwReadFile(
 <p>Pointer to a variable that specifies the starting byte offset in the file where the read operation will begin. If an attempt is made to read beyond the end of the file, <strong>NtReadFile</strong> returns an error.</p>
 <p>If the call to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong> set either of the <strong>CreateOptions</strong> flags <a href="file_synchronous_io_alert" title="#define FILE_SYNCHRONOUS_IO_ALERT 0x00000010">FILE_SYNCHRONOUS_IO_ALERT</a> or <a href="file_synchronous_io_nonalert" title="#define FILE_SYNCHRONOUS_IO_NONALERT 0x00000020">FILE_SYNCHRONOUS_IO_NONALERT</a>, the I/O Manager maintains the current file position. If so, the caller of <strong>NtReadFile</strong> can specify that the current file position offset be used instead of an explicit <strong>ByteOffset</strong> value. This specification can be made by using one of the following methods:</p>
 <ul>
-<li>
-Specify a pointer to a LARGE_INTEGER value with the <strong>HighPart</strong> member set to -1 and the <strong>LowPart</strong> member set to the system-defined value <a href="file_use_file_pointer_position" title="#define FILE_USE_FILE_POINTER_POSITION 0xfffffffe">FILE_USE_FILE_POINTER_POSITION</a>.
-</li>
-<li>
-Pass a NULL pointer for <strong>ByteOffset</strong>.
-</li>
+<li>Specify a pointer to a LARGE_INTEGER value with the <strong>HighPart</strong> member set to -1 and the <strong>LowPart</strong> member set to the system-defined value <a href="file_use_file_pointer_position" title="#define FILE_USE_FILE_POINTER_POSITION 0xfffffffe">FILE_USE_FILE_POINTER_POSITION</a>.</li>
+<li>Pass a NULL pointer for <strong>ByteOffset</strong>.</li>
 </ul>
 <p><strong>NtReadFile</strong> updates the current file position by adding the number of bytes read when it completes the read operation, if it is using the current file position maintained by the I/O Manager.</p>
 <p>Even when the I/O Manager is maintaining the current file position, the caller can reset this position by passing an explicit <strong>ByteOffset</strong> value to <strong>NtReadFile</strong>. Doing this automatically changes the current file position to that <strong>ByteOffset</strong> value, performs the read operation, and then updates the position according to the number of bytes actually read. This technique gives the caller atomic seek-and-read service.</p>
@@ -194,36 +191,20 @@ Pass a NULL pointer for <strong>ByteOffset</strong>.
 <p>If the preceding call to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong> set the <a href="file_no_intermediate_buffering" title="#define FILE_NO_INTERMEDIATE_BUFFERING 0x00000008">FILE_NO_INTERMEDIATE_BUFFERING</a> flag in the <strong>CreateOptions</strong> parameter to <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></strong>, the <strong>Length</strong> and <strong>ByteOffset</strong> parameters to <strong>NtReadFile</strong> must be multiples of the sector size.</p>
 <p><strong>NtReadFile</strong> begins reading from the given <strong>ByteOffset</strong> or the current file position into the given <strong>Buffer</strong>. It terminates the read operation under one of the following conditions:</p>
 <ul>
-<li>
-The buffer is full because the number of bytes specified by the <strong>Length</strong> parameter has been read. Therefore, no more data can be placed into the buffer without an overflow.
-</li>
-<li>
-The end of file is reached during the read operation, so there is no more data in the file to be transferred into the buffer.
-</li>
+<li>The buffer is full because the number of bytes specified by the <strong>Length</strong> parameter has been read. Therefore, no more data can be placed into the buffer without an overflow.</li>
+<li>The end of file is reached during the read operation, so there is no more data in the file to be transferred into the buffer.</li>
 </ul>
 <p>If the caller opened the file with the SYNCHRONIZE flag set in <strong>DesiredAccess</strong>, the calling thread can synchronize to the completion of the read operation by waiting on the file handle, <strong>FileHandle</strong>. The handle is signaled each time that an I/O operation that was issued on the handle completes. However, the caller must not wait on a handle that was opened for synchronous file access (<a href="file_synchronous_io_nonalert" title="#define FILE_SYNCHRONOUS_IO_NONALERT 0x00000020">FILE_SYNCHRONOUS_IO_NONALERT</a> or <a href="file_synchronous_io_alert" title="#define FILE_SYNCHRONOUS_IO_ALERT 0x00000010">FILE_SYNCHRONOUS_IO_ALERT</a>). In this case, <strong>NtReadFile</strong> waits on behalf of the caller and does not return until the read operation is complete. The caller can safely wait on the file handle only if all three of the following conditions are met:</p>
 <ul>
-<li>
-The handle was opened for asynchronous access (that is, neither FILE_SYNCHRONOUS_IO_<strong>XXX</strong> flag was specified).
-</li>
-<li>
-The handle is being used for only one I/O operation at a time.
-</li>
-<li>
-<strong>NtReadFile</strong> returned STATUS_PENDING.
-</li>
+<li>The handle was opened for asynchronous access (that is, neither FILE_SYNCHRONOUS_IO_<strong>XXX</strong> flag was specified).</li>
+<li>The handle is being used for only one I/O operation at a time.</li>
+<li><strong>NtReadFile</strong> returned STATUS_PENDING.</li>
 </ul>
 <p>A driver should call <strong>NtReadFile</strong> in the context of the system process if any of the following conditions exist:</p>
 <ul>
-<li>
-The driver created the file handle that it passes to <strong>NtReadFile</strong>.
-</li>
-<li>
-<strong>NtReadFile</strong> will notify the driver of I/O completion by means of an event that the driver created.
-</li>
-<li>
-<strong>NtReadFile</strong> will notify the driver of I/O completion by means of an APC callback routine that the driver passes to <strong>NtReadFile</strong>.
-</li>
+<li>The driver created the file handle that it passes to <strong>NtReadFile</strong>.</li>
+<li><strong>NtReadFile</strong> will notify the driver of I/O completion by means of an event that the driver created.</li>
+<li><strong>NtReadFile</strong> will notify the driver of I/O completion by means of an APC callback routine that the driver passes to <strong>NtReadFile</strong>.</li>
 </ul>
 <p>File and event handles are valid only in the process context where the handles are created. Therefore, to avoid security holes, the driver should create any file or event handle that it passes to <strong>NtReadFile</strong> in the context of the system process rather than the context of the process that the driver is in.</p>
 <p>Likewise, <strong>NtReadFile</strong> should be called in the context of the system process if it notifies the driver of I/O completion by means of an APC, because APCs are always fired in the context of the thread that issues the I/O request. If the driver calls <strong>NtReadFile</strong> in the context of a process other than the system one, the APC could be delayed indefinitely, or it might not fire at all.</p>
@@ -493,27 +474,17 @@ The driver created the file handle that it passes to <strong>NtReadFile</strong>
 <p>??? (In my opinion: use this, if you previously lock file, and now you want read it, but without unlocking).</p>
 <h1>Related Win32 API</h1>
 <ul>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile"><code>ReadFile</code></a> (Although it does more than just forwarding the arguments and invoking this procedure.)
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile"><code>ReadFile</code></a> (Although it does more than just forwarding the arguments and invoking this procedure.)</li>
 </ul>
 <h1>Documented by</h1>
 <ul>
-<li>
-Tomasz Nowak
-</li>
+<li>Tomasz Nowak</li>
 </ul>
 <h1>See also</h1>
 <ul>
-<li>
-<code><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></code>
-</li>
-<li>
-<code><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></code>
-</li>
-<li>
-<code><a href="ntwritefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWriteFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_reads_bytes_(Length) PVOID Buffer,&#10;    _In_ ULONG Length,&#10;    _In_opt_ PLARGE_INTEGER ByteOffset,&#10;    _In_opt_ PULONG Key&#10;    );">NtWriteFile</a></code>
-</li>
+<li><code><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a></code></li>
+<li><code><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenFile</a></code></li>
+<li><code><a href="ntwritefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWriteFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_reads_bytes_(Length) PVOID Buffer,&#10;    _In_ ULONG Length,&#10;    _In_opt_ PLARGE_INTEGER ByteOffset,&#10;    _In_opt_ PULONG Key&#10;    );">NtWriteFile</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntreadfile.md">Edit description on GitHub</a>
@@ -544,6 +515,7 @@ Tomasz Nowak
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

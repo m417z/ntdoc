@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -89,24 +90,14 @@ a synchronous kernel-mode <a href="irp" title="typedef struct _IRP {&#10;  CSHOR
 <p>To unregister for Plug and Play events, the VSP sends the <a href="ioctl_sriov_detach" title="// CTL_CODE(0x0022, 0x814, METHOD_BUFFERED, FILE_READ_ACCESS)&#10;#define IOCTL_SRIOV_DETACH 0x00226050">IOCTL_SRIOV_DETACH</a> request.</p>
 <p>These events (defined in <a href="sriov_pf_event" title="typedef enum _SRIOV_PF_EVENT {&#10;  SriovEventPfQueryStopDevice,&#10;  SriovEventPfRestart,&#10;  SriovEventPfMaximum&#10;} SRIOV_PF_EVENT;">SRIOV_PF_EVENT</a>) cause the completion of <a href="ioctl_sriov_notification" title="// CTL_CODE(0x0022, 0x811, METHOD_BUFFERED, FILE_READ_ACCESS)&#10;#define IOCTL_SRIOV_NOTIFICATION 0x00226044">IOCTL_SRIOV_NOTIFICATION</a> and a wait for <a href="ioctl_sriov_event_complete" title="// CTL_CODE(0x0022, 0x812, METHOD_BUFFERED, FILE_READ_ACCESS)&#10;#define IOCTL_SRIOV_EVENT_COMPLETE 0x00226048">IOCTL_SRIOV_EVENT_COMPLETE</a>:</p>
 <ul>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-stop-device">IRP_MN_QUERY_STOP_DEVICE</a> generates <strong>SriovEventPfQueryStopDevice</strong>.
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-start-device">IRP_MN_START_DEVICE</a> generates <strong>SriovEventPfRestart</strong> <em>if and only if</em> the device was stopped for rebalancing (see above).
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-cancel-stop-device">IRP_MN_CANCEL_STOP_DEVICE</a> generates <strong>SriovEventPfRestart</strong> <em>if and only if</em> the device was stopped for rebalancing.
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-remove-device">IRP_MN_QUERY_REMOVE_DEVICE</a> generates <strong>SriovEventPfQueryRemoveDevice</strong>.
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-surprise-removal">IRP_MN_SURPRISE_REMOVAL</a> generates <strong>SriovEventPfSurpriseRemoveDevice</strong>.
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-stop-device">IRP_MN_QUERY_STOP_DEVICE</a> generates <strong>SriovEventPfQueryStopDevice</strong>.</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-start-device">IRP_MN_START_DEVICE</a> generates <strong>SriovEventPfRestart</strong> <em>if and only if</em> the device was stopped for rebalancing (see above).</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-cancel-stop-device">IRP_MN_CANCEL_STOP_DEVICE</a> generates <strong>SriovEventPfRestart</strong> <em>if and only if</em> the device was stopped for rebalancing.</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-remove-device">IRP_MN_QUERY_REMOVE_DEVICE</a> generates <strong>SriovEventPfQueryRemoveDevice</strong>.</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-surprise-removal">IRP_MN_SURPRISE_REMOVAL</a> generates <strong>SriovEventPfSurpriseRemoveDevice</strong>.</li>
 </ul>
 <p>In this example handling of the IOCTL_SRIOV_ATTACH request, the PF driver maintains PnP states in its device context. The deviceContext-&gt;PnpRebalancing is set to TRUE, when the driver receives <a href="irp_mn_query_stop_device" title="#define IRP_MN_QUERY_STOP_DEVICE 0x05">IRP_MN_QUERY_STOP_DEVICE</a> and set to FALSE when it receives <a href="irp_mn_start_device" title="#define IRP_MN_START_DEVICE 0x00">IRP_MN_START_DEVICE</a>.</p>
-<pre><code>case IOCTL_SRIOV_ATTACH:
+<pre><code class="language-cpp">    case IOCTL_SRIOV_ATTACH:
         TraceEvents(TRACE_LEVEL_VERBOSE, DBG_IOCTL, &quot;IOCTL_SRIOV_ATTACH:\n&quot;);
 
         <a href="wdfwaitlockacquire" title="NTSTATUS WdfWaitLockAcquire(&#10;  [in]           WDFWAITLOCK Lock,&#10;  [in, optional] PLONGLONG   Timeout&#10;);">WdfWaitLockAcquire</a>(fdoContext-&gt;PnpStateLock, NULL);
@@ -188,6 +179,7 @@ a synchronous kernel-mode <a href="irp" title="typedef struct _IRP {&#10;  CSHOR
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

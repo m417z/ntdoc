@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -93,18 +94,10 @@ VOID PdxgkInitialComponentState(
 <h2>Remarks</h2>
 <p>Upon shared power registration (<strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> call), if <strong>PDXGK_INITIAL_COMPONENT_STATE</strong> was provided, it is called once for each shared power component that the graphics driver has reported. The behavior of this callback is such that:</p>
 <ul>
-<li>
-These calls are re-entrant calls, occurring prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> returning
-</li>
-<li>
-These calls occur at <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/when-should-code-and-data-be-pageable-">DISPATCH_LEVEL, which requires driver code and data to be memory-resident</a>
-</li>
-<li>
-As these callbacks occur prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> returning, <strong><a href="dxgk_graphicspower_register_output" title="typedef struct _DXGK_GRAPHICSPOWER_REGISTER_OUTPUT {&#10;  PVOID                                  DeviceHandle;&#10;  DEVICE_POWER_STATE                     InitialGrfxPowerState;&#10;  PDXGK_SET_SHARED_POWER_COMPONENT_STATE SetSharedPowerComponentStateCb;&#10;  PDXGK_GRAPHICSPOWER_UNREGISTER         UnregisterCb;&#10;} DXGK_GRAPHICSPOWER_REGISTER_OUTPUT, *PDXGK_GRAPHICSPOWER_REGISTER_OUTPUT;">DXGK_GRAPHICSPOWER_REGISTER_OUTPUT</a></strong> would not have been filled in yet
-</li>
-<li>
-If any F-state transitions are currently in progress, a post-notification <strong><a href="pdxgk_fstate_notification" title="PDXGK_FSTATE_NOTIFICATION PdxgkFstateNotification;&#10;&#10;VOID PdxgkFstateNotification(&#10;  PVOID GraphicsDeviceHandle,&#10;  ULONG ComponentIndex,&#10;  UINT NewFState,&#10;  BOOLEAN PreNotification,&#10;  PVOID PrivateHandle&#10;)&#10;{...}">PDXGK_FSTATE_NOTIFICATION</a></strong> will alert the driver of the final state. Such calls will be guaranteed to occur after the InitialComponentStateCb calls. However, it is possible that such callbacks could occur prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> returning if synchronization is required. A spin lock should be around <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> and the <strong><a href="pdxgk_fstate_notification" title="PDXGK_FSTATE_NOTIFICATION PdxgkFstateNotification;&#10;&#10;VOID PdxgkFstateNotification(&#10;  PVOID GraphicsDeviceHandle,&#10;  ULONG ComponentIndex,&#10;  UINT NewFState,&#10;  BOOLEAN PreNotification,&#10;  PVOID PrivateHandle&#10;)&#10;{...}">PDXGK_FSTATE_NOTIFICATION</a></strong> handler.
-</li>
+<li>These calls are re-entrant calls, occurring prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> returning</li>
+<li>These calls occur at <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/when-should-code-and-data-be-pageable-">DISPATCH_LEVEL, which requires driver code and data to be memory-resident</a></li>
+<li>As these callbacks occur prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> returning, <strong><a href="dxgk_graphicspower_register_output" title="typedef struct _DXGK_GRAPHICSPOWER_REGISTER_OUTPUT {&#10;  PVOID                                  DeviceHandle;&#10;  DEVICE_POWER_STATE                     InitialGrfxPowerState;&#10;  PDXGK_SET_SHARED_POWER_COMPONENT_STATE SetSharedPowerComponentStateCb;&#10;  PDXGK_GRAPHICSPOWER_UNREGISTER         UnregisterCb;&#10;} DXGK_GRAPHICSPOWER_REGISTER_OUTPUT, *PDXGK_GRAPHICSPOWER_REGISTER_OUTPUT;">DXGK_GRAPHICSPOWER_REGISTER_OUTPUT</a></strong> would not have been filled in yet</li>
+<li>If any F-state transitions are currently in progress, a post-notification <strong><a href="pdxgk_fstate_notification" title="PDXGK_FSTATE_NOTIFICATION PdxgkFstateNotification;&#10;&#10;VOID PdxgkFstateNotification(&#10;  PVOID GraphicsDeviceHandle,&#10;  ULONG ComponentIndex,&#10;  UINT NewFState,&#10;  BOOLEAN PreNotification,&#10;  PVOID PrivateHandle&#10;)&#10;{...}">PDXGK_FSTATE_NOTIFICATION</a></strong> will alert the driver of the final state. Such calls will be guaranteed to occur after the InitialComponentStateCb calls. However, it is possible that such callbacks could occur prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> returning if synchronization is required. A spin lock should be around <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> and the <strong><a href="pdxgk_fstate_notification" title="PDXGK_FSTATE_NOTIFICATION PdxgkFstateNotification;&#10;&#10;VOID PdxgkFstateNotification(&#10;  PVOID GraphicsDeviceHandle,&#10;  ULONG ComponentIndex,&#10;  UINT NewFState,&#10;  BOOLEAN PreNotification,&#10;  PVOID PrivateHandle&#10;)&#10;{...}">PDXGK_FSTATE_NOTIFICATION</a></strong> handler.</li>
 </ul>
 <h2>See also</h2>
 <p><strong><a href="dxgk_graphicspower_register_output" title="typedef struct _DXGK_GRAPHICSPOWER_REGISTER_OUTPUT {&#10;  PVOID                                  DeviceHandle;&#10;  DEVICE_POWER_STATE                     InitialGrfxPowerState;&#10;  PDXGK_SET_SHARED_POWER_COMPONENT_STATE SetSharedPowerComponentStateCb;&#10;  PDXGK_GRAPHICSPOWER_UNREGISTER         UnregisterCb;&#10;} DXGK_GRAPHICSPOWER_REGISTER_OUTPUT, *PDXGK_GRAPHICSPOWER_REGISTER_OUTPUT;">DXGK_GRAPHICSPOWER_REGISTER_OUTPUT</a></strong></p>
@@ -145,6 +138,7 @@ If any F-state transitions are currently in progress, a post-notification <stron
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

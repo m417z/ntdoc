@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -82,12 +83,8 @@
 <p>Starting in KMDF 1.11, the driver can optionally call <strong>WdfDeviceInitSetRemoveLockOptions</strong> to cause the framework to acquire a remove lock before delivering all <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> types, not just those listed above.</p>
 <p>If your driver has kernel-mode clients that send I/O unsynchronized with the PnP state of your device, you may experience crashes due to I/O IRPs arriving after the framework device object has been removed. In this case, you can call <strong>WdfDeviceInitSetRemoveLockOptions</strong>. Then, when a client sends an I/O request to your device:</p>
 <ul>
-<li>
-If the device has not yet been removed, the remove lock is acquired successfully and the request is delivered. If removal happens later, the framework calls <strong><a href="ioreleaseremovelockandwait" title="void IoReleaseRemoveLockAndWait(&#10;  [in] RemoveLock,&#10;  [in] Tag&#10;);">IoReleaseRemoveLockAndWait</a></strong> which blocks until all successful lock acquisitions are released (I/O requests are completed).
-</li>
-<li>
-If the device has already processed <a href="irp_mn_remove_device" title="#define IRP_MN_REMOVE_DEVICE 0x02">IRP_MN_REMOVE_DEVICE</a>, but there is an outstanding reference to a WDM device object preventing the device from being released, the remove lock is not acquired and the framework completes the request immediately.
-</li>
+<li>If the device has not yet been removed, the remove lock is acquired successfully and the request is delivered. If removal happens later, the framework calls <strong><a href="ioreleaseremovelockandwait" title="void IoReleaseRemoveLockAndWait(&#10;  [in] RemoveLock,&#10;  [in] Tag&#10;);">IoReleaseRemoveLockAndWait</a></strong> which blocks until all successful lock acquisitions are released (I/O requests are completed).</li>
+<li>If the device has already processed <a href="irp_mn_remove_device" title="#define IRP_MN_REMOVE_DEVICE 0x02">IRP_MN_REMOVE_DEVICE</a>, but there is an outstanding reference to a WDM device object preventing the device from being released, the remove lock is not acquired and the framework completes the request immediately.</li>
 </ul>
 <p><strong>Note</strong> <strong>WdfDeviceInitSetRemoveLockOptions</strong> is not supported on control objects.</p>
 <p>Typically, a driver calls <strong>WdfDeviceInitSetRemoveLockOptions</strong> from within its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function, just before calling <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a>.</p>
@@ -95,7 +92,8 @@ If the device has already processed <a href="irp_mn_remove_device" title="#defin
 <p>For more information about remove locks, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-remove-locks">Using Remove Locks</a>.</p>
 <h4>Examples</h4>
 <p>This code example initializes a <a href="wdf_remove_lock_options" title="typedef struct _WDF_REMOVE_LOCK_OPTIONS {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;} WDF_REMOVE_LOCK_OPTIONS, *PWDF_REMOVE_LOCK_OPTIONS;">WDF_REMOVE_LOCK_OPTIONS</a> structure and calls <strong>WdfDeviceInitSetRemoveLockOptions</strong>.</p>
-<pre><code><a href="wdf_remove_lock_options" title="typedef struct _WDF_REMOVE_LOCK_OPTIONS {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;} WDF_REMOVE_LOCK_OPTIONS, *PWDF_REMOVE_LOCK_OPTIONS;">WDF_REMOVE_LOCK_OPTIONS</a> RemoveLockOptions;
+<pre><code class="language-cpp">
+<a href="wdf_remove_lock_options" title="typedef struct _WDF_REMOVE_LOCK_OPTIONS {&#10;  ULONG Size;&#10;  ULONG Flags;&#10;} WDF_REMOVE_LOCK_OPTIONS, *PWDF_REMOVE_LOCK_OPTIONS;">WDF_REMOVE_LOCK_OPTIONS</a> RemoveLockOptions;
 
 <a href="wdf_remove_lock_options_init" title="VOID WDF_REMOVE_LOCK_OPTIONS_INIT(&#10;  [out] PWDF_REMOVE_LOCK_OPTIONS RemoveLockOptions,&#10;  [in]  ULONG                    Flags&#10;);">WDF_REMOVE_LOCK_OPTIONS_INIT</a>(
                              &amp;RemoveLockOptions,
@@ -143,6 +141,7 @@ WdfDeviceInitSetRemoveLockOptions(
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

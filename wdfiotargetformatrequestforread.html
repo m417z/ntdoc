@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -137,12 +138,8 @@
 <p>Provide buffer space, and supply the buffer's handle for the <strong>WdfIoTargetFormatRequestForRead</strong> method's <em>OutputBuffer</em> parameter.</p>
 <p>Your driver must specify this buffer space as a WDFMEMORY handle to framework-managed memory. Your driver can do either of the following:</p>
 <ul>
-<li>
-Call <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a> or <a href="wdfmemorycreatepreallocated" title="NTSTATUS WdfMemoryCreatePreallocated(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]           __drv_aliasesMem PVOID Buffer,&#10;  [in]           size_t                 BufferSize,&#10;  [out]          WDFMEMORY              *Memory&#10;);">WdfMemoryCreatePreallocated</a> to create a new memory buffer, if you want the driver to pass a new buffer to the I/O target.
-</li>
-<li>
-Call <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> to obtain a handle to the memory object that represents a received I/O request's buffer, if you want the driver to pass that buffer's contents to the I/O target.Note that if your driver calls <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> and passes the memory handle to <strong>WdfIoTargetFormatRequestForRead</strong>, the driver must not complete the received I/O request until after the driver deletes, reuses, or reformats the new, driver-created request object. (<strong>WdfIoTargetFormatRequestForRead</strong> increments the memory object's reference count. Deleting, reusing, or reformatting a request object decrements the memory object's reference count.)
-</li>
+<li>Call <a href="wdfmemorycreate" title="NTSTATUS WdfMemoryCreate(&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]            POOL_TYPE              PoolType,&#10;  [in, optional]  ULONG                  PoolTag,&#10;  [in]            size_t                 BufferSize,&#10;  [out]           WDFMEMORY              *Memory,&#10;  [out, optional] PVOID                  *Buffer&#10;);">WdfMemoryCreate</a> or <a href="wdfmemorycreatepreallocated" title="NTSTATUS WdfMemoryCreatePreallocated(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [in]           __drv_aliasesMem PVOID Buffer,&#10;  [in]           size_t                 BufferSize,&#10;  [out]          WDFMEMORY              *Memory&#10;);">WdfMemoryCreatePreallocated</a> to create a new memory buffer, if you want the driver to pass a new buffer to the I/O target.</li>
+<li>Call <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> to obtain a handle to the memory object that represents a received I/O request's buffer, if you want the driver to pass that buffer's contents to the I/O target.Note that if your driver calls <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieveOutputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveOutputMemory</a> and passes the memory handle to <strong>WdfIoTargetFormatRequestForRead</strong>, the driver must not complete the received I/O request until after the driver deletes, reuses, or reformats the new, driver-created request object. (<strong>WdfIoTargetFormatRequestForRead</strong> increments the memory object's reference count. Deleting, reusing, or reformatting a request object decrements the memory object's reference count.)</li>
 </ul>
 </li>
 </ol>
@@ -154,7 +151,7 @@ Call <a href="wdfrequestretrieveoutputmemory" title="NTSTATUS WdfRequestRetrieve
 <p>For more information about I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-i-o-targets">Using I/O Targets</a>.</p>
 <h4>Examples</h4>
 <p>The following code example creates a framework memory object for a read request's output buffer, formats the read request, registers a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfrequest/nc-wdfrequest-evt_wdf_request_completion_routine">CompletionRoutine</a> callback function, and sends the read request to an I/O target.</p>
-<pre><code>WDFREQUEST  request;
+<pre><code class="language-cpp">WDFREQUEST  request;
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
 WDFMEMORY  memory;
 <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a>  attributes;
@@ -243,6 +240,7 @@ if (<a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUES
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

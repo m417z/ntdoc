@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -95,16 +96,12 @@
 <p><strong>ScsiPortGetDeviceBase</strong> can be called only from a miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff557300(v=vs.85)">HwScsiFindAdapter</a> routine or from HwScsiAdapterControl when the control type is <strong>ScsiSetRunningConfig</strong>. Calls from other miniport driver routines will result in system failure or in incorrect operation for the caller.</p>
 <p>Follow these guidelines for calling <strong>ScsiPortGetDeviceBase</strong>:</p>
 <ul>
-<li>
-If <em>HwScsiFindAdapter</em> is using a miniport driver-supplied set of default bus-relative access ranges or values returned by <strong><a href="scsiportgetbusdata" title="SCSIPORT_API ULONG ScsiPortGetBusData(&#10;  [in] PVOID DeviceExtension,&#10;  [in] ULONG BusDataType,&#10;  [in] ULONG SystemIoBusNumber,&#10;  [in] ULONG SlotNumber,&#10;  [in] PVOID Buffer,&#10;  [in] ULONG Length&#10;);">ScsiPortGetBusData</a></strong>, it should call <a href="scsiportvalidaterange" title="SCSIPORT_API BOOLEAN ScsiPortValidateRange(&#10;  [in] PVOID                 HwDeviceExtension,&#10;  [in] INTERFACE_TYPE        BusType,&#10;  [in] ULONG                 SystemIoBusNumber,&#10;  [in] SCSI_PHYSICAL_ADDRESS IoAddress,&#10;  [in] ULONG                 NumberOfBytes,&#10;  [in] BOOLEAN               InIoSpace&#10;);">ScsiPortValidateRange</a> before attempting to call <strong>ScsiPortGetDeviceBase</strong>.
-</li>
-<li>
-If <em>HwScsiFindAdapter</em> determines that a particular HBA is not one that the miniport driver supports, it must call <strong><a href="scsiportfreedevicebase" title="SCSIPORT_API VOID ScsiPortFreeDeviceBase(&#10;  [in] PVOID HwDeviceExtension,&#10;  [in] PVOID MappedAddress&#10;);">ScsiPortFreeDeviceBase</a></strong> to release the mapping(s) it set up to communicate with that HBA.
-</li>
+<li>If <em>HwScsiFindAdapter</em> is using a miniport driver-supplied set of default bus-relative access ranges or values returned by <strong><a href="scsiportgetbusdata" title="SCSIPORT_API ULONG ScsiPortGetBusData(&#10;  [in] PVOID DeviceExtension,&#10;  [in] ULONG BusDataType,&#10;  [in] ULONG SystemIoBusNumber,&#10;  [in] ULONG SlotNumber,&#10;  [in] PVOID Buffer,&#10;  [in] ULONG Length&#10;);">ScsiPortGetBusData</a></strong>, it should call <a href="scsiportvalidaterange" title="SCSIPORT_API BOOLEAN ScsiPortValidateRange(&#10;  [in] PVOID                 HwDeviceExtension,&#10;  [in] INTERFACE_TYPE        BusType,&#10;  [in] ULONG                 SystemIoBusNumber,&#10;  [in] SCSI_PHYSICAL_ADDRESS IoAddress,&#10;  [in] ULONG                 NumberOfBytes,&#10;  [in] BOOLEAN               InIoSpace&#10;);">ScsiPortValidateRange</a> before attempting to call <strong>ScsiPortGetDeviceBase</strong>.</li>
+<li>If <em>HwScsiFindAdapter</em> determines that a particular HBA is not one that the miniport driver supports, it must call <strong><a href="scsiportfreedevicebase" title="SCSIPORT_API VOID ScsiPortFreeDeviceBase(&#10;  [in] PVOID HwDeviceExtension,&#10;  [in] PVOID MappedAddress&#10;);">ScsiPortFreeDeviceBase</a></strong> to release the mapping(s) it set up to communicate with that HBA.</li>
 </ul>
 <p>The logical address returned by <strong>ScsiPortGetDeviceBase</strong> should be used for all subsequent references made to the hardware but should <em>not</em> be added to any <strong>AccessRanges</strong> specification in the <a href="port_configuration_information" title="typedef struct _PORT_CONFIGURATION_INFORMATION {&#10;  ULONG           Length;&#10;  ULONG           SystemIoBusNumber;&#10;  INTERFACE_TYPE  AdapterInterfaceType;&#10;  ULONG           BusInterruptLevel;&#10;  ULONG           BusInterruptVector;&#10;  KINTERRUPT_MODE InterruptMode;&#10;  ULONG           MaximumTransferLength;&#10;  ULONG           NumberOfPhysicalBreaks;&#10;  ULONG           DmaChannel;&#10;  ULONG           DmaPort;&#10;  DMA_WIDTH       DmaWidth;&#10;  DMA_SPEED       DmaSpeed;&#10;  ULONG           AlignmentMask;&#10;  ULONG           NumberOfAccessRanges;&#10;  ACCESS_RANGE( )   *AccessRanges[];&#10;  PVOID           Reserved;&#10;  UCHAR           NumberOfBuses;&#10;  UCHAR           InitiatorBusId[8];&#10;  BOOLEAN         ScatterGather;&#10;...">PORT_CONFIGURATION_INFORMATION</a>. Miniport driver writers should make no assumptions about how many bits are used in the logical base address returned by <strong>ScsiPortGetDeviceBase</strong>.</p>
 <p><strong>ScsiPortGetDeviceBase</strong> uses <strong>SCSI_PHYSICAL_ADDRESS</strong> to represent bus-relative addresses.</p>
-<pre><code>typedef <a href="physical_address" title="typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;">PHYSICAL_ADDRESS</a> SCSI_PHYSICAL_ADDRESS, *PSCSI_PHYSICAL_ADDRESS;
+<pre><code class="language-cpp">typedef <a href="physical_address" title="typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;">PHYSICAL_ADDRESS</a> SCSI_PHYSICAL_ADDRESS, *PSCSI_PHYSICAL_ADDRESS;
 
 </code></pre>
 <p>The <strong>SCSI_PHYSICAL_ADDRESS</strong> type is an operating system-independent data type that SCSI miniport drivers use to represent either a physical addresses or a bus-relative address.</p>
@@ -149,6 +146,7 @@ If <em>HwScsiFindAdapter</em> determines that a particular HBA is not one that t
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

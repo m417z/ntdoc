@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -75,24 +76,12 @@
 <p>File system filter drivers can disable delivery of normal kernel APCs by calling <strong>FsRtlEnterFileSystem</strong> or <strong><a href="keentercriticalregion" title="VOID KeEnterCriticalRegion();">KeEnterCriticalRegion</a></strong> prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> only if <strong><a href="fsrtlexitfilesystem" title="VOID FsRtlExitFileSystem(&#10;   VOID &#10;);">FsRtlExitFileSystem</a></strong> or <strong><a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a></strong> is in the same dispatch routine. They shouldn't call <strong>FsRtlEnterFileSystem</strong> or <strong><a href="keentercriticalregion" title="VOID KeEnterCriticalRegion();">KeEnterCriticalRegion</a></strong> prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> and then call <strong><a href="fsrtlexitfilesystem" title="VOID FsRtlExitFileSystem(&#10;   VOID &#10;);">FsRtlExitFileSystem</a></strong> or <strong><a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a></strong> in the <em>completion routine</em> of the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>. Driver Verifier has a rule to help catch this condition.</p>
 <p>File system filter drivers should disable normal kernel APCs before acquiring any resource. File system filter drivers acquire resources with the following routines:</p>
 <ul>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceExclusive</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)"><strong>ExAcquireResourceExclusiveLite</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceShared</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)"><strong>ExAcquireResourceSharedLite</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544367(v=vs.85)"><strong>ExAcquireSharedStarveExclusive</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544370(v=vs.85)"><strong>ExAcquireSharedWaitForExclusive</strong></a>
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceExclusive</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)"><strong>ExAcquireResourceExclusiveLite</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceShared</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)"><strong>ExAcquireResourceSharedLite</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544367(v=vs.85)"><strong>ExAcquireSharedStarveExclusive</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544370(v=vs.85)"><strong>ExAcquireSharedWaitForExclusive</strong></a></li>
 </ul>
 <p>As an alternative to <strong>FsRtlEnterFileSystem</strong>, minifilter drivers can use the <strong><a href="fltacquireresourceexclusive" title="VOID FLTAPI FltAcquireResourceExclusive(&#10;  [in/out] PERESOURCE Resource&#10;);">FltAcquireResourceExclusive</a></strong>, <strong><a href="fltacquireresourceshared" title="VOID FLTAPI FltAcquireResourceShared(&#10;  [in/out] PERESOURCE Resource&#10;);">FltAcquireResourceShared</a></strong>, and <strong><a href="fltreleaseresource" title="VOID FLTAPI FltReleaseResource(&#10;  [in/out] PERESOURCE Resource&#10;);">FltReleaseResource</a></strong> routines, which properly handle APCs when acquiring and releasing a resource.</p>
 <h2>Requirements</h2>
@@ -164,6 +153,7 @@
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

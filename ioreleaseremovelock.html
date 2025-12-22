@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -77,12 +78,8 @@
 <h2>Remarks</h2>
 <p>A driver calls <strong>IoReleaseRemoveLock</strong> when it has completed the I/O operation for which it called <a href="ioacquireremovelock" title="NTSTATUS&#10;IoAcquireRemoveLock (&#10;    _Inout_ PIO_REMOVE_LOCK RemoveLock,&#10;    _In_opt_ PVOID          Tag&#10;    );">IoAcquireRemoveLock</a>.</p>
 <ul>
-<li>
-For I/O operations (including power and PnP IRPs) that set an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-io_completion_routine">IoCompletion</a> routine, a driver should call <strong>IoReleaseRemoveLock</strong> in the <em>IoCompletion</em> routine, after calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-iocompleterequest">IoCompleteRequest</a>.
-</li>
-<li>
-For I/O operations that do not set an <em>IoCompletion</em> routine, a driver should call <strong>IoReleaseRemoveLock</strong> after passing the current <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> to the next-lower driver, but before exiting the dispatch routine.
-</li>
+<li>For I/O operations (including power and PnP IRPs) that set an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-io_completion_routine">IoCompletion</a> routine, a driver should call <strong>IoReleaseRemoveLock</strong> in the <em>IoCompletion</em> routine, after calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nf-wdm-iocompleterequest">IoCompleteRequest</a>.</li>
+<li>For I/O operations that do not set an <em>IoCompletion</em> routine, a driver should call <strong>IoReleaseRemoveLock</strong> after passing the current <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> to the next-lower driver, but before exiting the dispatch routine.</li>
 </ul>
 <p>Each call to <a href="ioacquireremovelock" title="NTSTATUS&#10;IoAcquireRemoveLock (&#10;    _Inout_ PIO_REMOVE_LOCK RemoveLock,&#10;    _In_opt_ PVOID          Tag&#10;    );">IoAcquireRemoveLock</a> must have a corresponding call to <strong>IoReleaseRemoveLock</strong>.</p>
 <p><strong>IoReleaseRemoveLock</strong> decrements the count of outstanding acquisitions of the remove lock. If the count goes to zero and the driver has received an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-remove-device">IRP_MN_REMOVE_DEVICE</a> request, <strong>IoReleaseRemoveLock</strong> sets an internal event. When a driver is ready to delete a device object, it calls a similar routine, <a href="ioreleaseremovelockandwait" title="void IoReleaseRemoveLockAndWait(&#10;  [in] RemoveLock,&#10;  [in] Tag&#10;);">IoReleaseRemoveLockAndWait</a>. The driver makes this call only in its dispatch code for an <strong><a href="irp_mn_remove_device" title="#define IRP_MN_REMOVE_DEVICE 0x02">IRP_MN_REMOVE_DEVICE</a></strong> request. The <strong><a href="ioreleaseremovelockandwait" title="void IoReleaseRemoveLockAndWait(&#10;  [in] RemoveLock,&#10;  [in] Tag&#10;);">IoReleaseRemoveLockAndWait</a></strong> routine does not return until <strong>IoReleaseRemoveLock</strong> sets the event that indicates the acquisition count is zero. After <strong><a href="ioreleaseremovelockandwait" title="void IoReleaseRemoveLockAndWait(&#10;  [in] RemoveLock,&#10;  [in] Tag&#10;);">IoReleaseRemoveLockAndWait</a></strong> returns, the driver can safely detach and delete the device object.</p>
@@ -124,6 +121,7 @@ For I/O operations that do not set an <em>IoCompletion</em> routine, a driver sh
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -168,18 +169,10 @@ Specifies the Personal Computer Memory Card International Association (PC Card) 
 <p>Intermediate drivers must call <strong>NdisMSetAttributesEx</strong>, rather than <strong>NdisMSetAttributes</strong>, and they must set NDIS_ATTRIBUTE_INTERMEDIATE_DRIVER in the <em>AttributeFlags</em>. Setting this flag causes NDIS to treat an intermediate driver as a full-duplex miniport driver, which prevents rare but intermittent deadlocks from occurring in the intermediate driver. Consequently, every intermediate driver must be capable of handling concurrent sends and indications.</p>
 <p>Deserialized drivers also must call <strong>NdisMSetAttributesEx</strong>, and they must set NDIS_ATTRIBUTE_DESERIALIZE in the <em>AttributeFlags</em>. NDIS does not maintain a send-packet queue for a deserialized driver, nor does NDIS serialize calls to a such a driver's <em>MiniportXxx</em> functions. A deserialized driver makes itself responsible for the following:</p>
 <ul>
-<li>
-Accepting all incoming send requests
-</li>
-<li>
-Queuing incoming send packets internally if necessary, as, for example, if a deserialized NIC driver currently has insufficient resources available to transmit an incoming send packet immediately
-</li>
-<li>
-Synchronizing access to its internal queue(s) as necessary among the driver's routines
-</li>
-<li>
-Completing all requested sends asynchronously by subsequently calling <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553613/(v=vs.85/)"><strong>NdisMSendComplete</strong></a> with each protocol-supplied packet descriptor passed in to its <strong>Miniport(Co)Send(Packets)</strong> function
-</li>
+<li>Accepting all incoming send requests</li>
+<li>Queuing incoming send packets internally if necessary, as, for example, if a deserialized NIC driver currently has insufficient resources available to transmit an incoming send packet immediately</li>
+<li>Synchronizing access to its internal queue(s) as necessary among the driver's routines</li>
+<li>Completing all requested sends asynchronously by subsequently calling <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553613/(v=vs.85/)"><strong>NdisMSendComplete</strong></a> with each protocol-supplied packet descriptor passed in to its <strong>Miniport(Co)Send(Packets)</strong> function</li>
 </ul>
 <p>NDIS assumes that all connection-oriented miniports are deserialized drivers, regardless of the <em>AttributeFlags</em> that they pass to <strong>NdisMSetAttributesEx</strong>. That is, any driver that calls <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553602/(v=vs.85/)"><strong>NdisMRegisterMiniport</strong></a> with 0x05 as the <strong>MajorNdisVersion</strong> must be a deserialized miniport driver.</p>
 <p>Serialized NIC drivers can call either of these functions from <em>MiniportInitialize</em>, but <strong>NdisMSetAttributes</strong> does not allow its caller to adjust the interval at which a NIC driver's <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff549367/(v=vs.85/).md"><strong>MiniportCheckForHang</strong></a> and/or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/embedded/aa447851(v=msdn.10)"><em>MiniportReset</em></a> function(s) are called.</p>
@@ -191,94 +184,40 @@ Completing all requested sends asynchronously by subsequently calling <a rel="no
 <p>A miniport driver that can support both connectionless and connection-oriented devices must set NDIS_ATTRIBUTE_NOT_CO_NDIS if its device is a connectionless device. Otherwise, NDIS will mistakenly assume that its device is connection-oriented since the driver registers connection-oriented miniport driver functions with <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553602/(v=vs.85/)"><strong>NdisMRegisterMiniport</strong></a>.</p>
 <p>In general, a NIC driver must call <strong>NdisMSetAttributesEx</strong> before it calls any <em>NdisXxx</em> function that claims hardware resources in the registry for its NIC, because NDIS must have the <em>AttributeFlags</em> value before such a call is made and because the driver usually needs the memory at <em>MiniportAdapterContext</em> to store information for these calls. This restriction implies that a NIC driver's <em>MiniportInitialize</em> function cannot call the following <em>NdisXxx</em> before it calls <strong>NdisMSetAttributesEx</strong>:</p>
 <ul>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552300/(v=vs.85/)"><strong>NdisMAllocateMapRegisters</strong></a> and <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff562782"><strong>NdisMAllocateSharedMemory</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563613"><strong>NdisMMapIoSpace</strong></a> and, consequently, the <em>NdisReadRegisterXxx</em> and <em>NdisWriteRegisterXxx</em> functions
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563646"><strong>NdisMRegisterDmaChannel</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553596/(v=vs.85/)"><strong>NdisMRegisterInterrupt</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563651"><strong>NdisMRegisterIoPortRange</strong></a> and, consequently, the <em>NdisRaw..PortXxx</em> functions
-</li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552300/(v=vs.85/)"><strong>NdisMAllocateMapRegisters</strong></a> and <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff562782"><strong>NdisMAllocateSharedMemory</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563613"><strong>NdisMMapIoSpace</strong></a> and, consequently, the <em>NdisReadRegisterXxx</em> and <em>NdisWriteRegisterXxx</em> functions</li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563646"><strong>NdisMRegisterDmaChannel</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553596/(v=vs.85/)"><strong>NdisMRegisterInterrupt</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563651"><strong>NdisMRegisterIoPortRange</strong></a> and, consequently, the <em>NdisRaw..PortXxx</em> functions</li>
 </ul>
 <p>However, before calling <strong>NdisMSetAttributesEx</strong>, any driver's <em>MiniportInitialize</em> function can call the <em>Ndis..Configuration</em> functions to retrieve configuration information installed in the registry. <em>MiniportInitialize</em> also can call the bus-type-specific <em>NdisReadXxx</em> functions, such as <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff554554/(v=vs.85/)"><strong>NdisReadPciSlotInformation</strong></a>, as long as the installed registry entry for the driver's interface type matches the bus-type-specific <em>NdisReadXxxMiniportInitialize</em> calls.</p>
 <p>The <em>MiniportAdapterContext</em> handle supplied to <strong>NdisMSetAttributesEx</strong> becomes an input parameter to all <em>MiniportXxx</em> functions that were registered, along with <em>MiniportInitialize</em>, in the call to <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553602/(v=vs.85/).md"><strong>NdisMRegisterMiniport</strong></a> or <strong><a href="ndisimregisterlayeredminiport" title="NDIS_STATUS NdisIMRegisterLayeredMiniport(&#10;  [in]  NDIS_HANDLE                    NdisWrapperHandle,&#10;  [in]  PNDIS_MINIPORT_CHARACTERISTICS MiniportCharacteristics,&#10;  [in]  UINT                           CharacteristicsLength,&#10;  [out] PNDIS_HANDLE                   DriverHandle&#10;);">NdisIMRegisterLayeredMiniport</a></strong>. Usually, this handle is a pointer to resident memory, allocated by <em>MiniportInitialize</em>, in which the driver maintains NIC-specific run-time state.</p>
 <ul>
-<li>
-Target platform: <a rel="noopener" target="_blank" href="https://go.microsoft.com/fwlink/p/?linkid=531356">Universal</a>
-</li>
-<li>
-Version: Not supported for NDIS 6.0 drivers in Windows Vista. Use <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563672"><strong>NdisMSetMiniportAttributes</strong></a>instead. Supported for NDIS 5.1 drivers in Windows Vista and Windows XP.
-</li>
+<li>Target platform: <a rel="noopener" target="_blank" href="https://go.microsoft.com/fwlink/p/?linkid=531356">Universal</a></li>
+<li>Version: Not supported for NDIS 6.0 drivers in Windows Vista. Use <a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563672"><strong>NdisMSetMiniportAttributes</strong></a>instead. Supported for NDIS 5.1 drivers in Windows Vista and Windows XP.</li>
 </ul>
 <h2>See also</h2>
 <ul>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff550472/(v=vs.85/)"><strong>MiniportInitialize</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff550487/(v=vs.85/)"><strong>MiniportPnPEventNotify</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff550767/(v=vs.85/)"><strong>NdisAllocateMemoryWithTag</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552167/(v=vs.85/)"><strong>NdisImmediateReadPciSlotInformation</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552171/(v=vs.85/)"><strong>NdisImmediateReadPortUchar</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552174/(v=vs.85/)"><strong>NdisImmediateReadPortUlong</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552177/(v=vs.85/)"><strong>NdisImmediateReadPortUshort</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552181/(v=vs.85/)"><strong>NdisImmediateReadSharedMemory</strong></a>
-</li>
-<li>
-<strong><a href="ndisimregisterlayeredminiport" title="NDIS_STATUS NdisIMRegisterLayeredMiniport(&#10;  [in]  NDIS_HANDLE                    NdisWrapperHandle,&#10;  [in]  PNDIS_MINIPORT_CHARACTERISTICS MiniportCharacteristics,&#10;  [in]  UINT                           CharacteristicsLength,&#10;  [out] PNDIS_HANDLE                   DriverHandle&#10;);">NdisIMRegisterLayeredMiniport</a></strong>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552300/(v=vs.85/)"><strong>NdisMAllocateMapRegisters</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff562782"><strong>NdisMAllocateSharedMemory</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563613"><strong>NdisMMapIoSpace</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553562/(v=vs.85/)"><strong>NdisMPciAssignResources</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563646"><strong>NdisMRegisterDmaChannel</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553596/(v=vs.85/)"><strong>NdisMRegisterInterrupt</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563651"><strong>NdisMRegisterIoPortRange</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553602/(v=vs.85/)"><strong>NdisMRegisterMiniport</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553676/(v=vs.85/)"><strong>NdisOpenConfiguration</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff554540/(v=vs.85/)"><strong>NdisReadEisaSlotInformation</strong></a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff554544/(v=vs.85/)"><strong>NdisReadEisaSlotInformationEx</strong></a>
-</li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff550472/(v=vs.85/)"><strong>MiniportInitialize</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff550487/(v=vs.85/)"><strong>MiniportPnPEventNotify</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff550767/(v=vs.85/)"><strong>NdisAllocateMemoryWithTag</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552167/(v=vs.85/)"><strong>NdisImmediateReadPciSlotInformation</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552171/(v=vs.85/)"><strong>NdisImmediateReadPortUchar</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552174/(v=vs.85/)"><strong>NdisImmediateReadPortUlong</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552177/(v=vs.85/)"><strong>NdisImmediateReadPortUshort</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552181/(v=vs.85/)"><strong>NdisImmediateReadSharedMemory</strong></a></li>
+<li><strong><a href="ndisimregisterlayeredminiport" title="NDIS_STATUS NdisIMRegisterLayeredMiniport(&#10;  [in]  NDIS_HANDLE                    NdisWrapperHandle,&#10;  [in]  PNDIS_MINIPORT_CHARACTERISTICS MiniportCharacteristics,&#10;  [in]  UINT                           CharacteristicsLength,&#10;  [out] PNDIS_HANDLE                   DriverHandle&#10;);">NdisIMRegisterLayeredMiniport</a></strong></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff552300/(v=vs.85/)"><strong>NdisMAllocateMapRegisters</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff562782"><strong>NdisMAllocateSharedMemory</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563613"><strong>NdisMMapIoSpace</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553562/(v=vs.85/)"><strong>NdisMPciAssignResources</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563646"><strong>NdisMRegisterDmaChannel</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553596/(v=vs.85/)"><strong>NdisMRegisterInterrupt</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/Ff563651"><strong>NdisMRegisterIoPortRange</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553602/(v=vs.85/)"><strong>NdisMRegisterMiniport</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff553676/(v=vs.85/)"><strong>NdisOpenConfiguration</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff554540/(v=vs.85/)"><strong>NdisReadEisaSlotInformation</strong></a></li>
+<li><a rel="noopener" target="_blank" href="https://msdn.microsoft.com/library/ff554544/(v=vs.85/)"><strong>NdisReadEisaSlotInformationEx</strong></a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">
@@ -313,6 +252,7 @@ Version: Not supported for NDIS 6.0 drivers in Windows Vista. Use <a rel="noopen
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>

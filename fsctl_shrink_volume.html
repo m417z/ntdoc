@@ -16,10 +16,11 @@
     <noscript id="dark-mode-toggle-stylesheets">
         <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
         <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
     </noscript>
     <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
     <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
-    <link rel="stylesheet" href="modules/pygments-css.css">
     <link rel="stylesheet" href="ntdoc.css">
     <noscript>
         <link rel="stylesheet" href="ntdoc-noscript.css">
@@ -66,7 +67,7 @@
 <h2>Description</h2>
 <p>Signals that the volume is to be prepared to perform the shrink operation, the shrink operation is to be committed, or the shrink operation is to be terminated.</p>
 <p>To perform this operation, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> function with the following parameters.</p>
-<pre><code>BOOL DeviceIoControl(
+<pre><code class="language-cpp">BOOL DeviceIoControl(
   (HANDLE) hDevice,             // handle to device
   FSCTL_SHRINK_VOLUME,          // dwIoControlCode
   (LPVOID) lpInBuffer,          // input buffer
@@ -92,21 +93,11 @@
 <p>This control code is only supported on NTFS and RAW file systems.</p>
 <p>To complete a shrink operation, you must:</p>
 <ol>
-<li>
-Call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFile</a> to open a handle to the volume.
-</li>
-<li>
-Call <strong>FSCTL_SHRINK_VOLUME</strong>. Set the <strong>ShrinkRequestType</strong> member of the <a href="shrink_volume_information" title="typedef struct _SHRINK_VOLUME_INFORMATION {&#10;  SHRINK_VOLUME_REQUEST_TYPES ShrinkRequestType;&#10;  DWORDLONG                   Flags;&#10;  LONGLONG                    NewNumberOfSectors;&#10;} SHRINK_VOLUME_INFORMATION, *PSHRINK_VOLUME_INFORMATION;">SHRINK_VOLUME_INFORMATION</a> structure to <strong>ShrinkPrepare</strong>. Set the <strong>NewNumberOfSectors</strong> member of the same structure to zero. If this call succeeds, the filesystem will not allocate clusters beyond the end of the new volume length.
-</li>
-<li>
-Call <a href="fsctl_move_file" title="// CTL_CODE(0x0009, 0x01d, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_MOVE_FILE 0x00090074">FSCTL_MOVE_FILE</a> on all files beyond the new number of sectors and move them within the valid range. You are responsible for moving any files that are affected by the shrink operation.
-</li>
-<li>
-Call <strong>FSCTL_SHRINK_VOLUME</strong>. Set the <strong>ShrinkRequestType</strong> member of the <a href="shrink_volume_information" title="typedef struct _SHRINK_VOLUME_INFORMATION {&#10;  SHRINK_VOLUME_REQUEST_TYPES ShrinkRequestType;&#10;  DWORDLONG                   Flags;&#10;  LONGLONG                    NewNumberOfSectors;&#10;} SHRINK_VOLUME_INFORMATION, *PSHRINK_VOLUME_INFORMATION;">SHRINK_VOLUME_INFORMATION</a> structure to <strong>ShrinkCommit</strong>. Set the <strong>NewNumberOfSectors</strong> member of the same structure to zero. If all files beyond the end of the new volume size have not been moved, the call fails with <strong>STATUS_ALREADY_COMMITTED</strong> (<strong>ERROR_ACCESS_DENIED</strong>). Otherwise, the filesystem has now been shrunk.
-</li>
-<li>
-Call <a href="ioctl_disk_grow_partition" title="// CTL_CODE(0x0007, 0x034, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_DISK_GROW_PARTITION 0x0007C0D0">IOCTL_DISK_GROW_PARTITION</a>. Set the <strong>BytesToGrow</strong> member of the <a href="disk_grow_partition" title="typedef struct _DISK_GROW_PARTITION {&#10;  ULONG         PartitionNumber;&#10;  LARGE_INTEGER BytesToGrow;&#10;} DISK_GROW_PARTITION, *PDISK_GROW_PARTITION;">DISK_GROW_PARTITION</a> structure to the negative number that represents the number of bytes to remove.
-</li>
+<li>Call <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFile</a> to open a handle to the volume.</li>
+<li>Call <strong>FSCTL_SHRINK_VOLUME</strong>. Set the <strong>ShrinkRequestType</strong> member of the <a href="shrink_volume_information" title="typedef struct _SHRINK_VOLUME_INFORMATION {&#10;  SHRINK_VOLUME_REQUEST_TYPES ShrinkRequestType;&#10;  DWORDLONG                   Flags;&#10;  LONGLONG                    NewNumberOfSectors;&#10;} SHRINK_VOLUME_INFORMATION, *PSHRINK_VOLUME_INFORMATION;">SHRINK_VOLUME_INFORMATION</a> structure to <strong>ShrinkPrepare</strong>. Set the <strong>NewNumberOfSectors</strong> member of the same structure to zero. If this call succeeds, the filesystem will not allocate clusters beyond the end of the new volume length.</li>
+<li>Call <a href="fsctl_move_file" title="// CTL_CODE(0x0009, 0x01d, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_MOVE_FILE 0x00090074">FSCTL_MOVE_FILE</a> on all files beyond the new number of sectors and move them within the valid range. You are responsible for moving any files that are affected by the shrink operation.</li>
+<li>Call <strong>FSCTL_SHRINK_VOLUME</strong>. Set the <strong>ShrinkRequestType</strong> member of the <a href="shrink_volume_information" title="typedef struct _SHRINK_VOLUME_INFORMATION {&#10;  SHRINK_VOLUME_REQUEST_TYPES ShrinkRequestType;&#10;  DWORDLONG                   Flags;&#10;  LONGLONG                    NewNumberOfSectors;&#10;} SHRINK_VOLUME_INFORMATION, *PSHRINK_VOLUME_INFORMATION;">SHRINK_VOLUME_INFORMATION</a> structure to <strong>ShrinkCommit</strong>. Set the <strong>NewNumberOfSectors</strong> member of the same structure to zero. If all files beyond the end of the new volume size have not been moved, the call fails with <strong>STATUS_ALREADY_COMMITTED</strong> (<strong>ERROR_ACCESS_DENIED</strong>). Otherwise, the filesystem has now been shrunk.</li>
+<li>Call <a href="ioctl_disk_grow_partition" title="// CTL_CODE(0x0007, 0x034, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_DISK_GROW_PARTITION 0x0007C0D0">IOCTL_DISK_GROW_PARTITION</a>. Set the <strong>BytesToGrow</strong> member of the <a href="disk_grow_partition" title="typedef struct _DISK_GROW_PARTITION {&#10;  ULONG         PartitionNumber;&#10;  LARGE_INTEGER BytesToGrow;&#10;} DISK_GROW_PARTITION, *PDISK_GROW_PARTITION;">DISK_GROW_PARTITION</a> structure to the negative number that represents the number of bytes to remove.</li>
 </ol>
 <p>In Windows 8 and Windows Server 2012, this code is supported by the following technologies.</p>
 <table>
@@ -138,24 +129,12 @@ Call <a href="ioctl_disk_grow_partition" title="// CTL_CODE(0x0007, 0x034, METHO
 <p>Is supported only on the node that has NTFS mounted.</p>
 <h2>See also</h2>
 <ul>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFile</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a>
-</li>
-<li>
-<a href="fsctl_extend_volume" title="// CTL_CODE(0x0009, 0x03c, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_EXTEND_VOLUME 0x000900F0">FSCTL_EXTEND_VOLUME</a>
-</li>
-<li>
-<a href="ioctl_disk_grow_partition" title="// CTL_CODE(0x0007, 0x034, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_DISK_GROW_PARTITION 0x0007C0D0">IOCTL_DISK_GROW_PARTITION</a>
-</li>
-<li>
-<a href="shrink_volume_information" title="typedef struct _SHRINK_VOLUME_INFORMATION {&#10;  SHRINK_VOLUME_REQUEST_TYPES ShrinkRequestType;&#10;  DWORDLONG                   Flags;&#10;  LONGLONG                    NewNumberOfSectors;&#10;} SHRINK_VOLUME_INFORMATION, *PSHRINK_VOLUME_INFORMATION;">SHRINK_VOLUME_INFORMATION</a>
-</li>
-<li>
-<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/FileIO/volume-management-control-codes">Volume Management Control Codes</a>
-</li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFile</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a></li>
+<li><a href="fsctl_extend_volume" title="// CTL_CODE(0x0009, 0x03c, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define FSCTL_EXTEND_VOLUME 0x000900F0">FSCTL_EXTEND_VOLUME</a></li>
+<li><a href="ioctl_disk_grow_partition" title="// CTL_CODE(0x0007, 0x034, METHOD_BUFFERED, FILE_READ_ACCESS | FILE_WRITE_ACCESS)&#10;#define IOCTL_DISK_GROW_PARTITION 0x0007C0D0">IOCTL_DISK_GROW_PARTITION</a></li>
+<li><a href="shrink_volume_information" title="typedef struct _SHRINK_VOLUME_INFORMATION {&#10;  SHRINK_VOLUME_REQUEST_TYPES ShrinkRequestType;&#10;  DWORDLONG                   Flags;&#10;  LONGLONG                    NewNumberOfSectors;&#10;} SHRINK_VOLUME_INFORMATION, *PSHRINK_VOLUME_INFORMATION;">SHRINK_VOLUME_INFORMATION</a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/FileIO/volume-management-control-codes">Volume Management Control Codes</a></li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">
@@ -190,6 +169,7 @@ Call <a href="ioctl_disk_grow_partition" title="// CTL_CODE(0x0007, 0x034, METHO
     <script src="modules/popper-2.11.8.min.js"></script>
     <script src="modules/tippy-6.3.7.min.js"></script>
     <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
     <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
     <script src="ntdoc.js"></script>
 </body>
