@@ -75,12 +75,24 @@
 <p>File system filter drivers can disable delivery of normal kernel APCs by calling <strong>FsRtlEnterFileSystem</strong> or <strong><a href="keentercriticalregion" title="VOID KeEnterCriticalRegion();">KeEnterCriticalRegion</a></strong> prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> only if <strong><a href="fsrtlexitfilesystem" title="VOID FsRtlExitFileSystem(&#10;   VOID &#10;);">FsRtlExitFileSystem</a></strong> or <strong><a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a></strong> is in the same dispatch routine. They shouldn't call <strong>FsRtlEnterFileSystem</strong> or <strong><a href="keentercriticalregion" title="VOID KeEnterCriticalRegion();">KeEnterCriticalRegion</a></strong> prior to <strong><a href="iocalldriver" title="#define IoCallDriver(a,b)   \&#10;        IofCallDriver(a,b)&#10;);">IoCallDriver</a></strong> and then call <strong><a href="fsrtlexitfilesystem" title="VOID FsRtlExitFileSystem(&#10;   VOID &#10;);">FsRtlExitFileSystem</a></strong> or <strong><a href="keleavecriticalregion" title="VOID KeLeaveCriticalRegion();">KeLeaveCriticalRegion</a></strong> in the <em>completion routine</em> of the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>. Driver Verifier has a rule to help catch this condition.</p>
 <p>File system filter drivers should disable normal kernel APCs before acquiring any resource. File system filter drivers acquire resources with the following routines:</p>
 <ul>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceExclusive</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)"><strong>ExAcquireResourceExclusiveLite</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceShared</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)"><strong>ExAcquireResourceSharedLite</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544367(v=vs.85)"><strong>ExAcquireSharedStarveExclusive</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544370(v=vs.85)"><strong>ExAcquireSharedWaitForExclusive</strong></a></li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceExclusive</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544351(v=vs.85)"><strong>ExAcquireResourceExclusiveLite</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/mmcreatemdl"><strong>ExAcquireResourceShared</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544363(v=vs.85)"><strong>ExAcquireResourceSharedLite</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544367(v=vs.85)"><strong>ExAcquireSharedStarveExclusive</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/ff544370(v=vs.85)"><strong>ExAcquireSharedWaitForExclusive</strong></a>
+</li>
 </ul>
 <p>As an alternative to <strong>FsRtlEnterFileSystem</strong>, minifilter drivers can use the <strong><a href="fltacquireresourceexclusive" title="VOID FLTAPI FltAcquireResourceExclusive(&#10;  [in/out] PERESOURCE Resource&#10;);">FltAcquireResourceExclusive</a></strong>, <strong><a href="fltacquireresourceshared" title="VOID FLTAPI FltAcquireResourceShared(&#10;  [in/out] PERESOURCE Resource&#10;);">FltAcquireResourceShared</a></strong>, and <strong><a href="fltreleaseresource" title="VOID FLTAPI FltReleaseResource(&#10;  [in/out] PERESOURCE Resource&#10;);">FltReleaseResource</a></strong> routines, which properly handle APCs when acquiring and releasing a resource.</p>
 <h2>Requirements</h2>

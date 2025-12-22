@@ -89,7 +89,7 @@
 <h3><code>PrivateDriverData</code></h3>
 <p>[in/out] Pointer to a buffer that is private to the driver. The size of this buffer is specified by <strong>PrivateDriverDataSize</strong>. The maximum buffer size allowed is D3DDDI_DOORBELL_PRIVATEDATA_MAX_BYTES_WDDM3_1 bytes.</p>
 <h3><code>DoorbellCPUVirtualAddress</code></h3>
-<p>[out] Pointer to the CPU VA (both read/write) reserved by the OS for this doorbell. UMD will write a specific value to this address, effectively &quot;ringing the doorbell&quot; to notify the GPU scheduler of a new work submission on the hardware queue. This address remains constant over the lifetime of the doorbell, even if the underlying physical doorbell gets disconnected. The UMD should always use this address to write/read to this doorbell.</p>
+<p>[out] Pointer to the CPU VA (both read/write) reserved by the OS for this doorbell. UMD will write a specific value to this address, effectively "ringing the doorbell" to notify the GPU scheduler of a new work submission on the hardware queue. This address remains constant over the lifetime of the doorbell, even if the underlying physical doorbell gets disconnected. The UMD should always use this address to write/read to this doorbell.</p>
 <h3><code>DoorbellSecondaryCPUVirtualAddress</code></h3>
 <p>[out/optional] Pointer to a secondary CPU VA (both read/write) reserved by the OS for this doorbell.</p>
 <p>On hardware that implements a secondary doorbell location the UMD sets the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmthk/ns-d3dkmthk-d3dkmt_create_doorbell_flags"><strong>RequireSecondaryCpuVA</strong></a> flag. For such devices, the OS will reserve another CPU VA for this doorbell. Over the lifetime of the doorbell, this address will remain constant even if the underlying physical doorbell gets disconnected.</p>
@@ -99,10 +99,18 @@
 <p>This address remains constant over the lifetime of the doorbell, even if the underlying physical doorbell gets disconnected. The UMD should always use this address to read the doorbell's status.</p>
 <p>Only the OS writes to and updates this status memory:</p>
 <ul>
-<li>On successful return from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_connectdoorbell"><strong>DxgkDdiConnectDoorbell</strong></a>, the OS writes the status as D3DDDI_DOORBELL_STATUS_CONNECTED.</li>
-<li>If the OS disconnects the doorbell as part of suspending the hardware queue or powering down the GPU, it calls KMD's <strong>DxgkDdiDisconnectDoorbell</strong> and then writes the status as D3DDDI_DOORBELL_STATUS_DISCONNECTED_RETRY.</li>
-<li>If the KMD wants to disconnect the doorbell for any reason, it calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkcb_disconnectdoorbell"><strong>DxgkDisconnectDoorbellCB</strong></a> callback to inform the OS. KMD provides D3DDDI_DOORBELL_STATUS as the status, which the OS writes to this status page.</li>
-<li>In GPU lost or stopped scenarios, the OS writes D3DDDI_DOORBELL_STATUS_DISCONNECTED_ABORT as the status.</li>
+<li>
+On successful return from <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_connectdoorbell"><strong>DxgkDdiConnectDoorbell</strong></a>, the OS writes the status as D3DDDI_DOORBELL_STATUS_CONNECTED.
+</li>
+<li>
+If the OS disconnects the doorbell as part of suspending the hardware queue or powering down the GPU, it calls KMD's <strong>DxgkDdiDisconnectDoorbell</strong> and then writes the status as D3DDDI_DOORBELL_STATUS_DISCONNECTED_RETRY.
+</li>
+<li>
+If the KMD wants to disconnect the doorbell for any reason, it calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkcb_disconnectdoorbell"><strong>DxgkDisconnectDoorbellCB</strong></a> callback to inform the OS. KMD provides D3DDDI_DOORBELL_STATUS as the status, which the OS writes to this status page.
+</li>
+<li>
+In GPU lost or stopped scenarios, the OS writes D3DDDI_DOORBELL_STATUS_DISCONNECTED_ABORT as the status.
+</li>
 </ul>
 <h3><code>HwQueueProgressFenceLastQueuedValueCPUVirtualAddress</code></h3>
 <p>[out] CPU VA of the location where the UMD will write the newly queued progress fence value every time a new command buffer is appended to the ring buffer.</p>

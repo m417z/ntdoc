@@ -104,8 +104,12 @@
 <p>The <strong>WdfDeviceEnqueueRequest</strong> method adds the request to the driver's request-type-specific I/O queue for the device, if the driver has created one. Otherwise the method adds the request to the device's default queue, if the driver has created one.</p>
 <p>If the driver has not created any I/O queues for the device, <strong>WdfDeviceEnqueueRequest</strong> does the following:</p>
 <ul>
-<li>If the driver is a filter driver, <strong>WdfDeviceEnqueueRequest</strong> sends the request to the driver's I/O target.</li>
-<li>If the driver is not a filter driver, <strong>WdfDeviceEnqueueRequest</strong> returns STATUS_INVALID_DEVICE_REQUEST.</li>
+<li>
+If the driver is a filter driver, <strong>WdfDeviceEnqueueRequest</strong> sends the request to the driver's I/O target.
+</li>
+<li>
+If the driver is not a filter driver, <strong>WdfDeviceEnqueueRequest</strong> returns STATUS_INVALID_DEVICE_REQUEST.
+</li>
 </ul>
 <p>While <strong>WdfDeviceEnqueueRequest</strong> is executing, it is possible for the driver to receive and complete or cancel the request.</p>
 <p>As a result, if the driver needs to use the request or its context after calling <strong>WdfDeviceEnqueueRequest</strong>, then it should take a reference on the request before calling <strong>WdfDeviceEnqueueRequest</strong>.</p>
@@ -116,50 +120,50 @@
 <p>The following code example is an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_io_in_caller_context">EvtIoInCallerContext</a> callback function that looks for requests that contain the custom I/O control code, IOCTL_NONPNP_METHOD_NEITHER. If the I/O control code is not found, the callback function just returns the request to the framework. If the callback function finds the I/O control code, it preprocesses the request and then returns it to the framework. If an error is encountered, the callback function completes the request.</p>
 <pre><code>VOID
 MyEvtDeviceIoInCallerContext(
-    IN WDFDEVICE  Device,
-    IN WDFREQUEST Request
-    )
+IN WDFDEVICE  Device,
+IN WDFREQUEST Request
+)
 {
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-    <a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+<a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  params;
 
-    <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
-    <a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a>(
-                            Request,
-                            &amp;params
-                            );
-    if(!(params.Type == WdfRequestTypeDeviceControl &amp;&amp;
-         params.Parameters.DeviceIoControl.IoControlCode == IOCTL_NONPNP_METHOD_NEITHER)) {
-        status = WdfDeviceEnqueueRequest(
-                                         Device,
-                                         Request
-                                         );
-        if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-            goto End;
-        }
-        return;
-    }
-    //
-    // Found a match for the control code. Preprocess the request, and then
-    // return the request to the framework.
-    //
+<a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;params);
+<a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a>(
+Request,
+&amp;params
+);
+if(!(params.Type == WdfRequestTypeDeviceControl &amp;&amp;
+params.Parameters.DeviceIoControl.IoControlCode == IOCTL_NONPNP_METHOD_NEITHER)) {
+status = WdfDeviceEnqueueRequest(
+Device,
+Request
+);
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto End;
+}
+return;
+}
+//
+// Found a match for the control code. Preprocess the request, and then
+// return the request to the framework.
+//
 
-    //...(Preprocess the request here.)
+//...(Preprocess the request here.)
 
-    status = WdfDeviceEnqueueRequest(
-                                     Device,
-                                     Request
-                                     );
-    if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        goto End;
-    }
-    return;
+status = WdfDeviceEnqueueRequest(
+Device,
+Request
+);
+if(!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto End;
+}
+return;
 End:
-    <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
-                       Request,
-                       status
-                       );
-    return;
+<a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(
+Request,
+status
+);
+return;
 }
 </code></pre>
 <h2>See also</h2>

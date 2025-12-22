@@ -234,22 +234,38 @@
 <p>The <strong>FLT_IO_PARAMETER_BLOCK</strong> structure contains the parameters for the I/O operation that is represented by a callback data (<strong><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></strong>) structure. The callback data structure contains a pointer to the FLT_IO_PARAMETER_BLOCK structure in its <strong>Iopb</strong> member.</p>
 <p>A minifilter receives a pointer to the callback data structure as the <em>Data</em> or <em>CallbackData</em> input parameter to the following callback routine types:</p>
 <ul>
-<li><strong><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></strong></li>
-<li><strong><a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a></strong></li>
-<li><strong><a href="pflt_completed_async_io_callback" title="PFLT_COMPLETED_ASYNC_IO_CALLBACK PfltCompletedAsyncIoCallback;&#10;&#10;VOID PfltCompletedAsyncIoCallback(&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] PFLT_CONTEXT Context&#10;)&#10;{...}">PFLT_COMPLETED_ASYNC_IO_CALLBACK</a></strong></li>
-<li><strong><a href="pflt_generate_file_name" title="PFLT_GENERATE_FILE_NAME PfltGenerateFileName;&#10;&#10;NTSTATUS PfltGenerateFileName(&#10;  [in]           PFLT_INSTANCE Instance,&#10;  [in]           PFILE_OBJECT FileObject,&#10;  [in, optional] PFLT_CALLBACK_DATA CallbackData,&#10;  [in]           FLT_FILE_NAME_OPTIONS NameOptions,&#10;  [out]          PBOOLEAN CacheFileNameInformation,&#10;  [out]          PFLT_NAME_CONTROL FileName&#10;)&#10;{...}">PFLT_GENERATE_FILE_NAME</a></strong></li>
+<li>
+<strong><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></strong>
+</li>
+<li>
+<strong><a href="pflt_pre_operation_callback" title="PFLT_PRE_OPERATION_CALLBACK PfltPreOperationCallback;&#10;&#10;FLT_PREOP_CALLBACK_STATUS PfltPreOperationCallback(&#10;  [in, out] PFLT_CALLBACK_DATA Data,&#10;  [in]      PCFLT_RELATED_OBJECTS FltObjects,&#10;  [out]     PVOID *CompletionContext&#10;)&#10;{...}">PFLT_PRE_OPERATION_CALLBACK</a></strong>
+</li>
+<li>
+<strong><a href="pflt_completed_async_io_callback" title="PFLT_COMPLETED_ASYNC_IO_CALLBACK PfltCompletedAsyncIoCallback;&#10;&#10;VOID PfltCompletedAsyncIoCallback(&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] PFLT_CONTEXT Context&#10;)&#10;{...}">PFLT_COMPLETED_ASYNC_IO_CALLBACK</a></strong>
+</li>
+<li>
+<strong><a href="pflt_generate_file_name" title="PFLT_GENERATE_FILE_NAME PfltGenerateFileName;&#10;&#10;NTSTATUS PfltGenerateFileName(&#10;  [in]           PFLT_INSTANCE Instance,&#10;  [in]           PFILE_OBJECT FileObject,&#10;  [in, optional] PFLT_CALLBACK_DATA CallbackData,&#10;  [in]           FLT_FILE_NAME_OPTIONS NameOptions,&#10;  [out]          PBOOLEAN CacheFileNameInformation,&#10;  [out]          PFLT_NAME_CONTROL FileName&#10;)&#10;{...}">PFLT_GENERATE_FILE_NAME</a></strong>
+</li>
 </ul>
 <p>A minifilter's preoperation and postoperation callback routines can modify the contents of the FLT_IO_PARAMETER_BLOCK structure for the I/O operation, except for the <strong>MajorFunction</strong> and <strong>Reserved</strong> members. If it does, it must call <strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong>, unless it has also modified the <strong>IoStatus</strong> member of the callback data structure for the operation. Otherwise, the modified values are ignored.</p>
-<p>When Filter Manager issues a preoperation or postoperation callback to a minifilter, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/ns-fltkernel-_flt_related_objects"><strong>FltObjects-&gt;FileObject</strong></a> and <strong>TargetFileObject</strong> (CallbackData-&gt;Iopb-&gt;TargetFileObject) are initially the same. If a minifilter modifies <strong>TargetFileObject</strong> or <strong>TargetInstance</strong>, its subsequent call to <strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong> from a preoperation callback will cause Filter Manager to replace <strong>FltObjects-&gt;FileObject</strong> and <strong>FltObjects-&gt;Instance</strong> before sending the operation to lower filters.</p>
+<p>When Filter Manager issues a preoperation or postoperation callback to a minifilter, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/fltkernel/ns-fltkernel-_flt_related_objects"><strong>FltObjects->FileObject</strong></a> and <strong>TargetFileObject</strong> (CallbackData->Iopb->TargetFileObject) are initially the same. If a minifilter modifies <strong>TargetFileObject</strong> or <strong>TargetInstance</strong>, its subsequent call to <strong><a href="fltsetcallbackdatadirty" title="VOID FLTAPI FltSetCallbackDataDirty(&#10;  [in, out] PFLT_CALLBACK_DATA Data&#10;);">FltSetCallbackDataDirty</a></strong> from a preoperation callback will cause Filter Manager to replace <strong>FltObjects->FileObject</strong> and <strong>FltObjects->Instance</strong> before sending the operation to lower filters.</p>
 <p>If a minifilter's preoperation callback routine modifies the parameters for an I/O operation, all minifilters below it in the minifilter instance stack will receive the modified parameters in their preoperation and postoperation callback routines.</p>
 <p>The modified parameters are not received by the minifilter's own postoperation callback routine, or by any minifilters above that minifilter in the minifilter instance stack. In all cases, a minifilter's preoperation and postoperation callback routines receive the same input parameter values.</p>
 <p>If a minifilter changes the value of the <strong>TargetInstance</strong> member, the new value must be a pointer to an instance of the same minifilter at the same altitude on a different volume. In addition, the new volume's device object must have a stack size that is greater than or equal to that of the original volume's device object.</p>
 <p>To get the stack size for a volume device object, given an opaque instance pointer for an instance that is attached to the volume, do the following:</p>
 <ul>
-<li>Call <strong><a href="fltgetvolumefrominstance" title="NTSTATUS FLTAPI FltGetVolumeFromInstance(&#10;  [in]  PFLT_INSTANCE Instance,&#10;  [out] PFLT_VOLUME   *RetVolume&#10;);">FltGetVolumeFromInstance</a></strong> to get the volume pointer.</li>
-<li>Call <strong><a href="fltgetdeviceobject" title="NTSTATUS FLTAPI FltGetDeviceObject(&#10;  [in]  PFLT_VOLUME    Volume,&#10;  [out] PDEVICE_OBJECT *DeviceObject&#10;);">FltGetDeviceObject</a></strong> to get a pointer to the volume device object. This pointer is returned in the <em>DeviceObject</em> parameter. The device object's stack size can be found in <strong>DeviceObject-&gt;StackSize</strong>.</li>
-<li>When the volume pointer is no longer needed, call <strong><a href="fltobjectdereference" title="VOID FLTAPI FltObjectDereference(&#10;  [in, out] PVOID FltObject&#10;);">FltObjectDereference</a></strong> to decrement its reference count.</li>
-<li>When the volume device object pointer is no longer needed, call <strong><a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a></strong> to decrement its reference count.</li>
+<li>
+Call <strong><a href="fltgetvolumefrominstance" title="NTSTATUS FLTAPI FltGetVolumeFromInstance(&#10;  [in]  PFLT_INSTANCE Instance,&#10;  [out] PFLT_VOLUME   *RetVolume&#10;);">FltGetVolumeFromInstance</a></strong> to get the volume pointer.
+</li>
+<li>
+Call <strong><a href="fltgetdeviceobject" title="NTSTATUS FLTAPI FltGetDeviceObject(&#10;  [in]  PFLT_VOLUME    Volume,&#10;  [out] PDEVICE_OBJECT *DeviceObject&#10;);">FltGetDeviceObject</a></strong> to get a pointer to the volume device object. This pointer is returned in the <em>DeviceObject</em> parameter. The device object's stack size can be found in <strong>DeviceObject->StackSize</strong>.
+</li>
+<li>
+When the volume pointer is no longer needed, call <strong><a href="fltobjectdereference" title="VOID FLTAPI FltObjectDereference(&#10;  [in, out] PVOID FltObject&#10;);">FltObjectDereference</a></strong> to decrement its reference count.
+</li>
+<li>
+When the volume device object pointer is no longer needed, call <strong><a href="obdereferenceobject" title="void ObDereferenceObject(&#10;  [in] a&#10;);">ObDereferenceObject</a></strong> to decrement its reference count.
+</li>
 </ul>
 <p>A minifilter can change the value of the <strong>TargetFileObject</strong> member. However, the new value must be a pointer to a file object for a file that resides on the same volume as the instance specified by the <strong>TargetInstance</strong> member.</p>
 <p>A minifilter cannot safely change the value of the <strong>MajorFunction</strong> member. Instead, it must initiate a new I/O operation.</p>
@@ -271,40 +287,108 @@
 <p><strong><a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a></strong></p>
 <p><strong><a href="flt_parameters" title="typedef union _FLT_PARAMETERS {&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;    USHORT POINTER_ALIGNMENT FileAttributes;&#10;    USHORT                   ShareAccess;&#10;    ULONG POINTER_ALIGNMENT  EaLength;&#10;    PVOID                    EaBuffer;&#10;    LARGE_INTEGER            AllocationSize;&#10;  } Create;&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;    USHORT POINTER_ALIGNMENT Reserved;&#10;    USHORT                   ShareAccess;&#10;    PVOID                    Parameters;&#10;  } CreatePipe;&#10;  struct {&#10;    PIO_SECURITY_CONTEXT     SecurityContext;&#10;    ULONG                    Options;&#10;...">FLT_PARAMETERS</a></strong></p>
 <ul>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-acquire-for-mod-write"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_ACQUIRE_FOR_MOD_WRITE</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-acquire-for-section-synchronization"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-create"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_CREATE</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-create-mailslot"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_CREATE_MAILSLOT</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-create-named-pipe"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_CREATE_NAMED_PIPE</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-device-control-and-irp-mj-internal-device-co"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_DEVICE_CONTROL</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-directory-control"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_DIRECTORY_CONTROL</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-fast-io-check-if-possible"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_FAST_IO_CHECK_IF_POSSIBLE</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-file-system-control"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_FILE_SYSTEM_CONTROL</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-device-control-and-irp-mj-internal-device-co"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_INTERNAL_DEVICE_CONTROL</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-lock-control"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_LOCK_CONTROL</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-mdl-read"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_MDL_READ</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-mdl-read-complete"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_MDL_READ_COMPLETE</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-mdl-write-complete"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_MDL_WRITE_COMPLETE</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-network-query-open"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_NETWORK_QUERY_OPEN</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-pnp"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_PNP</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-prepare-mdl-write"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_PREPARE_MDL_WRITE</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-ea"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_EA</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-information"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_INFORMATION</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-open"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_OPEN</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-quota"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_QUOTA</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-security"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_SECURITY</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-volume-information"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_VOLUME_INFORMATION</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-read"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_READ</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-release-for-mod-write"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_RELEASE_FOR_MOD_WRITE</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-release-for-section-synchronization"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_RELEASE_FOR_SECTION_SYNCHRONIZATION</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-ea"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_EA</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-information"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_INFORMATION</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-quota"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_QUOTA</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-security"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_SECURITY</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-volume-information"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_VOLUME_INFORMATION</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-system-control"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SYSTEM_CONTROL</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-volume-mount"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_VOLUME_MOUNT</strong></a></li>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-write"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_WRITE</strong></a></li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-acquire-for-mod-write"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_ACQUIRE_FOR_MOD_WRITE</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-acquire-for-section-synchronization"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_ACQUIRE_FOR_SECTION_SYNCHRONIZATION</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-create"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_CREATE</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-create-mailslot"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_CREATE_MAILSLOT</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-create-named-pipe"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_CREATE_NAMED_PIPE</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-device-control-and-irp-mj-internal-device-co"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_DEVICE_CONTROL</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-directory-control"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_DIRECTORY_CONTROL</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-fast-io-check-if-possible"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_FAST_IO_CHECK_IF_POSSIBLE</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-file-system-control"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_FILE_SYSTEM_CONTROL</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-device-control-and-irp-mj-internal-device-co"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_INTERNAL_DEVICE_CONTROL</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-lock-control"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_LOCK_CONTROL</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-mdl-read"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_MDL_READ</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-mdl-read-complete"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_MDL_READ_COMPLETE</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-mdl-write-complete"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_MDL_WRITE_COMPLETE</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-network-query-open"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_NETWORK_QUERY_OPEN</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-pnp"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_PNP</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-prepare-mdl-write"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_PREPARE_MDL_WRITE</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-ea"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_EA</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-information"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_INFORMATION</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-open"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_OPEN</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-quota"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_QUOTA</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-security"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_SECURITY</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-query-volume-information"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_QUERY_VOLUME_INFORMATION</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-read"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_READ</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-release-for-mod-write"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_RELEASE_FOR_MOD_WRITE</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-release-for-section-synchronization"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_RELEASE_FOR_SECTION_SYNCHRONIZATION</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-ea"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_EA</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-information"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_INFORMATION</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-quota"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_QUOTA</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-security"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_SECURITY</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-set-volume-information"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SET_VOLUME_INFORMATION</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-system-control"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_SYSTEM_CONTROL</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-volume-mount"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_VOLUME_MOUNT</strong></a>
+</li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/flt-parameters-for-irp-mj-write"><strong>FLT_PARAMETERS</strong> for <strong>IRP_MJ_WRITE</strong></a>
+</li>
 </ul>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-cleanup"><strong>IRP_MJ_CLEANUP</strong></a></p>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-close"><strong>IRP_MJ_CLOSE</strong></a></p>

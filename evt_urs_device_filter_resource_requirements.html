@@ -91,113 +91,114 @@
 <p>If the driver wants to use a particular resource, it can add the associated resource descriptor to the respective resource list by calling <a href="ursioresourcelistappenddescriptor" title="NTSTATUS UrsIoResourceListAppendDescriptor(&#10;  [in] URSIORESLIST            IoResourceList,&#10;  [in] PIO_RESOURCE_DESCRIPTOR Descriptor&#10;);">UrsIoResourceListAppendDescriptor</a>.</p>
 <p>To delete a resource descriptor from the requirement list, the driver calls <a href="wdfioresourcelistremove" title="VOID WdfIoResourceListRemove(&#10;  [in] WDFIORESLIST ResourceList,&#10;  [in] ULONG        Index&#10;);">WdfIoResourceListRemove</a>.</p>
 <h4>Examples</h4>
-<pre><code>EVT_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsFilterRemoveResourceRequirements;
+<pre><code>
+EVT_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS EvtUrsFilterRemoveResourceRequirements;
 
 _Function_class_(EVT_URS_DEVICE_FILTER_RESOURCE_REQUIREMENTS)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 EvtUrsFilterRemoveResourceRequirements (
-    _In_ WDFDEVICE Device,
-    _In_ WDFIORESREQLIST IoResourceRequirementsList,
-    _In_ URSIORESLIST HostRoleResources,
-    _In_ URSIORESLIST FunctionRoleResources
-    )
+_In_ WDFDEVICE Device,
+_In_ WDFIORESREQLIST IoResourceRequirementsList,
+_In_ URSIORESLIST HostRoleResources,
+_In_ URSIORESLIST FunctionRoleResources
+)
 {
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
-    WDFIORESLIST resList;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> resListCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> resCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> currentResourceIndex;
-    <a href="io_resource_descriptor" title="typedef struct _IO_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Option;&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  UCHAR  Spare1;&#10;  USHORT Flags;&#10;  USHORT Spare2;&#10;  union {&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Port;&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Memory;&#10;...">PIO_RESOURCE_DESCRIPTOR</a> descriptor;
-    BOOLEAN assignToHost;
-    BOOLEAN assignToFunction;
-    BOOLEAN keepAssigned;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
+WDFIORESLIST resList;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> resListCount;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> resCount;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> currentResourceIndex;
+<a href="io_resource_descriptor" title="typedef struct _IO_RESOURCE_DESCRIPTOR {&#10;  UCHAR  Option;&#10;  UCHAR  Type;&#10;  UCHAR  ShareDisposition;&#10;  UCHAR  Spare1;&#10;  USHORT Flags;&#10;  USHORT Spare2;&#10;  union {&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Port;&#10;    struct {&#10;      ULONG            Length;&#10;      ULONG            Alignment;&#10;      PHYSICAL_ADDRESS MinimumAddress;&#10;      PHYSICAL_ADDRESS MaximumAddress;&#10;    } Memory;&#10;...">PIO_RESOURCE_DESCRIPTOR</a> descriptor;
+BOOLEAN assignToHost;
+BOOLEAN assignToFunction;
+BOOLEAN keepAssigned;
 
-    TRY {
+TRY {
 
-        status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
 
-        //
-        // Currently does not support multiple logical configurations. Only the first one
-        // is considered.
-        //
+//
+// Currently does not support multiple logical configurations. Only the first one
+// is considered.
+//
 
-        resListCount = <a href="wdfioresourcerequirementslistgetcount" title="ULONG WdfIoResourceRequirementsListGetCount(&#10;  [in] WDFIORESREQLIST RequirementsList&#10;);">WdfIoResourceRequirementsListGetCount</a>(IoResourceRequirementsList);
-        if (resListCount == 0) {
-            // No logical resource configurations found.
-            LEAVE;
-        }
+resListCount = <a href="wdfioresourcerequirementslistgetcount" title="ULONG WdfIoResourceRequirementsListGetCount(&#10;  [in] WDFIORESREQLIST RequirementsList&#10;);">WdfIoResourceRequirementsListGetCount</a>(IoResourceRequirementsList);
+if (resListCount == 0) {
+// No logical resource configurations found.
+LEAVE;
+}
 
-        // Enumerate through logical resource configurations.
+// Enumerate through logical resource configurations.
 
-        resList = <a href="wdfioresourcerequirementslistgetioreslist" title="WDFIORESLIST WdfIoResourceRequirementsListGetIoResList(&#10;  [in] WDFIORESREQLIST RequirementsList,&#10;  [in] ULONG           Index&#10;);">WdfIoResourceRequirementsListGetIoResList</a>(IoResourceRequirementsList, 0);
-        resCount = <a href="wdfioresourcelistgetcount" title="ULONG WdfIoResourceListGetCount(&#10;  [in] WDFIORESLIST ResourceList&#10;);">WdfIoResourceListGetCount</a>(resList);
+resList = <a href="wdfioresourcerequirementslistgetioreslist" title="WDFIORESLIST WdfIoResourceRequirementsListGetIoResList(&#10;  [in] WDFIORESREQLIST RequirementsList,&#10;  [in] ULONG           Index&#10;);">WdfIoResourceRequirementsListGetIoResList</a>(IoResourceRequirementsList, 0);
+resCount = <a href="wdfioresourcelistgetcount" title="ULONG WdfIoResourceListGetCount(&#10;  [in] WDFIORESLIST ResourceList&#10;);">WdfIoResourceListGetCount</a>(resList);
 
-        for (currentResourceIndex = 0; currentResourceIndex &lt; resCount; ++currentResourceIndex) {
+for (currentResourceIndex = 0; currentResourceIndex &lt; resCount; ++currentResourceIndex) {
 
-            descriptor = <a href="wdfioresourcelistgetdescriptor" title="PIO_RESOURCE_DESCRIPTOR WdfIoResourceListGetDescriptor(&#10;  [in] WDFIORESLIST ResourceList,&#10;  [in] ULONG        Index&#10;);">WdfIoResourceListGetDescriptor</a>(resList, currentResourceIndex);
+descriptor = <a href="wdfioresourcelistgetdescriptor" title="PIO_RESOURCE_DESCRIPTOR WdfIoResourceListGetDescriptor(&#10;  [in] WDFIORESLIST ResourceList,&#10;  [in] ULONG        Index&#10;);">WdfIoResourceListGetDescriptor</a>(resList, currentResourceIndex);
 
-            if (descriptor-&gt;Type == CmResourceTypeConfigData) {
+if (descriptor-&gt;Type == CmResourceTypeConfigData) {
 
-                //
-                // This indicates the priority of this logical configuration.
-                // This descriptor can be ignored.
-                //
+//
+// This indicates the priority of this logical configuration.
+// This descriptor can be ignored.
+//
 
-                keepAssigned = TRUE;
-                assignToFunction = FALSE;
-                assignToHost = FALSE;
+keepAssigned = TRUE;
+assignToFunction = FALSE;
+assignToHost = FALSE;
 
-            } else if ((descriptor-&gt;Type == CmResourceTypeMemory) ||
-                       (descriptor-&gt;Type == CmResourceTypeMemoryLarge)) {
+} else if ((descriptor-&gt;Type == CmResourceTypeMemory) ||
+(descriptor-&gt;Type == CmResourceTypeMemoryLarge)) {
 
-                //
-                // This example client driver keeps the memory resources here.
-                //
+//
+// This example client driver keeps the memory resources here.
+//
 
-                keepAssigned = TRUE;
-                assignToFunction = TRUE;
-                assignToHost = TRUE;
+keepAssigned = TRUE;
+assignToFunction = TRUE;
+assignToHost = TRUE;
 
-            } else {
+} else {
 
-                //
-                // For all other resources, pass it to the child device nodes for host and function.
-                //
+//
+// For all other resources, pass it to the child device nodes for host and function.
+//
 
-                keepAssigned = FALSE;
-                assignToHost = TRUE;
-                assignToFunction = TRUE;
-            }
+keepAssigned = FALSE;
+assignToHost = TRUE;
+assignToFunction = TRUE;
+}
 
-            if (assignToHost != FALSE) {
-                status = <a href="ursioresourcelistappenddescriptor" title="NTSTATUS UrsIoResourceListAppendDescriptor(&#10;  [in] URSIORESLIST            IoResourceList,&#10;  [in] PIO_RESOURCE_DESCRIPTOR Descriptor&#10;);">UrsIoResourceListAppendDescriptor</a>(HostRoleResources, descriptor);
-                if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-                    // <a href="ursioresourcelistappenddescriptor" title="NTSTATUS UrsIoResourceListAppendDescriptor(&#10;  [in] URSIORESLIST            IoResourceList,&#10;  [in] PIO_RESOURCE_DESCRIPTOR Descriptor&#10;);">UrsIoResourceListAppendDescriptor</a> for HostRoleResources failed.
-                    LEAVE;
-                }
-            }
+if (assignToHost != FALSE) {
+status = <a href="ursioresourcelistappenddescriptor" title="NTSTATUS UrsIoResourceListAppendDescriptor(&#10;  [in] URSIORESLIST            IoResourceList,&#10;  [in] PIO_RESOURCE_DESCRIPTOR Descriptor&#10;);">UrsIoResourceListAppendDescriptor</a>(HostRoleResources, descriptor);
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+// <a href="ursioresourcelistappenddescriptor" title="NTSTATUS UrsIoResourceListAppendDescriptor(&#10;  [in] URSIORESLIST            IoResourceList,&#10;  [in] PIO_RESOURCE_DESCRIPTOR Descriptor&#10;);">UrsIoResourceListAppendDescriptor</a> for HostRoleResources failed.
+LEAVE;
+}
+}
 
-            if (assignToFunction != FALSE) {
-                status = <a href="ursioresourcelistappenddescriptor" title="NTSTATUS UrsIoResourceListAppendDescriptor(&#10;  [in] URSIORESLIST            IoResourceList,&#10;  [in] PIO_RESOURCE_DESCRIPTOR Descriptor&#10;);">UrsIoResourceListAppendDescriptor</a>(FunctionRoleResources, descriptor);
-                if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-                    // <a href="ursioresourcelistappenddescriptor" title="NTSTATUS UrsIoResourceListAppendDescriptor(&#10;  [in] URSIORESLIST            IoResourceList,&#10;  [in] PIO_RESOURCE_DESCRIPTOR Descriptor&#10;);">UrsIoResourceListAppendDescriptor</a> for FunctionRoleResources failed.
-                    LEAVE;
-                }
-            }
+if (assignToFunction != FALSE) {
+status = <a href="ursioresourcelistappenddescriptor" title="NTSTATUS UrsIoResourceListAppendDescriptor(&#10;  [in] URSIORESLIST            IoResourceList,&#10;  [in] PIO_RESOURCE_DESCRIPTOR Descriptor&#10;);">UrsIoResourceListAppendDescriptor</a>(FunctionRoleResources, descriptor);
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+// <a href="ursioresourcelistappenddescriptor" title="NTSTATUS UrsIoResourceListAppendDescriptor(&#10;  [in] URSIORESLIST            IoResourceList,&#10;  [in] PIO_RESOURCE_DESCRIPTOR Descriptor&#10;);">UrsIoResourceListAppendDescriptor</a> for FunctionRoleResources failed.
+LEAVE;
+}
+}
 
-            if (keepAssigned == FALSE) {
-                <a href="wdfioresourcelistremove" title="VOID WdfIoResourceListRemove(&#10;  [in] WDFIORESLIST ResourceList,&#10;  [in] ULONG        Index&#10;);">WdfIoResourceListRemove</a>(resList, currentResourceIndex);
-                --currentResourceIndex;
-                --resCount;
-            }
-        }
+if (keepAssigned == FALSE) {
+<a href="wdfioresourcelistremove" title="VOID WdfIoResourceListRemove(&#10;  [in] WDFIORESLIST ResourceList,&#10;  [in] ULONG        Index&#10;);">WdfIoResourceListRemove</a>(resList, currentResourceIndex);
+--currentResourceIndex;
+--resCount;
+}
+}
 
-    } FINALLY {
-    }
+} FINALLY {
+}
 
-    return status;
+return status;
 }
 </code></pre>
 <h2>See also</h2>

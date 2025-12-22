@@ -84,7 +84,7 @@
 <h2>Remarks</h2>
 <p>Starting in Windows Server 2022, the operating system no longer splits large NUMA nodes; instead, Windows reports the true NUMA topology of the system. When a node contains more than 64 processors, a NUMA node spans across more than a single group. In this case, the system assigns a primary group for each NUMA node. The primary group is always the one containing the most processors. To determine the number of active processors in a given NUMA node (across all groups), call <strong><a href="kequerynodeactiveprocessorcount" title="ULONG KeQueryNodeActiveProcessorCount(&#10;  [in] USHORT NodeNumber&#10;);">KeQueryNodeActiveProcessorCount</a></strong>. For more info about this change in behavior, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/procthread/numa-support">NUMA Support</a>.</p>
 <p>To re-enable the legacy node splitting behavior, make the following change to the registry and reboot the system:</p>
-<p><code>reg add &quot;HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\NUMA&quot; /v SplitLargeNodes /t REG_DWORD /d 1</code></p>
+<p><code>reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\NUMA" /v SplitLargeNodes /t REG_DWORD /d 1</code></p>
 <p>If your driver maps processors to NUMA nodes by calling <strong><a href="kequerynodeactiveaffinity" title="VOID KeQueryNodeActiveAffinity(&#10;  [in]            USHORT          NodeNumber,&#10;  [out, optional] PGROUP_AFFINITY Affinity,&#10;  [out, optional] PUSHORT         Count&#10;);">KeQueryNodeActiveAffinity</a></strong>, and your code runs on systems with more than 64 processors per NUMA node, use one of the following workarounds:</p>
 <ol>
 <li>
@@ -99,108 +99,108 @@
 // Problematic implementation using <a href="kequerynodeactiveaffinity" title="VOID KeQueryNodeActiveAffinity(&#10;  [in]            USHORT          NodeNumber,&#10;  [out, optional] PGROUP_AFFINITY Affinity,&#10;  [out, optional] PUSHORT         Count&#10;);">KeQueryNodeActiveAffinity</a>.
 //
 
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CurrentNode;
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> HighestNodeNumber;
-    <a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a> NodeAffinity;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorIndex;
-    <a href="processor_number" title="typedef struct _PROCESSOR_NUMBER {&#10;  USHORT Group;&#10;  UCHAR  Number;&#10;  UCHAR  Reserved;&#10;} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;">PROCESSOR_NUMBER</a> ProcessorNumber;
+<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CurrentNode;
+<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> HighestNodeNumber;
+<a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a> NodeAffinity;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorIndex;
+<a href="processor_number" title="typedef struct _PROCESSOR_NUMBER {&#10;  USHORT Group;&#10;  UCHAR  Number;&#10;  UCHAR  Reserved;&#10;} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;">PROCESSOR_NUMBER</a> ProcessorNumber;
 
-    HighestNodeNumber = <a href="kequeryhighestnodenumber" title="USHORT KeQueryHighestNodeNumber();">KeQueryHighestNodeNumber</a>();
-    for (CurrentNode = 0; CurrentNode &lt;= HighestNodeNumber; CurrentNode += 1) {
+HighestNodeNumber = <a href="kequeryhighestnodenumber" title="USHORT KeQueryHighestNodeNumber();">KeQueryHighestNodeNumber</a>();
+for (CurrentNode = 0; CurrentNode &lt;= HighestNodeNumber; CurrentNode += 1) {
 
-        <a href="kequerynodeactiveaffinity" title="VOID KeQueryNodeActiveAffinity(&#10;  [in]            USHORT          NodeNumber,&#10;  [out, optional] PGROUP_AFFINITY Affinity,&#10;  [out, optional] PUSHORT         Count&#10;);">KeQueryNodeActiveAffinity</a>(CurrentNode, &amp;NodeAffinity, NULL);
-        while (NodeAffinity.Mask != 0) {
+<a href="kequerynodeactiveaffinity" title="VOID KeQueryNodeActiveAffinity(&#10;  [in]            USHORT          NodeNumber,&#10;  [out, optional] PGROUP_AFFINITY Affinity,&#10;  [out, optional] PUSHORT         Count&#10;);">KeQueryNodeActiveAffinity</a>(CurrentNode, &amp;NodeAffinity, NULL);
+while (NodeAffinity.Mask != 0) {
 
-            ProcessorNumber.Group = NodeAffinity.Group;
-            BitScanForward(&amp;ProcessorNumber.Number, NodeAffinity.Mask);
+ProcessorNumber.Group = NodeAffinity.Group;
+BitScanForward(&amp;ProcessorNumber.Number, NodeAffinity.Mask);
 
-            ProcessorIndex = <a href="kegetprocessorindexfromnumber" title="ULONG KeGetProcessorIndexFromNumber(&#10;  [in] PPROCESSOR_NUMBER ProcNumber&#10;);">KeGetProcessorIndexFromNumber</a>(&amp;ProcessorNumber);
+ProcessorIndex = <a href="kegetprocessorindexfromnumber" title="ULONG KeGetProcessorIndexFromNumber(&#10;  [in] PPROCESSOR_NUMBER ProcNumber&#10;);">KeGetProcessorIndexFromNumber</a>(&amp;ProcessorNumber);
 
-            ProcessorNodeContexts[ProcessorIndex] = NodeContexts[CurrentNode;]
+ProcessorNodeContexts[ProcessorIndex] = NodeContexts[CurrentNode;]
 
-            NodeAffinity.Mask &amp;= ~((KAFFINITY)1 &lt;&lt; ProcessorNumber.Number);
-        }
-    }
+NodeAffinity.Mask &amp;= ~((KAFFINITY)1 &lt;&lt; ProcessorNumber.Number);
+}
+}
 
 //
 // Resolution using KeQueryNodeActiveAffinity2.
 //
 
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CurrentIndex;
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CurrentNode;
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CurrentNodeAffinityCount;
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> HighestNodeNumber;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MaximumGroupCount;
-    <a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">PGROUP_AFFINITY</a> NodeAffinityMasks;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorIndex;
-    <a href="processor_number" title="typedef struct _PROCESSOR_NUMBER {&#10;  USHORT Group;&#10;  UCHAR  Number;&#10;  UCHAR  Reserved;&#10;} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;">PROCESSOR_NUMBER</a> ProcessorNumber;
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status;
+<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CurrentIndex;
+<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CurrentNode;
+<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CurrentNodeAffinityCount;
+<a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> HighestNodeNumber;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MaximumGroupCount;
+<a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">PGROUP_AFFINITY</a> NodeAffinityMasks;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorIndex;
+<a href="processor_number" title="typedef struct _PROCESSOR_NUMBER {&#10;  USHORT Group;&#10;  UCHAR  Number;&#10;  UCHAR  Reserved;&#10;} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;">PROCESSOR_NUMBER</a> ProcessorNumber;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status;
 
-    MaximumGroupCount = <a href="kequerymaximumgroupcount" title="USHORT KeQueryMaximumGroupCount();">KeQueryMaximumGroupCount</a>();
-    NodeAffinityMasks = <a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a>(POOL_FLAG_PAGED,
-                                        sizeof(<a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a>) * MaximumGroupCount,
-                                        'tseT');
+MaximumGroupCount = <a href="kequerymaximumgroupcount" title="USHORT KeQueryMaximumGroupCount();">KeQueryMaximumGroupCount</a>();
+NodeAffinityMasks = <a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a>(POOL_FLAG_PAGED,
+sizeof(<a href="group_affinity" title="typedef struct _GROUP_AFFINITY {&#10;  KAFFINITY Mask;&#10;  USHORT    Group;&#10;  USHORT    Reserved[3];&#10;} GROUP_AFFINITY, *PGROUP_AFFINITY;">GROUP_AFFINITY</a>) * MaximumGroupCount,
+'tseT');
 
-    if (NodeAffinityMasks == NULL) {
-        return STATUS_NO_MEMORY;
-    }
+if (NodeAffinityMasks == NULL) {
+return STATUS_NO_MEMORY;
+}
 
-    HighestNodeNumber = <a href="kequeryhighestnodenumber" title="USHORT KeQueryHighestNodeNumber();">KeQueryHighestNodeNumber</a>();
-    for (CurrentNode = 0; CurrentNode &lt;= HighestNodeNumber; CurrentNode += 1) {
+HighestNodeNumber = <a href="kequeryhighestnodenumber" title="USHORT KeQueryHighestNodeNumber();">KeQueryHighestNodeNumber</a>();
+for (CurrentNode = 0; CurrentNode &lt;= HighestNodeNumber; CurrentNode += 1) {
 
-        Status = KeQueryNodeActiveAffinity2(CurrentNode,
-                                            NodeAffinityMasks,
-                                            MaximumGroupCount,
-                                            &amp;CurrentNodeAffinityCount);
-        <a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a>(<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status));
+Status = KeQueryNodeActiveAffinity2(CurrentNode,
+NodeAffinityMasks,
+MaximumGroupCount,
+&amp;CurrentNodeAffinityCount);
+<a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a>(<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status));
 
-        for (CurrentIndex = 0; CurrentIndex &lt; CurrentNodeAffinityCount; CurrentIndex += 1) {
+for (CurrentIndex = 0; CurrentIndex &lt; CurrentNodeAffinityCount; CurrentIndex += 1) {
 
-            CurrentAffinity = &amp;NodeAffinityMasks[CurrentIndex];
+CurrentAffinity = &amp;NodeAffinityMasks[CurrentIndex];
 
-            while (CurrentAffinity-&gt;Mask != 0) {
+while (CurrentAffinity-&gt;Mask != 0) {
 
-                ProcessorNumber.Group = CurrentAffinity.Group;
-                BitScanForward(&amp;ProcessorNumber.Number, CurrentAffinity-&gt;Mask);
+ProcessorNumber.Group = CurrentAffinity.Group;
+BitScanForward(&amp;ProcessorNumber.Number, CurrentAffinity-&gt;Mask);
 
-                ProcessorIndex = <a href="kegetprocessorindexfromnumber" title="ULONG KeGetProcessorIndexFromNumber(&#10;  [in] PPROCESSOR_NUMBER ProcNumber&#10;);">KeGetProcessorIndexFromNumber</a>(&amp;ProcessorNumber);
+ProcessorIndex = <a href="kegetprocessorindexfromnumber" title="ULONG KeGetProcessorIndexFromNumber(&#10;  [in] PPROCESSOR_NUMBER ProcNumber&#10;);">KeGetProcessorIndexFromNumber</a>(&amp;ProcessorNumber);
 
-                ProcessorNodeContexts[ProcessorIndex] = NodeContexts[CurrentNode];
+ProcessorNodeContexts[ProcessorIndex] = NodeContexts[CurrentNode];
 
-                CurrentAffinity-&gt;Mask &amp;= ~((KAFFINITY)1 &lt;&lt; ProcessorNumber.Number);
-            }
-        }
-    }
+CurrentAffinity-&gt;Mask &amp;= ~((KAFFINITY)1 &lt;&lt; ProcessorNumber.Number);
+}
+}
+}
 
 //
 // Resolution using <a href="kequerylogicalprocessorrelationship" title="NTSTATUS KeQueryLogicalProcessorRelationship(&#10;  [in, optional]  PPROCESSOR_NUMBER                        ProcessorNumber,&#10;  [in]            LOGICAL_PROCESSOR_RELATIONSHIP           RelationshipType,&#10;  [out, optional] PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information,&#10;  [in, out]       PULONG                                   Length&#10;);">KeQueryLogicalProcessorRelationship</a>.
 //
 
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorIndex;
-    SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX <a href="processorinformation" title="#define ProcessorInformation 11 // out: PROCESSOR_POWER_INFORMATION">ProcessorInformation</a>;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorInformationSize;
-    <a href="processor_number" title="typedef struct _PROCESSOR_NUMBER {&#10;  USHORT Group;&#10;  UCHAR  Number;&#10;  UCHAR  Reserved;&#10;} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;">PROCESSOR_NUMBER</a> ProcessorNumber;
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorCount;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorIndex;
+SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX <a href="processorinformation" title="#define ProcessorInformation 11 // out: PROCESSOR_POWER_INFORMATION">ProcessorInformation</a>;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessorInformationSize;
+<a href="processor_number" title="typedef struct _PROCESSOR_NUMBER {&#10;  USHORT Group;&#10;  UCHAR  Number;&#10;  UCHAR  Reserved;&#10;} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;">PROCESSOR_NUMBER</a> ProcessorNumber;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Status;
 
-    ProcessorCount = <a href="kequeryactiveprocessorcountex" title="ULONG KeQueryActiveProcessorCountEx(&#10;  [in] USHORT GroupNumber&#10;);">KeQueryActiveProcessorCountEx</a>(ALL_PROCESSOR_GROUPS);
+ProcessorCount = <a href="kequeryactiveprocessorcountex" title="ULONG KeQueryActiveProcessorCountEx(&#10;  [in] USHORT GroupNumber&#10;);">KeQueryActiveProcessorCountEx</a>(ALL_PROCESSOR_GROUPS);
 
-    for (ProcessorIndex = 0; ProcessorIndex &lt; ProcessorCount; ProcessorIndex += 1) {
+for (ProcessorIndex = 0; ProcessorIndex &lt; ProcessorCount; ProcessorIndex += 1) {
 
-        Status = <a href="kegetprocessornumberfromindex" title="NTSTATUS KeGetProcessorNumberFromIndex(&#10;  [in]  ULONG             ProcIndex,&#10;  [out] PPROCESSOR_NUMBER ProcNumber&#10;);">KeGetProcessorNumberFromIndex</a>(ProcessorIndex, &amp;ProcessorNumber);
-        <a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a>(<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status));
+Status = <a href="kegetprocessornumberfromindex" title="NTSTATUS KeGetProcessorNumberFromIndex(&#10;  [in]  ULONG             ProcIndex,&#10;  [out] PPROCESSOR_NUMBER ProcNumber&#10;);">KeGetProcessorNumberFromIndex</a>(ProcessorIndex, &amp;ProcessorNumber);
+<a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a>(<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status));
 
-        ProcessorInformationSize = sizeof(<a href="processorinformation" title="#define ProcessorInformation 11 // out: PROCESSOR_POWER_INFORMATION">ProcessorInformation</a>);
-        Status = <a href="kequerylogicalprocessorrelationship" title="NTSTATUS KeQueryLogicalProcessorRelationship(&#10;  [in, optional]  PPROCESSOR_NUMBER                        ProcessorNumber,&#10;  [in]            LOGICAL_PROCESSOR_RELATIONSHIP           RelationshipType,&#10;  [out, optional] PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information,&#10;  [in, out]       PULONG                                   Length&#10;);">KeQueryLogicalProcessorRelationship</a>(&amp;ProcessorNumber,
-                                                     RelationNumaNode,
-                                                     &amp;<a href="processorinformation" title="#define ProcessorInformation 11 // out: PROCESSOR_POWER_INFORMATION">ProcessorInformation</a>,
-                                                     &amp;ProcessorInformationSize);
-        <a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a>(<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status));
+ProcessorInformationSize = sizeof(<a href="processorinformation" title="#define ProcessorInformation 11 // out: PROCESSOR_POWER_INFORMATION">ProcessorInformation</a>);
+Status = <a href="kequerylogicalprocessorrelationship" title="NTSTATUS KeQueryLogicalProcessorRelationship(&#10;  [in, optional]  PPROCESSOR_NUMBER                        ProcessorNumber,&#10;  [in]            LOGICAL_PROCESSOR_RELATIONSHIP           RelationshipType,&#10;  [out, optional] PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information,&#10;  [in, out]       PULONG                                   Length&#10;);">KeQueryLogicalProcessorRelationship</a>(&amp;ProcessorNumber,
+RelationNumaNode,
+&amp;<a href="processorinformation" title="#define ProcessorInformation 11 // out: PROCESSOR_POWER_INFORMATION">ProcessorInformation</a>,
+&amp;ProcessorInformationSize);
+<a href="nt_assert" title="#define NT_ASSERT NT_ASSERT_ASSUME">NT_ASSERT</a>(<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(Status));
 
-        NodeNumber = <a href="processorinformation" title="#define ProcessorInformation 11 // out: PROCESSOR_POWER_INFORMATION">ProcessorInformation</a>.NumaNode.NodeNumber;
+NodeNumber = <a href="processorinformation" title="#define ProcessorInformation 11 // out: PROCESSOR_POWER_INFORMATION">ProcessorInformation</a>.NumaNode.NodeNumber;
 
-        ProcessorNodeContexts[ProcessorIndex] = NodeContexts[NodeNumber];
-    }
+ProcessorNodeContexts[ProcessorIndex] = NodeContexts[NodeNumber];
+}
 </code></pre>
 <h2>See also</h2>
 <p><a href="kequerynodeactiveaffinity" title="VOID KeQueryNodeActiveAffinity(&#10;  [in]            USHORT          NodeNumber,&#10;  [out, optional] PGROUP_AFFINITY Affinity,&#10;  [out, optional] PUSHORT         Count&#10;);">KeQueryNodeActiveAffinity</a></p>

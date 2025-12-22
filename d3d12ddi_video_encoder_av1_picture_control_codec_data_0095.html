@@ -243,33 +243,42 @@
 <h3>DPB Management expectations</h3>
 <p>The following is the contract the API client and the driver must conform to when using this API:</p>
 <ol>
-<li>
-<p>When encoding <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/ne-d3d12umddi-d3d12ddi_video_encoder_av1_frame_type_0095"><strong>D3D12DDI_VIDEO_ENCODER_AV1_FRAME_TYPE_0095_KEY_FRAME</strong></a>:</p>
+<li><p>When encoding <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/ne-d3d12umddi-d3d12ddi_video_encoder_av1_frame_type_0095"><strong>D3D12DDI_VIDEO_ENCODER_AV1_FRAME_TYPE_0095_KEY_FRAME</strong></a>:</p>
 <ul>
-<li><strong>PrimaryRefFrame</strong> must be 7 (PRIMARY_REF_NONE)</li>
-<li><strong>RefreshFrameFlags</strong> must be 0xFF (conforming to the AV1 codec standard bitstream syntax)</li>
-<li>For all array entries in <strong>ReferenceFramesReconPictureDescriptors</strong>, <strong>ReconstructedPictureResourceIndex</strong> must be set to D3D12_VIDEO_ENCODER_AV1_INVALID_DPB_RESOURCE_INDEX</li>
-<li>The values in <strong>ReferenceIndices</strong>[7] are indistinct as any value [0..7] will point to an unused DPB slot in <strong>ReferenceFramesReconPictureDescriptors</strong> as per the point above.</li>
+<li>
+<strong>PrimaryRefFrame</strong> must be 7 (PRIMARY_REF_NONE)
+</li>
+<li>
+<strong>RefreshFrameFlags</strong> must be 0xFF (conforming to the AV1 codec standard bitstream syntax)
+</li>
+<li>
+For all array entries in <strong>ReferenceFramesReconPictureDescriptors</strong>, <strong>ReconstructedPictureResourceIndex</strong> must be set to D3D12_VIDEO_ENCODER_AV1_INVALID_DPB_RESOURCE_INDEX
+</li>
+<li>
+The values in <strong>ReferenceIndices</strong>[7] are indistinct as any value [0..7] will point to an unused DPB slot in <strong>ReferenceFramesReconPictureDescriptors</strong> as per the point above.
+</li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/ns-d3d12umddi-d3d12ddi_video_encode_reference_frames_0080"><strong>D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0082_0</strong></a> will be filled as:
 <ul>
-<li><strong>NumTexture2Ds</strong> = 0</li>
-<li><strong>ppTexture2Ds</strong> = NULL</li>
-<li><strong>pSubresources</strong> = NULL</li>
-</ul>
-</li>
-</ul>
+<li>
+<strong>NumTexture2Ds</strong> = 0
 </li>
 <li>
-<p>When encoding a frame type with references (ie. SWITCH/INTER):</p>
+<strong>ppTexture2Ds</strong> = NULL
+</li>
+<li>
+<strong>pSubresources</strong> = NULL
+</li>
+</ul></li>
+</ul></li>
+<li><p>When encoding a frame type with references (ie. SWITCH/INTER):</p>
 <ul>
 <li>
-<p><strong>PrimaryRefFrame</strong> specifies which reference frame contains the CDF values and other state that must be loaded at the start of the frame.</p>
+<strong>PrimaryRefFrame</strong> specifies which reference frame contains the CDF values and other state that must be loaded at the start of the frame.
 </li>
 <li>
-<p><strong>RefreshFrameFlags</strong> must be set accordingly to indicate on which <strong>ReferenceFramesReconPictureDescriptors</strong> DPB slots the current encoded frame reconstructed picture will be placed after encoding execution. This value must match exactly what the API client will code for refresh_frame_flags AV1 syntax element in the associated picture header for the current frame.</p>
+<strong>RefreshFrameFlags</strong> must be set accordingly to indicate on which <strong>ReferenceFramesReconPictureDescriptors</strong> DPB slots the current encoded frame reconstructed picture will be placed after encoding execution. This value must match exactly what the API client will code for refresh_frame_flags AV1 syntax element in the associated picture header for the current frame.
 </li>
-<li>
-<p>The array entries in <strong>ReferenceFramesReconPictureDescriptors</strong> for the current frame will follow exactly what <strong>RefreshFrameFlags</strong> indicated for the previous frame.</p>
+<li><p>The array entries in <strong>ReferenceFramesReconPictureDescriptors</strong> for the current frame will follow exactly what <strong>RefreshFrameFlags</strong> indicated for the previous frame.</p>
 <ul>
 <li>
 <p>For example: if <strong>RefreshFrameFlags</strong> indicates the current frame N will be placed in slots 2, 3 and 6, then in the next <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/nc-d3d12umddi-pfnd3d12ddi_video_encode_frame_0082_0"><em>EncodeFrame</em></a> call for frame N+1, the <strong>ReconstructedPictureResourceIndex</strong> parameter in the entries <strong>ReferenceFramesReconPictureDescriptors</strong>[1], <strong>ReferenceFramesReconPictureDescriptors</strong>[2], <strong>ReferenceFramesReconPictureDescriptors</strong>[5] parameter must point to frame N reconstructed picture in <strong><a href="d3d12ddi_video_encode_reference_frames_0080" title="typedef struct D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080 {&#10;  UINT               NumTexture2Ds;&#10;  D3D12DDI_HRESOURCE *hDrvTexture2Ds;&#10;  UINT               *pSubresources;&#10;} D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080;">D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080</a></strong>.</p>
@@ -278,66 +287,70 @@
 <p>Note this includes considering <strong>RefreshFrameFlags</strong>=0xFF for <strong>D3D12DDI_VIDEO_ENCODER_AV1_FRAME_TYPE_0095_KEY_FRAME</strong> as well, by marking all <strong>ReferenceFramesReconPictureDescriptors</strong> entries pointing to the KEY frame reconstructed picture.</p>
 </li>
 <li>
-<p>If a (non key frame) picture won't be marked with <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/ne-d3d12umddi-d3d12ddi_video_encoder_picture_control_flags_0080"><strong>D3D12DDI_VIDEO_ENCODER_PICTURE_CONTROL_FLAG_0080_USED_AS_REFERENCE_PICTURE</strong></a>, their <strong>RefreshFrameFlags</strong> must be zero to indicate this.</p>
+If a (non key frame) picture won't be marked with <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d12umddi/ne-d3d12umddi-d3d12ddi_video_encoder_picture_control_flags_0080"><strong>D3D12DDI_VIDEO_ENCODER_PICTURE_CONTROL_FLAG_0080_USED_AS_REFERENCE_PICTURE</strong></a>, their <strong>RefreshFrameFlags</strong> must be zero to indicate this.
 </li>
-</ul>
+</ul></li>
+<li>
+The values in <strong>ReferenceIndices</strong>[7] are within [0..7] and point to DPB slots in <strong>ReferenceFramesReconPictureDescriptors</strong>.
 </li>
 <li>
-<p>The values in <strong>ReferenceIndices</strong>[7] are within [0..7] and point to DPB slots in <strong>ReferenceFramesReconPictureDescriptors</strong>.</p>
+The values of <strong>ReferenceIndices</strong>[7] must match exactly what the API client codes in the picture header for ref_frame_idx.
 </li>
 <li>
-<p>The values of <strong>ReferenceIndices</strong>[7] must match exactly what the API client codes in the picture header for ref_frame_idx.</p>
+As per AV1 syntax definition of ref_frame_idx there is no requirement that the array entry values must be unique.
 </li>
-<li>
-<p>As per AV1 syntax definition of ref_frame_idx there is no requirement that the array entry values must be unique.</p>
-</li>
-<li>
-<p>If <strong>ReferenceFramesReconPictureDescriptors</strong>[<strong>ReferenceIndices</strong>[i]]. <strong>ReconstructedPictureResourceIndex</strong> == D3D12_VIDEO_ENCODER_AV1_INVALID_DPB_RESOURCE_INDEX</p>
-<ul>
-<li>This indicates the reference picture i-th won't be used for the current frame and must be ignored.</li>
-</ul>
-</li>
-<li>
-<p>Otherwise (Valid <strong>ReferenceFramesReconPictureDescriptors</strong>[<strong>ReferenceIndices</strong>[i]]. <strong>ReconstructedPictureResourceIndex</strong>)</p>
-<ul>
-<li>This indicates the reference i-th will point to the DPB slot <strong>ReferenceIndices</strong>[i] and the reconstructed picture to be used is <strong><a href="d3d12ddi_video_encode_reference_frames_0080" title="typedef struct D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080 {&#10;  UINT               NumTexture2Ds;&#10;  D3D12DDI_HRESOURCE *hDrvTexture2Ds;&#10;  UINT               *pSubresources;&#10;} D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080;">D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080</a></strong>.<strong>ppTexture2Ds</strong>[<strong>ReferenceFramesReconPictureDescriptors</strong>[<strong>ReferenceIndices</strong>[i]].<strong>ReconstructedPictureResourceIndex</strong>]</li>
-</ul>
-</li>
-<li>
-<p><strong><a href="d3d12ddi_video_encode_reference_frames_0080" title="typedef struct D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080 {&#10;  UINT               NumTexture2Ds;&#10;  D3D12DDI_HRESOURCE *hDrvTexture2Ds;&#10;  UINT               *pSubresources;&#10;} D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080;">D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080</a></strong> will be filled as:</p>
-<ul>
-<li><strong>NumTexture2Ds</strong> = {number of unique values of <strong>ReferenceFramesReconPictureDescriptors</strong>.<strong>ReconstructedPictureResourceIndex</strong>[j] != D3D12_VIDEO_ENCODER_AV1_INVALID_DPB_RESOURCE_INDEX for j in {0..7} }</li>
-<li><strong>ppTexture2Ds</strong> = { compact array (no null entries) containing the reconstructed picture from the previously encoded frames that will be used as references }</li>
-<li>[Texture Array mode only] <strong>pSubresources</strong> = { compact array (no null entries) containing the subresource index of the texture array from the previously encoded frames that will be used as references }</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>
-<p>When encoding a frame type without references but without clearing the DPB (ie. INTRA_ONLY)</p>
+<li>If <strong>ReferenceFramesReconPictureDescriptors</strong>[<strong>ReferenceIndices</strong>[i]]. <strong>ReconstructedPictureResourceIndex</strong> == D3D12_VIDEO_ENCODER_AV1_INVALID_DPB_RESOURCE_INDEX
 <ul>
 <li>
-<p><strong>PrimaryRefFrame</strong> must be 7 (PRIMARY_REF_NONE)</p>
+This indicates the reference picture i-th won't be used for the current frame and must be ignored.
 </li>
-<li>
-<p><strong>RefreshFrameFlags</strong> must be set accordingly to indicate on which <strong>ReferenceFramesReconPictureDescriptors</strong> DPB slots the current encoded frame reconstructed picture will be placed after encoding execution. This value must match exactly what the API client will code for refresh_frame_flags AV1 syntax element in the associated picture header for the current frame.</p>
-</li>
-<li>
-<p>The array entries in <strong>ReferenceFramesReconPictureDescriptors</strong> for the current frame will follow exactly what RefreshFrameFlags indicated for the previous frame.</p>
-</li>
-<li>
-<p>The values in <strong>ReferenceIndices</strong>[7] are ignored as the intra-only frame doesn't use any references.</p>
-</li>
-<li>
-<p><strong><a href="d3d12ddi_video_encode_reference_frames_0080" title="typedef struct D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080 {&#10;  UINT               NumTexture2Ds;&#10;  D3D12DDI_HRESOURCE *hDrvTexture2Ds;&#10;  UINT               *pSubresources;&#10;} D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080;">D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080</a></strong> contains the DPB snapshot and will be filled as:</p>
+</ul></li>
+<li>Otherwise (Valid <strong>ReferenceFramesReconPictureDescriptors</strong>[<strong>ReferenceIndices</strong>[i]]. <strong>ReconstructedPictureResourceIndex</strong>)
 <ul>
-<li><strong>NumTexture2Ds</strong> = {number of <em>unique</em> values of <strong>ReferenceFramesReconPictureDescriptors</strong>.<strong>ReconstructedPictureResourceIndex</strong>[j] != D3D12_VIDEO_ENCODER_AV1_INVALID_DPB_RESOURCE_INDEX for j in {0..7} }</li>
-<li><strong>ppTexture2Ds</strong> = { compact array (no null entries) containing the reconstructed picture from the previously encoded frames referred to by <strong>ReferenceFramesReconPictureDescriptors</strong>.<strong>ReconstructedPictureResourceIndex</strong>[j] for j in {0..7} }</li>
-<li>[Texture Array mode only] <strong>pSubresources</strong> = { compact array (no null entries) containing the subresource index of the texture array from the previously encoded frames referred to by <strong>ReferenceFramesReconPictureDescriptors</strong>.<strong>ReconstructedPictureResourceIndex</strong>[j] for j in {0..7} }</li>
-</ul>
+<li>
+This indicates the reference i-th will point to the DPB slot <strong>ReferenceIndices</strong>[i] and the reconstructed picture to be used is <strong><a href="d3d12ddi_video_encode_reference_frames_0080" title="typedef struct D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080 {&#10;  UINT               NumTexture2Ds;&#10;  D3D12DDI_HRESOURCE *hDrvTexture2Ds;&#10;  UINT               *pSubresources;&#10;} D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080;">D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080</a></strong>.<strong>ppTexture2Ds</strong>[<strong>ReferenceFramesReconPictureDescriptors</strong>[<strong>ReferenceIndices</strong>[i]].<strong>ReconstructedPictureResourceIndex</strong>]
 </li>
-</ul>
+</ul></li>
+<li><p><strong><a href="d3d12ddi_video_encode_reference_frames_0080" title="typedef struct D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080 {&#10;  UINT               NumTexture2Ds;&#10;  D3D12DDI_HRESOURCE *hDrvTexture2Ds;&#10;  UINT               *pSubresources;&#10;} D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080;">D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080</a></strong> will be filled as:</p>
+<ul>
+<li>
+<strong>NumTexture2Ds</strong> = {number of unique values of <strong>ReferenceFramesReconPictureDescriptors</strong>.<strong>ReconstructedPictureResourceIndex</strong>[j] != D3D12_VIDEO_ENCODER_AV1_INVALID_DPB_RESOURCE_INDEX for j in {0..7} }
 </li>
+<li>
+<strong>ppTexture2Ds</strong> = { compact array (no null entries) containing the reconstructed picture from the previously encoded frames that will be used as references }
+</li>
+<li>
+[Texture Array mode only] <strong>pSubresources</strong> = { compact array (no null entries) containing the subresource index of the texture array from the previously encoded frames that will be used as references }
+</li>
+</ul></li>
+</ul></li>
+<li><p>When encoding a frame type without references but without clearing the DPB (ie. INTRA_ONLY)</p>
+<ul>
+<li>
+<strong>PrimaryRefFrame</strong> must be 7 (PRIMARY_REF_NONE)
+</li>
+<li>
+<strong>RefreshFrameFlags</strong> must be set accordingly to indicate on which <strong>ReferenceFramesReconPictureDescriptors</strong> DPB slots the current encoded frame reconstructed picture will be placed after encoding execution. This value must match exactly what the API client will code for refresh_frame_flags AV1 syntax element in the associated picture header for the current frame.
+</li>
+<li>
+The array entries in <strong>ReferenceFramesReconPictureDescriptors</strong> for the current frame will follow exactly what RefreshFrameFlags indicated for the previous frame.
+</li>
+<li>
+The values in <strong>ReferenceIndices</strong>[7] are ignored as the intra-only frame doesn't use any references.
+</li>
+<li><p><strong><a href="d3d12ddi_video_encode_reference_frames_0080" title="typedef struct D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080 {&#10;  UINT               NumTexture2Ds;&#10;  D3D12DDI_HRESOURCE *hDrvTexture2Ds;&#10;  UINT               *pSubresources;&#10;} D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080;">D3D12DDI_VIDEO_ENCODE_REFERENCE_FRAMES_0080</a></strong> contains the DPB snapshot and will be filled as:</p>
+<ul>
+<li>
+<strong>NumTexture2Ds</strong> = {number of <em>unique</em> values of <strong>ReferenceFramesReconPictureDescriptors</strong>.<strong>ReconstructedPictureResourceIndex</strong>[j] != D3D12_VIDEO_ENCODER_AV1_INVALID_DPB_RESOURCE_INDEX for j in {0..7} }
+</li>
+<li>
+<strong>ppTexture2Ds</strong> = { compact array (no null entries) containing the reconstructed picture from the previously encoded frames referred to by <strong>ReferenceFramesReconPictureDescriptors</strong>.<strong>ReconstructedPictureResourceIndex</strong>[j] for j in {0..7} }
+</li>
+<li>
+[Texture Array mode only] <strong>pSubresources</strong> = { compact array (no null entries) containing the subresource index of the texture array from the previously encoded frames referred to by <strong>ReferenceFramesReconPictureDescriptors</strong>.<strong>ReconstructedPictureResourceIndex</strong>[j] for j in {0..7} }
+</li>
+</ul></li>
+</ul></li>
 </ol>
 <p>See <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/video-encoding-d3d12-av1">D3D12 AV1 video encoding</a> for more information.</p>
 <h2>See also</h2>

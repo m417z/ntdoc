@@ -83,8 +83,12 @@
 <p>The request object that the driver specifies for the <em>Request</em> parameter can be one that it <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/receiving-i-o-requests">received</a> or one that it created by calling the <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a> method.</p>
 <p>To obtain a handle to an I/O target object, the driver can do one of the following:</p>
 <ul>
-<li>If the driver is using general I/O targets, it calls <a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a>. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/initializing-a-general-i-o-target">Initializing a General I/O Target</a>.</li>
-<li>If the driver is using a specialized I/O target, it calls one or more methods that the specialized target object defines. For example, a driver for a USB device can call <a href="wdfusbtargetdevicegetiotarget" title="WDFIOTARGET WdfUsbTargetDeviceGetIoTarget(&#10;  [in] WDFUSBDEVICE UsbDevice&#10;);">WdfUsbTargetDeviceGetIoTarget</a> or <a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>.</li>
+<li>
+If the driver is using general I/O targets, it calls <a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a>. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/initializing-a-general-i-o-target">Initializing a General I/O Target</a>.
+</li>
+<li>
+If the driver is using a specialized I/O target, it calls one or more methods that the specialized target object defines. For example, a driver for a USB device can call <a href="wdfusbtargetdevicegetiotarget" title="WDFIOTARGET WdfUsbTargetDeviceGetIoTarget(&#10;  [in] WDFUSBDEVICE UsbDevice&#10;);">WdfUsbTargetDeviceGetIoTarget</a> or <a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>.
+</li>
 </ul>
 <p>By default, <strong>WdfRequestSend</strong> delivers the request to the target asynchronously, which means it returns immediately without waiting for the request to be completed. Optionally, the request can be delivered synchronously, which means <strong>WdfRequestSend</strong> does not return until a driver completes the request. To send the request synchronously, the driver must set the <strong>WDF_REQUEST_SEND_OPTION_SYNCHRONOUS</strong> flag in the <a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a> structure.</p>
 <p>If <strong>WdfRequestSend</strong> fails, or if your driver sets the WDF_REQUEST_SEND_OPTION_SYNCHRONOUS flag, the driver can call <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a> immediately after calling <strong>WdfRequestSend</strong>.</p>
@@ -100,80 +104,80 @@
 <p>The following code example is a shortened version of an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfio/nc-wdfio-evt_wdf_io_queue_io_write">EvtIoWrite</a> callback function from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/samples/browse/?redirectedfrom=MSDN-samples">kmdf_fx2</a> sample driver. The function validates the request's buffer length, obtains a handle to the buffer, formats the request for a USB target, and sends the request.</p>
 <pre><code>VOID
 OsrFxEvtIoWrite(
-    IN WDFQUEUE  Queue,
-    IN WDFREQUEST  Request,
-    IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  Length
-    )
+IN WDFQUEUE  Queue,
+IN WDFREQUEST  Request,
+IN <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a>  Length
+)
 {
-    WDFUSBPIPE  pipe;
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
-    WDFMEMORY  reqMemory;
-    PDEVICE_CONTEXT  pDeviceContext;
+WDFUSBPIPE  pipe;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>  status;
+WDFMEMORY  reqMemory;
+PDEVICE_CONTEXT  pDeviceContext;
 
-    UNREFERENCED_PARAMETER(Queue);
-    //
-    // Check if the transfer size is valid.
-    //
-    if (Length &gt; MAX_TRANSFER_BUFFER_SIZE) {
-        status = STATUS_INVALID_PARAMETER;
-        goto Exit;
-    }
-    //
-    // Get driver-defined context space from
-    // the device object. The driver stored the
-    // pipe handle there.
-    //
-    pDeviceContext = GetDeviceContext(<a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue));
-    pipe = pDeviceContext-&gt;BulkWritePipe;
+UNREFERENCED_PARAMETER(Queue);
+//
+// Check if the transfer size is valid.
+//
+if (Length &gt; MAX_TRANSFER_BUFFER_SIZE) {
+status = STATUS_INVALID_PARAMETER;
+goto Exit;
+}
+//
+// Get driver-defined context space from
+// the device object. The driver stored the
+// pipe handle there.
+//
+pDeviceContext = GetDeviceContext(<a href="wdfioqueuegetdevice" title="WDFDEVICE WdfIoQueueGetDevice(&#10;  [in] WDFQUEUE Queue&#10;);">WdfIoQueueGetDevice</a>(Queue));
+pipe = pDeviceContext-&gt;BulkWritePipe;
 
-    //
-    // Get a handle to a memory object that represents
-    // the input buffer.
-    //
-    status = <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a>(Request, &amp;reqMemory);
-    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
-        goto Exit;
-    }
-    //
-    // Format the request so it can be sent to a USB target.
-    //
-    status = <a href="wdfusbtargetpipeformatrequestforwrite" title="NTSTATUS WdfUsbTargetPipeFormatRequestForWrite(&#10;  [in]           WDFUSBPIPE        Pipe,&#10;  [in]           WDFREQUEST        Request,&#10;  [in, optional] WDFMEMORY         WriteMemory,&#10;  [in, optional] PWDFMEMORY_OFFSET WriteOffset&#10;);">WdfUsbTargetPipeFormatRequestForWrite</a>(
-                            pipe,
-                            Request,
-                            reqMemory,
-                            NULL // Offsets
-                            );
-    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        goto Exit;
-    }
-    //
-    // Set a CompletionRoutine callback function.
-    //
-    <a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a>(
-                            Request,
-                            EvtRequestReadCompletionRoutine,
-                            pipe
-                            );
-    //
-    // Send the request. If an error occurs, complete the request.
-    //
-    if (WdfRequestSend(
-                       Request,
-                       <a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>(pipe),
-                       WDF_NO_SEND_OPTIONS
-                       ) == FALSE) {
-        status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(Request);
-        goto Exit;
-    }
+//
+// Get a handle to a memory object that represents
+// the input buffer.
+//
+status = <a href="wdfrequestretrieveinputmemory" title="NTSTATUS WdfRequestRetrieveInputMemory(&#10;  [in]  WDFREQUEST Request,&#10;  [out] WDFMEMORY  *Memory&#10;);">WdfRequestRetrieveInputMemory</a>(Request, &amp;reqMemory);
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)){
+goto Exit;
+}
+//
+// Format the request so it can be sent to a USB target.
+//
+status = <a href="wdfusbtargetpipeformatrequestforwrite" title="NTSTATUS WdfUsbTargetPipeFormatRequestForWrite(&#10;  [in]           WDFUSBPIPE        Pipe,&#10;  [in]           WDFREQUEST        Request,&#10;  [in, optional] WDFMEMORY         WriteMemory,&#10;  [in, optional] PWDFMEMORY_OFFSET WriteOffset&#10;);">WdfUsbTargetPipeFormatRequestForWrite</a>(
+pipe,
+Request,
+reqMemory,
+NULL // Offsets
+);
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+goto Exit;
+}
+//
+// Set a CompletionRoutine callback function.
+//
+<a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a>(
+Request,
+EvtRequestReadCompletionRoutine,
+pipe
+);
+//
+// Send the request. If an error occurs, complete the request.
+//
+if (WdfRequestSend(
+Request,
+<a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>(pipe),
+WDF_NO_SEND_OPTIONS
+) == FALSE) {
+status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(Request);
+goto Exit;
+}
 Exit:
-    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-        <a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
-                                          Request,
-                                          status,
-                                          0
-                                          );
-    }
-    return;
+if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+<a href="wdfrequestcompletewithinformation" title="VOID WdfRequestCompleteWithInformation(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status,&#10;  [in] ULONG_PTR  Information&#10;);">WdfRequestCompleteWithInformation</a>(
+Request,
+status,
+0
+);
+}
+return;
 }
 </code></pre>
 <h2>See also</h2>

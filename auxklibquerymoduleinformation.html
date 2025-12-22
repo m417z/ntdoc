@@ -81,9 +81,15 @@
 <h2>Remarks</h2>
 <p>To obtain information about the operating system's loaded image modules, a driver must:</p>
 <ol>
-<li>Call <strong>AuxKlibQueryModuleInformation</strong> with a <strong>NULL</strong> <em>QueryInfo</em> pointer. After <strong>AuxKlibQueryModuleInformation</strong> returns, the location that the <em>BufferSize</em> parameter points to will contain the number of bytes that the driver will have to allocate for the array.</li>
-<li>Call a memory allocation routine, such as <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>, to allocate a buffer for the array.</li>
-<li>Call <strong>AuxKlibQueryModuleInformation</strong> again. This time, the <em>QueryInfo</em> pointer must contain the address of the allocated buffer. After <strong>AuxKlibQueryModuleInformation</strong> returns, the buffer contains an array of module information.</li>
+<li>
+Call <strong>AuxKlibQueryModuleInformation</strong> with a <strong>NULL</strong> <em>QueryInfo</em> pointer. After <strong>AuxKlibQueryModuleInformation</strong> returns, the location that the <em>BufferSize</em> parameter points to will contain the number of bytes that the driver will have to allocate for the array.
+</li>
+<li>
+Call a memory allocation routine, such as <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>, to allocate a buffer for the array.
+</li>
+<li>
+Call <strong>AuxKlibQueryModuleInformation</strong> again. This time, the <em>QueryInfo</em> pointer must contain the address of the allocated buffer. After <strong>AuxKlibQueryModuleInformation</strong> returns, the buffer contains an array of module information.
+</li>
 </ol>
 <p>The number of loaded modules can change between the first and second calls to <strong>AuxKlibQueryModuleInformation</strong>. As a result, the second call to <strong>AuxKlibQueryModuleInformation</strong> might return STATUS_BUFFER_TOO_SMALL even if the driver allocates a buffer that is based on the size that was obtained from the first call.</p>
 <p>If a call to <strong>AuxKlibQueryModuleInformation</strong> succeeds, the routine writes an <strong>ImageBase</strong> value to each element in the <em>QueryInfo</em> array. Each <strong>ImageBase</strong> value is a pointer to the base of a loaded driver image. This pointer remains valid only while the driver remains loaded. The caller should assume that the driver can be unloaded at any time unless the caller can guarantee otherwise. For example, a driver might be unloaded between a call to <strong>AuxKlibQueryModuleInformation</strong> that obtains a pointer to the driver image and a call to <a href="auxklibgetimageexportdirectory" title="PIMAGE_EXPORT_DIRECTORY AuxKlibGetImageExportDirectory(&#10;  [in] PVOID ImageBase&#10;);">AuxKlibGetImageExportDirectory</a> that uses this pointer.</p>
@@ -98,14 +104,14 @@
 // Get the required array size.
 //
 status = AuxKlibQueryModuleInformation(
-                                       &amp;modulesSize,
-                                       sizeof(<a href="aux_module_extended_info" title="typedef struct _AUX_MODULE_EXTENDED_INFO {&#10;  AUX_MODULE_BASIC_INFO BasicInfo;&#10;  ULONG                 ImageSize;&#10;  USHORT                FileNameOffset;&#10;  UCHAR                 FullPathName[AUX_KLIB_MODULE_PATH_LEN];&#10;} AUX_MODULE_EXTENDED_INFO, *PAUX_MODULE_EXTENDED_INFO;">AUX_MODULE_EXTENDED_INFO</a>),
-                                       NULL
-                                       );
+&amp;modulesSize,
+sizeof(<a href="aux_module_extended_info" title="typedef struct _AUX_MODULE_EXTENDED_INFO {&#10;  AUX_MODULE_BASIC_INFO BasicInfo;&#10;  ULONG                 ImageSize;&#10;  USHORT                FileNameOffset;&#10;  UCHAR                 FullPathName[AUX_KLIB_MODULE_PATH_LEN];&#10;} AUX_MODULE_EXTENDED_INFO, *PAUX_MODULE_EXTENDED_INFO;">AUX_MODULE_EXTENDED_INFO</a>),
+NULL
+);
 
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) || modulesSize == 0) {
-    break;
-    }
+break;
+}
 
 //
 // Calculate the number of modules.
@@ -116,32 +122,32 @@ numberOfModules = modulesSize / sizeof(<a href="aux_module_extended_info" title=
 // Allocate memory to receive data.
 //
 modules =
-    (<a href="aux_module_extended_info" title="typedef struct _AUX_MODULE_EXTENDED_INFO {&#10;  AUX_MODULE_BASIC_INFO BasicInfo;&#10;  ULONG                 ImageSize;&#10;  USHORT                FileNameOffset;&#10;  UCHAR                 FullPathName[AUX_KLIB_MODULE_PATH_LEN];&#10;} AUX_MODULE_EXTENDED_INFO, *PAUX_MODULE_EXTENDED_INFO;">AUX_MODULE_EXTENDED_INFO</a>*) <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>(
-                                      PagedPool,
-                                      modulesSize,
-                                      '3LxF'
-                                      );
+(<a href="aux_module_extended_info" title="typedef struct _AUX_MODULE_EXTENDED_INFO {&#10;  AUX_MODULE_BASIC_INFO BasicInfo;&#10;  ULONG                 ImageSize;&#10;  USHORT                FileNameOffset;&#10;  UCHAR                 FullPathName[AUX_KLIB_MODULE_PATH_LEN];&#10;} AUX_MODULE_EXTENDED_INFO, *PAUX_MODULE_EXTENDED_INFO;">AUX_MODULE_EXTENDED_INFO</a>*) <a href="exallocatepoolwithtag" title="PVOID ExAllocatePoolWithTag(&#10;  [in] __drv_strictTypeMatch(__drv_typeExpr)POOL_TYPE PoolType,&#10;  [in] SIZE_T                                         NumberOfBytes,&#10;  [in] ULONG                                          Tag&#10;);">ExAllocatePoolWithTag</a>(
+PagedPool,
+modulesSize,
+'3LxF'
+);
 if (modules == NULL) {
-    status = STATUS_INSUFFICIENT_RESOURCES;
-    break;
-    }
+status = STATUS_INSUFFICIENT_RESOURCES;
+break;
+}
 
 <a href="rtlzeromemory" title="VOID RtlZeroMemory(&#10;  _Out_ VOID UNALIGNED *Destination,&#10;  _In_  SIZE_T         Length&#10;);">RtlZeroMemory</a>(
-              modules,
-              modulesSize
-              );
+modules,
+modulesSize
+);
 
 //
 // Obtain the module information.
 //
 status = AuxKlibQueryModuleInformation(
-                                       &amp;modulesSize,
-                                       sizeof(<a href="aux_module_extended_info" title="typedef struct _AUX_MODULE_EXTENDED_INFO {&#10;  AUX_MODULE_BASIC_INFO BasicInfo;&#10;  ULONG                 ImageSize;&#10;  USHORT                FileNameOffset;&#10;  UCHAR                 FullPathName[AUX_KLIB_MODULE_PATH_LEN];&#10;} AUX_MODULE_EXTENDED_INFO, *PAUX_MODULE_EXTENDED_INFO;">AUX_MODULE_EXTENDED_INFO</a>),
-                                       modules
-                                       );
+&amp;modulesSize,
+sizeof(<a href="aux_module_extended_info" title="typedef struct _AUX_MODULE_EXTENDED_INFO {&#10;  AUX_MODULE_BASIC_INFO BasicInfo;&#10;  ULONG                 ImageSize;&#10;  USHORT                FileNameOffset;&#10;  UCHAR                 FullPathName[AUX_KLIB_MODULE_PATH_LEN];&#10;} AUX_MODULE_EXTENDED_INFO, *PAUX_MODULE_EXTENDED_INFO;">AUX_MODULE_EXTENDED_INFO</a>),
+modules
+);
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-    break;
-    }
+break;
+}
 </code></pre>
 <h2>See also</h2>
 <p><a href="aux_module_basic_info" title="typedef struct _AUX_MODULE_BASIC_INFO {&#10;  PVOID ImageBase;&#10;} AUX_MODULE_BASIC_INFO, *PAUX_MODULE_BASIC_INFO;">AUX_MODULE_BASIC_INFO</a></p>

@@ -93,26 +93,26 @@ WdfWorkItemEnqueue(hWorkItem);
 </code></pre>
 <p>The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function contains the following code.</p>
 <pre><code>MyWorkItemCallback (
-    IN WDFWORKITEM hWorkItem
-    )
+IN WDFWORKITEM hWorkItem
+)
 {
-    PMY_CONTEXT_TYPE context;
+PMY_CONTEXT_TYPE context;
 
-    context = GetWorkItemContext(hWorkItem);
+context = GetWorkItemContext(hWorkItem);
 
-    //
-    // Do work here.
-    //
-    ...
-    //
-    return;
+//
+// Do work here.
+//
+...
+//
+return;
 }
 </code></pre>
 <p><strong>Example 2: KMDF versions prior to 1.7</strong></p>
-<p>The following code example calls a local routine that returns a pointer to a work-item object's context memory. The example sets information in the object's context memory, sets a state variable to &quot;busy&quot;, and then calls <strong>WdfWorkItemEnqueue</strong>. The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function will later retrieve the information from the work-item object.</p>
+<p>The following code example calls a local routine that returns a pointer to a work-item object's context memory. The example sets information in the object's context memory, sets a state variable to "busy", and then calls <strong>WdfWorkItemEnqueue</strong>. The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function will later retrieve the information from the work-item object.</p>
 <pre><code>typedef enum _WORKITEM_STATE {
-    WORKITEM_STATE_FREE =0,
-    WORKITEM_STATE_BUSY = 1
+WORKITEM_STATE_FREE =0,
+WORKITEM_STATE_BUSY = 1
 } WORKITEM_STATE;
 ...
 PMY_CONTEXT_TYPE context;
@@ -123,36 +123,36 @@ context-&gt;Argument1 = Context1;
 context-&gt;Argument2 = Context2;
 
 if (<a href="interlockedcompareexchange" title="LONG InterlockedCompareExchange(&#10;  [in, out] LONG volatile *Destination,&#10;            LONG          ExChange,&#10;            LONG          Comperand&#10;);">InterlockedCompareExchange</a>(
-                               (PLONG)&amp;context-&gt;WorkItemState,
-                               WORKITEM_STATE_BUSY,
-                               WORKITEM_STATE_FREE
-                               ) == WORKITEM_STATE_FREE) {
- WdfWorkItemEnqueue(hWorkItem);
+(PLONG)&amp;context-&gt;WorkItemState,
+WORKITEM_STATE_BUSY,
+WORKITEM_STATE_FREE
+) == WORKITEM_STATE_FREE) {
+WdfWorkItemEnqueue(hWorkItem);
 }
 </code></pre>
-<p>The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function contains the following code. Just before the <strong>return</strong> statement, the code sets the work-item object's state variable to &quot;free&quot; so that the driver can queue the object again.</p>
+<p>The driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfworkitem/nc-wdfworkitem-evt_wdf_workitem">EvtWorkItem</a> callback function contains the following code. Just before the <strong>return</strong> statement, the code sets the work-item object's state variable to "free" so that the driver can queue the object again.</p>
 <pre><code>MyWorkItemCallback (
-    IN WDFWORKITEM hWorkItem
-    )
+IN WDFWORKITEM hWorkItem
+)
 {
-    PMY_CONTEXT_TYPE context;
-    <a href="long" title="typedef long LONG;">LONG</a> result;
+PMY_CONTEXT_TYPE context;
+<a href="long" title="typedef long LONG;">LONG</a> result;
 
-    context = GetWorkItemContext(hWorkItem);
+context = GetWorkItemContext(hWorkItem);
 
-    //
-    // Do work here.
-    //
-    ...
-    //
-    // Reset object state.
-    //
-    result = <a href="interlockedexchange" title="LONG InterlockedExchange(&#10;  [in, out] LONG volatile *Target,&#10;  [in]      LONG          Value&#10;);">InterlockedExchange</a>(
-                                 (PLONG)&amp;context-&gt;WorkItemState,
-                                 WORKITEM_STATE_FREE
-                                 );
-    <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(result == WORKITEM_STATE_BUSY);
-    return;
+//
+// Do work here.
+//
+...
+//
+// Reset object state.
+//
+result = <a href="interlockedexchange" title="LONG InterlockedExchange(&#10;  [in, out] LONG volatile *Target,&#10;  [in]      LONG          Value&#10;);">InterlockedExchange</a>(
+(PLONG)&amp;context-&gt;WorkItemState,
+WORKITEM_STATE_FREE
+);
+<a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(result == WORKITEM_STATE_BUSY);
+return;
 }
 </code></pre>
 <h2>See also</h2>

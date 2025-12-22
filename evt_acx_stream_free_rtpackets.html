@@ -81,46 +81,46 @@ VOID EvtAcxStreamFreeRtpackets(
 <p>When work with the stream is complete, EvtAcxStreamFreeRtPackets is called after <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/nc-acxstreams-evt_acx_stream_release_hardware">EvtAcxStreamReleaseHardware</a>. This allows the release hardware phase to finish deallocating bandwidth, freeing DMA resources and any other associated cleanup, to occur before te allocated RT buffers are then freed.</p>
 <h3>Example</h3>
 <p>Example usage is shown below.</p>
-<pre><code>// Init RT streaming callbacks.
-    //
-    <a href="acx_rt_stream_callbacks" title="typedef struct _ACX_RT_STREAM_CALLBACKS {&#10;  ULONG                                    Size;&#10;  PFN_ACX_STREAM_GET_HW_LATENCY            EvtAcxStreamGetHwLatency;&#10;  PFN_ACX_STREAM_ALLOCATE_RTPACKETS        EvtAcxStreamAllocateRtPackets;&#10;  PFN_ACX_STREAM_FREE_RTPACKETS            EvtAcxStreamFreeRtPackets;&#10;  PFN_ACX_STREAM_SET_RENDER_PACKET         EvtAcxStreamSetRenderPacket;&#10;  PFN_ACX_STREAM_GET_CURRENT_PACKET        EvtAcxStreamGetCurrentPacket;&#10;  PFN_ACX_STREAM_GET_CAPTURE_PACKET        EvtAcxStreamGetCapturePacket;&#10;  PFN_ACX_STREAM_GET_PRESENTATION_POSITION EvtAcxStreamGetPresentationPosition;&#10;} ACX_RT_STREAM_CALLBACKS, *PACX_RT_STREAM_CALLBACKS;">ACX_RT_STREAM_CALLBACKS</a> rtCallbacks;
-    <a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a>(&amp;rtCallbacks);
-    rtCallbacks.EvtAcxStreamFreeRtPackets               = Dsp_EvtStreamFreeRtPackets;
+<pre><code>    // Init RT streaming callbacks.
+//
+<a href="acx_rt_stream_callbacks" title="typedef struct _ACX_RT_STREAM_CALLBACKS {&#10;  ULONG                                    Size;&#10;  PFN_ACX_STREAM_GET_HW_LATENCY            EvtAcxStreamGetHwLatency;&#10;  PFN_ACX_STREAM_ALLOCATE_RTPACKETS        EvtAcxStreamAllocateRtPackets;&#10;  PFN_ACX_STREAM_FREE_RTPACKETS            EvtAcxStreamFreeRtPackets;&#10;  PFN_ACX_STREAM_SET_RENDER_PACKET         EvtAcxStreamSetRenderPacket;&#10;  PFN_ACX_STREAM_GET_CURRENT_PACKET        EvtAcxStreamGetCurrentPacket;&#10;  PFN_ACX_STREAM_GET_CAPTURE_PACKET        EvtAcxStreamGetCapturePacket;&#10;  PFN_ACX_STREAM_GET_PRESENTATION_POSITION EvtAcxStreamGetPresentationPosition;&#10;} ACX_RT_STREAM_CALLBACKS, *PACX_RT_STREAM_CALLBACKS;">ACX_RT_STREAM_CALLBACKS</a> rtCallbacks;
+<a href="acx_rt_stream_callbacks_init" title="VOID ACX_RT_STREAM_CALLBACKS_INIT(&#10;  PACX_RT_STREAM_CALLBACKS Callbacks&#10;);">ACX_RT_STREAM_CALLBACKS_INIT</a>(&amp;rtCallbacks);
+rtCallbacks.EvtAcxStreamFreeRtPackets               = Dsp_EvtStreamFreeRtPackets;
 
-    RETURN_NTSTATUS_IF_FAILED(<a href="acxstreaminitassignacxrtstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxRtStreamCallbacks(&#10;  PACXSTREAM_INIT          StreamInit,&#10;  PACX_RT_STREAM_CALLBACKS RtStreamCallbacks&#10;);">AcxStreamInitAssignAcxRtStreamCallbacks</a>(StreamInit, &amp;rtCallbacks));
+RETURN_NTSTATUS_IF_FAILED(<a href="acxstreaminitassignacxrtstreamcallbacks" title="NTSTATUS AcxStreamInitAssignAcxRtStreamCallbacks(&#10;  PACXSTREAM_INIT          StreamInit,&#10;  PACX_RT_STREAM_CALLBACKS RtStreamCallbacks&#10;);">AcxStreamInitAssignAcxRtStreamCallbacks</a>(StreamInit, &amp;rtCallbacks));
 
 // Later in the code need to free the packets...
-#pragma code_seg(&quot;PAGE&quot;)
+#pragma code_seg("PAGE")
 VOID
 Codec_EvtStreamFreeRtPackets(
-    _In_ ACXSTREAM Stream,
-    _In_ <a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">PACX_RTPACKET</a> Packets,
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PacketCount
-    )
+_In_ ACXSTREAM Stream,
+_In_ <a href="acx_rtpacket" title="typedef struct _ACX_RTPACKET {&#10;  ULONG                 Size;&#10;  WDF_MEMORY_DESCRIPTOR RtPacketBuffer;&#10;  ULONG                 RtPacketOffset;&#10;  ULONG                 RtPacketSize;&#10;} ACX_RTPACKET, *PACX_RTPACKET;">PACX_RTPACKET</a> Packets,
+_In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PacketCount
+)
 {
-    PCODEC_STREAM_CONTEXT ctx;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> i;
-    PVOID buffer;
+PCODEC_STREAM_CONTEXT ctx;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> i;
+PVOID buffer;
 
-    PAGED_CODE();
+PAGED_CODE();
 
-    ctx = GetCodecStreamContext(Stream);
+ctx = GetCodecStreamContext(Stream);
 
-    for (i = 0; i &lt; PacketCount; ++i)
-    {
-        if (Packets[i].RtPacketBuffer.u.MdlType.Mdl)
-        {
-            buffer = <a href="mmgetmdlvirtualaddress" title="#define MmGetMdlVirtualAddress(Mdl) \&#10;    ((PVOID) ((PCHAR) ((Mdl)-&gt;StartVa) + (Mdl)-&gt;ByteOffset))">MmGetMdlVirtualAddress</a>(Packets[i].RtPacketBuffer.u.MdlType.Mdl);
-            <a href="iofreemdl" title="VOID IoFreeMdl(&#10;  [in] PMDL Mdl&#10;);">IoFreeMdl</a>(Packets[i].RtPacketBuffer.u.MdlType.Mdl);
-            <a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a>(buffer);
-        }
-    }
+for (i = 0; i &lt; PacketCount; ++i)
+{
+if (Packets[i].RtPacketBuffer.u.MdlType.Mdl)
+{
+buffer = <a href="mmgetmdlvirtualaddress" title="#define MmGetMdlVirtualAddress(Mdl) \&#10;    ((PVOID) ((PCHAR) ((Mdl)-&gt;StartVa) + (Mdl)-&gt;ByteOffset))">MmGetMdlVirtualAddress</a>(Packets[i].RtPacketBuffer.u.MdlType.Mdl);
+<a href="iofreemdl" title="VOID IoFreeMdl(&#10;  [in] PMDL Mdl&#10;);">IoFreeMdl</a>(Packets[i].RtPacketBuffer.u.MdlType.Mdl);
+<a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a>(buffer);
+}
+}
 
-    <a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a>(Packets);
+<a href="exfreepool" title="void ExFreePool(&#10;  a&#10;);">ExFreePool</a>(Packets);
 
-    ctx-&gt;PacketsCount = 0;
-    ctx-&gt;PacketSize = 0;
-    ctx-&gt;FirstPacketOffset = 0;
+ctx-&gt;PacketsCount = 0;
+ctx-&gt;PacketSize = 0;
+ctx-&gt;FirstPacketOffset = 0;
 }
 </code></pre>
 <h3>ACX requirements</h3>
@@ -128,7 +128,9 @@ Codec_EvtStreamFreeRtPackets(
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
 <h2>See also</h2>
 <ul>
-<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/">acxstreams.h header</a></li>
+<li>
+<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxstreams/">acxstreams.h header</a>
+</li>
 </ul>
 <hr>
 <div class="ntdoc-description-links">

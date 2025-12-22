@@ -81,19 +81,25 @@
 <p>If the driver determines that the hardware is already finished processing all of the submitted DMA buffers--and that the hardware informed the graphics processing unit (GPU) scheduler about the completions--when its <em>DxgkDdiPreemptCommand</em> function is called to preempt the DMA buffers, the driver should perform the following operations instead of submitting the preempt fence that is identified by the <strong>PreemptionFenceId</strong> member of <a href="dxgkarg_preemptcommand" title="typedef struct _DXGKARG_PREEMPTCOMMAND {&#10;  [in] UINT                     PreemptionFenceId;&#10;  [in] UINT                     NodeOrdinal;&#10;  [in] UINT                     EngineOrdinal;&#10;  [in] DXGK_PREEMPTCOMMANDFLAGS Flags;&#10;} DXGKARG_PREEMPTCOMMAND;">DXGKARG_PREEMPTCOMMAND</a> to the hardware:</p>
 <ul>
 <li>
-<p>Raise IRQL to interrupt level. For example, the driver can call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkcb_synchronize_execution">DxgkCbSynchronizeExecution</a> function to synchronize with its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_interrupt_routine">DxgkDdiInterruptRoutine</a> function.</p>
+Raise IRQL to interrupt level. For example, the driver can call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkcb_synchronize_execution">DxgkCbSynchronizeExecution</a> function to synchronize with its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_interrupt_routine">DxgkDdiInterruptRoutine</a> function.
 </li>
-<li>
-<p>Inform the GPU scheduler about the preemption information. The driver can either call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkcb_notify_interrupt">DxgkCbNotifyInterrupt</a> function directly or call its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_interrupt_routine">DxgkDdiInterruptRoutine</a> function (for example, if the driver must perform other updates as well).</p>
-<p>Note that the GPU scheduler handles instances where the hardware has stopped responding because of Timeout Detection and Recovery (TDR) work.</p>
-</li>
+<li><p>Inform the GPU scheduler about the preemption information. The driver can either call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkcb_notify_interrupt">DxgkCbNotifyInterrupt</a> function directly or call its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/dispmprt/nc-dispmprt-dxgkddi_interrupt_routine">DxgkDdiInterruptRoutine</a> function (for example, if the driver must perform other updates as well).</p>
+<p>Note that the GPU scheduler handles instances where the hardware has stopped responding because of Timeout Detection and Recovery (TDR) work.</p></li>
 </ul>
 <p>If the driver returns an error code, the Microsoft DirectX graphics kernel subsystem causes a system bugcheck to occur. In a crash dump file, the error is noted by the message <strong>BugCheck 0x119</strong>, which has the following four parameters.</p>
 <ol>
-<li>0x2</li>
-<li>The <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code returned from the failed driver call</li>
-<li>A pointer to the <a href="dxgkarg_preemptcommand" title="typedef struct _DXGKARG_PREEMPTCOMMAND {&#10;  [in] UINT                     PreemptionFenceId;&#10;  [in] UINT                     NodeOrdinal;&#10;  [in] UINT                     EngineOrdinal;&#10;  [in] DXGK_PREEMPTCOMMANDFLAGS Flags;&#10;} DXGKARG_PREEMPTCOMMAND;">DXGKARG_PREEMPTCOMMAND</a> structure</li>
-<li>A pointer to an internal scheduler data structure</li>
+<li>
+0x2
+</li>
+<li>
+The <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code returned from the failed driver call
+</li>
+<li>
+A pointer to the <a href="dxgkarg_preemptcommand" title="typedef struct _DXGKARG_PREEMPTCOMMAND {&#10;  [in] UINT                     PreemptionFenceId;&#10;  [in] UINT                     NodeOrdinal;&#10;  [in] UINT                     EngineOrdinal;&#10;  [in] DXGK_PREEMPTCOMMANDFLAGS Flags;&#10;} DXGKARG_PREEMPTCOMMAND;">DXGKARG_PREEMPTCOMMAND</a> structure
+</li>
+<li>
+A pointer to an internal scheduler data structure
+</li>
 </ol>
 <p><em>DxgkDdiPreemptCommand</em> should be made nonpageable because it runs at IRQL = DISPATCH_LEVEL</p>
 <h2>See also</h2>

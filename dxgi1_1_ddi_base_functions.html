@@ -82,9 +82,15 @@
 <p>The <em>SetDisplayModeDXGI</em> function switches to a display mode or primary that the GDI desktop does not support.</p>
 <p>The Microsoft Direct3D runtime calls <em>SetDisplayModeDXGI</em> to switch to a display mode or primary that the GDI desktop does not support. The following list describes examples of such primaries:</p>
 <ul>
-<li>Primaries that are created with 10-bits-per-channel (10:10:10:2) display and render target formats (for example, D3DFMT_A2R10G10B10)</li>
-<li>Multiple-sampled primaries where the multiple-sampling is performed while scanning-out</li>
-<li>Persistent primaries that full-screen Microsoft DirectX version 10 applications use</li>
+<li>
+Primaries that are created with 10-bits-per-channel (10:10:10:2) display and render target formats (for example, D3DFMT_A2R10G10B10)
+</li>
+<li>
+Multiple-sampled primaries where the multiple-sampling is performed while scanning-out
+</li>
+<li>
+Persistent primaries that full-screen Microsoft DirectX version 10 applications use
+</li>
 </ul>
 <p>The Direct3D runtime calls the user-mode display driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3d10umddi/nc-d3d10umddi-pfnd3d10ddi_createresource">CreateResource(D3D10)</a> function to create the primary to be scanned out. However, the driver should program the hardware to scan out only when its <em>SetDisplayModeDXGI</em> function is called. Therefore, the runtime sets the <strong>hResource</strong> and <strong>SubResourceIndex</strong> members of the <a href="dxgi_ddi_arg_setdisplaymode" title="typedef struct DXGI_DDI_ARG_SETDISPLAYMODE {&#10;  [in] DXGI_DDI_HDEVICE   hDevice;&#10;  [in] DXGI_DDI_HRESOURCE hResource;&#10;  [in] UINT               SubResourceIndex;&#10;} DXGI_DDI_ARG_SETDISPLAYMODE;">DXGI_DDI_ARG_SETDISPLAYMODE</a> structure that is pointed to by the <em>pDisplayModeData</em> parameter to the primary that was created through the call to the driver's <em>CreateResourceD3D10</em> function. The driver should then translate the primary that <strong>hResource</strong> and <strong>SubResourceIndex</strong> represent to a primary allocation handle. After the driver makes this translation, the driver should pass the resulting handle in a call to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_setdisplaymodecb">pfnSetDisplayModeCb</a> function, which then initiates a call to the display miniport driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_commitvidpn">DxgkDdiCommitVidPn</a> function.</p>
 <p>The user-mode display driver can set the <strong>hPrimaryAllocation</strong> member of the <a href="d3dddicb_setdisplaymode" title="typedef struct _D3DDDICB_SETDISPLAYMODE {&#10;  [in]  D3DKMT_HANDLE hPrimaryAllocation;&#10;  [out] UINT          PrivateDriverFormatAttribute;&#10;} D3DDDICB_SETDISPLAYMODE;">D3DDDICB_SETDISPLAYMODE</a> structure in the call to <strong>pfnSetDisplayModeCb</strong> to scan out any allocation. However, the allocation must be marked as a primary (that is, the user-mode display driver must have set the <strong>Primary</strong> bit-field flag in the <strong>Flags</strong> member of the <a href="d3dddi_allocationinfo" title="typedef struct _D3DDDI_ALLOCATIONINFO {&#10;  D3DKMT_HANDLE                  hAllocation;&#10;  const VOID                     *pSystemMem;&#10;  VOID                           *pPrivateDriverData;&#10;  UINT                           PrivateDriverDataSize;&#10;  D3DDDI_VIDEO_PRESENT_SOURCE_ID VidPnSourceId;&#10;  union {&#10;    struct {&#10;      UINT Primary : 1;&#10;      UINT Stereo : 1;&#10;#if ...&#10;      UINT Reserved : 30;&#10;#else&#10;      UINT Reserved : 31;&#10;#endif&#10;    };&#10;    UINT Value;&#10;  } Flags;&#10;} D3DDDI_ALLOCATIONINFO;">D3DDDI_ALLOCATIONINFO</a> structure in a call to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dumddi/nc-d3dumddi-pfnd3dddi_allocatecb">pfnAllocateCb</a> function to create the allocation).</p>
@@ -102,8 +108,12 @@
 <p>The <em>ResolveSharedResourceDXGI</em> function informs a user-mode display driver that the ownership of a shared surface changed or that a surface is being used for GDI interoperation.</p>
 <p>The Direct3D runtime calls <em>ResolveSharedResourceDXGI</em> when an application calls one of the following functions:</p>
 <ul>
-<li><strong>IDXGIKeyedMutex::ReleaseSynch</strong> on a synchronized shared surface</li>
-<li><strong>IDXGISurface1::GetDC</strong> for a GDI interoperable surface</li>
+<li>
+<strong>IDXGIKeyedMutex::ReleaseSynch</strong> on a synchronized shared surface
+</li>
+<li>
+<strong>IDXGISurface1::GetDC</strong> for a GDI interoperable surface
+</li>
 </ul>
 <p>The runtime calls the driver's <em>ResolveSharedResourceDXGI</em> function every time a shared surface owner changes or when a surface is used for GDI interoperation.</p>
 <p>The driver implements <em>ResolveSharedResourceDXGI</em> to appropriately manage resources for multiple GPU scenarios. Each resource might be divided across memory for multiple GPUs to render on. The driver can implement <em>ResolveSharedResourceDXGI</em> to remerge each resource so that the new resource owner has the merged resource. The driver must flush any partially built command buffers that might modify the resource.</p>

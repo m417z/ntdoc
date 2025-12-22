@@ -92,42 +92,42 @@ BOOLEAN sendStatus;
 // Assign the <a href="io_stack_location" title="typedef struct _IO_STACK_LOCATION {&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  UCHAR                  Flags;&#10;  UCHAR                  Control;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      PIO_SECURITY_CONTEXT          SecurityContext;&#10;      ULONG                         Options;&#10;      USHORT POINTER_ALIGNMENT      Reserved;&#10;      USHORT                        ShareAccess;&#10;      PNAMED_PIPE_CREATE_PARAMETERS Parameters;&#10;    } CreatePipe;&#10;...">IO_STACK_LOCATION</a> structure to the request.
 //
 WdfRequestWdmFormatUsingStackLocation(
-                                      request,
-                                      &amp;ioStackLocation
-                                      );
+request,
+&amp;ioStackLocation
+);
 //
 // Assign a CompletionRoutine callback function.
 //
 <a href="wdfrequestsetcompletionroutine" title="VOID WdfRequestSetCompletionRoutine(&#10;  [in]           WDFREQUEST                         Request,&#10;  [in, optional] PFN_WDF_REQUEST_COMPLETION_ROUTINE CompletionRoutine,&#10;  [in, optional] __drv_aliasesMem WDFCONTEXT        CompletionContext&#10;);">WdfRequestSetCompletionRoutine</a>(
-                               Request,
-                               RequestTimeoutComplete,
-                               NULL
-                               );
+Request,
+RequestTimeoutComplete,
+NULL
+);
 //
 // Send the request.
 //
 sendStatus = <a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>(
-                            Request,
-                            target,
-                            NULL
-                            );
+Request,
+target,
+NULL
+);
 </code></pre>
 <p>The following code example illustrates how to send a PnP <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-query-capabilities">IRP_MN_QUERY_CAPABILITIES</a> <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> to an IO target.</p>
 <pre><code>target = <a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a>(Device);
 status = <a href="wdfrequestcreate" title="NTSTATUS WdfRequestCreate(&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES RequestAttributes,&#10;  [in, optional] WDFIOTARGET            IoTarget,&#10;  [out]          WDFREQUEST             *Request&#10;);">WdfRequestCreate</a>(WDF_NO_OBJECT_ATTRIBUTES,
-                          target,
-                          &amp;request);
+target,
+&amp;request);
 
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-    // Log failure and leave
+// Log failure and leave
 }
 
 //
 // PnP IRPs must be initialized with STATUS_NOT_SUPPORTED
 //
 <a href="wdf_request_reuse_params_init" title="VOID WDF_REQUEST_REUSE_PARAMS_INIT(&#10;  [out] PWDF_REQUEST_REUSE_PARAMS Params,&#10;  [in]  ULONG                     Flags,&#10;  [in]  NTSTATUS                  Status&#10;);">WDF_REQUEST_REUSE_PARAMS_INIT</a>(&amp;reuse,
-                              WDF_REQUEST_REUSE_NO_FLAGS,
-                              STATUS_NOT_SUPPORTED);
+WDF_REQUEST_REUSE_NO_FLAGS,
+STATUS_NOT_SUPPORTED);
 
 <a href="wdfrequestreuse" title="NTSTATUS WdfRequestReuse(&#10;  [in] WDFREQUEST                Request,&#10;  [in] PWDF_REQUEST_REUSE_PARAMS ReuseParams&#10;);">WdfRequestReuse</a>(request, &amp;reuse);
 
@@ -147,21 +147,21 @@ stack.Parameters.DeviceCapabilities.Capabilities = Capabilities;
 WdfRequestWdmFormatUsingStackLocation(request, &amp;stack);
 
 <a href="wdf_request_send_options_init" title="VOID WDF_REQUEST_SEND_OPTIONS_INIT(&#10;  [out] PWDF_REQUEST_SEND_OPTIONS Options,&#10;  [in]  ULONG                     Flags&#10;);">WDF_REQUEST_SEND_OPTIONS_INIT</a>(&amp;options,
-                              WDF_REQUEST_SEND_OPTION_SYNCHRONOUS);
+WDF_REQUEST_SEND_OPTION_SYNCHRONOUS);
 
 if (<a href="wdfrequestsend" title="BOOLEAN WdfRequestSend(&#10;  [in] WDFREQUEST                Request,&#10;  [in] WDFIOTARGET               Target,&#10;       PWDF_REQUEST_SEND_OPTIONS Options&#10;);">WdfRequestSend</a>(request, target, &amp;options) == FALSE) {
-    // Log failure
+// Log failure
 }
 
 status = <a href="wdfrequestgetstatus" title="NTSTATUS WdfRequestGetStatus(&#10;  [in] WDFREQUEST Request&#10;);">WdfRequestGetStatus</a>(request);
 
 if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
-    // Log failure
+// Log failure
 }
 
 // Remember to delete the WDFREQUEST after creating it
 if (request != NULL) {
-    <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(request);
+<a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(request);
 }
 </code></pre>
 <h2>See also</h2>

@@ -112,8 +112,12 @@
 <h2>Remarks</h2>
 <p>Counterset providers can supply information to the consumer through two different systems:</p>
 <ul>
-<li>The provider can supply a <code><a href="pcw_callback" title="PCW_CALLBACK PcwCallback;&#10;&#10;NTSTATUS PcwCallback(&#10;  [in]           PCW_CALLBACK_TYPE Type,&#10;  [in]           PPCW_CALLBACK_INFORMATION Info,&#10;  [in, optional] PVOID Context&#10;)&#10;{...}">PCW_CALLBACK</a></code> function that will be invoked by the Performance Counter Library as needed to collect data. For more information on this system, refer to the documentation for <a href="pcw_callback" title="PCW_CALLBACK PcwCallback;&#10;&#10;NTSTATUS PcwCallback(&#10;  [in]           PCW_CALLBACK_TYPE Type,&#10;  [in]           PPCW_CALLBACK_INFORMATION Info,&#10;  [in, optional] PVOID Context&#10;)&#10;{...}">PCW_CALLBACK</a>.</li>
-<li>The provider can use <code>PcwCreateInstance</code> and <code><a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a></code> to maintain a list of available instances and the corresponding counter data. This system is simple to implement but limited in flexibility.</li>
+<li>
+The provider can supply a <code><a href="pcw_callback" title="PCW_CALLBACK PcwCallback;&#10;&#10;NTSTATUS PcwCallback(&#10;  [in]           PCW_CALLBACK_TYPE Type,&#10;  [in]           PPCW_CALLBACK_INFORMATION Info,&#10;  [in, optional] PVOID Context&#10;)&#10;{...}">PCW_CALLBACK</a></code> function that will be invoked by the Performance Counter Library as needed to collect data. For more information on this system, refer to the documentation for <a href="pcw_callback" title="PCW_CALLBACK PcwCallback;&#10;&#10;NTSTATUS PcwCallback(&#10;  [in]           PCW_CALLBACK_TYPE Type,&#10;  [in]           PPCW_CALLBACK_INFORMATION Info,&#10;  [in, optional] PVOID Context&#10;)&#10;{...}">PCW_CALLBACK</a>.
+</li>
+<li>
+The provider can use <code>PcwCreateInstance</code> and <code><a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a></code> to maintain a list of available instances and the corresponding counter data. This system is simple to implement but limited in flexibility.
+</li>
 </ul>
 <p>Before the provider uses this function, the provider must call the <code><a href="pcwregister" title="NTSTATUS PcwRegister(&#10;  [out] PPCW_REGISTRATION             *Registration,&#10;  [in]  PPCW_REGISTRATION_INFORMATION Info&#10;);">PcwRegister</a></code> function to create a registration.</p>
 <p>When a new instance arrives (e.g. when a device is plugged in), the provider should allocate and initialize a data block for the instance, call <code>PcwCreateInstance</code> with the name and data block for the instance, and then keep the values in the data block updated with counter values for the instance. When the instance becomes invalid (e.g. when a device is unplugged), the provider should call <code><a href="pcwcloseinstance" title="VOID PcwCloseInstance(&#10;  [in] PPCW_INSTANCE Instance&#10;);">PcwCloseInstance</a></code> and then delete the data block.</p>
@@ -124,23 +128,23 @@
 <p>Most developers do not need to call <code>PcwCreateInstance</code> directly. Instead, they will compile a manifest with the CTRPP tool and use the CreateXxx function from the CTRPP-generated header. The generated function will look like this:</p>
 <pre><code><a href="extern_c" title="#define EXTERN_C extern &quot;C&quot;">EXTERN_C</a> __inline <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 CreateMyCounterset(
-    __deref_out PPCW_INSTANCE *Instance,
-    __in <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a> Name,
-    __in const MY_COUNTER_DATA *MyCounterData
-    )
+__deref_out PPCW_INSTANCE *Instance,
+__in <a href="pcunicode_string" title="typedef const UNICODE_STRING *PCUNICODE_STRING;">PCUNICODE_STRING</a> Name,
+__in const MY_COUNTER_DATA *MyCounterData
+)
 {
-    <a href="pcw_data" title="typedef struct _PCW_DATA {&#10;  const VOID *Data;&#10;  ULONG      Size;&#10;} PCW_DATA, *PPCW_DATA;">PCW_DATA</a> Data[1];
+<a href="pcw_data" title="typedef struct _PCW_DATA {&#10;  const VOID *Data;&#10;  ULONG      Size;&#10;} PCW_DATA, *PPCW_DATA;">PCW_DATA</a> Data[1];
 
-    PAGED_CODE();
+PAGED_CODE();
 
-    Data[0].Data = MyCounterData;
-    Data[0].Size = sizeof(MY_COUNTER_DATA);
+Data[0].Data = MyCounterData;
+Data[0].Size = sizeof(MY_COUNTER_DATA);
 
-    return PcwCreateInstance(Instance,
-                             MyCounterset,
-                             Name,
-                             1,
-                             Data);
+return PcwCreateInstance(Instance,
+MyCounterset,
+Name,
+1,
+Data);
 }
 </code></pre>
 <p>The CTRPP-generated Create function will be named <em>Prefix</em>Create<em>Counterset</em>. <em>Prefix</em> is usually blank, but may be present if the <code>-prefix</code> parameter was used on the CTRPP command-line. <em>Counterset</em> is the name of the counterset, as specified in the manifest. The function will have Data parameters based on the structures defined in the manifest. The function will wrap the user-provided data block(s) into an array of <code><a href="pcw_data" title="typedef struct _PCW_DATA {&#10;  const VOID *Data;&#10;  ULONG      Size;&#10;} PCW_DATA, *PPCW_DATA;">PCW_DATA</a></code> structures and then call <code>PcwCreateInstance</code>. Note that the function references a <em>Counterset</em> variable (<code>MyCounterset</code> in the example), which is a global variable that holds the counterset registration handle initialized by the CTRPP-generated RegisterXxx function.</p>

@@ -116,7 +116,8 @@
 <p>For related information, see the Remarks section of <a href="wdfusbtargetdevicecreateurb" title="NTSTATUS WdfUsbTargetDeviceCreateUrb(&#10;  [in]            WDFUSBDEVICE           UsbDevice,&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]           WDFMEMORY              *UrbMemory,&#10;  [out, optional] PURB                   *Urb&#10;);">WdfUsbTargetDeviceCreateUrb</a>.</p>
 <h4>Examples</h4>
 <p>The following code example is based on the PerformIsochTransfer routine in the Isorwr sample driver. The example calls <strong>WdfUsbTargetDeviceCreateIsochUrb</strong> to allocate an isochronous USB request block. The example determines the number of bytes required to hold the isochronous transfer request, and then manually configures the <a href="urb" title="typedef struct _URB {&#10;  union {&#10;#if ...&#10;    _URB_HEADER                                     UrbHeader;&#10;#else&#10;    struct _URB_HEADER                              UrbHeader;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_INTERFACE                           UrbSelectInterface;&#10;#else&#10;    struct _URB_SELECT_INTERFACE                    UrbSelectInterface;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_CONFIGURATION                       UrbSelectConfiguration;&#10;#else&#10;    struct _URB_SELECT_CONFIGURATION                UrbSelectConfiguration;&#10;#endif&#10;#if ...&#10;    _URB_PIPE_REQUEST                               UrbPipeRequest;&#10;#else&#10;...">URB</a> header and the isochronous packets in the <a href="urb" title="typedef struct _URB {&#10;  union {&#10;#if ...&#10;    _URB_HEADER                                     UrbHeader;&#10;#else&#10;    struct _URB_HEADER                              UrbHeader;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_INTERFACE                           UrbSelectInterface;&#10;#else&#10;    struct _URB_SELECT_INTERFACE                    UrbSelectInterface;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_CONFIGURATION                       UrbSelectConfiguration;&#10;#else&#10;    struct _URB_SELECT_CONFIGURATION                UrbSelectConfiguration;&#10;#endif&#10;#if ...&#10;    _URB_PIPE_REQUEST                               UrbPipeRequest;&#10;#else&#10;...">URB</a>. At this point, the driver can call <a href="wdfusbtargetpipeformatrequestforurb" title="NTSTATUS WdfUsbTargetPipeFormatRequestForUrb(&#10;                 WDFUSBPIPE        PIPE,&#10;  [in]           WDFREQUEST        Request,&#10;  [in]           WDFMEMORY         UrbMemory,&#10;  [in, optional] PWDFMEMORY_OFFSET UrbMemoryOffset&#10;);">WdfUsbTargetPipeFormatRequestForUrb</a>, as shown in the example in <a href="wdfusbtargetdevicecreateurb" title="NTSTATUS WdfUsbTargetDeviceCreateUrb(&#10;  [in]            WDFUSBDEVICE           UsbDevice,&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]           WDFMEMORY              *UrbMemory,&#10;  [out, optional] PURB                   *Urb&#10;);">WdfUsbTargetDeviceCreateUrb</a>.</p>
-<pre><code>USBD_PIPE_HANDLE usbdPipeHandle;
+<pre><code>
+USBD_PIPE_HANDLE usbdPipeHandle;
 <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> numPackets = UserBufferLength/TransferSizePerFrame;
 <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> urbSize;
 <a href="urb" title="typedef struct _URB {&#10;  union {&#10;#if ...&#10;    _URB_HEADER                                     UrbHeader;&#10;#else&#10;    struct _URB_HEADER                              UrbHeader;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_INTERFACE                           UrbSelectInterface;&#10;#else&#10;    struct _URB_SELECT_INTERFACE                    UrbSelectInterface;&#10;#endif&#10;#if ...&#10;    _URB_SELECT_CONFIGURATION                       UrbSelectConfiguration;&#10;#else&#10;    struct _URB_SELECT_CONFIGURATION                UrbSelectConfiguration;&#10;#endif&#10;#if ...&#10;    _URB_PIPE_REQUEST                               UrbPipeRequest;&#10;#else&#10;...">PURB</a> urb;
@@ -126,13 +127,13 @@ WDFMEMORY memory;
 objectAttribs.ParentObject = UsbDevice;
 
 status = WdfUsbTargetDeviceCreateIsochUrb(
-                                     pDevContext-&gt;WdfUsbTargetDevice,
-                                     &amp;objectAttribs,
-                                     0,
-                                     numPackets,
-                                     &amp;memory,
-                                     NULL
-                                     );
+pDevContext-&gt;WdfUsbTargetDevice,
+&amp;objectAttribs,
+0,
+numPackets,
+&amp;memory,
+NULL
+);
 
 urb = <a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a>(urbMemory, &amp;urbSize);
 urbSize = <a href="get_iso_urb_size" title="#define  GET_ISO_URB_SIZE(n) (sizeof(struct _URB_ISOCH_TRANSFER)+\&#10;        sizeof(USBD_ISO_PACKET_DESCRIPTOR)*n)">GET_ISO_URB_SIZE</a>(numPackets);
@@ -144,8 +145,8 @@ urb-&gt;UrbIsochronousTransfer.PipeHandle = usbdPipeHandle;
 
 for (packetId = 0; packetId &lt; numberOfPackets; packetId++) {
 
-     Urb-&gt; UrbIsochronousTransfer.IsoPacket[packetId].Offset = xxx;
-     Urb-&gt; UrbIsochronousTransfer.IsoPacket[packetId].YYY = yyy;
+Urb-&gt; UrbIsochronousTransfer.IsoPacket[packetId].Offset = xxx;
+Urb-&gt; UrbIsochronousTransfer.IsoPacket[packetId].YYY = yyy;
 }
 
 </code></pre>
