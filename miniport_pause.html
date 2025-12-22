@@ -67,34 +67,23 @@ NDIS_STATUS MiniportPause(
 <h1>Windows Driver Kit DDI reference (nc-ndis-miniport_pause)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="miniport_pause-callback-function">MINIPORT_PAUSE callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>MINIPORT_PAUSE callback function</h1>
+<h2>Description</h2>
 <p>NDIS calls a miniport driver's
 <em>MiniportPause</em> function to stop the flow of network data through a specified miniport adapter.</p>
-
 <p><strong>Note</strong> You must declare the function by using the <strong>MINIPORT_PAUSE</strong> type. For more
 information, see the following Examples section.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="miniportadaptercontext-in"><code>MiniportAdapterContext</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>MiniportAdapterContext</code> [in]</h3>
 <p>A handle to a context area that the miniport driver allocated in its
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a> function.
 The miniport driver uses this context area to maintain state information for a miniport adapter.</p>
-
-<h3 id="pauseparameters-in"><code>PauseParameters</code> [in]</h3>
-
+<h3><code>PauseParameters</code> [in]</h3>
 <p>A pointer to an
 <a href="ndis_miniport_pause_parameters" title="typedef struct _NDIS_MINIPORT_PAUSE_PARAMETERS {&#10;  NDIS_OBJECT_HEADER Header;&#10;  ULONG              Flags;&#10;  ULONG              PauseReason;&#10;} NDIS_MINIPORT_PAUSE_PARAMETERS, *PNDIS_MINIPORT_PAUSE_PARAMETERS;">NDIS_MINIPORT_PAUSE_PARAMETERS</a> structure that defines the pause parameters for the miniport
 adapter.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><em>MiniportPause</em> returns one of the following status values:</p>
-
 <table>
 <thead>
 <tr>
@@ -113,24 +102,18 @@ adapter.</p>
 </tr>
 </tbody>
 </table>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>A driver specifies the
 <em>MiniportPause</em> entry point when it calls the
 <a href="ndismregisterminiportdriver" title="NDIS_STATUS NdisMRegisterMiniportDriver(&#10;  [in]           PDRIVER_OBJECT                        DriverObject,&#10;  [in]           PUNICODE_STRING                       RegistryPath,&#10;  [in, optional] NDIS_HANDLE                           MiniportDriverContext,&#10;  [in]           PNDIS_MINIPORT_DRIVER_CHARACTERISTICS MiniportDriverCharacteristics,&#10;  [out]          PNDIS_HANDLE                          NdisMiniportDriverHandle&#10;);">NdisMRegisterMiniportDriver</a> function.</p>
-
 <p>NDIS pauses a miniport adapter to stop data flow that could interfere with PnP operations such as
 adding or removing a filter driver, or binding or unbinding a protocol driver.</p>
-
 <p>NDIS calls a miniport driver's
 <em>MiniportPause</em> function to initiate a pause request for the miniport adapter specified at
 <em>MiniportAdapterContext</em>. The miniport adapter remains in the
 <em>Pausing</em> state until the pause operation is complete.</p>
-
 <p>For a miniport adapter in the
 <em>Pausing</em> state, the miniport driver:</p>
-
 <ul>
 <li>Waits for all calls to the
 <a href="ndismindicatereceivenetbufferlists" title="VOID NdisMIndicateReceiveNetBufferLists(&#10;  [in] NDIS_HANDLE      MiniportAdapterHandle,&#10;       PNET_BUFFER_LIST NetBufferList,&#10;  [in] NDIS_PORT_NUMBER PortNumber,&#10;  [in] ULONG            NumberOfNetBufferLists,&#10;  [in] ULONG            ReceiveFlags&#10;);">NdisMIndicateReceiveNetBufferLists</a> function to return.</li>
@@ -152,12 +135,10 @@ NDIS_STATUS_PAUSED.</li>
 from handling requests or providing status indications.</li>
 <li>Should not free the resources the driver allocated during initialization.</li>
 </ul>
-
 <p>NDIS does not initiate other PnP operations for the miniport adapter, such as halt, initialize, power
 change, pause, or a restart requests, while the miniport adapter is in the
 <em>Pausing</em> state. NDIS can initiate these PnP operations after a miniport adapter is in the
 <em>Paused</em> state.</p>
-
 <p>After a miniport driver completes all outstanding send requests and NDIS returns all received network
 data structures (from outstanding receive indications), the driver must complete the pause operation. If
 the driver returns NDIS_STATUS_SUCCESS from
@@ -167,10 +148,8 @@ miniport adapter can remain in the
 <a href="ndismpausecomplete" title="VOID NdisMPauseComplete(&#10;  [in] NDIS_HANDLE MiniportAdapterHandle&#10;);">NdisMPauseComplete</a> function. After the
 pause operation is complete, the miniport adapter is in the
 <em>Paused</em> state.</p>
-
 <p>For a miniport adapter in the
 <em>Paused</em> state, the miniport driver:</p>
-
 <ul>
 <li>Must reject all send requests made to
 <em>MiniportSendNetBufferLists</em> immediately by calling
@@ -192,28 +171,19 @@ but should not indicate received network data.</li>
 <li>Can handle requests to reset the hardware in the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_reset">MiniportResetEx</a> function.</li>
 </ul>
-
 <p>Miniport drivers cannot fail a pause request. Therefore, if a miniport driver requires any resources
 to handle a pause request, it should preallocate the resources during initialization.</p>
-
 <p>NDIS calls the
 <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_restart">MiniportRestart</a> function to initiate a
 restart request for a miniport adapter that is paused.</p>
-
 <p>NDIS calls
 <em>MiniportPause</em> at IRQL = PASSIVE_LEVEL.</p>
-
-<h3 id="examples">Examples</h3>
-
+<h3>Examples</h3>
 <p>To define a <em>MiniportPause</em> function, you must first provide a function declaration that identifies the type of function you're defining. Windows provides a set of function types for drivers. Declaring a function using the function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-
 <p>For example, to define a <em>MiniportPause</em> function that is named "MyPause", use the <strong>MINIPORT_PAUSE</strong> type as shown in this code example:</p>
-
 <pre><code>MINIPORT_PAUSE MyPause;
 </code></pre>
-
 <p>Then, implement your function as follows:</p>
-
 <pre><code>_Use_decl_annotations_
 NDIS_STATUS
  MyPause(
@@ -222,43 +192,24 @@ NDIS_STATUS
     )
   {...}
 </code></pre>
-
 <p>The <strong>MINIPORT_PAUSE</strong> function type is defined in the Ndis.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>MINIPORT_PAUSE</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-ndis-drivers">Declaring Functions by Using Function Role Types for NDIS Drivers</a>.</p>
-
 <p>For information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_device_pnp_event_notify">MiniportDevicePnPEventNotify</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_initialize">MiniportInitializeEx</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_isr">MiniportInterrupt</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_interrupt_dpc">MiniportInterruptDPC</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_reset">MiniportResetEx</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_restart">MiniportRestart</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_return_net_buffer_lists">MiniportReturnNetBufferLists</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-miniport_send_net_buffer_lists">MiniportSendNetBufferLists</a></p>
-
 <p><a href="ndis_miniport_pause_parameters" title="typedef struct _NDIS_MINIPORT_PAUSE_PARAMETERS {&#10;  NDIS_OBJECT_HEADER Header;&#10;  ULONG              Flags;&#10;  ULONG              PauseReason;&#10;} NDIS_MINIPORT_PAUSE_PARAMETERS, *PNDIS_MINIPORT_PAUSE_PARAMETERS;">NDIS_MINIPORT_PAUSE_PARAMETERS</a></p>
-
 <p><a href="net_buffer_list" title="typedef struct _NET_BUFFER_LIST {&#10;  union {&#10;    struct {&#10;      NET_BUFFER_LIST *Next;&#10;      NET_BUFFER      *FirstNetBuffer;&#10;    };&#10;    SLIST_HEADER           Link;&#10;    NET_BUFFER_LIST_HEADER NetBufferListHeader;&#10;  };&#10;  NET_BUFFER_LIST_CONTEXT *Context;&#10;  NET_BUFFER_LIST         *ParentNetBufferList;&#10;  NDIS_HANDLE             NdisPoolHandle;&#10;  PVOID                   NdisReserved[2];&#10;  PVOID                   ProtocolReserved[4];&#10;  PVOID                   MiniportReserved[2];&#10;  PVOID                   Scratch;&#10;  NDIS_HANDLE             SourceHandle;&#10;  ULONG                   NblFlags;&#10;  LONG                    ChildRefCount;&#10;  ULONG                   Flags;&#10;...">NET_BUFFER_LIST</a></p>
-
 <p><a href="ndismindicatereceivenetbufferlists" title="VOID NdisMIndicateReceiveNetBufferLists(&#10;  [in] NDIS_HANDLE      MiniportAdapterHandle,&#10;       PNET_BUFFER_LIST NetBufferList,&#10;  [in] NDIS_PORT_NUMBER PortNumber,&#10;  [in] ULONG            NumberOfNetBufferLists,&#10;  [in] ULONG            ReceiveFlags&#10;);">NdisMIndicateReceiveNetBufferLists</a></p>
-
 <p><a href="ndismindicatestatusex" title="VOID NdisMIndicateStatusEx(&#10;  [in] NDIS_HANDLE             MiniportAdapterHandle,&#10;  [in] PNDIS_STATUS_INDICATION StatusIndication&#10;);">NdisMIndicateStatusEx</a></p>
-
 <p><a href="ndismpausecomplete" title="VOID NdisMPauseComplete(&#10;  [in] NDIS_HANDLE MiniportAdapterHandle&#10;);">NdisMPauseComplete</a></p>
-
 <p><a href="ndismregisterminiportdriver" title="NDIS_STATUS NdisMRegisterMiniportDriver(&#10;  [in]           PDRIVER_OBJECT                        DriverObject,&#10;  [in]           PUNICODE_STRING                       RegistryPath,&#10;  [in, optional] NDIS_HANDLE                           MiniportDriverContext,&#10;  [in]           PNDIS_MINIPORT_DRIVER_CHARACTERISTICS MiniportDriverCharacteristics,&#10;  [out]          PNDIS_HANDLE                          NdisMiniportDriverHandle&#10;);">NdisMRegisterMiniportDriver</a></p>
-
 <p><a href="ndismsendnetbufferlistscomplete" title="VOID NdisMSendNetBufferListsComplete(&#10;  [in] NDIS_HANDLE      MiniportAdapterHandle,&#10;       PNET_BUFFER_LIST NetBufferList,&#10;  [in] ULONG            SendCompleteFlags&#10;);">NdisMSendNetBufferListsComplete</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ndis/nc-ndis-ndis_timer_function">NetTimerCallback</a></p>
 <hr>
 <div class="ntdoc-description-links">

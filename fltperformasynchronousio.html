@@ -65,30 +65,18 @@
 <h1>Windows Driver Kit DDI reference (nf-fltkernel-fltperformasynchronousio)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="fltperformasynchronousio-function">FltPerformAsynchronousIo function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>FltPerformAsynchronousIo function</h1>
+<h2>Description</h2>
 <p>A minifilter driver calls <strong>FltPerformAsynchronousIo</strong> to initiate an asynchronous I/O operation.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="callbackdata-in-out"><code>CallbackData</code> [in, out]</h3>
-
+<h2>Parameters</h2>
+<h3><code>CallbackData</code> [in, out]</h3>
 <p>Pointer to a callback data (<a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a>) structure allocated by a previous call to <a href="fltallocatecallbackdata" title="NTSTATUS FLTAPI FltAllocateCallbackData(&#10;  [in]           PFLT_INSTANCE      Instance,&#10;  [in, optional] PFILE_OBJECT       FileObject,&#10;  [out]          PFLT_CALLBACK_DATA *RetNewCallbackData&#10;);">FltAllocateCallbackData</a>. This parameter is required and cannot be <strong>NULL</strong>. The caller is responsible for freeing this structure when it is no longer needed by calling <a href="fltfreecallbackdata" title="VOID FLTAPI FltFreeCallbackData(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltFreeCallbackData</a>.</p>
-
-<h3 id="callbackroutine-in"><code>CallbackRoutine</code> [in]</h3>
-
+<h3><code>CallbackRoutine</code> [in]</h3>
 <p>Pointer to a <a href="pflt_completed_async_io_callback" title="PFLT_COMPLETED_ASYNC_IO_CALLBACK PfltCompletedAsyncIoCallback;&#10;&#10;VOID PfltCompletedAsyncIoCallback(&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] PFLT_CONTEXT Context&#10;)&#10;{...}">PFLT_COMPLETED_ASYNC_IO_CALLBACK</a>-typed callback routine to be called when the I/O operation is completed. Note: The Filter Manager calls this routine after it calls the postoperation callback (<a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a>) routines of any minifilter drivers whose instances are attached below the initiating instance (specified in the <em>Instance</em> parameter to <a href="fltallocatecallbackdata" title="NTSTATUS FLTAPI FltAllocateCallbackData(&#10;  [in]           PFLT_INSTANCE      Instance,&#10;  [in, optional] PFILE_OBJECT       FileObject,&#10;  [out]          PFLT_CALLBACK_DATA *RetNewCallbackData&#10;);">FltAllocateCallbackData</a>). This parameter is required and cannot be <strong>NULL</strong>. The Filter Manager always calls this routine, even when <strong>FltPerformAsynchronousIo</strong> fails.</p>
-
-<h3 id="callbackcontext-in"><code>CallbackContext</code> [in]</h3>
-
+<h3><code>CallbackContext</code> [in]</h3>
 <p>Context pointer to be passed to the <em>CallbackRoutine</em> This parameter is optional and can be <strong>NULL</strong>.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>FltPerformAsynchronousIo</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> to indicate that the I/O operation was completed by the file system, and the callback routine that <em>CallbackRoutine</em> points to has been called. Otherwise, it returns an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value such as one of the following:</p>
-
 <table>
 <thead>
 <tr>
@@ -111,53 +99,33 @@
 </tr>
 </tbody>
 </table>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>A minifilter driver calls <strong>FltPerformAsynchronousIo</strong> to initiate an asynchronous I/O operation after calling <a href="fltallocatecallbackdata" title="NTSTATUS FLTAPI FltAllocateCallbackData(&#10;  [in]           PFLT_INSTANCE      Instance,&#10;  [in, optional] PFILE_OBJECT       FileObject,&#10;  [out]          PFLT_CALLBACK_DATA *RetNewCallbackData&#10;);">FltAllocateCallbackData</a> to allocate a callback data structure for the operation.</p>
-
 <p><strong>FltPerformAsynchronousIo</strong> sends the I/O operation only to the minifilter driver instances attached below the initiating instance (specified in the <em>Instance</em> parameter to <a href="fltallocatecallbackdata" title="NTSTATUS FLTAPI FltAllocateCallbackData(&#10;  [in]           PFLT_INSTANCE      Instance,&#10;  [in, optional] PFILE_OBJECT       FileObject,&#10;  [out]          PFLT_CALLBACK_DATA *RetNewCallbackData&#10;);">FltAllocateCallbackData</a>), and the file system. Minifilter drivers attached above the specified instance do not receive the I/O operation.</p>
-
 <p>Minifilter drivers can only initiate <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>-based I/O operations. They cannot initiate fast I/O or file system filter (FSFilter) callback operations.</p>
-
 <p>Minifilter drivers should use <strong>FltPerformAsynchronousIo</strong> only for asynchronous I/O operations for which routines such as the following cannot be used:</p>
-
 <ul>
 <li><p><a href="fltreadfile" title="NTSTATUS FLTAPI FltReadFile(&#10;  [in]            PFLT_INSTANCE                    InitiatingInstance,&#10;  [in]            PFILE_OBJECT                     FileObject,&#10;  [in, optional]  PLARGE_INTEGER                   ByteOffset,&#10;  [in]            ULONG                            Length,&#10;  [out]           PVOID                            Buffer,&#10;  [in]            FLT_IO_OPERATION_FLAGS           Flags,&#10;  [out, optional] PULONG                           BytesRead,&#10;  [in, optional]  PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in, optional]  PVOID                            CallbackContext&#10;);">FltReadFile</a></p></li>
 <li><p><a href="fltwritefile" title="NTSTATUS FLTAPI FltWriteFile(&#10;  [in]            PFLT_INSTANCE                    InitiatingInstance,&#10;  [in]            PFILE_OBJECT                     FileObject,&#10;  [in, optional]  PLARGE_INTEGER                   ByteOffset,&#10;  [in]            ULONG                            Length,&#10;  [in]            PVOID                            Buffer,&#10;  [in]            FLT_IO_OPERATION_FLAGS           Flags,&#10;  [out, optional] PULONG                           BytesWritten,&#10;  [in, optional]  PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in, optional]  PVOID                            CallbackContext&#10;);">FltWriteFile</a></p></li>
 </ul>
-
 <p><a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a> requests cannot be performed asynchronously.</p>
-
 <p>The callback data (<a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a>) structure can be freed or reused at any time after the callback routine that <em>CallbackRoutine</em> points to has been called. The caller can free the callback data structure by calling <a href="fltfreecallbackdata" title="VOID FLTAPI FltFreeCallbackData(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltFreeCallbackData</a> or prepare it for reuse by calling <a href="fltreusecallbackdata" title="VOID FLTAPI FltReuseCallbackData(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltReuseCallbackData</a>.</p>
-
 <blockquote>
   <p>[!NOTE]
   <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> and STATUS_FLT_IO_COMPLETE indicate that the I/O operation was completed, but do not indicate the final status of the I/O operation. To determine the actual operation status returned by the underlying minifilter drivers, filter drivers, and file system, the <em>CallbackRoutine</em> should examine the <strong>IoStatus</strong> member of the callback data structure received in the <em>CallbackRoutine</em>'s <em>CallbackContext</em> parameter.</p>
   
   <p>Because Filter Manager always calls the callback routine that <em>CallbackRoutine</em> points to, even when <strong>FltPerformAsynchronousIo</strong> fails, the minifilter driver can perform the freeing or reusing operations directly in the callback routine.</p>
 </blockquote>
-
 <p>The caller of <strong>FltPerformAsynchronousIo</strong> can be running at IRQL &lt;= APC_LEVEL if the <a href="irp_paging_io" title="#define IRP_PAGING_IO 0x00000002">IRP_PAGING_IO</a> flag is set in the <strong>IrpFlags</strong> member of the <a href="flt_io_parameter_block" title="typedef struct _FLT_IO_PARAMETER_BLOCK {&#10;  ULONG          IrpFlags;&#10;  UCHAR          MajorFunction;&#10;  UCHAR          MinorFunction;&#10;  UCHAR          OperationFlags;&#10;  UCHAR          Reserved;&#10;  PFILE_OBJECT   TargetFileObject;&#10;  PFLT_INSTANCE  TargetInstance;&#10;  FLT_PARAMETERS Parameters;&#10;} FLT_IO_PARAMETER_BLOCK, *PFLT_IO_PARAMETER_BLOCK;">FLT_IO_PARAMETER_BLOCK</a> structure for the operation. (This flag is only valid for <a href="irp_mj_read" title="#define IRP_MJ_READ 0x03">IRP_MJ_READ</a>, <a href="irp_mj_write" title="#define IRP_MJ_WRITE 0x04">IRP_MJ_WRITE</a>, <a href="irp_mj_query_information" title="#define IRP_MJ_QUERY_INFORMATION 0x05">IRP_MJ_QUERY_INFORMATION</a>, and <a href="irp_mj_set_information" title="#define IRP_MJ_SET_INFORMATION 0x06">IRP_MJ_SET_INFORMATION</a> operations.) Otherwise, the caller must be running at IRQL PASSIVE_LEVEL.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="flt_callback_data" title="typedef struct _FLT_CALLBACK_DATA {&#10;  FLT_CALLBACK_DATA_FLAGS     Flags;&#10;  PETHREAD                    Thread;&#10;  PFLT_IO_PARAMETER_BLOCK     Iopb;&#10;  IO_STATUS_BLOCK             IoStatus;&#10;  struct _FLT_TAG_DATA_BUFFER *TagData;&#10;  union {&#10;    struct {&#10;      LIST_ENTRY QueueLinks;&#10;      PVOID      QueueContext[2];&#10;    };&#10;    PVOID FilterContext[4];&#10;  };&#10;  KPROCESSOR_MODE             RequestorMode;&#10;} FLT_CALLBACK_DATA, *PFLT_CALLBACK_DATA;">FLT_CALLBACK_DATA</a></p>
-
 <p><a href="flt_io_parameter_block" title="typedef struct _FLT_IO_PARAMETER_BLOCK {&#10;  ULONG          IrpFlags;&#10;  UCHAR          MajorFunction;&#10;  UCHAR          MinorFunction;&#10;  UCHAR          OperationFlags;&#10;  UCHAR          Reserved;&#10;  PFILE_OBJECT   TargetFileObject;&#10;  PFLT_INSTANCE  TargetInstance;&#10;  FLT_PARAMETERS Parameters;&#10;} FLT_IO_PARAMETER_BLOCK, *PFLT_IO_PARAMETER_BLOCK;">FLT_IO_PARAMETER_BLOCK</a></p>
-
 <p><a href="fltallocatecallbackdata" title="NTSTATUS FLTAPI FltAllocateCallbackData(&#10;  [in]           PFLT_INSTANCE      Instance,&#10;  [in, optional] PFILE_OBJECT       FileObject,&#10;  [out]          PFLT_CALLBACK_DATA *RetNewCallbackData&#10;);">FltAllocateCallbackData</a></p>
-
 <p><a href="fltfreecallbackdata" title="VOID FLTAPI FltFreeCallbackData(&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltFreeCallbackData</a></p>
-
 <p><a href="fltperformsynchronousio" title="VOID FLTAPI FltPerformSynchronousIo(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltPerformSynchronousIo</a></p>
-
 <p><a href="fltreusecallbackdata" title="VOID FLTAPI FltReuseCallbackData(&#10;  [in, out] PFLT_CALLBACK_DATA CallbackData&#10;);">FltReuseCallbackData</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a></p>
-
 <p><a href="pflt_completed_async_io_callback" title="PFLT_COMPLETED_ASYNC_IO_CALLBACK PfltCompletedAsyncIoCallback;&#10;&#10;VOID PfltCompletedAsyncIoCallback(&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] PFLT_CONTEXT Context&#10;)&#10;{...}">PFLT_COMPLETED_ASYNC_IO_CALLBACK</a></p>
-
 <p><a href="pflt_post_operation_callback" title="PFLT_POST_OPERATION_CALLBACK PfltPostOperationCallback;&#10;&#10;FLT_POSTOP_CALLBACK_STATUS PfltPostOperationCallback(&#10;  [in, out]      PFLT_CALLBACK_DATA Data,&#10;  [in]           PCFLT_RELATED_OBJECTS FltObjects,&#10;  [in, optional] PVOID CompletionContext,&#10;  [in]           FLT_POST_OPERATION_FLAGS Flags&#10;)&#10;{...}">PFLT_POST_OPERATION_CALLBACK</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -66,34 +66,20 @@
 <h1>Windows Driver Kit DDI reference (nf-scavengr-rxpurgerelatedfobxs)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="rxpurgerelatedfobxs-function">RxPurgeRelatedFobxs function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>RxPurgeRelatedFobxs function</h1>
+<h2>Description</h2>
 <p><strong>RxPurgeRelatedFobxs</strong> purges all of the FOBX structures associated with a NET_ROOT structure.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="netroot"><code>NetRoot</code></h3>
-
+<h2>Parameters</h2>
+<h3><code>NetRoot</code></h3>
 <p>A pointer to the NET_ROOT structure for which the FOBX structures need to be purged.</p>
-
-<h3 id="rxcontext"><code>RxContext</code></h3>
-
+<h3><code>RxContext</code></h3>
 <p>A pointer to the <a href="rx_context" title="typedef struct _RX_CONTEXT {&#10;  NODE_TYPE_CODE         NodeTypeCode;&#10;  NODE_BYTE_SIZE         NodeByteSize;&#10;  __volatile ULONG       ReferenceCount;&#10;  LIST_ENTRY             ContextListEntry;&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  BOOLEAN                PendingReturned;&#10;  BOOLEAN                PostRequest;&#10;  PDEVICE_OBJECT         RealDevice;&#10;  PIRP                   CurrentIrp;&#10;  PIO_STACK_LOCATION     CurrentIrpSp;&#10;  PMRX_FCB               pFcb;&#10;  PMRX_FOBX              pFobx;&#10;  PMRX_SRV_OPEN          pRelevantSrvOpen;&#10;  PNON_PAGED_FCB         NonPagedFcb;&#10;  PRDBSS_DEVICE_OBJECT   RxDeviceObject;&#10;  PETHREAD               OriginalThread;&#10;  PETHREAD               LastExecutionThread;&#10;  __volatile PVOID       LockManagerContext;&#10;...">RX_CONTEXT</a> structure.</p>
-
-<h3 id="attemptfinalization"><code>AttemptFinalization</code></h3>
-
+<h3><code>AttemptFinalization</code></h3>
 <p>A Boolean value that indicates whether an attempt to finalize and release the associated FCB structure should occur.</p>
-
-<h3 id="purgingfcb"><code>PurgingFcb</code></h3>
-
+<h3><code>PurgingFcb</code></h3>
 <p>A pointer to the FCB structure for which purging should occur.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>RxPurgeRelatedFobxs</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success or one of the following error values on failure:</p>
-
 <table>
 <thead>
 <tr>
@@ -108,27 +94,16 @@
 </tr>
 </tbody>
 </table>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>At cleanup there are no more user handles associated with the file object. In such cases, the time window between close and cleanup is dictated by the additional references maintained by the memory manager and cache manager. On cleanup, the FOBX is put on a close pending list and removed from the corresponding list when a close operation is received. In the interim, if an open operation is failing with ACCESS_DENIED status, then RDBSS can force a purge of the FOBX structure. This is a synchronous operation.</p>
-
 <p>For directory renames, all files under the directory need to be closed. A network mini-redirector might call <strong>RxPurgeRelatedFobxs</strong> and <strong><a href="rxscavengefobxsfornetroot" title="VOID RxScavengeFobxsForNetRoot(&#10;  PNET_ROOT NetRoot,&#10;  PFCB      PurgingFcb,&#10;  BOOLEAN   SynchronizeWithScavenger&#10;);">RxScavengeFobxsForNetRoot</a></strong> in response to an <a href="irp_mj_set_information" title="#define IRP_MJ_SET_INFORMATION 0x06">IRP_MJ_SET_INFORMATION</a> request to rename a directory. By passing in the NET_ROOT structure for the directory and a <strong>NULL</strong> FCB, all of the FOBX structures associated with the directory would be purged and scavenged.</p>
-
 <p>The <strong>RxPurgeRelatedFobxs</strong> routine attempts to purge all of the FOBX structures that had a close operation pending before the purge request was received. The <strong>RxPurgeRelatedFobxs</strong> routine acquires the scavenger mutex, traverses the <strong>ClosePendingFobxsList</strong> member on the scavenger object removing list entries, and then releases the mutex.</p>
-
 <p>If <em>AttemptFinalize</em> is set to <strong>TRUE</strong>, then <strong>RxPurgeRelatedFobxs</strong> will try to finalize and release the associated FCB.</p>
-
 <p>If <em>PFCB</em> is not <strong>NULL</strong>, and this purging FCB structure is not the same as the FCB structure associated with the FOBX on the <strong>ClosePendingFobxsList</strong> member, then <strong>RxPurgeRelatedFobxs</strong> will call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_chkfcb_calldown">MRxAreFilesAliased</a> callback routine provided by the network mini-redirector if this routine is supported. The call to <strong>MRxAreFilesAliased</strong> is to determine if the PFCB is an alias for the FCB associated with the FOBX structure.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_chkfcb_calldown">MRxAreFilesAliased</a></p>
-
 <p><a href="rxpurgeallfobxs" title="VOID RxPurgeAllFobxs(&#10;  PRDBSS_DEVICE_OBJECT RxDeviceObject&#10;);">RxPurgeAllFobxs</a></p>
-
 <p><a href="rxscavengeallfobxs" title="VOID RxScavengeAllFobxs(&#10;  PRDBSS_DEVICE_OBJECT RxDeviceObject&#10;);">RxScavengeAllFobxs</a></p>
-
 <p><a href="rxscavengefobxsfornetroot" title="VOID RxScavengeFobxsForNetRoot(&#10;  PNET_ROOT NetRoot,&#10;  PFCB      PurgingFcb,&#10;  BOOLEAN   SynchronizeWithScavenger&#10;);">RxScavengeFobxsForNetRoot</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -66,47 +66,27 @@
 <h1>Windows hardware development documentation (mrxsetfileinfoatcleanup)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="mrxsetfileinfoatcleanup-routine">MRxSetFileInfoAtCleanup routine</h1>
-
+<h1>MRxSetFileInfoAtCleanup routine</h1>
 <p>The <em>MRxSetFileInfoAtCleanup</em> routine is called by <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/the-rdbss-driver-and-library">RDBSS</a> to request that a network mini-redirector set file information on a file system object at cleanup.</p>
-
-<h2 id="parameters">Parameters</h2>
-
+<h2>Parameters</h2>
 <p><em>RxContext</em> [in, out]
 A pointer to the <a href="rx_context" title="typedef struct _RX_CONTEXT {&#10;  NODE_TYPE_CODE         NodeTypeCode;&#10;  NODE_BYTE_SIZE         NodeByteSize;&#10;  __volatile ULONG       ReferenceCount;&#10;  LIST_ENTRY             ContextListEntry;&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  BOOLEAN                PendingReturned;&#10;  BOOLEAN                PostRequest;&#10;  PDEVICE_OBJECT         RealDevice;&#10;  PIRP                   CurrentIrp;&#10;  PIO_STACK_LOCATION     CurrentIrpSp;&#10;  PMRX_FCB               pFcb;&#10;  PMRX_FOBX              pFobx;&#10;  PMRX_SRV_OPEN          pRelevantSrvOpen;&#10;  PNON_PAGED_FCB         NonPagedFcb;&#10;  PRDBSS_DEVICE_OBJECT   RxDeviceObject;&#10;  PETHREAD               OriginalThread;&#10;  PETHREAD               LastExecutionThread;&#10;  __volatile PVOID       LockManagerContext;&#10;...">RX_CONTEXT</a> structure. This parameter contains the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> that is requesting the operation.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><em>MRxSetFileInfoAtCleanup</em> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success or an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>RDBSS issues a call to <em>MRxSetFileInfoAtCleanup</em> during cleanup, when the last handle to a file object is closed. This is different than the close operation which is invoked when the last reference to a file object is deleted.</p>
-
 <p><em>MRxSetFileInfoAtCleanup</em> is called by RDBSS if the timestamps on a file or the size of a file have changed. The calls to <em>MRxSetFileInfoAtCleanup</em> by RDBSS are made separately for each of these changes. If both the file size and the timestamps have changed, then RDBSS makes two calls to <em>MRxSetFileInfoAtCleanup</em>.</p>
-
 <p>Before calling <em>MRxSetFileInfoAtCleanup</em>, RDBSS modifies the following members in the <a href="rx_context" title="typedef struct _RX_CONTEXT {&#10;  NODE_TYPE_CODE         NodeTypeCode;&#10;  NODE_BYTE_SIZE         NodeByteSize;&#10;  __volatile ULONG       ReferenceCount;&#10;  LIST_ENTRY             ContextListEntry;&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  BOOLEAN                PendingReturned;&#10;  BOOLEAN                PostRequest;&#10;  PDEVICE_OBJECT         RealDevice;&#10;  PIRP                   CurrentIrp;&#10;  PIO_STACK_LOCATION     CurrentIrpSp;&#10;  PMRX_FCB               pFcb;&#10;  PMRX_FOBX              pFobx;&#10;  PMRX_SRV_OPEN          pRelevantSrvOpen;&#10;  PNON_PAGED_FCB         NonPagedFcb;&#10;  PRDBSS_DEVICE_OBJECT   RxDeviceObject;&#10;  PETHREAD               OriginalThread;&#10;  PETHREAD               LastExecutionThread;&#10;  __volatile PVOID       LockManagerContext;&#10;...">RX_CONTEXT</a> structure pointed to by the <em>RxContext</em> parameter if the timestamps on a file have changed:</p>
-
 <p>The <strong>Info.FileInformationClass</strong> member is set to a <a href="file_information_class" title="typedef enum _FILE_INFORMATION_CLASS&#10;{&#10;    FileDirectoryInformation = 1,                   // q: FILE_DIRECTORY_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileFullDirectoryInformation,                   // q: FILE_FULL_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBothDirectoryInformation,                   // q: FILE_BOTH_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBasicInformation,                           // qs: FILE_BASIC_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileStandardInformation,                        // q: FILE_STANDARD_INFORMATION, FILE_STANDARD_INFORMATION_EX&#10;    FileInternalInformation,                        // q: FILE_INTERNAL_INFORMATION&#10;    FileEaInformation,                              // q: FILE_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileAccessInformation,                          // q: FILE_ACCESS_INFORMATION&#10;    FileNameInformation,                            // q: FILE_NAME_INFORMATION&#10;    FileRenameInformation,                          // s: FILE_RENAME_INFORMATION (requires DELETE) // 10&#10;    FileLinkInformation,                            // s: FILE_LINK_INFORMATION&#10;    FileNamesInformation,                           // q: FILE_NAMES_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileDispositionInformation,                     // s: FILE_DISPOSITION_INFORMATION (requires DELETE)&#10;    FilePositionInformation,                        // qs: FILE_POSITION_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileFullEaInformation,                          // q: FILE_FULL_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileModeInformation,                            // qs: FILE_MODE_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileAlignmentInformation,                       // q: FILE_ALIGNMENT_INFORMATION&#10;    FileAllInformation,                             // q: FILE_ALL_INFORMATION&#10;...">FILE_INFORMATION_CLASS</a> value of FileBasicInformation.</p>
-
 <p>The <strong>Info.Buffer</strong> member is set to a <a href="file_basic_information" title="typedef struct _FILE_BASIC_INFORMATION&#10;{&#10;    LARGE_INTEGER CreationTime;         // Specifies the time that the file was created.&#10;    LARGE_INTEGER LastAccessTime;       // Specifies the time that the file was last accessed.&#10;    LARGE_INTEGER LastWriteTime;        // Specifies the time that the file was last written to.&#10;    LARGE_INTEGER ChangeTime;           // Specifies the last time the file was changed.&#10;    ULONG FileAttributes;               // Specifies one or more FILE_ATTRIBUTE_XXX flags.&#10;} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;">FILE_BASIC_INFORMATION</a> structure allocated on the stack.</p>
-
 <p>The <strong>Info.Length</strong> member is set to the sizeof a <a href="file_basic_information" title="typedef struct _FILE_BASIC_INFORMATION&#10;{&#10;    LARGE_INTEGER CreationTime;         // Specifies the time that the file was created.&#10;    LARGE_INTEGER LastAccessTime;       // Specifies the time that the file was last accessed.&#10;    LARGE_INTEGER LastWriteTime;        // Specifies the time that the file was last written to.&#10;    LARGE_INTEGER ChangeTime;           // Specifies the last time the file was changed.&#10;    ULONG FileAttributes;               // Specifies one or more FILE_ATTRIBUTE_XXX flags.&#10;} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;">FILE_BASIC_INFORMATION</a> structure.</p>
-
 <p>Before calling <em>MRxSetFileInfoAtCleanup</em>, RDBSS modifies the following members in the <a href="rx_context" title="typedef struct _RX_CONTEXT {&#10;  NODE_TYPE_CODE         NodeTypeCode;&#10;  NODE_BYTE_SIZE         NodeByteSize;&#10;  __volatile ULONG       ReferenceCount;&#10;  LIST_ENTRY             ContextListEntry;&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  BOOLEAN                PendingReturned;&#10;  BOOLEAN                PostRequest;&#10;  PDEVICE_OBJECT         RealDevice;&#10;  PIRP                   CurrentIrp;&#10;  PIO_STACK_LOCATION     CurrentIrpSp;&#10;  PMRX_FCB               pFcb;&#10;  PMRX_FOBX              pFobx;&#10;  PMRX_SRV_OPEN          pRelevantSrvOpen;&#10;  PNON_PAGED_FCB         NonPagedFcb;&#10;  PRDBSS_DEVICE_OBJECT   RxDeviceObject;&#10;  PETHREAD               OriginalThread;&#10;  PETHREAD               LastExecutionThread;&#10;  __volatile PVOID       LockManagerContext;&#10;...">RX_CONTEXT</a> structure pointed to by the <em>RxContext</em> parameter if the size of a file has changed:</p>
-
 <p>The <strong>Info.FileInformationClass</strong> member is set to a <a href="file_information_class" title="typedef enum _FILE_INFORMATION_CLASS&#10;{&#10;    FileDirectoryInformation = 1,                   // q: FILE_DIRECTORY_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileFullDirectoryInformation,                   // q: FILE_FULL_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBothDirectoryInformation,                   // q: FILE_BOTH_DIR_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileBasicInformation,                           // qs: FILE_BASIC_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileStandardInformation,                        // q: FILE_STANDARD_INFORMATION, FILE_STANDARD_INFORMATION_EX&#10;    FileInternalInformation,                        // q: FILE_INTERNAL_INFORMATION&#10;    FileEaInformation,                              // q: FILE_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileAccessInformation,                          // q: FILE_ACCESS_INFORMATION&#10;    FileNameInformation,                            // q: FILE_NAME_INFORMATION&#10;    FileRenameInformation,                          // s: FILE_RENAME_INFORMATION (requires DELETE) // 10&#10;    FileLinkInformation,                            // s: FILE_LINK_INFORMATION&#10;    FileNamesInformation,                           // q: FILE_NAMES_INFORMATION (requires FILE_LIST_DIRECTORY) (NtQueryDirectoryFile[Ex])&#10;    FileDispositionInformation,                     // s: FILE_DISPOSITION_INFORMATION (requires DELETE)&#10;    FilePositionInformation,                        // qs: FILE_POSITION_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileFullEaInformation,                          // q: FILE_FULL_EA_INFORMATION (requires FILE_READ_EA)&#10;    FileModeInformation,                            // qs: FILE_MODE_INFORMATION (q: requires FILE_READ_ATTRIBUTES; s: requires FILE_WRITE_ATTRIBUTES)&#10;    FileAlignmentInformation,                       // q: FILE_ALIGNMENT_INFORMATION&#10;    FileAllInformation,                             // q: FILE_ALL_INFORMATION&#10;...">FILE_INFORMATION_CLASS</a> value of FileEndOfFileInformation.</p>
-
 <p>The <strong>Info.Buffer</strong> member is set to a <a href="file_end_of_file_information" title="typedef struct _FILE_END_OF_FILE_INFORMATION&#10;{&#10;    LARGE_INTEGER EndOfFile;&#10;} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;">FILE_END_OF_FILE_INFORMATION</a> structure allocated on the stack.</p>
-
 <p>The <strong>Info.Length</strong> member is set to <strong>sizeof(</strong><a href="file_end_of_file_information" title="typedef struct _FILE_END_OF_FILE_INFORMATION&#10;{&#10;    LARGE_INTEGER EndOfFile;&#10;} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION;">FILE_END_OF_FILE_INFORMATION</a><strong>)</strong>.</p>
-
 <p>RDBSS ignores the return value from <em>MRxSetFileInfoAtCleanup</em>.</p>
-
 <p>A network mini-redirector can choose to do nothing in this routine and return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. Any changes to the file size or timestamps will be handled during the cleanup operation.</p>
-
-<h2 id="requirements">Requirements</h2>
-
+<h2>Requirements</h2>
 <table>
 <thead>
 <tr>
@@ -125,31 +105,18 @@ A pointer to the <a href="rx_context" title="typedef struct _RX_CONTEXT {&#10;  
 </tr>
 </tbody>
 </table>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/mrx/nc-mrx-pmrx_chkdir_calldown"><strong>MRxIsValidDirectory</strong></a></p>
-
 <p><strong><a href="mrxquerydirectory" title="PMRX_CALLDOWN MRxQueryDirectory;&#10;&#10;NTSTATUS MRxQueryDirectory(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxQueryDirectory</a></strong></p>
-
 <p><strong><a href="mrxqueryeainfo" title="PMRX_CALLDOWN MRxQueryEaInfo;&#10;&#10;NTSTATUS MRxQueryEaInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxQueryEaInfo</a></strong></p>
-
 <p><strong><a href="mrxqueryfileinfo" title="PMRX_CALLDOWN MRxQueryFileInfo;&#10;&#10;NTSTATUS MRxQueryFileInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxQueryFileInfo</a></strong></p>
-
 <p><strong><a href="mrxqueryquotainfo" title="PMRX_CALLDOWN MRxQueryQuotaInfo;&#10;&#10;NTSTATUS MRxQueryQuotaInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxQueryQuotaInfo</a></strong></p>
-
 <p><strong><a href="mrxquerysdinfo" title="PMRX_CALLDOWN MRxQuerySdInfo;&#10;&#10;NTSTATUS MRxQuerySdInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxQuerySdInfo</a></strong></p>
-
 <p><strong><a href="mrxqueryvolumeinfo" title="PMRX_CALLDOWN MRxQueryVolumeInfo;&#10;&#10;NTSTATUS MRxQueryVolumeInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxQueryVolumeInfo</a></strong></p>
-
 <p><strong><a href="mrxseteainfo" title="PMRX_CALLDOWN MRxSetEaInfo;&#10;&#10;NTSTATUS MRxSetEaInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxSetEaInfo</a></strong></p>
-
 <p><strong><a href="mrxsetfileinfo" title="PMRX_CALLDOWN MRxSetFileInfo;&#10;&#10;NTSTATUS MRxSetFileInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxSetFileInfo</a></strong></p>
-
 <p><strong><a href="mrxsetquotainfo" title="PMRX_CALLDOWN MRxSetQuotaInfo;&#10;&#10;NTSTATUS MRxSetQuotaInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxSetQuotaInfo</a></strong></p>
-
 <p><strong><a href="mrxsetsdinfo" title="PMRX_CALLDOWN MRxSetSdInfo;&#10;&#10;NTSTATUS MRxSetSdInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxSetSdInfo</a></strong></p>
-
 <p><strong><a href="mrxsetvolumeinfo" title="PMRX_CALLDOWN MRxSetVolumeInfo;&#10;&#10;NTSTATUS MRxSetVolumeInfo(&#10;  _Inout_ PRX_CONTEXT RxContext&#10;)&#10;{ ... }">MRxSetVolumeInfo</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

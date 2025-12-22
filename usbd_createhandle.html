@@ -67,40 +67,23 @@
 <h1>Windows Driver Kit DDI reference (nf-usbdlib-usbd_createhandle)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="usbd_createhandle-function">USBD_CreateHandle function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>USBD_CreateHandle function</h1>
+<h2>Description</h2>
 <p>The <strong>USBD_CreateHandle</strong> routine is called by a WDM USB client driver to obtain a USBD handle. The routine registers the client driver with the underlying USB driver stack.</p>
-
 <p><strong>Note for Windows Driver Framework (WDF) Drivers:</strong> If your client driver is a WDF-based driver, then you do not need the USBD handle. The client driver is registered in its call to the <a href="wdfusbtargetdevicecreatewithparameters" title="NTSTATUS WdfUsbTargetDeviceCreateWithParameters(&#10;  [in]           WDFDEVICE                     Device,&#10;  [in]           PWDF_USB_DEVICE_CREATE_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES        Attributes,&#10;  [out]          WDFUSBDEVICE                  *UsbDevice&#10;);">WdfUsbTargetDeviceCreateWithParameters</a> method.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="deviceobject-in"><code>DeviceObject</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>DeviceObject</code> [in]</h3>
 <p>Pointer to the device object for the client driver.</p>
-
-<h3 id="targetdeviceobject-in"><code>TargetDeviceObject</code> [in]</h3>
-
+<h3><code>TargetDeviceObject</code> [in]</h3>
 <p>Pointer to the next lower device object in the device stack. The client driver receives a pointer to that device object in a previous call to <a href="ioattachdevicetodevicestack" title="PDEVICE_OBJECT IoAttachDeviceToDeviceStack(&#10;  [in] PDEVICE_OBJECT SourceDevice,&#10;  [in] PDEVICE_OBJECT TargetDevice&#10;);">IoAttachDeviceToDeviceStack</a>.</p>
-
-<h3 id="usbdclientcontractversion-in"><code>USBDClientContractVersion</code> [in]</h3>
-
+<h3><code>USBDClientContractVersion</code> [in]</h3>
 <p>The contract version that the client driver supports. <em>USBDClientContractVersion</em> must be USBD_CLIENT_CONTRACT_VERSION_602. For more information, see Remarks.</p>
-
-<h3 id="pooltag-in"><code>PoolTag</code> [in]</h3>
-
+<h3><code>PoolTag</code> [in]</h3>
 <p>The pool tag used for memory allocations.</p>
-
-<h3 id="usbdhandle-out"><code>USBDHandle</code> [out]</h3>
-
+<h3><code>USBDHandle</code> [out]</h3>
 <p>Opaque handle that indicates that the client driver was registered with the USB driver stack. For more information, see Remarks.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>The routine returns an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code. Possible values include but are not limited to, these values in the following table.</p>
-
 <table>
 <thead>
 <tr>
@@ -119,127 +102,85 @@
 </tr>
 <tr>
   <td><strong>STATUS_INVALID_PARAMETER</strong></td>
-  <td>The caller passed one of the following invalid parameter values:<br><br>* <em>DeviceObject</em>, <em>TargetDeviceObject</em>, or <em>USBDHandle</em> is NULL.<br>* The client contract value specified in <em>USBDClientContractVersion</em> is not valid.<br>* <em>PoolTag</em> is zero.</td>
+  <td>The caller passed one of the following invalid parameter values:<br /><br />* <em>DeviceObject</em>, <em>TargetDeviceObject</em>, or <em>USBDHandle</em> is NULL.<br />* The client contract value specified in <em>USBDClientContractVersion</em> is not valid.<br />* <em>PoolTag</em> is zero.</td>
 </tr>
 </tbody>
 </table>
-
-<h2 id="remarks">Remarks</h2>
-
-<h3 id="version-registration">Version Registration</h3>
-
+<h2>Remarks</h2>
+<h3>Version Registration</h3>
 <p>Windows 8 includes a new USB driver stack to support USB 3.0 devices. The new USB driver stack provides several new capabilities, such as stream support, chained MDLs, and so on.
 Before your client driver can use any of those USB capabilities, you must register the client driver with the USB driver stack and obtain a USBD handle. The handle is required in order to call routines that use or configure the new capabilities. To obtain a USBD handle, call <strong>USBD_CreateHandle</strong>.</p>
-
 <p>The client driver must call <strong>USBD_CreateHandle</strong> regardless of whether the device is attached to a USB 3.0, 2.0, or 1.1 host controller. If the device is attached to a USB 3.0 host controller, Windows loads the USB 3.0 driver stack. Otherwise, USB 2.0 driver stack is loaded. In either case, the client driver is <em>not</em> required to know the version supported by the underlying USB driver stack. <strong>USBD_CreateHandle</strong> assesses the driver stack version and allocates resources appropriately.</p>
-
 <p>The client driver must specify USBD_CLIENT_CONTRACT_VERSION_602 in the <em>USBDClientContractVersion</em> parameter and follow the set of rules described in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/usbcon/usb-client-driver-contract-in-windows-8">Best Practices: Using URBs</a>.</p>
-
-<h3 id="calling-usbd_createhandle">Calling USBD_CreateHandle</h3>
-
+<h3>Calling USBD_CreateHandle</h3>
 <p>The <strong>USBD_CreateHandle</strong> routine must be called by a Windows Driver Model (WDM) client driver before the driver send any other requests, through URBs or IOCTLs, to the USB driver stack. Typically, the client driver obtains the USBD handle in its AddDevice routine.</p>
-
 <p>A Windows Driver Frameworks (WDF) client driver is not required to call <strong>USBD_CreateHandle</strong> because the framework calls this routine on behalf of the client driver during the device initialization phase. Instead, the client driver can specify its client contract version in the <a href="wdf_usb_device_create_config" title="typedef struct _WDF_USB_DEVICE_CREATE_CONFIG {&#10;  ULONG Size;&#10;  ULONG USBDClientContractVersion;&#10;} WDF_USB_DEVICE_CREATE_CONFIG, *PWDF_USB_DEVICE_CREATE_CONFIG;">WDF_USB_DEVICE_CREATE_CONFIG</a> structure and pass it in the call to <a href="wdfusbtargetdevicecreatewithparameters" title="NTSTATUS WdfUsbTargetDeviceCreateWithParameters(&#10;  [in]           WDFDEVICE                     Device,&#10;  [in]           PWDF_USB_DEVICE_CREATE_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES        Attributes,&#10;  [out]          WDFUSBDEVICE                  *UsbDevice&#10;);">WdfUsbTargetDeviceCreateWithParameters</a>.</p>
-
-<h3 id="usbd_createhandle-call-completion">USBD_CreateHandle Call Completion</h3>
-
+<h3>USBD_CreateHandle Call Completion</h3>
 <p>If the <strong>USBD_CreateHandle</strong> call succeeds, a valid <em>USBD handle</em> is obtained in the <em>USBDHandle</em> parameter. The client driver must use the USBD handle in the client driver's future requests to the USB driver stack.</p>
-
 <p>If the <strong>USBD_CreateHandle</strong> call fails, the client driver can fail the AddDevice routine.</p>
-
 <p>After the client driver is finished using the USBD handle, the driver must close the handle by calling the <a href="usbd_closehandle" title="VOID USBD_CloseHandle(&#10;  [in] USBD_HANDLE USBDHandle&#10;);">USBD_CloseHandle</a> routine.</p>
-
-<h4 id="examples">Examples</h4>
-
+<h4>Examples</h4>
 <p>The following example code shows how to register a client driver by calling <strong>USBD_CreateHandle</strong>.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="driver_add_device" title="DRIVER_ADD_DEVICE DriverAddDevice;&#10;&#10;NTSTATUS DriverAddDevice(&#10;  [in] _DRIVER_OBJECT *DriverObject,&#10;  [in] _DEVICE_OBJECT *PhysicalDeviceObject&#10;)&#10;{...}">DRIVER_ADD_DEVICE</a></span><span class="w"> </span><span class="n">MyAddDevice</span><span class="p">;</span>
-
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="nf">MyAddDevice</span><span class="p">(</span><span class="w"> </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="driver_object" title="typedef struct _DRIVER_OBJECT {&#10;  CSHORT             Type;&#10;  CSHORT             Size;&#10;  PDEVICE_OBJECT     DeviceObject;&#10;  ULONG              Flags;&#10;  PVOID              DriverStart;&#10;  ULONG              DriverSize;&#10;  PVOID              DriverSection;&#10;  PDRIVER_EXTENSION  DriverExtension;&#10;  UNICODE_STRING     DriverName;&#10;  PUNICODE_STRING    HardwareDatabase;&#10;  PFAST_IO_DISPATCH  FastIoDispatch;&#10;  PDRIVER_INITIALIZE DriverInit;&#10;  PDRIVER_STARTIO    DriverStartIo;&#10;  PDRIVER_UNLOAD     DriverUnload;&#10;  PDRIVER_DISPATCH   MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];&#10;} DRIVER_OBJECT, *PDRIVER_OBJECT;">PDRIVER_OBJECT</a></span><span class="w">  </span><span class="n">DriverObject</span><span class="p">,</span>
-<span class="w">                     </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">PDEVICE_OBJECT</a></span><span class="w">  </span><span class="n">PhysicalDeviceObject</span><span class="p">)</span>
-<span class="p">{</span>
-
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">            </span><span class="n">ntStatus</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">PDEVICE_OBJECT</a></span><span class="w">      </span><span class="n">deviceObject</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PDEVICE_EXTENSION</span><span class="w">   </span><span class="n">deviceExtension</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">PDEVICE_OBJECT</a></span><span class="w">      </span><span class="n">stackDeviceObject</span><span class="p">;</span>
-<span class="w">    </span><span class="n">USBD_HANDLE</span><span class="w">         </span><span class="n">usbdHandle</span><span class="p">;</span>
-
-<span class="w">    </span><span class="p">...</span>
-
-<span class="w">        </span><span class="n">ntStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="iocreatedevice" title="NTSTATUS IoCreateDevice(&#10;  [in]           PDRIVER_OBJECT  DriverObject,&#10;  [in]           ULONG           DeviceExtensionSize,&#10;  [in, optional] PUNICODE_STRING DeviceName,&#10;  [in]           DEVICE_TYPE     DeviceType,&#10;  [in]           ULONG           DeviceCharacteristics,&#10;  [in]           BOOLEAN         Exclusive,&#10;  [out]          PDEVICE_OBJECT  *DeviceObject&#10;);">IoCreateDevice</a></span><span class="p">(</span><span class="n">DriverObject</span><span class="p">,</span>
-<span class="w">        </span><span class="k">sizeof</span><span class="p">(</span><span class="n">DEVICE_EXTENSION</span><span class="p">),</span>
-<span class="w">        </span><span class="nb">NULL</span><span class="p">,</span>
-<span class="w">        </span><span class="n">FILE_DEVICE_UNKNOWN</span><span class="p">,</span>
-<span class="w">        </span><span class="n"><a href="file_autogenerated_device_name" title="#define FILE_AUTOGENERATED_DEVICE_NAME 0x00000080">FILE_AUTOGENERATED_DEVICE_NAME</a></span><span class="p">,</span>
-<span class="w">        </span><span class="n">FALSE</span><span class="p">,</span>
-<span class="w">        </span><span class="o">&amp;</span><span class="n">deviceObject</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">ntStatus</span><span class="p">))</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">ntStatus</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="p">...</span>
-
-<span class="w">        </span><span class="c1">//     Attach the FDO to the top of the PDO in the client driver&#39;s</span>
-<span class="w">        </span><span class="c1">//  device stack.</span>
-
-<span class="w">        </span><span class="n">deviceExtension</span><span class="o">-&gt;</span><span class="n">StackDeviceObject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="ioattachdevicetodevicestack" title="PDEVICE_OBJECT IoAttachDeviceToDeviceStack(&#10;  [in] PDEVICE_OBJECT SourceDevice,&#10;  [in] PDEVICE_OBJECT TargetDevice&#10;);">IoAttachDeviceToDeviceStack</a></span><span class="w"> </span><span class="p">(</span>
-<span class="w">        </span><span class="n">deviceObject</span><span class="p">,</span>
-<span class="w">        </span><span class="n">PhysicalDeviceObject</span><span class="p">);</span>
-
-<span class="w">    </span><span class="p">...</span>
-
-<span class="w">        </span><span class="c1">// Initialize the DeviceExtension</span>
-
-<span class="w">        </span><span class="n">deviceExtension</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">deviceObject</span><span class="o">-&gt;</span><span class="n">DeviceExtension</span><span class="p">;</span>
-
-<span class="w">    </span><span class="p">...</span>
-
-<span class="w">        </span><span class="c1">//Register the client driver with the USB driver stack.</span>
-<span class="w">        </span><span class="c1">//Obtain a USBD handle for registration.</span>
-
-<span class="w">        </span><span class="n">ntStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">USBD_CreateHandle</span><span class="p">(</span><span class="n">deviceObject</span><span class="p">,</span>
-<span class="w">        </span><span class="n">deviceExtension</span><span class="o">-&gt;</span><span class="n">StackDeviceObject</span><span class="p">,</span>
-<span class="w">        </span><span class="n">USBD_CLIENT_CONTRACT_VERSION_602</span><span class="p">,</span>
-<span class="w">        </span><span class="n">POOL_TAG</span><span class="p">,</span>
-<span class="w">        </span><span class="o">&amp;</span><span class="n">deviceExtension</span><span class="o">-&gt;</span><span class="n">USBDHandle</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">ntStatus</span><span class="p">))</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">ntStatus</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="p">...</span>
-
-<span class="w">        </span><span class="c1">// Call <a href="usbd_queryusbcapability" title="NTSTATUS USBD_QueryUsbCapability(&#10;  [in]            USBD_HANDLE USBDHandle,&#10;  [in]            const GUID  *CapabilityType,&#10;  [in]            ULONG       OutputBufferLength,&#10;  [in, out]       PUCHAR      OutputBuffer,&#10;  [out, optional] PULONG      ResultLength&#10;);">USBD_QueryUsbCapability</a> to determine</span>
-<span class="w">        </span><span class="c1">// stream support.</span>
-
-<span class="w">        </span><span class="n">ntStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="usbd_queryusbcapability" title="NTSTATUS USBD_QueryUsbCapability(&#10;  [in]            USBD_HANDLE USBDHandle,&#10;  [in]            const GUID  *CapabilityType,&#10;  [in]            ULONG       OutputBufferLength,&#10;  [in, out]       PUCHAR      OutputBuffer,&#10;  [out, optional] PULONG      ResultLength&#10;);">USBD_QueryUsbCapability</a></span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">deviceExtension</span><span class="o">-&gt;</span><span class="n">USBDHandle</span><span class="p">,</span>
-<span class="w">        </span><span class="p">(</span><span class="n">GUID</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">GUID_USB_CAPABILITY_STATIC_STREAMS</span><span class="p">,</span>
-<span class="w">        </span><span class="k">sizeof</span><span class="p">(</span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="p">),</span>
-<span class="w">        </span><span class="p">(</span><span class="n">PUCHAR</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="n">deviceExtension</span><span class="p">.</span><span class="n">MaxSupportedStreams</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">ntStatus</span><span class="p">))</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">deviceExtension</span><span class="o">-&gt;</span><span class="n">MaxSupportedStreams</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="w">        </span><span class="n">ntStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="p">...</span>
-
-<span class="p">}</span>
+<pre><code><a href="driver_add_device" title="DRIVER_ADD_DEVICE DriverAddDevice;&#10;&#10;NTSTATUS DriverAddDevice(&#10;  [in] _DRIVER_OBJECT *DriverObject,&#10;  [in] _DEVICE_OBJECT *PhysicalDeviceObject&#10;)&#10;{...}">DRIVER_ADD_DEVICE</a> MyAddDevice;
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> MyAddDevice( __in <a href="driver_object" title="typedef struct _DRIVER_OBJECT {&#10;  CSHORT             Type;&#10;  CSHORT             Size;&#10;  PDEVICE_OBJECT     DeviceObject;&#10;  ULONG              Flags;&#10;  PVOID              DriverStart;&#10;  ULONG              DriverSize;&#10;  PVOID              DriverSection;&#10;  PDRIVER_EXTENSION  DriverExtension;&#10;  UNICODE_STRING     DriverName;&#10;  PUNICODE_STRING    HardwareDatabase;&#10;  PFAST_IO_DISPATCH  FastIoDispatch;&#10;  PDRIVER_INITIALIZE DriverInit;&#10;  PDRIVER_STARTIO    DriverStartIo;&#10;  PDRIVER_UNLOAD     DriverUnload;&#10;  PDRIVER_DISPATCH   MajorFunction[IRP_MJ_MAXIMUM_FUNCTION + 1];&#10;} DRIVER_OBJECT, *PDRIVER_OBJECT;">PDRIVER_OBJECT</a>  DriverObject,
+                     __in <a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">PDEVICE_OBJECT</a>  PhysicalDeviceObject)
+{
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>            ntStatus;
+    <a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">PDEVICE_OBJECT</a>      deviceObject;
+    PDEVICE_EXTENSION   deviceExtension;
+    <a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">PDEVICE_OBJECT</a>      stackDeviceObject;
+    USBD_HANDLE         usbdHandle;
+    ...
+        ntStatus = <a href="iocreatedevice" title="NTSTATUS IoCreateDevice(&#10;  [in]           PDRIVER_OBJECT  DriverObject,&#10;  [in]           ULONG           DeviceExtensionSize,&#10;  [in, optional] PUNICODE_STRING DeviceName,&#10;  [in]           DEVICE_TYPE     DeviceType,&#10;  [in]           ULONG           DeviceCharacteristics,&#10;  [in]           BOOLEAN         Exclusive,&#10;  [out]          PDEVICE_OBJECT  *DeviceObject&#10;);">IoCreateDevice</a>(DriverObject,
+        sizeof(DEVICE_EXTENSION),
+        NULL,
+        FILE_DEVICE_UNKNOWN,
+        <a href="file_autogenerated_device_name" title="#define FILE_AUTOGENERATED_DEVICE_NAME 0x00000080">FILE_AUTOGENERATED_DEVICE_NAME</a>,
+        FALSE,
+        &amp;deviceObject);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(ntStatus))
+    {
+        return ntStatus;
+    }
+    ...
+        //     Attach the FDO to the top of the PDO in the client driver's
+        //  device stack.
+        deviceExtension-&gt;StackDeviceObject = <a href="ioattachdevicetodevicestack" title="PDEVICE_OBJECT IoAttachDeviceToDeviceStack(&#10;  [in] PDEVICE_OBJECT SourceDevice,&#10;  [in] PDEVICE_OBJECT TargetDevice&#10;);">IoAttachDeviceToDeviceStack</a> (
+        deviceObject,
+        PhysicalDeviceObject);
+    ...
+        // Initialize the DeviceExtension
+        deviceExtension = deviceObject-&gt;DeviceExtension;
+    ...
+        //Register the client driver with the USB driver stack.
+        //Obtain a USBD handle for registration.
+        ntStatus = USBD_CreateHandle(deviceObject,
+        deviceExtension-&gt;StackDeviceObject,
+        USBD_CLIENT_CONTRACT_VERSION_602,
+        POOL_TAG,
+        &amp;deviceExtension-&gt;USBDHandle);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(ntStatus))
+    {
+        return ntStatus;
+    }
+    ...
+        // Call <a href="usbd_queryusbcapability" title="NTSTATUS USBD_QueryUsbCapability(&#10;  [in]            USBD_HANDLE USBDHandle,&#10;  [in]            const GUID  *CapabilityType,&#10;  [in]            ULONG       OutputBufferLength,&#10;  [in, out]       PUCHAR      OutputBuffer,&#10;  [out, optional] PULONG      ResultLength&#10;);">USBD_QueryUsbCapability</a> to determine
+        // stream support.
+        ntStatus = <a href="usbd_queryusbcapability" title="NTSTATUS USBD_QueryUsbCapability(&#10;  [in]            USBD_HANDLE USBDHandle,&#10;  [in]            const GUID  *CapabilityType,&#10;  [in]            ULONG       OutputBufferLength,&#10;  [in, out]       PUCHAR      OutputBuffer,&#10;  [out, optional] PULONG      ResultLength&#10;);">USBD_QueryUsbCapability</a> ( deviceExtension-&gt;USBDHandle,
+        (GUID*)&amp;GUID_USB_CAPABILITY_STATIC_STREAMS,
+        sizeof(<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>),
+        (PUCHAR) &amp;deviceExtension.MaxSupportedStreams);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(ntStatus))
+    {
+        deviceExtension-&gt;MaxSupportedStreams = 0;
+        ntStatus = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+    }
+    ...
+}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/usbcon/how-to-add-xrb-support-for-client-drivers">Allocating and Building URBs</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/usbcon/usb-client-driver-contract-in-windows-8">Best Practices: Using URBs</a></p>
-
 <p><a href="usbd_closehandle" title="VOID USBD_CloseHandle(&#10;  [in] USBD_HANDLE USBDHandle&#10;);">USBD_CloseHandle</a></p>
 <hr>
 <div class="ntdoc-description-links">

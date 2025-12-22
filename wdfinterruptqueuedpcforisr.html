@@ -63,71 +63,46 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfinterrupt-wdfinterruptqueuedpcforisr)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wdfinterruptqueuedpcforisr-function">WdfInterruptQueueDpcForIsr function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WdfInterruptQueueDpcForIsr function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfInterruptQueueDpcForIsr</strong> method queues a framework interrupt object's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback function for execution.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="interrupt-in"><code>Interrupt</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Interrupt</code> [in]</h3>
 <p>A handle to a framework interrupt object.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>WdfInterruptQueueDpcForIsr</strong> returns <strong>TRUE</strong> if it successfully queues the interrupt object's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback function. The method returns <strong>FALSE</strong> if the callback function was previously queued and has not executed.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>Drivers typically call <strong>WdfInterruptQueueDpcForIsr</strong> from within an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_isr">EvtInterruptIsr</a> callback function.</p>
-
 <p>An interrupt object's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback function can be queued only once before it executes. Therefore, if a call to <strong>WdfInterruptQueueDpcForIsr</strong> succeeds, subsequent calls will return <strong>FALSE</strong> until the framework dequeues the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback function.</p>
-
 <p>The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback will run on the processor that enqueued it. If your driver calls <strong>WdfInterruptQueueDpcForIsr</strong> to queue another DPC while an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback function is already dequeued or running, the second <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback might even run before the first one completes.</p>
-
 <p>For more information about handling interrupts in framework-based drivers, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/handling-hardware-interrupts">Handling Hardware Interrupts</a>.</p>
-
 <p>In KMDF 1.11 and later, a driver can call <strong>WdfInterruptQueueDpcForIsr</strong> from a passive-level ISR. Note that a driver can register a work item or a DPC but not both.</p>
-
-<h4 id="examples">Examples</h4>
-
+<h4>Examples</h4>
 <p>The following code example shows how an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_isr">EvtInterruptIsr</a> callback function should queue an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a> callback function.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">BOOLEAN</span>
-<span class="nf">MyEvtInterruptIsr</span><span class="p">(</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">WDFINTERRUPT</span><span class="w"> </span><span class="n">Interrupt</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">MessageID</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">queueDpcSuccess</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Save interrupt information for the</span>
-<span class="w">    </span><span class="c1">// EvtInterruptDpc function.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="p">...</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Queue the EvtInterruptDpc function.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="n">queueDpcSuccess</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfInterruptQueueDpcForIsr</span><span class="p">(</span><span class="n">Interrupt</span><span class="p">);</span>
-<span class="p">...</span>
-<span class="p">}</span>
+<pre><code>BOOLEAN
+MyEvtInterruptIsr(
+    IN WDFINTERRUPT Interrupt,
+    IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  MessageID
+    )
+{
+    BOOLEAN queueDpcSuccess;
+    //
+    // Save interrupt information for the
+    // EvtInterruptDpc function.
+    //
+...
+    //
+    // Queue the EvtInterruptDpc function.
+    //
+    queueDpcSuccess = WdfInterruptQueueDpcForIsr(Interrupt);
+...
+}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_dpc">EvtInterruptDpc</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfinterrupt/nc-wdfinterrupt-evt_wdf_interrupt_isr">EvtInterruptIsr</a></p>
-
 <p><a href="wdfinterruptcreate" title="NTSTATUS WdfInterruptCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in]           PWDF_INTERRUPT_CONFIG  Configuration,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]          WDFINTERRUPT           *Interrupt&#10;);">WdfInterruptCreate</a></p>
 <hr>
 <div class="ntdoc-description-links">

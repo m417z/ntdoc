@@ -67,84 +67,57 @@ VOID EvtUcxRoothubGetInfo(
 <h1>Windows Driver Kit DDI reference (nc-ucxroothub-evt_ucx_roothub_get_info)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="evt_ucx_roothub_get_info-callback-function">EVT_UCX_ROOTHUB_GET_INFO callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>EVT_UCX_ROOTHUB_GET_INFO callback function</h1>
+<h2>Description</h2>
 <p>The client driver's implementation that UCX calls when it receives a request for information about the root hub.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="ucxroothub-in"><code>UcxRootHub</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>UcxRootHub</code> [in]</h3>
 <p>A handle to a UCX object that represents the root hub.</p>
-
-<h3 id="request-in"><code>Request</code> [in]</h3>
-
+<h3><code>Request</code> [in]</h3>
 <p>A structure of type <a href="roothub_info" title="typedef struct _ROOTHUB_INFO {&#10;  ULONG           Size;&#10;  CONTROLLER_TYPE ControllerType;&#10;  USHORT          NumberOf20Ports;&#10;  USHORT          NumberOf30Ports;&#10;  USHORT          MaxU1ExitLatency;&#10;  USHORT          MaxU2ExitLatency;&#10;} ROOTHUB_INFO, *PROOTHUB_INFO;">ROOTHUB_INFO</a>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>The UCX client driver registers this callback function with the USB host controller extension (UCX) by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/mt188048(v=vs.85)">UcxRootHubCreate</a>
 method.</p>
-
 <p>The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ucxroothub/ns-ucxroothub-_roothub_info">_ROOTHUB_INFO</a> structure contains the number of USB 2.0 and USB 3.0 ports supported by the root hub.</p>
-
 <p>After UCX calls the <em>EVT_UCX_ROOTHUB_GET_INFO</em> function, the number of ports exposed by the root hub is guaranteed to remain the same. Note that these are virtual ports, not physical ports. Each physical USB connector is represented by one or more
 ports of different speed on the root hub.</p>
-
 <p>The client driver returns completion status in <em>Request</em>. The driver can complete the WDFREQUEST asynchronously.</p>
-
-<h4 id="examples">Examples</h4>
-
+<h4>Examples</h4>
 <pre><code>VOID
 RootHub_EvtRootHubGetInfo(
     UCXROOTHUB         UcxRootHub,
     WDFREQUEST         Request
 )
 /*++
-
     For sample demonstration purposes, this function returns statically
     defined information for the root hub.
-
 --*/
 {
     PUCX_ROOTHUB_CONTEXT    ucxRootHubContext;
     <a href="wdf_request_parameters" title="typedef struct _WDF_REQUEST_PARAMETERS {&#10;  USHORT           Size;&#10;  UCHAR            MinorFunction;&#10;  WDF_REQUEST_TYPE Type;&#10;  union {&#10;    struct {&#10;      PIO_SECURITY_CONTEXT     SecurityContext;&#10;      ULONG                    Options;&#10;      USHORT POINTER_ALIGNMENT FileAttributes;&#10;      USHORT                   ShareAccess;&#10;      ULONG POINTER_ALIGNMENT  EaLength;&#10;    } Create;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;      LONGLONG                DeviceOffset;&#10;    } Read;&#10;    struct {&#10;      size_t                  Length;&#10;      ULONG POINTER_ALIGNMENT Key;&#10;...">WDF_REQUEST_PARAMETERS</a>  wdfRequestParams;
     <a href="roothub_info" title="typedef struct _ROOTHUB_INFO {&#10;  ULONG           Size;&#10;  CONTROLLER_TYPE ControllerType;&#10;  USHORT          NumberOf20Ports;&#10;  USHORT          NumberOf30Ports;&#10;  USHORT          MaxU1ExitLatency;&#10;  USHORT          MaxU2ExitLatency;&#10;} ROOTHUB_INFO, *PROOTHUB_INFO;">PROOTHUB_INFO</a>           rootHubInfo;
     <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>                status;
-
     ucxRootHubContext = GetUcxRootHubContext(UcxRootHub);
-
     <a href="wdf_request_parameters_init" title="VOID WDF_REQUEST_PARAMETERS_INIT(&#10;  [out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WDF_REQUEST_PARAMETERS_INIT</a>(&amp;wdfRequestParams);
     <a href="wdfrequestgetparameters" title="VOID WdfRequestGetParameters(&#10;  [in]      WDFREQUEST              Request,&#10;  [in, out] PWDF_REQUEST_PARAMETERS Parameters&#10;);">WdfRequestGetParameters</a>(Request, &amp;wdfRequestParams);
-
     rootHubInfo = (<a href="roothub_info" title="typedef struct _ROOTHUB_INFO {&#10;  ULONG           Size;&#10;  CONTROLLER_TYPE ControllerType;&#10;  USHORT          NumberOf20Ports;&#10;  USHORT          NumberOf30Ports;&#10;  USHORT          MaxU1ExitLatency;&#10;  USHORT          MaxU2ExitLatency;&#10;} ROOTHUB_INFO, *PROOTHUB_INFO;">PROOTHUB_INFO</a>)wdfRequestParams.Parameters.Others.Arg1;
-
     if (rootHubInfo-&gt;Size &lt; sizeof(<a href="roothub_info" title="typedef struct _ROOTHUB_INFO {&#10;  ULONG           Size;&#10;  CONTROLLER_TYPE ControllerType;&#10;  USHORT          NumberOf20Ports;&#10;  USHORT          NumberOf30Ports;&#10;  USHORT          MaxU1ExitLatency;&#10;  USHORT          MaxU2ExitLatency;&#10;} ROOTHUB_INFO, *PROOTHUB_INFO;">ROOTHUB_INFO</a>)) {
         DbgTrace(TL_ERROR, RootHub, "Invalid <a href="roothub_info" title="typedef struct _ROOTHUB_INFO {&#10;  ULONG           Size;&#10;  CONTROLLER_TYPE ControllerType;&#10;  USHORT          NumberOf20Ports;&#10;  USHORT          NumberOf30Ports;&#10;  USHORT          MaxU1ExitLatency;&#10;  USHORT          MaxU2ExitLatency;&#10;} ROOTHUB_INFO, *PROOTHUB_INFO;">ROOTHUB_INFO</a> Size %d", rootHubInfo-&gt;Size);
         status = STATUS_INVALID_PARAMETER;
         goto RootHub_EvtRootHubGetInfo;
     }
-
     rootHubInfo-&gt;ControllerType = ControllerTypeSoftXhci;
     rootHubInfo-&gt;NumberOf20Ports = ucxRootHubContext-&gt;NumberOf20Ports;
     rootHubInfo-&gt;NumberOf30Ports = ucxRootHubContext-&gt;NumberOf30Ports;
     rootHubInfo-&gt;MaxU1ExitLatency = ucxRootHubContext-&gt;U1DeviceExitLatency;
     rootHubInfo-&gt;MaxU2ExitLatency = ucxRootHubContext-&gt;U2DeviceExitLatency;
-
     DbgTrace(TL_INFO, RootHub, "RootHub_UcxEvtGetInfo NumberOf20Ports %d NumberOf30Ports %d", rootHubInfo-&gt;NumberOf20Ports, rootHubInfo-&gt;NumberOf30Ports);
-
     status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-
 RootHub_EvtRootHubGetInfo:
-
     <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a>(Request, status);
 }
 </code></pre>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ucxroothub/ns-ucxroothub-_roothub_info">_ROOTHUB_INFO</a></p>
 <hr>
 <div class="ntdoc-description-links">

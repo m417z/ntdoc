@@ -67,68 +67,37 @@
 <h1>Windows Driver Kit DDI reference (ni-mountmgr-ioctl_mountmgr_query_points)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>This IOCTL returns triples that consist of a persistent symbolic link name for the volume (that is, a mount point), a unique ID for the volume, and a nonpersistent device name (such as "\Device\HarddiskVolume1") for the volume. The input to this IOCTL is a <strong><a href="mountmgr_mount_point" title="typedef struct _MOUNTMGR_MOUNT_POINT&#10;{&#10;    ULONG SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT Reserved1;&#10;    ULONG UniqueIdOffset;&#10;    USHORT UniqueIdLength;&#10;    USHORT Reserved2;&#10;    ULONG DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;    USHORT Reserved3;&#10;} MOUNTMGR_MOUNT_POINT, *PMOUNTMGR_MOUNT_POINT;">MOUNTMGR_MOUNT_POINT</a></strong> structure that contains a single triple.</p>
-
 <p>If the input triple contains a unique ID or a non-persistent device name, the request retrieves all associated mount points (symbolic links), including the volume GUID pathname and the drive letters. However, if the input triple has a symbolic link, but does not specify either the unique ID or the device name, the request only returns a single triple that contains the symbolic link that was provided in the input, together with the unique ID and the device name. The caller must submit another IOCTL with either the unique ID or the device name to retrieve the remaining mount points.</p>
-
 <p>If the input triple is empty, the mount manager returns the entire mounted device list.</p>
-
 <p>The mount manager returns triples that match as much info as is provided by the caller. If the caller submits the unique ID, the mount manager returns all triples with that unique ID. If the caller inputs the volume pathname or a drive letter as the symbolic link name, the mount manager returns only the triple for the symbolic link. There is one entry per symbolic link. If the caller inputs a device pathname, the mount manager returns only the triples for that device pathname. If the caller inputs a unique ID and a symbolic link, again, the mount manager returns only one entry for that symbolic link. A caller would do this to get the device pathname. If the caller inputs no device pathname, unique ID or symbolic link, the mount manager returns all entries/triples.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="major-code">Major code</h3>
-
+<h2>Parameters</h2>
+<h3>Major code</h3>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-device-control">IRP_MJ_DEVICE_CONTROL</a></p>
-
-<h3 id="input-buffer">Input buffer</h3>
-
+<h3>Input buffer</h3>
 <p>The mount manager client initializes the <strong><a href="mountmgr_mount_point" title="typedef struct _MOUNTMGR_MOUNT_POINT&#10;{&#10;    ULONG SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT Reserved1;&#10;    ULONG UniqueIdOffset;&#10;    USHORT UniqueIdLength;&#10;    USHORT Reserved2;&#10;    ULONG DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;    USHORT Reserved3;&#10;} MOUNTMGR_MOUNT_POINT, *PMOUNTMGR_MOUNT_POINT;">MOUNTMGR_MOUNT_POINT</a></strong> structure at the beginning of the buffer at <strong>Irp->AssociatedIrp.SystemBuffer</strong>. Immediately following this structure, the MM client loads the symbolic link name, the unique ID and the device name, in that order.</p>
-
-<h3 id="input-buffer-length">Input buffer length</h3>
-
+<h3>Input buffer length</h3>
 <p><strong>Parameters.DeviceIoControl.InputBufferLength</strong> in the I/O stack location of the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> indicates the size, in bytes, of the input buffer, which must be greater than or equal to <code>sizeof(<a href="mountmgr_mount_point" title="typedef struct _MOUNTMGR_MOUNT_POINT&#10;{&#10;    ULONG SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT Reserved1;&#10;    ULONG UniqueIdOffset;&#10;    USHORT UniqueIdLength;&#10;    USHORT Reserved2;&#10;    ULONG DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;    USHORT Reserved3;&#10;} MOUNTMGR_MOUNT_POINT, *PMOUNTMGR_MOUNT_POINT;">MOUNTMGR_MOUNT_POINT</a>)</code>.</p>
-
-<h3 id="output-buffer">Output buffer</h3>
-
+<h3>Output buffer</h3>
 <p>The mount manager initializes a variable-length structure of type <strong><a href="mountmgr_mount_points" title="_Struct_size_bytes_(Size)&#10;typedef struct _MOUNTMGR_MOUNT_POINTS&#10;{&#10;    ULONG Size;&#10;    ULONG NumberOfMountPoints;&#10;    _Field_size_(NumberOfMountPoints) MOUNTMGR_MOUNT_POINT MountPoints[1];&#10;} MOUNTMGR_MOUNT_POINTS, *PMOUNTMGR_MOUNT_POINTS;">MOUNTMGR_MOUNT_POINTS</a></strong> at the beginning of the buffer at <strong>Irp->AssociatedIrp.SystemBuffer</strong>. The mount manager inserts the mount points, associated with the indicated volume, at the address pointed to by the <strong>MountPoints[]</strong> member of this structure. Each mount point is represented by a <a href="mountmgr_mount_point" title="typedef struct _MOUNTMGR_MOUNT_POINT&#10;{&#10;    ULONG SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT Reserved1;&#10;    ULONG UniqueIdOffset;&#10;    USHORT UniqueIdLength;&#10;    USHORT Reserved2;&#10;    ULONG DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;    USHORT Reserved3;&#10;} MOUNTMGR_MOUNT_POINT, *PMOUNTMGR_MOUNT_POINT;">MOUNTMGR_MOUNT_POINT</a> structure as defined in the <strong>Input</strong> section for this IOCTL.</p>
-
-<h3 id="output-buffer-length">Output buffer length</h3>
-
+<h3>Output buffer length</h3>
 <p><strong>Parameters.DeviceIoControl.OutputBufferLength</strong> in the I/O stack location of the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> indicates the size, in bytes, of the output buffer, which must be greater than or equal to <code>sizeof(<a href="mountmgr_mount_points" title="_Struct_size_bytes_(Size)&#10;typedef struct _MOUNTMGR_MOUNT_POINTS&#10;{&#10;    ULONG Size;&#10;    ULONG NumberOfMountPoints;&#10;    _Field_size_(NumberOfMountPoints) MOUNTMGR_MOUNT_POINT MountPoints[1];&#10;} MOUNTMGR_MOUNT_POINTS, *PMOUNTMGR_MOUNT_POINTS;">MOUNTMGR_MOUNT_POINTS</a>)</code>.</p>
-
-<h3 id="inputoutput-buffer">Input/output buffer</h3>
-
+<h3>Input/output buffer</h3>
 <p>N/A</p>
-
-<h3 id="inputoutput-buffer-length">Input/output buffer length</h3>
-
+<h3>Input/output buffer length</h3>
 <p>N/A</p>
-
-<h3 id="status-block">Status block</h3>
-
+<h3>Status block</h3>
 <p>If the operation is successful, the <strong>Status</strong> field is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p>
-
 <p>If neither the unique ID nor the nonpersistent device name are found in the volumes mounted device list, the <strong>Status</strong> field is set to STATUS_INVALID_PARAMETER.</p>
-
 <p>If <strong>InputBufferLength</strong> is less than <code>sizeof(<a href="mountmgr_mount_point" title="typedef struct _MOUNTMGR_MOUNT_POINT&#10;{&#10;    ULONG SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT Reserved1;&#10;    ULONG UniqueIdOffset;&#10;    USHORT UniqueIdLength;&#10;    USHORT Reserved2;&#10;    ULONG DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;    USHORT Reserved3;&#10;} MOUNTMGR_MOUNT_POINT, *PMOUNTMGR_MOUNT_POINT;">MOUNTMGR_MOUNT_POINT</a>)</code>, the <strong>Status</strong> field is set to STATUS_INVALID_PARAMETER.</p>
-
 <p>If <strong>InputBufferLength</strong> is less than the total length of the three input ID strings, the <strong>Status</strong> field is set to STATUS_INVALID_PARAMETER.</p>
-
 <p>If <strong>OutputBufferLength</strong> is less than <code>sizeof(<a href="mountmgr_mount_point" title="typedef struct _MOUNTMGR_MOUNT_POINT&#10;{&#10;    ULONG SymbolicLinkNameOffset;&#10;    USHORT SymbolicLinkNameLength;&#10;    USHORT Reserved1;&#10;    ULONG UniqueIdOffset;&#10;    USHORT UniqueIdLength;&#10;    USHORT Reserved2;&#10;    ULONG DeviceNameOffset;&#10;    USHORT DeviceNameLength;&#10;    USHORT Reserved3;&#10;} MOUNTMGR_MOUNT_POINT, *PMOUNTMGR_MOUNT_POINT;">MOUNTMGR_MOUNT_POINT</a>)</code>, the <strong>Status</strong> field is set to STATUS_INVALID_PARAMETER.</p>
-
 <p>If <strong>OutputBufferLength</strong> is less than <code>sizeof(<a href="mountmgr_mount_points" title="_Struct_size_bytes_(Size)&#10;typedef struct _MOUNTMGR_MOUNT_POINTS&#10;{&#10;    ULONG Size;&#10;    ULONG NumberOfMountPoints;&#10;    _Field_size_(NumberOfMountPoints) MOUNTMGR_MOUNT_POINT MountPoints[1];&#10;} MOUNTMGR_MOUNT_POINTS, *PMOUNTMGR_MOUNT_POINTS;">MOUNTMGR_MOUNT_POINTS</a>)</code> plus the sum of the sizes of the mount point triples, the <strong>Status</strong> field is set to STATUS_BUFFER_OVERFLOW.</p>
-
 <p>If any of the three strings contained within any of the triples is aligned on an odd address (for example, address &amp; 01 != 0), the <strong>Status</strong> field is set to STATUS_INVALID_PARAMETER.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/supporting-mount-manager-requests-in-a-storage-class-driver">Supporting Mount Manager Requests in a Storage Class Driver</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><strong><a href="mountmgr_mount_points" title="_Struct_size_bytes_(Size)&#10;typedef struct _MOUNTMGR_MOUNT_POINTS&#10;{&#10;    ULONG Size;&#10;    ULONG NumberOfMountPoints;&#10;    _Field_size_(NumberOfMountPoints) MOUNTMGR_MOUNT_POINT MountPoints[1];&#10;} MOUNTMGR_MOUNT_POINTS, *PMOUNTMGR_MOUNT_POINTS;">MOUNTMGR_MOUNT_POINTS</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -77,53 +77,29 @@ DbgPrint(
 <h1>Windows Driver Kit DDI reference (nf-wdm-dbgprint)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>DbgPrint</strong> routine sends a message to the kernel debugger when the conditions that you specify apply (see the <strong>Remarks</strong> section below).</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="format"><code>Format</code></h3>
-
+<h2>Parameters</h2>
+<h3><code>Format</code></h3>
 <p>Specifies a pointer to the format string to print. The <em>Format</em> string supports most of the <strong>printf</strong>-style <a rel="noopener" target="_blank" href="https://learn.microsoft.com/cpp/c-runtime-library/format-specification-syntax-printf-and-wprintf-functions">format specification fields</a>. However, the Unicode format codes (<strong>%C</strong>, <strong>%S</strong>, <strong>%lc</strong>, <strong>%ls</strong>, <strong>%wc</strong>, <strong>%ws</strong>, and <strong>%wZ</strong>) can only be used with IRQL = PASSIVE_LEVEL. The <strong>DbgPrint</strong> routine does not support any of the floating point types (<strong>%f</strong>, <strong>%e</strong>, <strong>%E</strong>, <strong>%g</strong>, <strong>%G</strong>, <strong>%a</strong>, or <strong>%A</strong>).</p>
-
-<h3 id="-1"><code>...</code></h3>
-
+<h3><code>...</code></h3>
 <p>Specifies arguments for the format string, as in <strong>printf</strong>.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>If successful, <strong>DbgPrint</strong> returns the <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>; otherwise it returns the appropriate error code.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p><strong>DbgPrint</strong> and <strong><a href="dbgprintex" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrintEx(&#10;    _In_ ULONG ComponentId,&#10;    _In_ ULONG Level,&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrintEx</a></strong> can be called at IRQL&lt;=DIRQL. However, Unicode format codes (<strong>%C</strong>, <strong>%S</strong>, <strong>%lc</strong>, <strong>%ls</strong>, <strong>%wc</strong>, <strong>%ws</strong>, and <strong>%wZ</strong>) can be used only at IRQL=PASSIVE_LEVEL. Also, because the debugger uses interprocess interrupts (IPIs) to communicate with other processors, calling <strong>DbgPrint</strong> at IRQL>DIRQL can cause deadlocks.</p>
-
 <p>Only kernel-mode drivers can call the <strong>DbgPrint</strong> routine.</p>
-
 <p><strong>DbgPrint</strong> sends a message only if certain conditions apply. Specifically, it behaves like the <a href="dbgprintex" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrintEx(&#10;    _In_ ULONG ComponentId,&#10;    _In_ ULONG Level,&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrintEx</a> routine with the DEFAULT component and a message importance level of DPFLTR_INFO_LEVEL. In other words, the following two function calls are identical:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">DbgPrint</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">Format</span><span class="p">,</span><span class="w"> </span><span class="n">arguments</span><span class="w"> </span><span class="p">)</span>
-
-<span class="n"><a href="dbgprintex" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrintEx(&#10;    _In_ ULONG ComponentId,&#10;    _In_ ULONG Level,&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrintEx</a></span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">DPFLTR_DEFAULT_ID</span><span class="p">,</span><span class="w"> </span><span class="n">DPFLTR_INFO_LEVEL</span><span class="p">,</span><span class="w"> </span><span class="n">Format</span><span class="p">,</span><span class="w"> </span><span class="n">arguments</span><span class="w"> </span><span class="p">)</span>
+<pre><code>DbgPrint ( Format, arguments )
+<a href="dbgprintex" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrintEx(&#10;    _In_ ULONG ComponentId,&#10;    _In_ ULONG Level,&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrintEx</a> ( DPFLTR_DEFAULT_ID, DPFLTR_INFO_LEVEL, Format, arguments )
 </code></pre>
-</div>
-
 <p>For more information about message filtering, components, and message importance level, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/reading-and-filtering-debugging-messages">Reading and Filtering Debugging Messages</a>.</p>
-
 <p>It is recommended that you use <strong><a href="dbgprintex" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrintEx(&#10;    _In_ ULONG ComponentId,&#10;    _In_ ULONG Level,&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrintEx</a></strong> instead of <strong>DbgPrint</strong>, since this allows you to control the conditions under which the message is sent.</p>
-
 <p>Unless it is absolutely necessary, you should not obtain a string from user input or another process and pass it to <strong>DbgPrint</strong>. If you do use a string that you did not create, you must verify that this is a valid format string, and that the format codes match the argument list in type and quantity. The best coding practice is for all <em>Format</em> strings to be static and defined at compile time.</p>
-
 <p>There is no upper limit to the size of the <em>Format</em> string or the number of arguments. However, any single call to <strong>DbgPrint</strong> will only transmit 512 bytes of information. There is also a limit to the size of the DbgPrint buffer. See <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/reading-and-filtering-debugging-messages">DbgPrint Buffer and the Debugger</a> for details.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="dbgprintex" title="NTSYSAPI&#10;ULONG&#10;STDAPIVCALLTYPE&#10;DbgPrintEx(&#10;    _In_ ULONG ComponentId,&#10;    _In_ ULONG Level,&#10;    _In_z_ _Printf_format_string_ PCCH Format,&#10;    ...&#10;    );">DbgPrintEx</a></p>
-
 <p><a href="kdprint" title="void KdPrint(&#10;  [in] _x_&#10;);">KdPrint</a></p>
-
 <p><a href="kdprintex" title="void KdPrintEx(&#10;  _x_&#10;);">KdPrintEx</a></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -138,13 +114,9 @@ DbgPrint(
 </div>
 <div class="ntdoc-description">
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-dbgprint">documented in Windows Driver Kit</a>.</p>
-
-<hr />
-
+<br />
 <p>Function works like a normal C <code>printf</code> routine, but result is streamed to debug output.</p>
-
 <h1>Documented by</h1>
-
 <ul>
 <li>Tomasz Nowak</li>
 </ul>

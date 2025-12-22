@@ -65,89 +65,63 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfdmatransaction-wdfdmatransactiondmacompletedwithlength)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wdfdmatransactiondmacompletedwithlength-function">WdfDmaTransactionDmaCompletedWithLength function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WdfDmaTransactionDmaCompletedWithLength function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF only]</p>
-
 <p>The <strong>WdfDmaTransactionDmaCompletedWithLength</strong> method notifies the framework that a device's DMA transfer operation is complete and supplies the length of the completed transfer.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="dmatransaction-in"><code>DmaTransaction</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>DmaTransaction</code> [in]</h3>
 <p>A handle to a DMA transaction object that the driver obtained from a previous call to <a href="wdfdmatransactioncreate" title="NTSTATUS WdfDmaTransactionCreate(&#10;  [in]           WDFDMAENABLER          DmaEnabler,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]          WDFDMATRANSACTION      *DmaTransaction&#10;);">WdfDmaTransactionCreate</a>.</p>
-
-<h3 id="transferredlength-in"><code>TransferredLength</code> [in]</h3>
-
+<h3><code>TransferredLength</code> [in]</h3>
 <p>The number of bytes that the device transferred in the current DMA transfer.</p>
-
-<h3 id="status-out"><code>Status</code> [out]</h3>
-
+<h3><code>Status</code> [out]</h3>
 <p>A pointer to a location that receives the status of the DMA transfer. For more information, see the Remarks section for <a href="wdfdmatransactiondmacompleted" title="BOOLEAN WdfDmaTransactionDmaCompleted(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompleted</a>.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>WdfDmaTransactionDmaCompletedWithLength</strong> returns <strong>FALSE</strong> and <em>Status</em> receives STATUS_MORE_PROCESSING_REQUIRED if additional transfers are needed to complete the DMA transaction. The method returns <strong>TRUE</strong> if no additional transfers are required.</p>
-
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>When your driver calls the <strong>WdfDmaTransactionDmaCompletedWithLength</strong> method, the framework ends the current transfer and, if necessary, starts a new one.</p>
-
 <p>The <strong>WdfDmaTransactionDmaCompletedWithLength</strong> method behaves the same as <a href="wdfdmatransactiondmacompleted" title="BOOLEAN WdfDmaTransactionDmaCompleted(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompleted</a>, except that drivers call <strong>WdfDmaTransactionDmaCompletedWithLength</strong> for devices that report the number of bytes that were transferred. The framework uses the reported byte count to determine the beginning of the next DMA transfer for the specified DMA transaction, if multiple transfers are needed to complete the transaction.</p>
-
 <p>For more information about completing DMA transfers, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/completing-a-dma-transfer">Completing a DMA Transfer</a>.</p>
-
-<h4 id="examples">Examples</h4>
-
+<h4>Examples</h4>
 <p>The following code example is from the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/sample-kmdf-drivers">PLX9x5x</a> sample driver. This example calls <a href="wdfdmatransactiongetcurrentdmatransferlength" title="size_t WdfDmaTransactionGetCurrentDmaTransferLength(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionGetCurrentDmaTransferLength</a> to determine the current transfer's original length, and then it calculates the actual transfer length. Next, the example calls <strong>WdfDmaTransactionDmaCompletedWithLength</strong> to report the actual transfer length to the framework. If the current transfer is the last one for the transaction, the example calls a private routine that completes the I/O request.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">BOOLEAN</span><span class="w">  </span><span class="n">hasTransitioned</span><span class="p">;</span>
-<span class="n">PDMA_TRANSFER_ELEMENT</span><span class="w">  </span><span class="n">dteVA</span><span class="p">;</span>
-<span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">length</span><span class="p">;</span>
-<span class="c1">//</span>
-<span class="c1">// Use &quot;DMA Clear-Count Mode&quot; to get the complementary</span>
-<span class="c1">// transferred byte count.</span>
-<span class="c1">//</span>
-<span class="n">length</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfdmatransactiongetcurrentdmatransferlength" title="size_t WdfDmaTransactionGetCurrentDmaTransferLength(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionGetCurrentDmaTransferLength</a></span><span class="p">(</span><span class="n">dmaTransaction</span><span class="p">);</span>
-<span class="n">dteVA</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">PDMA_TRANSFER_ELEMENT</span><span class="p">)</span><span class="w"> </span><span class="n">devExt</span><span class="o">-&gt;</span><span class="n">ReadCommonBufferBase</span><span class="p">;</span>
-<span class="k">while</span><span class="p">(</span><span class="n">dteVA</span><span class="o">-&gt;</span><span class="n">DescPtr</span><span class="p">.</span><span class="n">LastElement</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">FALSE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">length</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">dteVA</span><span class="o">-&gt;</span><span class="n">TransferSize</span><span class="p">;</span>
-<span class="w">    </span><span class="n">dteVA</span><span class="o">++</span><span class="p">;</span>
-<span class="p">}</span>
-<span class="n">length</span><span class="w"> </span><span class="o">-=</span><span class="w"> </span><span class="n">dteVA</span><span class="o">-&gt;</span><span class="n">TransferSize</span><span class="p">;</span>
-<span class="c1">//</span>
-<span class="c1">// Indicate that this DMA operation has completed.</span>
-<span class="c1">//</span>
-<span class="n">hasTransitioned</span><span class="w"> </span><span class="o">=</span>
-<span class="w">    </span><span class="n">WdfDmaTransactionDmaCompletedWithLength</span><span class="p">(</span>
-<span class="w">                                            </span><span class="n">dmaTransaction</span><span class="p">,</span>
-<span class="w">                                            </span><span class="n">length</span><span class="p">,</span>
-<span class="w">                                            </span><span class="o">&amp;</span><span class="n">status</span>
-<span class="w">                                            </span><span class="p">);</span>
-<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">hasTransitioned</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Complete this DMA transaction.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="n">devExt</span><span class="o">-&gt;</span><span class="n">CurrentReadDmaTransaction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PLxReadRequestComplete</span><span class="p">(</span>
-<span class="w">                           </span><span class="n">dmaTransaction</span><span class="p">,</span>
-<span class="w">                           </span><span class="n">status</span>
-<span class="w">                           </span><span class="p">);</span>
-<span class="p">}</span>
+<pre><code>BOOLEAN  hasTransitioned;
+PDMA_TRANSFER_ELEMENT  dteVA;
+<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  length;
+//
+// Use "DMA Clear-Count Mode" to get the complementary
+// transferred byte count.
+//
+length = <a href="wdfdmatransactiongetcurrentdmatransferlength" title="size_t WdfDmaTransactionGetCurrentDmaTransferLength(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionGetCurrentDmaTransferLength</a>(dmaTransaction);
+dteVA = (PDMA_TRANSFER_ELEMENT) devExt-&gt;ReadCommonBufferBase;
+while(dteVA-&gt;DescPtr.LastElement == FALSE) {
+    length -= dteVA-&gt;TransferSize;
+    dteVA++;
+}
+length -= dteVA-&gt;TransferSize;
+//
+// Indicate that this DMA operation has completed.
+//
+hasTransitioned =
+    WdfDmaTransactionDmaCompletedWithLength(
+                                            dmaTransaction,
+                                            length,
+                                            &amp;status
+                                            );
+if (hasTransitioned) {
+    //
+    // Complete this DMA transaction.
+    //
+    devExt-&gt;CurrentReadDmaTransaction = NULL;
+    PLxReadRequestComplete(
+                           dmaTransaction,
+                           status
+                           );
+}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="wdfdmatransactioncreate" title="NTSTATUS WdfDmaTransactionCreate(&#10;  [in]           WDFDMAENABLER          DmaEnabler,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]          WDFDMATRANSACTION      *DmaTransaction&#10;);">WdfDmaTransactionCreate</a></p>
-
 <p><a href="wdfdmatransactiondmacompleted" title="BOOLEAN WdfDmaTransactionDmaCompleted(&#10;  [in]  WDFDMATRANSACTION DmaTransaction,&#10;  [out] NTSTATUS          *Status&#10;);">WdfDmaTransactionDmaCompleted</a></p>
-
 <p><a href="wdfdmatransactiongetcurrentdmatransferlength" title="size_t WdfDmaTransactionGetCurrentDmaTransferLength(&#10;  [in] WDFDMATRANSACTION DmaTransaction&#10;);">WdfDmaTransactionGetCurrentDmaTransferLength</a></p>
 <hr>
 <div class="ntdoc-description-links">

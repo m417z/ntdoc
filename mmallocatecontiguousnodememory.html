@@ -79,32 +79,19 @@
 <h1>Windows Driver Kit DDI reference (nf-ntddk-mmallocatecontiguousnodememory)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>MmAllocateContiguousNodeMemory</strong> routine allocates a range of contiguous, nonpaged physical memory and maps it to the system address space.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="numberofbytes-in"><code>NumberOfBytes</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>NumberOfBytes</code> [in]</h3>
 <p>The size, in bytes, of the block of contiguous memory to allocate. For more information, see Remarks.</p>
-
-<h3 id="lowestacceptableaddress-in"><code>LowestAcceptableAddress</code> [in]</h3>
-
+<h3><code>LowestAcceptableAddress</code> [in]</h3>
 <p>The lowest valid physical address the caller can use. For example, if a device can address only locations above the first 8 megabytes of the processor's physical memory address range, the driver for this device should set <em>LowestAcceptableAddress</em> to 0x0000000000800000.</p>
-
-<h3 id="highestacceptableaddress-in"><code>HighestAcceptableAddress</code> [in]</h3>
-
+<h3><code>HighestAcceptableAddress</code> [in]</h3>
 <p>The highest valid physical address the caller can use. For example, if a device can address only locations in the first 16 megabytes of the processor's physical memory address range, the driver for this device should set <em>HighestAcceptableAddress</em> to 0x0000000000FFFFFF.</p>
-
-<h3 id="boundaryaddressmultiple-in-optional"><code>BoundaryAddressMultiple</code> [in, optional]</h3>
-
+<h3><code>BoundaryAddressMultiple</code> [in, optional]</h3>
 <p>The physical address multiple that the allocated buffer must not cross. A physical address multiple must always be a power of two. This parameter is optional and can be specified as zero to indicate that the device has no special memory boundary restrictions. For more information, see Remarks.</p>
-
-<h3 id="protect-in"><code>Protect</code> [in]</h3>
-
+<h3><code>Protect</code> [in]</h3>
 <p>Flag bits that specify the protection to use for the allocated memory. The caller must set one (but not both) of the following flag bits in the <em>Protect</em> parameter.</p>
-
 <table>
 <thead>
 <tr>
@@ -123,9 +110,7 @@
 </tr>
 </tbody>
 </table>
-
 <p>In addition, the caller can set one (but not both) of the following optional flag bits in the <em>Protect</em> parameter.</p>
-
 <table>
 <thead>
 <tr>
@@ -144,45 +129,25 @@
 </tr>
 </tbody>
 </table>
-
 <p>If neither <a href="page_nocache" title="#define PAGE_NOCACHE 0x200 // Sets all pages to be non-cachable. Applications should not use this attribute. Using interlocked functions with memory that is mapped with SEC_NOCACHE can result in an EXCEPTION_ILLEGAL_INSTRUCTION exception.">PAGE_NOCACHE</a> nor <a href="page_writecombine" title="#define PAGE_WRITECOMBINE 0x400 // Sets all pages to be write-combined. Applications should not use this attribute. Using interlocked functions with memory that is mapped with SEC_NOCACHE can result in an EXCEPTION_ILLEGAL_INSTRUCTION exception.">PAGE_WRITECOMBINE</a> is specified, the allocated memory is fully cached. In this case, the effect is similar to calling <strong><a href="mmallocatecontiguousmemoryspecifycache" title="PVOID MmAllocateContiguousMemorySpecifyCache(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType&#10;);">MmAllocateContiguousMemorySpecifyCache</a></strong> with <em>CacheType</em> set to <strong>MmCached</strong>.</p>
-
-<h3 id="preferrednode-in"><code>PreferredNode</code> [in]</h3>
-
+<h3><code>PreferredNode</code> [in]</h3>
 <p>The preferred node number. If a multiprocessor system contains N nodes, the nodes are numbered from 0 to N-1. If the caller sets <em>PreferredNode</em> to MM_ANY_NODE_OK, the routine chooses which node to allocate memory from. Otherwise, if memory in the specified address range cannot be allocated from the preferred node, the routine returns <strong>NULL</strong>.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>MmAllocateContiguousNodeMemory</strong> returns the base virtual address for the allocated memory. If the request cannot be satisfied, the routine returns <strong>NULL</strong>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>A kernel-mode device driver calls this routine to allocate a contiguous block of physical memory. The calling driver can specify whether to use no-execute (NX) memory for the allocation. In a non-uniform memory access (NUMA) multiprocessor system, the caller can specify a preferred node from which to allocate the memory. A node is a collection of processors that share fast access to a region of memory. In a non-NUMA multiprocessor or a single-processor system, <strong>MmAllocateContiguousNodeMemory</strong> treats all memory as belonging to a single node and allocates memory from this node.</p>
-
 <p><strong>MmAllocateContiguousNodeMemory</strong> allocates a block of nonpaged memory that is contiguous in physical address space. The routine maps this block to a contiguous block of virtual memory in the system address space and returns the virtual address of the base of this block. The routine aligns the starting address of a contiguous memory allocation to a memory page boundary.</p>
-
 <p>Drivers must not access memory beyond the requested allocation size. For example, developers should not assume that their drivers can safely use memory between the end of their requested allocation and the next page boundary.</p>
-
 <p>Because contiguous physical memory is usually in short supply, it should be used sparingly and only when necessary. A driver that must use contiguous memory should allocate this memory during driver initialization because physical memory is likely to become fragmented over time as the operating system allocates and frees memory. Typically, a driver calls <strong>MmAllocateContiguousNodeMemory</strong> from its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a> routine to allocate an internal buffer for long-term use, and frees the buffer just before the driver is unloaded.</p>
-
 <p>Memory allocated by <strong>MmAllocateContiguousNodeMemory</strong> must be freed when the memory is no longer needed. Call the <a href="mmfreecontiguousmemory" title="VOID MmFreeContiguousMemory(&#10;  [in] PVOID BaseAddress&#10;);">MmFreeContiguousMemory</a> routine to free memory that is allocated by <strong>MmAllocateContiguousNodeMemory</strong>.</p>
-
 <p><strong>MmAllocateContiguousNodeMemory</strong> is similar to the <a href="mmallocatecontiguousmemoryspecifycachenode" title="PVOID MmAllocateContiguousMemorySpecifyCacheNode(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType,&#10;  [in]           NODE_REQUIREMENT    PreferredNode&#10;);">MmAllocateContiguousMemorySpecifyCacheNode</a> routine. Unlike <strong><a href="mmallocatecontiguousmemoryspecifycachenode" title="PVOID MmAllocateContiguousMemorySpecifyCacheNode(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType,&#10;  [in]           NODE_REQUIREMENT    PreferredNode&#10;);">MmAllocateContiguousMemorySpecifyCacheNode</a></strong>, <strong>MmAllocateContiguousNodeMemory</strong> can be used to allocate no-execute (NX) memory. As a best practice, a driver should allocate NX memory unless the driver explicitly requires the ability to execute instructions in the allocated memory. By allocating NX memory, a driver improves security by preventing malicious software from executing instructions in this memory. Memory allocated by the <a href="mmallocatecontiguousmemory" title="PVOID MmAllocateContiguousMemory(&#10;  [in] SIZE_T           NumberOfBytes,&#10;  [in] PHYSICAL_ADDRESS HighestAcceptableAddress&#10;);">MmAllocateContiguousMemory</a>, <a href="mmallocatecontiguousmemoryspecifycache" title="PVOID MmAllocateContiguousMemorySpecifyCache(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType&#10;);">MmAllocateContiguousMemorySpecifyCache</a>, and <strong><a href="mmallocatecontiguousmemoryspecifycachenode" title="PVOID MmAllocateContiguousMemorySpecifyCacheNode(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType,&#10;  [in]           NODE_REQUIREMENT    PreferredNode&#10;);">MmAllocateContiguousMemorySpecifyCacheNode</a></strong> routines is always executable.</p>
-
 <p>If you specify a nonzero value for the <em>BoundaryAddressMultiple</em> parameter, the physical address range of the allocated memory block will not cross an address boundary that is an integer multiple of this value. A driver should set this parameter to zero unless a nonzero value is required to work around a hardware limitation. For example, if a device cannot transfer data across 16-megabyte physical boundaries, the driver should specify a value of 0x1000000 for this parameter to ensure that the addresses that the device sees do not wrap around at a 16-megabyte boundary.</p>
-
 <p>Memory that <strong>MmAllocateContiguousNodeMemory</strong> allocates is uninitialized. A kernel-mode driver must first zero this memory if it is going to make it visible to user-mode software (to avoid leaking potentially privileged contents).</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a></p>
-
 <p><a href="mmallocatecontiguousmemory" title="PVOID MmAllocateContiguousMemory(&#10;  [in] SIZE_T           NumberOfBytes,&#10;  [in] PHYSICAL_ADDRESS HighestAcceptableAddress&#10;);">MmAllocateContiguousMemory</a></p>
-
 <p><a href="mmallocatecontiguousmemoryspecifycache" title="PVOID MmAllocateContiguousMemorySpecifyCache(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType&#10;);">MmAllocateContiguousMemorySpecifyCache</a></p>
-
 <p><a href="mmallocatecontiguousmemoryspecifycachenode" title="PVOID MmAllocateContiguousMemorySpecifyCacheNode(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType,&#10;  [in]           NODE_REQUIREMENT    PreferredNode&#10;);">MmAllocateContiguousMemorySpecifyCacheNode</a></p>
-
 <p><a href="mmfreecontiguousmemory" title="VOID MmFreeContiguousMemory(&#10;  [in] PVOID BaseAddress&#10;);">MmFreeContiguousMemory</a></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -197,31 +162,18 @@
 </div>
 <div class="ntdoc-description">
 <h2>Description</h2>
-
 <p>The <strong>MmAllocateContiguousNodeMemory</strong> routine allocates a range of contiguous, nonpaged physical memory and maps it to the system address space.</p>
-
 <h2>Parameters</h2>
-
 <h3><code>NumberOfBytes</code> [in]</h3>
-
 <p>The size, in bytes, of the block of contiguous memory to allocate. For more information, see Remarks.</p>
-
 <h3><code>LowestAcceptableAddress</code> [in]</h3>
-
 <p>The lowest valid physical address the caller can use. For example, if a device can address only locations above the first 8 megabytes of the processor's physical memory address range, the driver for this device should set <em>LowestAcceptableAddress</em> to 0x0000000000800000.</p>
-
 <h3><code>HighestAcceptableAddress</code> [in]</h3>
-
 <p>The highest valid physical address the caller can use. For example, if a device can address only locations in the first 16 megabytes of the processor's physical memory address range, the driver for this device should set <em>HighestAcceptableAddress</em> to 0x0000000000FFFFFF.</p>
-
 <h3><code>BoundaryAddressMultiple</code> [in, optional]</h3>
-
 <p>The physical address multiple that the allocated buffer must not cross. A physical address multiple must always be a power of two. This parameter is optional and can be specified as zero to indicate that the device has no special memory boundary restrictions. For more information, see Remarks.</p>
-
 <h3><code>Protect</code> [in]</h3>
-
 <p>Flag bits that specify the protection to use for the allocated memory. The caller must set one (but not both) of the following flag bits in the <em>Protect</em> parameter.</p>
-
 <table>
 <thead>
 <tr>
@@ -240,9 +192,7 @@
 </tr>
 </tbody>
 </table>
-
 <p>In addition, the caller can set one (but not both) of the following optional flag bits in the <em>Protect</em> parameter.</p>
-
 <table>
 <thead>
 <tr>
@@ -261,45 +211,25 @@
 </tr>
 </tbody>
 </table>
-
 <p>If neither <a href="page_nocache" title="#define PAGE_NOCACHE 0x200 // Sets all pages to be non-cachable. Applications should not use this attribute. Using interlocked functions with memory that is mapped with SEC_NOCACHE can result in an EXCEPTION_ILLEGAL_INSTRUCTION exception.">PAGE_NOCACHE</a> nor <a href="page_writecombine" title="#define PAGE_WRITECOMBINE 0x400 // Sets all pages to be write-combined. Applications should not use this attribute. Using interlocked functions with memory that is mapped with SEC_NOCACHE can result in an EXCEPTION_ILLEGAL_INSTRUCTION exception.">PAGE_WRITECOMBINE</a> is specified, the allocated memory is fully cached. In this case, the effect is similar to calling <strong><a href="mmallocatecontiguousmemoryspecifycache" title="PVOID MmAllocateContiguousMemorySpecifyCache(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType&#10;);">MmAllocateContiguousMemorySpecifyCache</a></strong> with <em>CacheType</em> set to <strong>MmCached</strong>.</p>
-
 <h3><code>PreferredNode</code> [in]</h3>
-
 <p>The preferred node number. If a multiprocessor system contains N nodes, the nodes are numbered from 0 to N-1. If the caller sets <em>PreferredNode</em> to MM_ANY_NODE_OK, the routine chooses which node to allocate memory from. Otherwise, if memory in the specified address range cannot be allocated from the preferred node, the routine returns <strong>NULL</strong>.</p>
-
 <h2>Return value</h2>
-
 <p><strong>MmAllocateContiguousNodeMemory</strong> returns the base virtual address for the allocated memory. If the request cannot be satisfied, the routine returns <strong>NULL</strong>.</p>
-
 <h2>Remarks</h2>
-
 <p>A kernel-mode device driver calls this routine to allocate a contiguous block of physical memory. The calling driver can specify whether to use no-execute (NX) memory for the allocation. In a non-uniform memory access (NUMA) multiprocessor system, the caller can specify a preferred node from which to allocate the memory. A node is a collection of processors that share fast access to a region of memory. In a non-NUMA multiprocessor or a single-processor system, <strong>MmAllocateContiguousNodeMemory</strong> treats all memory as belonging to a single node and allocates memory from this node.</p>
-
 <p><strong>MmAllocateContiguousNodeMemory</strong> allocates a block of nonpaged memory that is contiguous in physical address space. The routine maps this block to a contiguous block of virtual memory in the system address space and returns the virtual address of the base of this block. The routine aligns the starting address of a contiguous memory allocation to a memory page boundary.</p>
-
 <p>Drivers must not access memory beyond the requested allocation size. For example, developers should not assume that their drivers can safely use memory between the end of their requested allocation and the next page boundary.</p>
-
 <p>Because contiguous physical memory is usually in short supply, it should be used sparingly and only when necessary. A driver that must use contiguous memory should allocate this memory during driver initialization because physical memory is likely to become fragmented over time as the operating system allocates and frees memory. Typically, a driver calls <strong>MmAllocateContiguousNodeMemory</strong> from its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a> routine to allocate an internal buffer for long-term use, and frees the buffer just before the driver is unloaded.</p>
-
 <p>Memory allocated by <strong>MmAllocateContiguousNodeMemory</strong> must be freed when the memory is no longer needed. Call the <a href="mmfreecontiguousmemory" title="VOID MmFreeContiguousMemory(&#10;  [in] PVOID BaseAddress&#10;);">MmFreeContiguousMemory</a> routine to free memory that is allocated by <strong>MmAllocateContiguousNodeMemory</strong>.</p>
-
 <p><strong>MmAllocateContiguousNodeMemory</strong> is similar to the <a href="mmallocatecontiguousmemoryspecifycachenode" title="PVOID MmAllocateContiguousMemorySpecifyCacheNode(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType,&#10;  [in]           NODE_REQUIREMENT    PreferredNode&#10;);">MmAllocateContiguousMemorySpecifyCacheNode</a> routine. Unlike <strong><a href="mmallocatecontiguousmemoryspecifycachenode" title="PVOID MmAllocateContiguousMemorySpecifyCacheNode(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType,&#10;  [in]           NODE_REQUIREMENT    PreferredNode&#10;);">MmAllocateContiguousMemorySpecifyCacheNode</a></strong>, <strong>MmAllocateContiguousNodeMemory</strong> can be used to allocate no-execute (NX) memory. As a best practice, a driver should allocate NX memory unless the driver explicitly requires the ability to execute instructions in the allocated memory. By allocating NX memory, a driver improves security by preventing malicious software from executing instructions in this memory. Memory allocated by the <a href="mmallocatecontiguousmemory" title="PVOID MmAllocateContiguousMemory(&#10;  [in] SIZE_T           NumberOfBytes,&#10;  [in] PHYSICAL_ADDRESS HighestAcceptableAddress&#10;);">MmAllocateContiguousMemory</a>, <a href="mmallocatecontiguousmemoryspecifycache" title="PVOID MmAllocateContiguousMemorySpecifyCache(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType&#10;);">MmAllocateContiguousMemorySpecifyCache</a>, and <strong><a href="mmallocatecontiguousmemoryspecifycachenode" title="PVOID MmAllocateContiguousMemorySpecifyCacheNode(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType,&#10;  [in]           NODE_REQUIREMENT    PreferredNode&#10;);">MmAllocateContiguousMemorySpecifyCacheNode</a></strong> routines is always executable.</p>
-
 <p>If you specify a nonzero value for the <em>BoundaryAddressMultiple</em> parameter, the physical address range of the allocated memory block will not cross an address boundary that is an integer multiple of this value. A driver should set this parameter to zero unless a nonzero value is required to work around a hardware limitation. For example, if a device cannot transfer data across 16-megabyte physical boundaries, the driver should specify a value of 0x1000000 for this parameter to ensure that the addresses that the device sees do not wrap around at a 16-megabyte boundary.</p>
-
 <p>Memory that <strong>MmAllocateContiguousNodeMemory</strong> allocates is uninitialized. A kernel-mode driver must first zero this memory if it is going to make it visible to user-mode software (to avoid leaking potentially privileged contents).</p>
-
 <h2>See also</h2>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/storage/driverentry-of-ide-controller-minidriver">DriverEntry</a></p>
-
 <p><a href="mmallocatecontiguousmemory" title="PVOID MmAllocateContiguousMemory(&#10;  [in] SIZE_T           NumberOfBytes,&#10;  [in] PHYSICAL_ADDRESS HighestAcceptableAddress&#10;);">MmAllocateContiguousMemory</a></p>
-
 <p><a href="mmallocatecontiguousmemoryspecifycache" title="PVOID MmAllocateContiguousMemorySpecifyCache(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType&#10;);">MmAllocateContiguousMemorySpecifyCache</a></p>
-
 <p><a href="mmallocatecontiguousmemoryspecifycachenode" title="PVOID MmAllocateContiguousMemorySpecifyCacheNode(&#10;  [in]           SIZE_T              NumberOfBytes,&#10;  [in]           PHYSICAL_ADDRESS    LowestAcceptableAddress,&#10;  [in]           PHYSICAL_ADDRESS    HighestAcceptableAddress,&#10;  [in, optional] PHYSICAL_ADDRESS    BoundaryAddressMultiple,&#10;  [in]           MEMORY_CACHING_TYPE CacheType,&#10;  [in]           NODE_REQUIREMENT    PreferredNode&#10;);">MmAllocateContiguousMemorySpecifyCacheNode</a></p>
-
 <p><a href="mmfreecontiguousmemory" title="VOID MmFreeContiguousMemory(&#10;  [in] PVOID BaseAddress&#10;);">MmFreeContiguousMemory</a></p>
 <hr>
 <div class="ntdoc-description-links">

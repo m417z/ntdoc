@@ -69,120 +69,77 @@
 <h1>Windows Driver Kit DDI reference (nc-ucxusbdevice-evt_ucx_usbdevice_default_endpoint_add)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="evt_ucx_usbdevice_default_endpoint_add-callback-function">EVT_UCX_USBDEVICE_DEFAULT_ENDPOINT_ADD callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>EVT_UCX_USBDEVICE_DEFAULT_ENDPOINT_ADD callback function</h1>
+<h2>Description</h2>
 <p>The client driver's implementation that UCX calls to add a new default endpoint for a USB device.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="ucxcontroller-in"><code>UcxController</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>UcxController</code> [in]</h3>
 <p>A handle to the UCX controller that the client driver received in a previous call to the <a href="ucxcontrollercreate" title="NTSTATUS UcxControllerCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in]           PUCX_CONTROLLER_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]          UCXCONTROLLER          *Controller&#10;);">UcxControllerCreate</a> method.</p>
-
-<h3 id="ucxusbdevice-in"><code>UcxUsbDevice</code> [in]</h3>
-
+<h3><code>UcxUsbDevice</code> [in]</h3>
 <p>A handle to a UCX object that represents the USB device.</p>
-
-<h3 id="maxpacketsize-in"><code>MaxPacketSize</code> [in]</h3>
-
+<h3><code>MaxPacketSize</code> [in]</h3>
 <p>Maximum packet size for transfers on this endpoint.</p>
-
-<h3 id="ucxendpointinit-in"><code>UcxEndpointInit</code> [in]</h3>
-
+<h3><code>UcxEndpointInit</code> [in]</h3>
 <p>A pointer to an opaque structure containing initialization information. Callbacks for the endpoint object are associated with this structure. This structure is managed by UCX.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>If the operation is successful, the callback function must return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, or another status value for which <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) equals TRUE. Otherwise it must return a status value for which <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status) equals FALSE.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>The UCX client driver registers this callback function with the USB host controller extension (UCX) by calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ucxusbdevice/nf-ucxusbdevice-ucxusbdevicecreate">UcxUsbDeviceCreate</a> method.</p>
-
 <p>The callback function calls <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ucxendpoint/nf-ucxendpoint-ucxendpointcreate">UcxEndpointCreate</a> to create a new default endpoint object and register its default endpoint object callback functions.</p>
-
 <p>Then, the callback function typically creates a WDF queue associated with the endpoint object. The queue does not receive any requests until the class extension starts it.</p>
-
-<h3 id="examples">Examples</h3>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="nf">Endpoint_EvtUcxUsbDeviceDefaultEndpointAdd</span><span class="p">(</span>
-<span class="w">    </span><span class="n">UCXCONTROLLER</span><span class="w">           </span><span class="n">UcxController</span><span class="p">,</span>
-<span class="w">    </span><span class="n">UCXUSBDEVICE</span><span class="w">            </span><span class="n">UcxUsbDevice</span><span class="p">,</span>
-<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">                   </span><span class="n">MaxPacketSize</span><span class="p">,</span>
-<span class="w">    </span><span class="n">PUCXENDPOINT_INIT</span><span class="w">       </span><span class="n">EndpointInit</span>
-<span class="p">)</span>
-
-<span class="p">{</span>
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w">                                </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
-
-<span class="w">    </span><span class="n"><a href="ucx_default_endpoint_event_callbacks" title="typedef struct _UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS {&#10;  ULONG                                   Size;&#10;  PFN_UCX_ENDPOINT_PURGE                  EvtEndpointPurge;&#10;  PFN_UCX_ENDPOINT_START                  EvtEndpointStart;&#10;  PFN_UCX_ENDPOINT_ABORT                  EvtEndpointAbort;&#10;  PFN_UCX_ENDPOINT_OK_TO_CANCEL_TRANSFERS EvtEndpointOkToCancelTransfers;&#10;  PFN_UCX_DEFAULT_ENDPOINT_UPDATE         EvtDefaultEndpointUpdate;&#10;  HANDLE                                  Reserved1;&#10;} UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS, *PUCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS;">UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS</a></span><span class="w">    </span><span class="n">ucxDefaultEndpointEventCallbacks</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a></span><span class="w">                   </span><span class="n">objectAttributes</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">PUCX_CONTROLLER_CONTEXT</span><span class="w">                 </span><span class="n">ucxControllerContext</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">UCXENDPOINT</span><span class="w">                             </span><span class="n">ucxEndpoint</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PUCX_ENDPOINT_CONTEXT</span><span class="w">                   </span><span class="n">ucxEndpointContext</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n"><a href="wdf_io_queue_config" title="typedef struct _WDF_IO_QUEUE_CONFIG {&#10;  ULONG                                       Size;&#10;  WDF_IO_QUEUE_DISPATCH_TYPE                  DispatchType;&#10;  WDF_TRI_STATE                               PowerManaged;&#10;  BOOLEAN                                     AllowZeroLengthRequests;&#10;  BOOLEAN                                     DefaultQueue;&#10;  PFN_WDF_IO_QUEUE_IO_DEFAULT                 EvtIoDefault;&#10;  PFN_WDF_IO_QUEUE_IO_READ                    EvtIoRead;&#10;  PFN_WDF_IO_QUEUE_IO_WRITE                   EvtIoWrite;&#10;  PFN_WDF_IO_QUEUE_IO_DEVICE_CONTROL          EvtIoDeviceControl;&#10;  PFN_WDF_IO_QUEUE_IO_INTERNAL_DEVICE_CONTROL EvtIoInternalDeviceControl;&#10;  PFN_WDF_IO_QUEUE_IO_STOP                    EvtIoStop;&#10;  PFN_WDF_IO_QUEUE_IO_RESUME                  EvtIoResume;&#10;  PFN_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE       EvtIoCanceledOnQueue;&#10;  union {&#10;    struct {&#10;      ULONG NumberOfPresentedRequests;&#10;    } Parallel;&#10;  } Settings;&#10;  WDFDRIVER                                   Driver;&#10;...">WDF_IO_QUEUE_CONFIG</a></span><span class="w">                     </span><span class="n">queueConfig</span><span class="p">;</span>
-<span class="w">    </span><span class="n">WDFQUEUE</span><span class="w">                                </span><span class="n">wdfQueue</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n"><a href="ucx_default_endpoint_event_callbacks_init" title="VOID UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS_INIT(&#10;  [out] PUCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS   Callbacks,&#10;  [in]  PFN_UCX_ENDPOINT_PURGE                  EvtEndpointPurge,&#10;  [in]  PFN_UCX_ENDPOINT_START                  EvtEndpointStart,&#10;  [in]  PFN_UCX_ENDPOINT_ABORT                  EvtEndpointAbort,&#10;  [in]  PFN_UCX_ENDPOINT_OK_TO_CANCEL_TRANSFERS EvtEndpointOkToCancelTransfers,&#10;  [in]  PFN_UCX_DEFAULT_ENDPOINT_UPDATE         EvtDefaultEndpointUpdate&#10;);">UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">ucxDefaultEndpointEventCallbacks</span><span class="p">,</span>
-<span class="w">                                              </span><span class="n">Endpoint_EvtUcxEndpointPurge</span><span class="p">,</span>
-<span class="w">                                              </span><span class="n">Endpoint_EvtUcxEndpointStart</span><span class="p">,</span>
-<span class="w">                                              </span><span class="n">Endpoint_EvtUcxEndpointAbort</span><span class="p">,</span>
-<span class="w">                                              </span><span class="n">Endpoint_EvtUcxEndpointOkToCancelTransfers</span><span class="p">,</span>
-<span class="w">                                              </span><span class="n">Endpoint_EvtUcxDefaultEndpointUpdate</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">UcxDefaultEndpointInitSetEventCallbacks</span><span class="p">(</span><span class="n">EndpointInit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ucxDefaultEndpointEventCallbacks</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n"><a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">objectAttributes</span><span class="p">,</span><span class="w"> </span><span class="n">UCX_ENDPOINT_CONTEXT</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">ucxControllerContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetUcxControllerContext</span><span class="p">(</span><span class="n">UcxController</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">UcxEndpointCreate</span><span class="p">(</span><span class="n">UcxUsbDevice</span><span class="p">,</span>
-<span class="w">        </span><span class="o">&amp;</span><span class="n">EndpointInit</span><span class="p">,</span>
-<span class="w">        </span><span class="o">&amp;</span><span class="n">objectAttributes</span><span class="p">,</span>
-<span class="w">        </span><span class="o">&amp;</span><span class="n">ucxEndpoint</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">DbgTrace</span><span class="p">(</span><span class="n">TL_ERROR</span><span class="p">,</span><span class="w"> </span><span class="n">Endpoint</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;UcxEndpoint Failed %!STATUS!&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">);</span>
-<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">EvtUsbDeviceDefaultEndpointAddEnd</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">DbgTrace</span><span class="p">(</span><span class="n">TL_INFO</span><span class="p">,</span><span class="w"> </span><span class="n">Endpoint</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;UcxEndpoint created&quot;</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">ucxEndpointContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetUcxEndpointContext</span><span class="p">(</span><span class="n">ucxEndpoint</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">ucxEndpointContext</span><span class="o">-&gt;</span><span class="n">IsDefault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TRUE</span><span class="p">;</span>
-<span class="w">    </span><span class="n">ucxEndpointContext</span><span class="o">-&gt;</span><span class="n">MaxPacketSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">MaxPacketSize</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n"><a href="wdf_io_queue_config_init" title="VOID WDF_IO_QUEUE_CONFIG_INIT(&#10;  [out] PWDF_IO_QUEUE_CONFIG       Config,&#10;  [in]  WDF_IO_QUEUE_DISPATCH_TYPE DispatchType&#10;);">WDF_IO_QUEUE_CONFIG_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">queueConfig</span><span class="p">,</span><span class="w"> </span><span class="n">WdfIoQueueDispatchManual</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="wdfioqueuecreate" title="NTSTATUS WdfIoQueueCreate(&#10;  [in]            WDFDEVICE              Device,&#10;  [in]            PWDF_IO_QUEUE_CONFIG   Config,&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES QueueAttributes,&#10;  [out, optional] WDFQUEUE               *Queue&#10;);">WdfIoQueueCreate</a></span><span class="p">(</span><span class="n">ucxControllerContext</span><span class="o">-&gt;</span><span class="n">WdfDevice</span><span class="p">,</span>
-<span class="w">        </span><span class="o">&amp;</span><span class="n">queueConfig</span><span class="p">,</span>
-<span class="w">        </span><span class="n">WDF_NO_OBJECT_ATTRIBUTES</span><span class="p">,</span>
-<span class="w">        </span><span class="o">&amp;</span><span class="n">wdfQueue</span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">DbgTrace</span><span class="p">(</span><span class="n">TL_ERROR</span><span class="p">,</span><span class="w"> </span><span class="n">Endpoint</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;<a href="wdfioqueuecreate" title="NTSTATUS WdfIoQueueCreate(&#10;  [in]            WDFDEVICE              Device,&#10;  [in]            PWDF_IO_QUEUE_CONFIG   Config,&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES QueueAttributes,&#10;  [out, optional] WDFQUEUE               *Queue&#10;);">WdfIoQueueCreate</a> Failed %!STATUS!&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">);</span>
-<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">EvtUsbDeviceDefaultEndpointAddEnd</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">UcxEndpointSetWdfIoQueue</span><span class="p">(</span><span class="n">ucxEndpoint</span><span class="p">,</span><span class="w"> </span><span class="n">wdfQueue</span><span class="p">);</span>
-
-<span class="nl">EvtUsbDeviceDefaultEndpointAddEnd</span><span class="p">:</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
-<span class="p">}</span>
+<h3>Examples</h3>
+<pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+Endpoint_EvtUcxUsbDeviceDefaultEndpointAdd(
+    UCXCONTROLLER           UcxController,
+    UCXUSBDEVICE            UcxUsbDevice,
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                   MaxPacketSize,
+    PUCXENDPOINT_INIT       EndpointInit
+)
+{
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>                                status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+    <a href="ucx_default_endpoint_event_callbacks" title="typedef struct _UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS {&#10;  ULONG                                   Size;&#10;  PFN_UCX_ENDPOINT_PURGE                  EvtEndpointPurge;&#10;  PFN_UCX_ENDPOINT_START                  EvtEndpointStart;&#10;  PFN_UCX_ENDPOINT_ABORT                  EvtEndpointAbort;&#10;  PFN_UCX_ENDPOINT_OK_TO_CANCEL_TRANSFERS EvtEndpointOkToCancelTransfers;&#10;  PFN_UCX_DEFAULT_ENDPOINT_UPDATE         EvtDefaultEndpointUpdate;&#10;  HANDLE                                  Reserved1;&#10;} UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS, *PUCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS;">UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS</a>    ucxDefaultEndpointEventCallbacks;
+    <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a>                   objectAttributes;
+    PUCX_CONTROLLER_CONTEXT                 ucxControllerContext;
+    UCXENDPOINT                             ucxEndpoint;
+    PUCX_ENDPOINT_CONTEXT                   ucxEndpointContext;
+    <a href="wdf_io_queue_config" title="typedef struct _WDF_IO_QUEUE_CONFIG {&#10;  ULONG                                       Size;&#10;  WDF_IO_QUEUE_DISPATCH_TYPE                  DispatchType;&#10;  WDF_TRI_STATE                               PowerManaged;&#10;  BOOLEAN                                     AllowZeroLengthRequests;&#10;  BOOLEAN                                     DefaultQueue;&#10;  PFN_WDF_IO_QUEUE_IO_DEFAULT                 EvtIoDefault;&#10;  PFN_WDF_IO_QUEUE_IO_READ                    EvtIoRead;&#10;  PFN_WDF_IO_QUEUE_IO_WRITE                   EvtIoWrite;&#10;  PFN_WDF_IO_QUEUE_IO_DEVICE_CONTROL          EvtIoDeviceControl;&#10;  PFN_WDF_IO_QUEUE_IO_INTERNAL_DEVICE_CONTROL EvtIoInternalDeviceControl;&#10;  PFN_WDF_IO_QUEUE_IO_STOP                    EvtIoStop;&#10;  PFN_WDF_IO_QUEUE_IO_RESUME                  EvtIoResume;&#10;  PFN_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE       EvtIoCanceledOnQueue;&#10;  union {&#10;    struct {&#10;      ULONG NumberOfPresentedRequests;&#10;    } Parallel;&#10;  } Settings;&#10;  WDFDRIVER                                   Driver;&#10;...">WDF_IO_QUEUE_CONFIG</a>                     queueConfig;
+    WDFQUEUE                                wdfQueue;
+    <a href="ucx_default_endpoint_event_callbacks_init" title="VOID UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS_INIT(&#10;  [out] PUCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS   Callbacks,&#10;  [in]  PFN_UCX_ENDPOINT_PURGE                  EvtEndpointPurge,&#10;  [in]  PFN_UCX_ENDPOINT_START                  EvtEndpointStart,&#10;  [in]  PFN_UCX_ENDPOINT_ABORT                  EvtEndpointAbort,&#10;  [in]  PFN_UCX_ENDPOINT_OK_TO_CANCEL_TRANSFERS EvtEndpointOkToCancelTransfers,&#10;  [in]  PFN_UCX_DEFAULT_ENDPOINT_UPDATE         EvtDefaultEndpointUpdate&#10;);">UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS_INIT</a>(&amp;ucxDefaultEndpointEventCallbacks,
+                                              Endpoint_EvtUcxEndpointPurge,
+                                              Endpoint_EvtUcxEndpointStart,
+                                              Endpoint_EvtUcxEndpointAbort,
+                                              Endpoint_EvtUcxEndpointOkToCancelTransfers,
+                                              Endpoint_EvtUcxDefaultEndpointUpdate);
+    UcxDefaultEndpointInitSetEventCallbacks(EndpointInit, &amp;ucxDefaultEndpointEventCallbacks);
+    <a href="wdf_object_attributes_init_context_type" title="void WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(&#10;    _attributes,&#10;    _contexttype&#10;);">WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE</a>(&amp;objectAttributes, UCX_ENDPOINT_CONTEXT);
+    ucxControllerContext = GetUcxControllerContext(UcxController);
+    status = UcxEndpointCreate(UcxUsbDevice,
+        &amp;EndpointInit,
+        &amp;objectAttributes,
+        &amp;ucxEndpoint);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+        DbgTrace(TL_ERROR, Endpoint, "UcxEndpoint Failed %!STATUS!", status);
+        goto EvtUsbDeviceDefaultEndpointAddEnd;
+    }
+    DbgTrace(TL_INFO, Endpoint, "UcxEndpoint created");
+    ucxEndpointContext = GetUcxEndpointContext(ucxEndpoint);
+    ucxEndpointContext-&gt;IsDefault = TRUE;
+    ucxEndpointContext-&gt;MaxPacketSize = MaxPacketSize;
+    <a href="wdf_io_queue_config_init" title="VOID WDF_IO_QUEUE_CONFIG_INIT(&#10;  [out] PWDF_IO_QUEUE_CONFIG       Config,&#10;  [in]  WDF_IO_QUEUE_DISPATCH_TYPE DispatchType&#10;);">WDF_IO_QUEUE_CONFIG_INIT</a>(&amp;queueConfig, WdfIoQueueDispatchManual);
+    status = <a href="wdfioqueuecreate" title="NTSTATUS WdfIoQueueCreate(&#10;  [in]            WDFDEVICE              Device,&#10;  [in]            PWDF_IO_QUEUE_CONFIG   Config,&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES QueueAttributes,&#10;  [out, optional] WDFQUEUE               *Queue&#10;);">WdfIoQueueCreate</a>(ucxControllerContext-&gt;WdfDevice,
+        &amp;queueConfig,
+        WDF_NO_OBJECT_ATTRIBUTES,
+        &amp;wdfQueue);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status)) {
+        DbgTrace(TL_ERROR, Endpoint, "<a href="wdfioqueuecreate" title="NTSTATUS WdfIoQueueCreate(&#10;  [in]            WDFDEVICE              Device,&#10;  [in]            PWDF_IO_QUEUE_CONFIG   Config,&#10;  [in, optional]  PWDF_OBJECT_ATTRIBUTES QueueAttributes,&#10;  [out, optional] WDFQUEUE               *Queue&#10;);">WdfIoQueueCreate</a> Failed %!STATUS!", status);
+        goto EvtUsbDeviceDefaultEndpointAddEnd;
+    }
+    UcxEndpointSetWdfIoQueue(ucxEndpoint, wdfQueue);
+EvtUsbDeviceDefaultEndpointAddEnd:
+    return status;
+}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <ul>
 <li><a href="ucx_default_endpoint_event_callbacks_init" title="VOID UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS_INIT(&#10;  [out] PUCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS   Callbacks,&#10;  [in]  PFN_UCX_ENDPOINT_PURGE                  EvtEndpointPurge,&#10;  [in]  PFN_UCX_ENDPOINT_START                  EvtEndpointStart,&#10;  [in]  PFN_UCX_ENDPOINT_ABORT                  EvtEndpointAbort,&#10;  [in]  PFN_UCX_ENDPOINT_OK_TO_CANCEL_TRANSFERS EvtEndpointOkToCancelTransfers,&#10;  [in]  PFN_UCX_DEFAULT_ENDPOINT_UPDATE         EvtDefaultEndpointUpdate&#10;);">UCX_DEFAULT_ENDPOINT_EVENT_CALLBACKS_INIT</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ucxendpoint/nf-ucxendpoint-ucxdefaultendpointinitseteventcallbacks">UcxDefaultEndpointInitSetEventCallbacks</a></li>

@@ -71,59 +71,36 @@
 <h1>Windows Driver Kit DDI reference (nf-fltkernel-fltreadfile)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="fltreadfile-function">FltReadFile function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>FltReadFile function</h1>
+<h2>Description</h2>
 <p><strong>FltReadFile</strong> reads data from an open file, stream, or device.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="initiatinginstance-in"><code>InitiatingInstance</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>InitiatingInstance</code> [in]</h3>
 <p>Opaque instance pointer for the minifilter driver instance that the operation is to be sent to. The instance must be attached to the volume where the file resides. This parameter is required and cannot be NULL.</p>
-
-<h3 id="fileobject-in"><code>FileObject</code> [in]</h3>
-
+<h3><code>FileObject</code> [in]</h3>
 <p>Pointer to a <strong><a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a></strong> for the file that the data is to be read from. This file object must be currently open. Calling <strong>FltReadFile</strong> when the file object is not yet open or is no longer open (for example, in a pre-create or post-cleanup callback routine) causes the system to <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a> on a checked build. This parameter is required and cannot be NULL.</p>
-
-<h3 id="byteoffset-in-optional"><code>ByteOffset</code> [in, optional]</h3>
-
+<h3><code>ByteOffset</code> [in, optional]</h3>
 <p>Pointer to a caller-allocated variable that specifies the starting byte offset within the file where the read operation is to begin.</p>
-
 <p>If <strong>ByteOffset</strong> is specified, the I/O is performed at that offset, regardless of the current value of the file object’s <strong>CurrentByteOffset</strong> field.</p>
-
 <ul>
 <li>If the file was opened for synchronous I/O (<a href="fo_synchronous_io" title="#define FO_SYNCHRONOUS_IO 0x00000002">FO_SYNCHRONOUS_IO</a> is set in the file object’s <strong>Flags</strong> field), the caller can set <strong>ByteOffset->LowPart</strong> to <a href="file_use_file_pointer_position" title="#define FILE_USE_FILE_POINTER_POSITION 0xfffffffe">FILE_USE_FILE_POINTER_POSITION</a> and <strong>ByteOffset->HighPart</strong> to -1 to have the I/O performed at the file object’s <strong>CurrentByteOffset</strong> field. If the file wasn't opened for synchronous I/O, using <a href="file_use_file_pointer_position" title="#define FILE_USE_FILE_POINTER_POSITION 0xfffffffe">FILE_USE_FILE_POINTER_POSITION</a> is an error.</li>
 </ul>
-
 <p>If <strong>ByteOffset</strong> isn't specified:</p>
-
 <ul>
 <li>If the file wasn't opened for synchronous I/O, that's an error.</li>
 <li>Otherwise, the I/O is performed at the file object’s <strong>CurrentByteOffset</strong>.</li>
 </ul>
-
 <p>If the file object was opened for synchronous I/O, the <strong>CurrentByteOffset</strong> field gets updated unless the caller passes the FLTFL_IO_OPERATION_DO_NOT_UPDATE_BYTE_OFFSET flag.</p>
-
 <ul>
 <li>Note: the file system still updates <strong>CurrentByteOffset</strong> in this case. Filter Manager saves the <strong>CurrentByteOffset</strong> value before sending the I/O down the stack and restores it when the I/O returns. From the perspective of the caller of <strong>FltReadFile</strong> (and filters at higher altitudes) the <strong>CurrrentByteOffset</strong> isn't updated. But filters below the caller see the updated <strong>CurrentByteOffset</strong> value in their post-read/write callbacks.</li>
 </ul>
-
 <p>If the file object wasn't opened for synchronous I/O, the <strong>CurrentByteOffset</strong> field isn't updated regardless of the state of the <strong>ByteOffset</strong> parameter.</p>
-
-<h3 id="length-in"><code>Length</code> [in]</h3>
-
+<h3><code>Length</code> [in]</h3>
 <p>Size, in bytes, of the buffer that the <strong>Buffer</strong> parameter points to.</p>
-
-<h3 id="buffer-out"><code>Buffer</code> [out]</h3>
-
+<h3><code>Buffer</code> [out]</h3>
 <p>Pointer to a caller-allocated buffer that receives the data that is read from the file.</p>
-
-<h3 id="flags-in"><code>Flags</code> [in]</h3>
-
+<h3><code>Flags</code> [in]</h3>
 <p>Bitmask of flags specifying the type of read operation to be performed.</p>
-
 <table>
 <thead>
 <tr>
@@ -150,72 +127,42 @@
 </tr>
 </tbody>
 </table>
-
-<h3 id="bytesread-out-optional"><code>BytesRead</code> [out, optional]</h3>
-
+<h3><code>BytesRead</code> [out, optional]</h3>
 <p>Pointer to a caller-allocated variable that receives the number of bytes read from the file. If <strong>CallbackRoutine</strong> is not NULL, this parameter is ignored. Otherwise, this parameter is optional and can be NULL.</p>
-
-<h3 id="callbackroutine-in-optional"><code>CallbackRoutine</code> [in, optional]</h3>
-
+<h3><code>CallbackRoutine</code> [in, optional]</h3>
 <p>Pointer to a <strong><a href="pflt_completed_async_io_callback" title="PFLT_COMPLETED_ASYNC_IO_CALLBACK PfltCompletedAsyncIoCallback;&#10;&#10;VOID PfltCompletedAsyncIoCallback(&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] PFLT_CONTEXT Context&#10;)&#10;{...}">PFLT_COMPLETED_ASYNC_IO_CALLBACK</a></strong>-typed callback routine to call when the read operation is complete. This parameter is optional and can be NULL.</p>
-
-<h3 id="callbackcontext-in-optional"><code>CallbackContext</code> [in, optional]</h3>
-
+<h3><code>CallbackContext</code> [in, optional]</h3>
 <p>Context pointer to be passed to the <strong>CallbackRoutine</strong> if one is present. This parameter is optional and can be NULL. If <strong>CallbackRoutine</strong> is NULL, this parameter is ignored.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>FltReadFile</strong> returns the <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value that was returned by the file system.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>A minifilter driver calls <strong>FltReadFile</strong> to read data from an open file.</p>
-
 <p><strong>FltReadFile</strong> creates a read request and sends it to the minifilter driver instances attached below the initiating instance, and to the file system. The specified instance and the instances attached above it do not receive the read request.</p>
-
 <p><strong>FltReadFile</strong> performs noncached I/O if either of the following is true:</p>
-
 <ul>
 <li><p>The caller set the FLTFL_IO_OPERATION_NON_CACHED flag in the <strong>Flags</strong> parameter.</p></li>
 <li><p>The file object was opened for noncached I/O. Usually, this is done by specifying the <a href="file_no_intermediate_buffering" title="#define FILE_NO_INTERMEDIATE_BUFFERING 0x00000008">FILE_NO_INTERMEDIATE_BUFFERING</a> <strong>CreateOptions</strong> flag in the preceding call to <strong><a href="fltcreatefile" title="NTSTATUS FLTAPI FltCreateFile(&#10;  [in]           PFLT_FILTER        Filter,&#10;  [in, optional] PFLT_INSTANCE      Instance,&#10;  [out]          PHANDLE            FileHandle,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              CreateDisposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           ULONG              Flags&#10;);">FltCreateFile</a></strong>, <strong><a href="fltcreatefileex" title="NTSTATUS FLTAPI FltCreateFileEx(&#10;  [in]           PFLT_FILTER        Filter,&#10;  [in, optional] PFLT_INSTANCE      Instance,&#10;  [out]          PHANDLE            FileHandle,&#10;  [out]          PFILE_OBJECT       *FileObject,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              CreateDisposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           ULONG              Flags&#10;);">FltCreateFileEx</a></strong>, or <strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong>.</p></li>
 </ul>
-
 <p>Noncached I/O imposes the following restrictions on the parameter values passed to <strong>FltReadFile</strong>:</p>
-
 <ul>
 <li><p>The buffer that the <strong>Buffer</strong> parameter points to must be aligned in accordance with the alignment requirement of the underlying storage device. To allocate such an aligned buffer, call <strong><a href="fltallocatepoolalignedwithtag" title="PVOID FLTAPI FltAllocatePoolAlignedWithTag(&#10;  [in] PFLT_INSTANCE Instance,&#10;  [in] POOL_TYPE     PoolType,&#10;  [in] SIZE_T        NumberOfBytes,&#10;  [in] ULONG         Tag&#10;);">FltAllocatePoolAlignedWithTag</a></strong>.</p></li>
 <li><p>The byte offset that the <strong>ByteOffset</strong> parameter points to must be a nonnegative multiple of the volume's sector size.</p></li>
 <li><p>The length specified in the <strong>Length</strong> parameter must be a nonnegative multiple of the volume's sector size.</p></li>
 </ul>
-
 <p>If an attempt is made to read beyond the end of the file, <strong>FltReadFile</strong> returns an error.</p>
-
 <p>If the value of the <strong>CallbackRoutine</strong> parameter is not NULL, the read operation is performed asynchronously.</p>
-
 <p>If the value of the <strong>CallbackRoutine</strong> parameter is NULL, the read operation is performed synchronously. That is, <strong>FltReadFile</strong> waits until the read operation is complete before returning. This is true even if the file object that <strong>FileObject</strong> points to was opened for asynchronous I/O.</p>
-
 <p>If multiple threads call <strong>FltReadFile</strong> for the same file object, and the file object was opened for synchronous I/O, the Filter Manager does not attempt to serialize I/O on the file. In this respect, <strong>FltReadFile</strong> differs from <strong><a href="ntreadfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReadFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID Buffer,&#10;    _In_ ULONG Length,&#10;    _In_opt_ PLARGE_INTEGER ByteOffset,&#10;    _In_opt_ PULONG Key&#10;    );">ZwReadFile</a></strong>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><strong><a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a></strong></p>
-
 <p><strong><a href="fltallocatepoolalignedwithtag" title="PVOID FLTAPI FltAllocatePoolAlignedWithTag(&#10;  [in] PFLT_INSTANCE Instance,&#10;  [in] POOL_TYPE     PoolType,&#10;  [in] SIZE_T        NumberOfBytes,&#10;  [in] ULONG         Tag&#10;);">FltAllocatePoolAlignedWithTag</a></strong></p>
-
 <p><strong><a href="fltcreatefile" title="NTSTATUS FLTAPI FltCreateFile(&#10;  [in]           PFLT_FILTER        Filter,&#10;  [in, optional] PFLT_INSTANCE      Instance,&#10;  [out]          PHANDLE            FileHandle,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              CreateDisposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           ULONG              Flags&#10;);">FltCreateFile</a></strong></p>
-
 <p><strong><a href="fltcreatefileex" title="NTSTATUS FLTAPI FltCreateFileEx(&#10;  [in]           PFLT_FILTER        Filter,&#10;  [in, optional] PFLT_INSTANCE      Instance,&#10;  [out]          PHANDLE            FileHandle,&#10;  [out]          PFILE_OBJECT       *FileObject,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              CreateDisposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           ULONG              Flags&#10;);">FltCreateFileEx</a></strong></p>
-
 <p><strong><a href="fltwritefile" title="NTSTATUS FLTAPI FltWriteFile(&#10;  [in]            PFLT_INSTANCE                    InitiatingInstance,&#10;  [in]            PFILE_OBJECT                     FileObject,&#10;  [in, optional]  PLARGE_INTEGER                   ByteOffset,&#10;  [in]            ULONG                            Length,&#10;  [in]            PVOID                            Buffer,&#10;  [in]            FLT_IO_OPERATION_FLAGS           Flags,&#10;  [out, optional] PULONG                           BytesWritten,&#10;  [in, optional]  PFLT_COMPLETED_ASYNC_IO_CALLBACK CallbackRoutine,&#10;  [in, optional]  PVOID                            CallbackContext&#10;);">FltWriteFile</a></strong></p>
-
 <p><strong><a href="obreferenceobjectbyhandle" title="NTSTATUS ObReferenceObjectByHandle(&#10;  [in]            HANDLE                     Handle,&#10;  [in]            ACCESS_MASK                DesiredAccess,&#10;  [in, optional]  POBJECT_TYPE               ObjectType,&#10;  [in]            KPROCESSOR_MODE            AccessMode,&#10;  [out]           PVOID                      *Object,&#10;  [out, optional] POBJECT_HANDLE_INFORMATION HandleInformation&#10;);">ObReferenceObjectByHandle</a></strong></p>
-
 <p><strong><a href="pflt_completed_async_io_callback" title="PFLT_COMPLETED_ASYNC_IO_CALLBACK PfltCompletedAsyncIoCallback;&#10;&#10;VOID PfltCompletedAsyncIoCallback(&#10;  [in] PFLT_CALLBACK_DATA CallbackData,&#10;  [in] PFLT_CONTEXT Context&#10;)&#10;{...}">PFLT_COMPLETED_ASYNC_IO_CALLBACK</a></strong></p>
-
 <p><strong><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong></p>
-
 <p><strong><a href="ntreadfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReadFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _Out_writes_bytes_(Length) PVOID Buffer,&#10;    _In_ ULONG Length,&#10;    _In_opt_ PLARGE_INTEGER ByteOffset,&#10;    _In_opt_ PULONG Key&#10;    );">ZwReadFile</a></strong></p>
-
 <p><strong><a href="ntwritefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWriteFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_reads_bytes_(Length) PVOID Buffer,&#10;    _In_ ULONG Length,&#10;    _In_opt_ PLARGE_INTEGER ByteOffset,&#10;    _In_opt_ PULONG Key&#10;    );">ZwWriteFile</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

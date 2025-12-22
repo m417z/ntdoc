@@ -73,108 +73,69 @@ typedef WUDF_INTERRUPT_ISR *PFN_WUDF_INTERRUPT_ISR;</span><span class="ntdoc-cod
 <h1>Windows Driver Kit DDI reference (nc-wudfinterrupt-wudf_interrupt_isr)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wudf_interrupt_isr-callback-function">WUDF_INTERRUPT_ISR callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WUDF_INTERRUPT_ISR callback function</h1>
+<h2>Description</h2>
 <blockquote>
   <p>[!WARNING]
   UMDF 2 is the latest version of UMDF and supersedes UMDF 1. All new UMDF drivers should be written using UMDF 2. No new features are being added to UMDF 1 and there is limited support for UMDF 1 on newer versions of Windows 10. Universal Windows drivers must use UMDF 2. For more info, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/getting-started-with-umdf-version-2">Getting Started with UMDF</a>.</p>
 </blockquote>
-
 <p>A driver's <em>OnInterruptIsr</em> event callback function services a hardware interrupt.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="interrupt-in"><code>Interrupt</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Interrupt</code> [in]</h3>
 <p>A pointer to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nn-wudfddi-iwdfinterrupt">IWDFInterrupt</a> interface.</p>
-
-<h3 id="messageid-in"><code>MessageID</code> [in]</h3>
-
+<h3><code>MessageID</code> [in]</h3>
 <p>If the device is using message-signaled interrupts (MSIs), this parameter is the message number that identifies the device's hardware interrupt message. Otherwise, this value is 0.</p>
-
-<h3 id="reserved-in"><code>Reserved</code> [in]</h3>
-
+<h3><code>Reserved</code> [in]</h3>
 <p>Reserved for system use.</p>
-
-<h2 id="syntax">Syntax</h2>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">typedef</span>
-<span class="n">BOOLEAN</span>
-<span class="nf">_Function_class_</span><span class="p">(</span><span class="n">WUDF_INTERRUPT_ISR</span><span class="p">)</span>
-<span class="n">WUDF_INTERRUPT_ISR</span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span>
-<span class="w">    </span><span class="n">IWDFInterrupt</span><span class="o">*</span><span class="w"> </span><span class="n">Interrupt</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span>
-<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">MessageID</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span>
-<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">Reserved</span>
-<span class="w">    </span><span class="p">);</span>
-
-<span class="k">typedef</span><span class="w"> </span><span class="n">WUDF_INTERRUPT_ISR</span><span class="w"> </span><span class="o">*</span><span class="n">PFN_WUDF_INTERRUPT_ISR</span><span class="p">;</span>
+<h2>Syntax</h2>
+<pre><code>typedef
+BOOLEAN
+_Function_class_(WUDF_INTERRUPT_ISR)
+WUDF_INTERRUPT_ISR(
+    _In_
+    IWDFInterrupt* Interrupt,
+    _In_
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MessageID,
+    _In_
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved
+    );
+typedef WUDF_INTERRUPT_ISR *PFN_WUDF_INTERRUPT_ISR;
 </code></pre>
-</div>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>Returns TRUE if the driver acknowledges ownership of the interrupt, and has stopped and acknowledged the interrupt on its device. Otherwise, returns FALSE.</p>
-
 <p>To register an <em>OnInterruptIsr</em> callback function, your driver must place the callback function's address in a <a href="wudf_interrupt_config" title="typedef struct _WUDF_INTERRUPT_CONFIG {&#10;  ULONG                           Size;&#10;  WDF_TRI_STATE                   ShareVector;&#10;  BOOLEAN                         AutomaticSerialization;&#10;  PFN_WUDF_INTERRUPT_ISR          OnInterruptIsr;&#10;  PFN_WUDF_INTERRUPT_ENABLE       OnInterruptEnable;&#10;  PFN_WUDF_INTERRUPT_DISABLE      OnInterruptDisable;&#10;  PFN_WUDF_INTERRUPT_WORKITEM     OnInterruptWorkItem;&#10;  PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptRaw;&#10;  PCM_PARTIAL_RESOURCE_DESCRIPTOR InterruptTranslated;&#10;} WUDF_INTERRUPT_CONFIG, *PWUDF_INTERRUPT_CONFIG;">WUDF_INTERRUPT_CONFIG</a> structure before calling <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfdevice3-createinterrupt">IWDFDevice3::CreateInterrupt</a>.</p>
-
 <p>The <em>OnInterruptIsr</em> callback function is a UMDF driver's interrupt service routine (ISR), which is called at PASSIVE_LEVEL when a hardware interrupt occurs.</p>
-
 <p>For an edge-triggered interrupt or message-signaled interrupt (MSI), the framework calls <em>OnInterruptIsr</em> outside of the operating system's interrupt dispatch context. This is because UMDF allows only non-shared edge-triggered or MSI interrupts, and the driver does not need to interact with its hardware within this context.</p>
-
 <p>For a level-triggered interrupt, the framework calls <em>OnInterruptIsr</em> in the context of the operating system's interrupt dispatch. As a result, the operating system's interrupt dispatch thread is blocked in kernel-mode waiting for a response from the driver.</p>
-
 <p>Typically, <em>OnInterruptIsr</em> saves any volatile information that might be lost and clears the hardware interrupt. For a level-triggered interrupt, the driver should stop and acknowledge the interrupt on the device and then return TRUE if it owns the interrupt. The driver should do any further processing in an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfinterrupt/nc-wudfinterrupt-wudf_interrupt_workitem">OnInterruptWorkItem</a> callback. To queue a work item, the driver calls the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfinterrupt-queueworkitemforisr">IWDFInterrupt::QueueWorkItemForIsr</a> method.</p>
-
 <p>For more information about handling interrupts in UMDF drivers, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/accessing-hardware-and-handling-interrupts">Accessing Hardware and Handling Interrupts</a>.</p>
-
-<h3 id="examples">Examples</h3>
-
+<h3>Examples</h3>
 <p>The function type is declared in <em>Wudfinterrupt.h</em>, as follows.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="k">typedef</span>
-<span class="n">BOOLEAN</span>
-<span class="nf">WUDF_INTERRUPT_ISR</span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span>
-<span class="w">    </span><span class="n">IWDFInterrupt</span><span class="o">*</span><span class="w"> </span><span class="n">Interrupt</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span>
-<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">MessageID</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span>
-<span class="w">    </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">Reserved</span>
-<span class="w">    </span><span class="p">);</span>
-
-<span class="k">typedef</span><span class="w"> </span><span class="n">WUDF_INTERRUPT_ISR</span><span class="w"> </span><span class="o">*</span><span class="n">PFN_WUDF_INTERRUPT_ISR</span><span class="p">;</span>
+<pre><code>typedef
+BOOLEAN
+WUDF_INTERRUPT_ISR(
+    _In_
+    IWDFInterrupt* Interrupt,
+    _In_
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MessageID,
+    _In_
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved
+    );
+typedef WUDF_INTERRUPT_ISR *PFN_WUDF_INTERRUPT_ISR;
 </code></pre>
-</div>
-
 <p>To define an <em>OnInterruptIsr</em> callback function that is named <em>MyInterruptIsr</em>, you must first provide a function declaration that SDV and other verification tools require, as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">WUDF_INTERRUPT_NOTIFY</span><span class="w">  </span><span class="n">MyInterruptIsr</span><span class="p">;</span>
+<pre><code>WUDF_INTERRUPT_NOTIFY  MyInterruptIsr;
 </code></pre>
-</div>
-
 <p>Then, implement your callback function as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">BOOLEAN</span>
-<span class="w">  </span><span class="nf">MyInterruptIsr</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n">IWDFInterrupt</span><span class="o">*</span><span class="w">  </span><span class="n">Interrupt</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w">  </span><span class="n">MessageID</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w"> </span><span class="n"><a href="ulong" title="typedef unsigned long ULONG;">ULONG</a></span><span class="w"> </span><span class="n">Reserved</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="w">  </span><span class="p">{</span><span class="err">…</span><span class="p">}</span>
+<pre><code>BOOLEAN
+  MyInterruptIsr (
+    IN IWDFInterrupt*  Interrupt,
+    IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>  MessageID,
+    IN <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved
+    )
+  {…}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfdevice3-createinterrupt">IWDFDevice3::CreateInterrupt</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfinterrupt/nc-wudfinterrupt-wudf_interrupt_workitem">OnInterruptWorkItem</a></li>

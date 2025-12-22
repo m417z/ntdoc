@@ -65,57 +65,33 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-ioattachdevice)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>IoAttachDevice</strong> routine attaches the caller's device object to a named target device object, so that I/O requests bound for the target device are routed first to the caller.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="sourcedevice-in"><code>SourceDevice</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>SourceDevice</code> [in]</h3>
 <p>Pointer to the caller-created device object.</p>
-
-<h3 id="targetdevice-in"><code>TargetDevice</code> [in]</h3>
-
+<h3><code>TargetDevice</code> [in]</h3>
 <p>Pointer to a buffer containing the name of the device object to which the specified <em>SourceDevice</em> is to be attached.</p>
-
-<h3 id="attacheddevice-out"><code>AttachedDevice</code> [out]</h3>
-
+<h3><code>AttachedDevice</code> [out]</h3>
 <p>Pointer to caller-allocated storage for a pointer. On return, contains a pointer to the target device object if the attachment succeeds.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>IoAttachDevice</strong> can return one of the following <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> values:</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p><strong>IoAttachDevice</strong> establishes layering between drivers so that the same IRPs can be sent to each driver in the chain.</p>
-
 <p>This routine is used by intermediate drivers during initialization. It allows such a driver to attach its own device object to another device in such a way that any requests being made to the original device are given first to the intermediate driver.</p>
-
 <p>The caller can be layered only at the top of an existing chain of layered drivers. <strong>IoAttachDevice</strong> searches for the highest device object layered over <em>TargetDevice</em> and attaches to that object (that can be the <em>TargetDevice</em>). Therefore, this routine must not be called if a driver that must be higher-level has already layered itself over the target device.</p>
-
 <p>Note that for file system drivers and drivers in the storage stack, <strong>IoAttachDevice</strong> opens the target device with FILE_READ_ATTRIBUTES and then calls <a href="iogetrelateddeviceobject" title="PDEVICE_OBJECT IoGetRelatedDeviceObject(&#10;  [in] PFILE_OBJECT FileObject&#10;);">IoGetRelatedDeviceObject</a>. This does not cause a file system to be mounted. Thus, a successful call to <strong>IoAttachDevice</strong> returns the device object of the storage driver, not that of the file system driver.</p>
-
 <p>This routine sets the <strong>AlignmentRequirement</strong> in <em>SourceDevice</em> to the value in the next-lower device object and sets the <strong>StackSize</strong> to the value in the next-lower object plus one.</p>
-
 <blockquote>
   <p>[!WARNING]
   <em>AttachedDevice</em> must point to a global memory location, such as the driver's device extension. <strong>IoAttachDevice</strong> opens the file object for the target device, updates <em>AttachedDevice</em>, performs the attach, and then closes the file object. Thus, the source device receives the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-cleanup">IRP_MJ_CLEANUP</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-close">IRP_MJ_CLOSE</a> requests for the file object before <strong>IoAttachDevice</strong> returns. The driver must forward these requests to the target device, and <em>AttachedDevice</em> must be a memory location accessible to the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_dispatch">DispatchCleanup</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_dispatch">DispatchClose</a> routines.</p>
 </blockquote>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="device_object" title="typedef struct _DEVICE_OBJECT {&#10;  CSHORT                   Type;&#10;  USHORT                   Size;&#10;  LONG                     ReferenceCount;&#10;  struct _DRIVER_OBJECT    *DriverObject;&#10;  struct _DEVICE_OBJECT    *NextDevice;&#10;  struct _DEVICE_OBJECT    *AttachedDevice;&#10;  struct _IRP              *CurrentIrp;&#10;  PIO_TIMER                Timer;&#10;  ULONG                    Flags;&#10;  ULONG                    Characteristics;&#10;  __volatile PVPB          Vpb;&#10;  PVOID                    DeviceExtension;&#10;  DEVICE_TYPE              DeviceType;&#10;  CCHAR                    StackSize;&#10;  union {&#10;    LIST_ENTRY         ListEntry;&#10;    WAIT_CONTEXT_BLOCK Wcb;&#10;  } Queue;&#10;  ULONG                    AlignmentRequirement;&#10;...">DEVICE_OBJECT</a></p>
-
 <p><a href="ioattachdevicetodevicestack" title="PDEVICE_OBJECT IoAttachDeviceToDeviceStack(&#10;  [in] PDEVICE_OBJECT SourceDevice,&#10;  [in] PDEVICE_OBJECT TargetDevice&#10;);">IoAttachDeviceToDeviceStack</a></p>
-
 <p><a href="ioattachdevicetodevicestacksafe" title="NTSTATUS IoAttachDeviceToDeviceStackSafe(&#10;  [in]  PDEVICE_OBJECT SourceDevice,&#10;  [in]  PDEVICE_OBJECT TargetDevice,&#10;  [out] PDEVICE_OBJECT *AttachedToDeviceObject&#10;);">IoAttachDeviceToDeviceStackSafe</a></p>
-
 <p><a href="iocreatedevice" title="NTSTATUS IoCreateDevice(&#10;  [in]           PDRIVER_OBJECT  DriverObject,&#10;  [in]           ULONG           DeviceExtensionSize,&#10;  [in, optional] PUNICODE_STRING DeviceName,&#10;  [in]           DEVICE_TYPE     DeviceType,&#10;  [in]           ULONG           DeviceCharacteristics,&#10;  [in]           BOOLEAN         Exclusive,&#10;  [out]          PDEVICE_OBJECT  *DeviceObject&#10;);">IoCreateDevice</a></p>
-
 <p><a href="iodetachdevice" title="VOID IoDetachDevice(&#10;  [in, out] PDEVICE_OBJECT TargetDevice&#10;);">IoDetachDevice</a></p>
-
 <p><a href="iogetrelateddeviceobject" title="PDEVICE_OBJECT IoGetRelatedDeviceObject(&#10;  [in] PFILE_OBJECT FileObject&#10;);">IoGetRelatedDeviceObject</a></p>
 <hr>
 <div class="ntdoc-description-links">

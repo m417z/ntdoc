@@ -65,68 +65,39 @@
 <h1>Windows Driver Kit DDI reference (nf-wdm-kesettimer)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="kesettimer-function">KeSetTimer function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>KeSetTimer function</h1>
+<h2>Description</h2>
 <p>The <strong>KeSetTimer</strong> routine sets the absolute or relative interval at which a timer object is to be set to a signaled state and, optionally, supplies a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-a-customtimerdpc-routine">CustomTimerDpc</a> routine to be executed when that interval expires.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="timer-in-out"><code>Timer</code> [in, out]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Timer</code> [in, out]</h3>
 <p>Pointer to a timer object that was initialized with <a href="keinitializetimer" title="VOID KeInitializeTimer(&#10;  [out] PKTIMER Timer&#10;);">KeInitializeTimer</a> or <a href="keinitializetimerex" title="VOID KeInitializeTimerEx(&#10;  [out] PKTIMER    Timer,&#10;  [in]  TIMER_TYPE Type&#10;);">KeInitializeTimerEx</a>.</p>
-
-<h3 id="duetime-in"><code>DueTime</code> [in]</h3>
-
+<h3><code>DueTime</code> [in]</h3>
 <p>Specifies the absolute or relative time at which the timer is to expire. If the value of the <em>DueTime</em> parameter is negative, the expiration time is relative to the current system time. Otherwise, the expiration time is absolute. The expiration time is expressed in system time units (100-nanosecond intervals). Absolute expiration times track any changes in the system time; relative expiration times are not affected by system time changes.</p>
-
-<h3 id="dpc-in-optional"><code>Dpc</code> [in, optional]</h3>
-
+<h3><code>Dpc</code> [in, optional]</h3>
 <p>Pointer to a DPC object that was initialized by <a href="keinitializedpc" title="VOID KeInitializeDpc(&#10;  [out]          __drv_aliasesMem PRKDPC Dpc,&#10;  [in]           PKDEFERRED_ROUTINE      DeferredRoutine,&#10;  [in, optional] __drv_aliasesMem PVOID  DeferredContext&#10;);">KeInitializeDpc</a>. This parameter is optional.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>If the timer object was already in the system timer queue, <strong>KeSetTimer</strong> returns <strong>TRUE</strong>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>The <strong>KeSetTimer</strong> routine does the following:</p>
-
 <ul>
 <li><p>Computes the expiration time.</p></li>
 <li><p>Sets the timer to a not-signaled state.</p></li>
 <li><p>Inserts the timer object in the system timer queue.</p></li>
 </ul>
-
 <p>If the timer object was already in the timer queue, it is implicitly canceled before being set to the new expiration time. A call to <strong>KeSetTimer</strong> before the previously specified <em>DueTime</em> has expired cancels both the timer and the call to the <em>Dpc</em>, if any, associated with the previous call.</p>
-
 <p>If the <em>Dpc</em> parameter is specified, a DPC object is associated with the timer object. When the timer expires, the timer object is removed from the system timer queue and its state is set to signaled. If a DPC object was associated with the timer when it was set, the DPC object is inserted in the system DPC queue to be executed as soon as conditions permit after the timer interval expires.</p>
-
 <p>Expiration times are measured relative to the system clock, and the accuracy with which the operating system can detect when a timer expires is limited by the granularity of the system clock. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/timer-accuracy">Timer Accuracy</a>.</p>
-
 <p>Only one instantiation of a given DPC object can be queued at any given moment. To avoid potential race conditions, the DPC passed to <strong>KeSetTimer</strong> should not be passed to <a href="keinsertqueuedpc" title="BOOLEAN KeInsertQueueDpc(&#10;  [in, out]      PRKDPC                 Dpc,&#10;  [in, optional] PVOID                  SystemArgument1,&#10;  [in, optional] __drv_aliasesMem PVOID SystemArgument2&#10;);">KeInsertQueueDpc</a>.</p>
-
 <p>Drivers must cancel any active timers in their <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdm/nc-wdm-driver_unload">Unload</a> routines. Use <a href="kecanceltimer" title="BOOLEAN KeCancelTimer(&#10;  [in, out] PKTIMER unnamedParam1&#10;);">KeCancelTimer</a> to cancel any timers.</p>
-
 <p>Callers of <strong>KeSetTimer</strong> can specify one expiration time for a timer. To set a recurring timer use <a href="kesettimerex" title="BOOLEAN KeSetTimerEx(&#10;  [in, out]      PKTIMER       Timer,&#10;  [in]           LARGE_INTEGER DueTime,&#10;  [in]           LONG          Period,&#10;  [in, optional] PKDPC         Dpc&#10;);">KeSetTimerEx</a>.</p>
-
 <p>For more information about timer objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/timer-objects-and-dpcs">Timer Objects and DPCs</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="kecanceltimer" title="BOOLEAN KeCancelTimer(&#10;  [in, out] PKTIMER unnamedParam1&#10;);">KeCancelTimer</a></p>
-
 <p><a href="keinitializedpc" title="VOID KeInitializeDpc(&#10;  [out]          __drv_aliasesMem PRKDPC Dpc,&#10;  [in]           PKDEFERRED_ROUTINE      DeferredRoutine,&#10;  [in, optional] __drv_aliasesMem PVOID  DeferredContext&#10;);">KeInitializeDpc</a></p>
-
 <p><a href="keinitializetimer" title="VOID KeInitializeTimer(&#10;  [out] PKTIMER Timer&#10;);">KeInitializeTimer</a></p>
-
 <p><a href="keinitializetimerex" title="VOID KeInitializeTimerEx(&#10;  [out] PKTIMER    Timer,&#10;  [in]  TIMER_TYPE Type&#10;);">KeInitializeTimerEx</a></p>
-
 <p><a href="kereadstatetimer" title="BOOLEAN KeReadStateTimer(&#10;  [in] PKTIMER Timer&#10;);">KeReadStateTimer</a></p>
-
 <p><a href="kesettimerex" title="BOOLEAN KeSetTimerEx(&#10;  [in, out]      PKTIMER       Timer,&#10;  [in]           LARGE_INTEGER DueTime,&#10;  [in]           LONG          Period,&#10;  [in, optional] PKDPC         Dpc&#10;);">KeSetTimerEx</a></p>
-
 <p><a href="kewaitformultipleobjects" title="NTSTATUS&#10;KeWaitForMultipleObjects (&#10;    ULONG Count,&#10;    PVOID Object[],&#10;    WaitType,&#10;    KWAIT_REASON WaitReason,&#10;    KPROCESSOR_MODE WaitMode,&#10;    BOOLEAN Alertable,&#10;    PLARGE_INTEGER Timeout,&#10;    PKWAIT_BLOCK WaitBlockArray&#10;    );">KeWaitForMultipleObjects</a></p>
 <hr>
 <div class="ntdoc-description-links">

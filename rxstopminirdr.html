@@ -64,26 +64,16 @@
 <h1>Windows Driver Kit DDI reference (nf-mrx-rxstopminirdr)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="rxstopminirdr-function">RxStopMinirdr function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>RxStopMinirdr function</h1>
+<h2>Description</h2>
 <p><strong>RxStopMinirdr</strong> is called to stop a network mini-redirector that has previously been started. As part of <strong>RxStopMinirdr</strong>, RDBSS will also de-register the network mini-redirector driver as a universal naming convention (UNC) provider with the Multiple UNC Provider (MUP) if the driver indicates support for UNC names.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="rxcontext-in"><code>RxContext</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>RxContext</code> [in]</h3>
 <p>A pointer to the <a href="rx_context" title="typedef struct _RX_CONTEXT {&#10;  NODE_TYPE_CODE         NodeTypeCode;&#10;  NODE_BYTE_SIZE         NodeByteSize;&#10;  __volatile ULONG       ReferenceCount;&#10;  LIST_ENTRY             ContextListEntry;&#10;  UCHAR                  MajorFunction;&#10;  UCHAR                  MinorFunction;&#10;  BOOLEAN                PendingReturned;&#10;  BOOLEAN                PostRequest;&#10;  PDEVICE_OBJECT         RealDevice;&#10;  PIRP                   CurrentIrp;&#10;  PIO_STACK_LOCATION     CurrentIrpSp;&#10;  PMRX_FCB               pFcb;&#10;  PMRX_FOBX              pFobx;&#10;  PMRX_SRV_OPEN          pRelevantSrvOpen;&#10;  PNON_PAGED_FCB         NonPagedFcb;&#10;  PRDBSS_DEVICE_OBJECT   RxDeviceObject;&#10;  PETHREAD               OriginalThread;&#10;  PETHREAD               LastExecutionThread;&#10;  __volatile PVOID       LockManagerContext;&#10;...">RX_CONTEXT</a> structure to use to get the device object and determine if this is a file system process.</p>
-
-<h3 id="posttofsp-out"><code>PostToFsp</code> [out]</h3>
-
+<h3><code>PostToFsp</code> [out]</h3>
 <p>A pointer to a logical value that is set to TRUE on return if the request must be posted for later processing by the file system process.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>RxStopMinirdr</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the stop sequence was successful or one of the following error values:</p>
-
 <table>
 <thead>
 <tr>
@@ -106,40 +96,24 @@
 </tr>
 </tbody>
 </table>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>When a stop request is issued to RDBSS, there may be ongoing requests in the RDBSS. Some of the requests can be canceled while the remaining requests need to be processed to completion.</p>
-
 <p>There are a number of strategies that can be employed to close down the RDBSS. Currently, the most conservative approach is employed. The cancellation of those operations that can be canceled and the stop operation is held back until the remaining requests run through to completion.</p>
-
 <p>The RDBSS <strong>RxStopMinirdr</strong> is usually called as a result of an FSCTL or IOCTL request from a user-mode application or service to stop the network mini-redirector, although this call could also be made from the network mini-redirector or as part of shutdown processing by the operating system.</p>
-
 <p>Once a call to <strong>RxStopMinirdr</strong> is issued, the only operations allowed by RDBSS and passed to the network mini-redirector are requests for the following I/O request packets:</p>
-
 <ul>
 <li><a href="irp_mj_cleanup" title="#define IRP_MJ_CLEANUP 0x12">IRP_MJ_CLEANUP</a></li>
 <li><a href="irp_mj_close" title="#define IRP_MJ_CLOSE 0x02">IRP_MJ_CLOSE</a></li>
 </ul>
-
 <p>The stop sequence for RDBSS and the network mini-redirector must be completed in the context of the file system process. If the call to <strong>RxStopMinirdr</strong> comes from a different process (a user-mode request, for example), then the request must be posted for later processing and STATUS_PENDING will be returned. In this case, the effective user ID (the logon ID) of the caller is saved in the <strong>FsdUid</strong> member of the <strong>RxContext</strong> parameter. In addition, If certain internal RDBSS locks cannot be obtained without waiting, STATUS_PENDING is returned and <strong>PostToFsp</strong> is set to TRUE. When STATUS_PENDING is returned, then <strong>RxStopMinirdr</strong> will be posted for later processing by a file system process and completed.</p>
-
 <p>If a network mini-redirector indicates support for UNC when registering with RDBSS (the <strong>Controls</strong> parameter to <strong><a href="rxregisterminirdr" title="NTSTATUS RxRegisterMinirdr(&#10;  [out]     OUT PRDBSS_DEVICE_OBJECT *DeviceObject,&#10;  [in, out] IN OUT PDRIVER_OBJECT    DriverObject,&#10;  [in]      IN PMINIRDR_DISPATCH     MrdrDispatch,&#10;  [in]      IN ULONG                 Controls,&#10;  [in]      IN PUNICODE_STRING       DeviceName,&#10;  [in]      IN ULONG                 DeviceExtensionSize,&#10;  [in]      IN DEVICE_TYPE           DeviceType,&#10;  [in]      IN ULONG                 DeviceCharacteristics&#10;);">RxRegisterMinirdr</a></strong>), then <strong>RxStopMinirdr</strong> will try to de-register the <strong>DeviceName</strong> of the network mini-redirector as a UNC provider with MUP (calls <strong><a href="fsrtlderegisteruncprovider" title="VOID FsRtlDeregisterUncProvider(&#10;  [in] HANDLE Handle&#10;);">FsRtlDeregisterUncProvider</a></strong> on behalf of the network mini-redirector). <strong>RxStopMinirdr</strong> also de-registers the file system with the I/O manager (calls <strong><a href="iounregisterfilesystem" title="VOID IoUnregisterFileSystem(&#10;  [in] PDEVICE_OBJECT DeviceObject&#10;);">IoUnregisterFileSystem</a></strong>) on behalf of the network mini-redirector).</p>
-
 <p>The <strong>RxStopMinirdr</strong> routine then calls the network mini-redirector <strong>MrxStop</strong> callback routine if this routine is implemented. If there are no active FCBs remaining, <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> is returned. If there are some remaining active FCBs, STATUS_REDIRECTOR_HAS_OPEN_HANDLES is returned. In either case, the RDBSS dispatcher for the redirector is spun down and the internal state of the network mini-redirector in RDBSS is set to RDBSS_STARTABLE.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><strong><a href="fsrtlderegisteruncprovider" title="VOID FsRtlDeregisterUncProvider(&#10;  [in] HANDLE Handle&#10;);">FsRtlDeregisterUncProvider</a></strong></p>
-
 <p><strong><a href="iounregisterfilesystem" title="VOID IoUnregisterFileSystem(&#10;  [in] PDEVICE_OBJECT DeviceObject&#10;);">IoUnregisterFileSystem</a></strong></p>
-
 <p><strong><a href="rxregisterminirdr" title="NTSTATUS RxRegisterMinirdr(&#10;  [out]     OUT PRDBSS_DEVICE_OBJECT *DeviceObject,&#10;  [in, out] IN OUT PDRIVER_OBJECT    DriverObject,&#10;  [in]      IN PMINIRDR_DISPATCH     MrdrDispatch,&#10;  [in]      IN ULONG                 Controls,&#10;  [in]      IN PUNICODE_STRING       DeviceName,&#10;  [in]      IN ULONG                 DeviceExtensionSize,&#10;  [in]      IN DEVICE_TYPE           DeviceType,&#10;  [in]      IN ULONG                 DeviceCharacteristics&#10;);">RxRegisterMinirdr</a></strong></p>
-
 <p><strong><a href="rxstartminirdr" title="NTSTATUS RxStartMinirdr(&#10;  [in]  IN PRX_CONTEXT RxContext,&#10;  [out] OUT PBOOLEAN   PostToFsp&#10;);">RxStartMinirdr</a></strong></p>
-
 <p><strong><a href="rxunregisterminirdr" title="VOID RxUnregisterMinirdr(&#10;  [in] IN PRDBSS_DEVICE_OBJECT RxDeviceObject&#10;);">RxUnregisterMinirdr</a></strong></p>
-
 <p><strong><a href="rxpunregisterminirdr" title="VOID RxpUnregisterMinirdr(&#10;  [in] IN PRDBSS_DEVICE_OBJECT RxDeviceObject&#10;);">RxpUnregisterMinirdr</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

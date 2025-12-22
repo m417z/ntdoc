@@ -67,82 +67,44 @@
 <h1>Windows Driver Kit DDI reference (nf-ntifs-ccpreparemdlwrite)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="ccpreparemdlwrite-function">CcPrepareMdlWrite function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>CcPrepareMdlWrite function</h1>
+<h2>Description</h2>
 <p>The <strong>CcPrepareMdlWrite</strong> routine provides direct access to cached file memory so that the caller can write data to the file.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="fileobject-in"><code>FileObject</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>FileObject</code> [in]</h3>
 <p>Pointer to a file object for the cached file.</p>
-
-<h3 id="fileoffset-in"><code>FileOffset</code> [in]</h3>
-
+<h3><code>FileOffset</code> [in]</h3>
 <p>Pointer to a variable that specifies the starting byte offset within the cached file where the data is to be written.</p>
-
-<h3 id="length-in"><code>Length</code> [in]</h3>
-
+<h3><code>Length</code> [in]</h3>
 <p>Length in bytes of the data to be written to the system cache.</p>
-
-<h3 id="mdlchain-out"><code>MdlChain</code> [out]</h3>
-
+<h3><code>MdlChain</code> [out]</h3>
 <p>A chain of one or more memory descriptor lists (<a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>) describing the pages to which the data is to be written.</p>
-
-<h3 id="iostatus-out"><code>IoStatus</code> [out]</h3>
-
+<h3><code>IoStatus</code> [out]</h3>
 <p>Pointer to an <a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    };&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a> structure. If the call to <strong>CcPrepareMdlWrite</strong> succeeds, <em>IoStatus.Status</em> is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. Otherwise, it is set to an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code. <em>IoStatus.Information</em> is set to the actual number of bytes that were successfully locked down in the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> chain.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p><strong>CcPrepareMdlWrite</strong> is similar to <a href="cccopywrite" title="BOOLEAN CcCopyWrite(&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] ULONG          Length,&#10;  [in] BOOLEAN        Wait,&#10;  [in] PVOID          Buffer&#10;);">CcCopyWrite</a>, except that the data is not copied to the cached file. Instead, the physical pages to be overwritten in the system cache are locked in memory, and <strong>CcPrepareMdlWrite</strong> returns one or more memory descriptor lists (<a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a>) describing the specified byte range. These pages remain locked in memory until <a href="ccmdlwritecomplete" title="VOID CcMdlWriteComplete(&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] PMDL           MdlChain&#10;);">CcMdlWriteComplete</a> or <a href="ccmdlwriteabort" title="VOID CcMdlWriteAbort(&#10;  [in] PFILE_OBJECT FileObject,&#10;  [in] PMDL         MdlChain&#10;);">CcMdlWriteAbort</a> is called. Thus each call to <strong>CcPrepareMdlWrite</strong> must be followed by a call to <strong><a href="ccmdlwritecomplete" title="VOID CcMdlWriteComplete(&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] PMDL           MdlChain&#10;);">CcMdlWriteComplete</a></strong> or <strong><a href="ccmdlwriteabort" title="VOID CcMdlWriteAbort(&#10;  [in] PFILE_OBJECT FileObject,&#10;  [in] PMDL         MdlChain&#10;);">CcMdlWriteAbort</a></strong>.</p>
-
 <p>Note that the pages described by the <a href="mdl" title="typedef struct _MDL {&#10;  struct _MDL      *Next;&#10;  CSHORT           Size;&#10;  CSHORT           MdlFlags;&#10;  struct _EPROCESS *Process;&#10;  PVOID            MappedSystemVa;&#10;  PVOID            StartVa;&#10;  ULONG            ByteCount;&#10;  ULONG            ByteOffset;&#10;} MDL, *PMDL;">MDL</a> are locked in memory, but not mapped in system space. The caller can perform this mapping by calling <a href="mmgetsystemaddressformdlsafe" title="PVOID MmGetSystemAddressForMdlSafe(&#10;  [in] PMDL  Mdl,&#10;  [in] ULONG Priority&#10;);">MmGetSystemAddressForMdlSafe</a>.</p>
-
 <p>Note that even if the call to <strong>CcPrepareMdlWrite</strong> fails, one or more MDLs may have been allocated. The caller can examine the value of <em>IoStatus.Information</em> to determine whether this has occurred. If it has, the caller must call <a href="ccmdlwritecomplete" title="VOID CcMdlWriteComplete(&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] PMDL           MdlChain&#10;);">CcMdlWriteComplete</a> to free the allocated MDLs.</p>
-
 <p>If any failure occurs, <strong>CcPrepareMdlWrite</strong> raises a status exception for that particular failure. For example, if a pool allocation failure occurs, <strong>CcPrepareMdlWrite</strong> raises a STATUS_INSUFFICIENT_RESOURCES exception; if an I/O error occurs, <strong>CcPrepareMdlWrite</strong> raises the status exception of the I/O error. Therefore, to gain control if a failure occurs, the driver should wrap the call to <strong>CcPrepareMdlWrite</strong> in a <strong>try-except</strong> or <strong>try-finally</strong> statement.</p>
-
 <p>To cache a file, use <a href="ccinitializecachemap" title="VOID CcInitializeCacheMap(&#10;  [in] PFILE_OBJECT             FileObject,&#10;  [in] PCC_FILE_SIZES           FileSizes,&#10;  [in] BOOLEAN                  PinAccess,&#10;  [in] PCACHE_MANAGER_CALLBACKS Callbacks,&#10;  [in] PVOID                    LazyWriteContext&#10;);">CcInitializeCacheMap</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="cccopywrite" title="BOOLEAN CcCopyWrite(&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] ULONG          Length,&#10;  [in] BOOLEAN        Wait,&#10;  [in] PVOID          Buffer&#10;);">CcCopyWrite</a></p>
-
 <p><a href="ccinitializecachemap" title="VOID CcInitializeCacheMap(&#10;  [in] PFILE_OBJECT             FileObject,&#10;  [in] PCC_FILE_SIZES           FileSizes,&#10;  [in] BOOLEAN                  PinAccess,&#10;  [in] PCACHE_MANAGER_CALLBACKS Callbacks,&#10;  [in] PVOID                    LazyWriteContext&#10;);">CcInitializeCacheMap</a></p>
-
 <p><a href="ccmdlwriteabort" title="VOID CcMdlWriteAbort(&#10;  [in] PFILE_OBJECT FileObject,&#10;  [in] PMDL         MdlChain&#10;);">CcMdlWriteAbort</a></p>
-
 <p><a href="ccmdlwritecomplete" title="VOID CcMdlWriteComplete(&#10;  [in] PFILE_OBJECT   FileObject,&#10;  [in] PLARGE_INTEGER FileOffset,&#10;  [in] PMDL           MdlChain&#10;);">CcMdlWriteComplete</a></p>
-
 <p><a href="ioallocatemdl" title="PMDL IoAllocateMdl(&#10;  [in, optional]      __drv_aliasesMem PVOID VirtualAddress,&#10;  [in]                ULONG                  Length,&#10;  [in]                BOOLEAN                SecondaryBuffer,&#10;  [in]                BOOLEAN                ChargeQuota,&#10;  [in, out, optional] PIRP                   Irp&#10;);">IoAllocateMdl</a></p>
-
 <p><a href="iobuildpartialmdl" title="VOID IoBuildPartialMdl(&#10;  [in]      PMDL  SourceMdl,&#10;  [in, out] PMDL  TargetMdl,&#10;  [in]      PVOID VirtualAddress,&#10;  [in]      ULONG Length&#10;);">IoBuildPartialMdl</a></p>
-
 <p><a href="mmgetmdlbytecount" title="ULONG MmGetMdlByteCount(&#10;  [in] PMDL Mdl&#10;);">MmGetMdlByteCount</a></p>
-
 <p><a href="mmgetmdlbyteoffset" title="void MmGetMdlByteOffset(&#10;  [in] Mdl&#10;);">MmGetMdlByteOffset</a></p>
-
 <p><a href="mmgetmdlpfnarray" title="PPFN_NUMBER MmGetMdlPfnArray(&#10;  _In_ PMDL Mdl&#10;);">MmGetMdlPfnArray</a></p>
-
 <p><a href="mmgetmdlvirtualaddress" title="#define MmGetMdlVirtualAddress(Mdl) \&#10;    ((PVOID) ((PCHAR) ((Mdl)-&gt;StartVa) + (Mdl)-&gt;ByteOffset))">MmGetMdlVirtualAddress</a></p>
-
 <p><a href="mmgetsystemaddressformdl" title="PVOID MmGetSystemAddressForMdl(&#10;   MDL&#10;);">MmGetSystemAddressForMdl</a></p>
-
 <p><a href="mmgetsystemaddressformdlsafe" title="PVOID MmGetSystemAddressForMdlSafe(&#10;  [in] PMDL  Mdl,&#10;  [in] ULONG Priority&#10;);">MmGetSystemAddressForMdlSafe</a></p>
-
 <p><a href="mminitializemdl" title="VOID MmInitializeMdl(&#10;  [in] PMDL   MemoryDescriptorList,&#10;  [in] PVOID  BaseVa,&#10;  [in] SIZE_T Length&#10;);">MmInitializeMdl</a></p>
-
 <p><a href="mmmaplockedpages" title="PVOID MmMapLockedPages(&#10;  [in] PMDL                                                                          MemoryDescriptorList,&#10;  [in] __drv_strictType(KPROCESSOR_MODE / enum _MODE,__drv_typeConst)KPROCESSOR_MODE AccessMode&#10;);">MmMapLockedPages</a></p>
-
 <p><a href="mmpreparemdlforreuse" title="VOID MmPrepareMdlForReuse(&#10;  [in] PMDL MDL&#10;);">MmPrepareMdlForReuse</a></p>
-
 <p><a href="mmprobeandlockpages" title="VOID MmProbeAndLockPages(&#10;  [in, out] PMDL            MemoryDescriptorList,&#10;  [in]      KPROCESSOR_MODE AccessMode,&#10;  [in]      LOCK_OPERATION  Operation&#10;);">MmProbeAndLockPages</a></p>
-
 <p><a href="mmunlockpages" title="VOID MmUnlockPages(&#10;  [in, out] PMDL MemoryDescriptorList&#10;);">MmUnlockPages</a></p>
-
 <p><a href="mmunmaplockedpages" title="VOID MmUnmapLockedPages(&#10;  [in] PVOID BaseAddress,&#10;  [in] PMDL  MemoryDescriptorList&#10;);">MmUnmapLockedPages</a></p>
 <hr>
 <div class="ntdoc-description-links">

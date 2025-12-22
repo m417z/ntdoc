@@ -74,88 +74,47 @@
 <h1>Windows Driver Kit DDI reference (nc-fltkernel-pflt_normalize_name_component_ex)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="pflt_normalize_name_component_ex-callback-function">PFLT_NORMALIZE_NAME_COMPONENT_EX callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>PFLT_NORMALIZE_NAME_COMPONENT_EX callback function</h1>
+<h2>Description</h2>
 <p>A minifilter driver that provides file names for the filter manager's name cache can register a routine of type PFLT_NORMALIZE_NAME_COMPONENT_EX as the minifilter driver's <em>NormalizeNameComponentExCallback</em> callback routine.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="instance-in"><code>Instance</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Instance</code> [in]</h3>
 <p>Opaque instance pointer for the minifilter driver instance that this callback routine is registered for.</p>
-
-<h3 id="fileobject-in"><code>FileObject</code> [in]</h3>
-
+<h3><code>FileObject</code> [in]</h3>
 <p>Pointer to the file object for the file whose name is being requested or the file that is the target of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-set-information">IRP_MJ_SET_INFORMATION</a> operation if the FLTFL_NORMALIZE_NAME_DESTINATION_FILE_NAME flag is set. See the <em>Flags</em> parameter below for more information.</p>
-
-<h3 id="parentdirectory-in"><code>ParentDirectory</code> [in]</h3>
-
+<h3><code>ParentDirectory</code> [in]</h3>
 <p>Pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that contains the name of the parent directory for this name component.</p>
-
-<h3 id="volumenamelength-in"><code>VolumeNameLength</code> [in]</h3>
-
+<h3><code>VolumeNameLength</code> [in]</h3>
 <p>Length, in bytes, of the parent directory name that is stored in the structure that the <em>ParentDirectory</em> parameter points to.</p>
-
-<h3 id="component-in"><code>Component</code> [in]</h3>
-
+<h3><code>Component</code> [in]</h3>
 <p>Pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that contains the name component to be expanded.</p>
-
-<h3 id="expandcomponentname-out"><code>ExpandComponentName</code> [out]</h3>
-
+<h3><code>ExpandComponentName</code> [out]</h3>
 <p>Pointer to a <a href="file_names_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_NAMES_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_NAMES_INFORMATION, *PFILE_NAMES_INFORMATION;">FILE_NAMES_INFORMATION</a> structure that receives the expanded (normalized) file name information for the name component.</p>
-
-<h3 id="expandcomponentnamelength-in"><code>ExpandComponentNameLength</code> [in]</h3>
-
+<h3><code>ExpandComponentNameLength</code> [in]</h3>
 <p>Length, in bytes, of the buffer that the <em>ExpandComponentName</em> parameter points to.</p>
-
-<h3 id="flags-in"><code>Flags</code> [in]</h3>
-
+<h3><code>Flags</code> [in]</h3>
 <p>Name normalization flags. FLTFL_NORMALIZE_NAME_CASE_SENSITIVE specifies that the name to be normalized is case-sensitive. FLTFL_NORMALIZE_NAME_DESTINATION_FILE_NAME specifies that the callback routine has been called to service an <a href="fltgetdestinationfilenameinformation" title="NTSTATUS FLTAPI FltGetDestinationFileNameInformation(&#10;  [in]           PFLT_INSTANCE              Instance,&#10;  [in]           PFILE_OBJECT               FileObject,&#10;  [in, optional] HANDLE                     RootDirectory,&#10;  [in]           PWSTR                      FileName,&#10;  [in]           ULONG                      FileNameLength,&#10;  [in]           FLT_FILE_NAME_OPTIONS      NameOptions,&#10;  [out]          PFLT_FILE_NAME_INFORMATION *RetFileNameInformation&#10;);">FltGetDestinationFileNameInformation</a> routine call. If the FLTFL_NORMALIZE_NAME_DESTINATION_FILE_NAME flag is set, <em>FileObject</em> represents the file/directory that is the target of the <a href="irp_mj_set_information" title="#define IRP_MJ_SET_INFORMATION 0x06">IRP_MJ_SET_INFORMATION</a> operation. If the FLTFL_NORMALIZE_NAME_DESTINATION_FILE_NAME flag is not set, <em>FileObject</em> represents the file/directory whose name is being requested.</p>
-
-<h3 id="normalizationcontext-in-out"><code>NormalizationContext</code> [in, out]</h3>
-
+<h3><code>NormalizationContext</code> [in, out]</h3>
 <p>Pointer to minifilter driver-provided context information to be passed in any subsequent calls to this callback routine that are made to normalize the remaining components in the same file name path.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>This callback routine returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value. If the name component that the <em>Component</em> parameter specifies does not exist in the parent directory that the <em>ParentDirectory</em> parameter specifies, this callback routine should return STATUS_NO_SUCH_FILE. If this callback routine issues an IRP_MN_QUERY_DIRECTORY (FileNamesInformation) request to the parent directory, the file system returns the correct status code. In this situation, this callback can simply return the status code that the file system returns.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>A minifilter driver that provides file names for the filter manager's name cache can register a routine of type PFLT_NORMALIZE_NAME_COMPONENT_EX as the minifilter driver's <em>NormalizeNameComponentExCallback</em> callback routine.</p>
-
 <p>The principal difference between the <em>NormalizeNameComponentExCallback</em> callback routine and the <em>NormalizeNameComponentCallback</em> callback routine (of type <a href="pflt_normalize_name_component" title="PFLT_NORMALIZE_NAME_COMPONENT PfltNormalizeNameComponent;&#10;&#10;NTSTATUS PfltNormalizeNameComponent(&#10;  [in]      PFLT_INSTANCE Instance,&#10;  [in]      PCUNICODE_STRING ParentDirectory,&#10;  [in]      USHORT VolumeNameLength,&#10;  [in]      PCUNICODE_STRING Component,&#10;  [out]     PFILE_NAMES_INFORMATION ExpandComponentName,&#10;  [in]      ULONG ExpandComponentNameLength,&#10;  [in]      FLT_NORMALIZE_NAME_FLAGS Flags,&#10;  [in, out] PVOID *NormalizationContext&#10;)&#10;{...}">PFLT_NORMALIZE_NAME_COMPONENT</a>) is that the <em>NormalizeNameComponentExCallback</em> callback routine supports the additional <em>FileObject</em> parameter. The file object (<em>FileObject</em>) can be used by the minifilter driver to retrieve the <a href="txn_parameter_block" title="typedef struct _TXN_PARAMETER_BLOCK {&#10;  USHORT Length;&#10;  USHORT TxFsContext;&#10;  PVOID  TransactionObject;&#10;} TXN_PARAMETER_BLOCK, *PTXN_PARAMETER_BLOCK;">TXN_PARAMETER_BLOCK</a> structure for the operation that the file/directory is participating in by calling the <a href="iogettransactionparameterblock" title="PTXN_PARAMETER_BLOCK IoGetTransactionParameterBlock(&#10;  [in] PFILE_OBJECT FileObject&#10;);">IoGetTransactionParameterBlock</a> routine. The <a href="txn_parameter_block" title="typedef struct _TXN_PARAMETER_BLOCK {&#10;  USHORT Length;&#10;  USHORT TxFsContext;&#10;  PVOID  TransactionObject;&#10;} TXN_PARAMETER_BLOCK, *PTXN_PARAMETER_BLOCK;">TXN_PARAMETER_BLOCK</a> structure can be used by the minifilter driver to issue its own create requests in the context of the transaction that this file object is participating in.</p>
-
 <p>To register this callback routine, the minifilter driver stores the address of a routine of type PFLT_NORMALIZE_NAME_COMPONENT_EX in the <strong>NormalizeNameComponentExCallback</strong> member of the <a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a> structure that the minifilter driver passes as a parameter to <a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a>.</p>
-
 <p>The filter manager calls this callback routine to query the minifilter driver for the normalized names for components in the file name path whose names the minifilter driver has modified. If the file name path contains more than one such component, the filter manager can call this callback routine multiple times in the process of normalizing all the components in the path. The minifilter driver can use the <em>NormalizationContext</em> parameter to pass context information to subsequent calls to this callback routine.</p>
-
 <p>If the minifilter driver uses the <em>NormalizationContext</em> parameter, it should also register a normalization context cleanup callback routine. For more information, see the reference entry for <a href="pflt_normalize_context_cleanup" title="PFLT_NORMALIZE_CONTEXT_CLEANUP PfltNormalizeContextCleanup;&#10;&#10;VOID PfltNormalizeContextCleanup(&#10;  [in, optional] PVOID *NormalizationContext&#10;)&#10;{...}">PFLT_NORMALIZE_CONTEXT_CLEANUP</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="file_names_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_NAMES_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    ULONG FileIndex;&#10;    ULONG FileNameLength;&#10;    _Field_size_bytes_(FileNameLength) WCHAR FileName[1];&#10;} FILE_NAMES_INFORMATION, *PFILE_NAMES_INFORMATION;">FILE_NAMES_INFORMATION</a></p>
-
 <p><a href="flt_registration" title="typedef struct _FLT_REGISTRATION {&#10;  USHORT                                      Size;&#10;  USHORT                                      Version;&#10;  FLT_REGISTRATION_FLAGS                      Flags;&#10;  const FLT_CONTEXT_REGISTRATION              *ContextRegistration;&#10;  const FLT_OPERATION_REGISTRATION            *OperationRegistration;&#10;  PFLT_FILTER_UNLOAD_CALLBACK                 FilterUnloadCallback;&#10;  PFLT_INSTANCE_SETUP_CALLBACK                InstanceSetupCallback;&#10;  PFLT_INSTANCE_QUERY_TEARDOWN_CALLBACK       InstanceQueryTeardownCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownStartCallback;&#10;  PFLT_INSTANCE_TEARDOWN_CALLBACK             InstanceTeardownCompleteCallback;&#10;  PFLT_GENERATE_FILE_NAME                     GenerateFileNameCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT               NormalizeNameComponentCallback;&#10;  PFLT_NORMALIZE_CONTEXT_CLEANUP              NormalizeContextCleanupCallback;&#10;  PFLT_TRANSACTION_NOTIFICATION_CALLBACK      TransactionNotificationCallback;&#10;  PFLT_NORMALIZE_NAME_COMPONENT_EX            NormalizeNameComponentExCallback;&#10;  PFLT_SECTION_CONFLICT_NOTIFICATION_CALLBACK SectionNotificationCallback;&#10;} FLT_REGISTRATION, *PFLT_REGISTRATION;">FLT_REGISTRATION</a></p>
-
 <p><a href="fltgetdestinationfilenameinformation" title="NTSTATUS FLTAPI FltGetDestinationFileNameInformation(&#10;  [in]           PFLT_INSTANCE              Instance,&#10;  [in]           PFILE_OBJECT               FileObject,&#10;  [in, optional] HANDLE                     RootDirectory,&#10;  [in]           PWSTR                      FileName,&#10;  [in]           ULONG                      FileNameLength,&#10;  [in]           FLT_FILE_NAME_OPTIONS      NameOptions,&#10;  [out]          PFLT_FILE_NAME_INFORMATION *RetFileNameInformation&#10;);">FltGetDestinationFileNameInformation</a></p>
-
 <p><a href="fltregisterfilter" title="NTSTATUS FLTAPI FltRegisterFilter(&#10;  [in]  PDRIVER_OBJECT         Driver,&#10;  [in]  const FLT_REGISTRATION *Registration,&#10;  [out] PFLT_FILTER            *RetFilter&#10;);">FltRegisterFilter</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-set-information">IRP_MJ_SET_INFORMATION</a></p>
-
 <p><a href="iogettransactionparameterblock" title="PTXN_PARAMETER_BLOCK IoGetTransactionParameterBlock(&#10;  [in] PFILE_OBJECT FileObject&#10;);">IoGetTransactionParameterBlock</a></p>
-
 <p><a href="pflt_generate_file_name" title="PFLT_GENERATE_FILE_NAME PfltGenerateFileName;&#10;&#10;NTSTATUS PfltGenerateFileName(&#10;  [in]           PFLT_INSTANCE Instance,&#10;  [in]           PFILE_OBJECT FileObject,&#10;  [in, optional] PFLT_CALLBACK_DATA CallbackData,&#10;  [in]           FLT_FILE_NAME_OPTIONS NameOptions,&#10;  [out]          PBOOLEAN CacheFileNameInformation,&#10;  [out]          PFLT_NAME_CONTROL FileName&#10;)&#10;{...}">PFLT_GENERATE_FILE_NAME</a></p>
-
 <p><a href="pflt_normalize_context_cleanup" title="PFLT_NORMALIZE_CONTEXT_CLEANUP PfltNormalizeContextCleanup;&#10;&#10;VOID PfltNormalizeContextCleanup(&#10;  [in, optional] PVOID *NormalizationContext&#10;)&#10;{...}">PFLT_NORMALIZE_CONTEXT_CLEANUP</a></p>
-
 <p><a href="pflt_normalize_name_component" title="PFLT_NORMALIZE_NAME_COMPONENT PfltNormalizeNameComponent;&#10;&#10;NTSTATUS PfltNormalizeNameComponent(&#10;  [in]      PFLT_INSTANCE Instance,&#10;  [in]      PCUNICODE_STRING ParentDirectory,&#10;  [in]      USHORT VolumeNameLength,&#10;  [in]      PCUNICODE_STRING Component,&#10;  [out]     PFILE_NAMES_INFORMATION ExpandComponentName,&#10;  [in]      ULONG ExpandComponentNameLength,&#10;  [in]      FLT_NORMALIZE_NAME_FLAGS Flags,&#10;  [in, out] PVOID *NormalizationContext&#10;)&#10;{...}">PFLT_NORMALIZE_NAME_COMPONENT</a></p>
-
 <p><a href="txn_parameter_block" title="typedef struct _TXN_PARAMETER_BLOCK {&#10;  USHORT Length;&#10;  USHORT TxFsContext;&#10;  PVOID  TransactionObject;&#10;} TXN_PARAMETER_BLOCK, *PTXN_PARAMETER_BLOCK;">TXN_PARAMETER_BLOCK</a></p>
-
 <p><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></p>
 <hr>
 <div class="ntdoc-description-links">

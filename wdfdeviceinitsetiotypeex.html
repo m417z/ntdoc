@@ -64,72 +64,41 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfdevice-wdfdeviceinitsetiotypeex)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wdfdeviceinitsetiotypeex-function">WdfDeviceInitSetIoTypeEx function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WdfDeviceInitSetIoTypeEx function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfDeviceInitSetIoTypeEx</strong> method sets the method or preference for how a driver will access the data buffers that are included in read and write requests, as well as device I/O control requests, for a specified device.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="deviceinit-in"><code>DeviceInit</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>DeviceInit</code> [in]</h3>
 <p>A pointer to a <a href="wdfdevice_init" title="struct WDFDEVICE_INIT {&#10;  ;      // Reserved.&#10;};">WDFDEVICE_INIT</a> structure.</p>
-
-<h3 id="iotypeconfig-in"><code>IoTypeConfig</code> [in]</h3>
-
+<h3><code>IoTypeConfig</code> [in]</h3>
 <p>Pointer to <a href="wdf_io_type_config" title="typedef struct _WDF_IO_TYPE_CONFIG {&#10;  ULONG              Size;&#10;  WDF_DEVICE_IO_TYPE ReadWriteIoType;&#10;  WDF_DEVICE_IO_TYPE DeviceControlIoType;&#10;  ULONG              DirectTransferThreshold;&#10;} WDF_IO_TYPE_CONFIG, *PWDF_IO_TYPE_CONFIG;">WDF_IO_TYPE_CONFIG</a> structure initialized using <a href="wdf_io_type_config_init" title="VOID WDF_IO_TYPE_CONFIG_INIT(&#10;  [out] PWDF_IO_TYPE_CONFIG IoTypeConfig&#10;);">WDF_IO_TYPE_CONFIG_INIT</a> macro.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>If you are writing a driver using KMDF version 1.11 or earlier, you must instead use <a href="wdfdeviceinitsetiotype" title="VOID WdfDeviceInitSetIoType(&#10;  [in] PWDFDEVICE_INIT    DeviceInit,&#10;  [in] WDF_DEVICE_IO_TYPE IoType&#10;);">WdfDeviceInitSetIoType</a>.</p>
-
 <p><strong>KMDF</strong> A KMDF driver calls <strong>WdfDeviceInitSetIoTypeEx</strong> to set a buffer-access method for read and write requests. For device I/O control requests, the framework uses the buffer type that is encoded in the I/O control code (IOCTL).</p>
-
 <p><strong>UMDF</strong> A UMDF driver calls <strong>WdfDeviceInitSetIoTypeEx</strong> to register preferences for read and write requests, as well as device I/O control requests. The values that a UMDF driver provides to <strong>WdfDeviceInitSetIoTypeEx</strong> are only preferences, and are not guaranteed to be used by the framework. Your driver can call <a href="wdfdevicegetdevicestackiotype" title="VOID WdfDeviceGetDeviceStackIoType(&#10;  [in]  WDFDEVICE          Device,&#10;  [out] WDF_DEVICE_IO_TYPE *ReadWriteIoType,&#10;  [out] WDF_DEVICE_IO_TYPE *IoControlIoType&#10;);">WdfDeviceGetDeviceStackIoType</a> to determine the buffer access methods that UMDF has assigned to a device's read/write requests and I/O control requests. For I/O control requests, the access method that the framework uses might differ from the access method specified in the IOCTL and the access method requested by the driver.</p>
-
 <p>If a driver calls <strong>WdfDeviceInitSetIoTypeEx</strong>, it must do so before it calls <a href="wdfdevicecreate" title="NTSTATUS WdfDeviceCreate(&#10;  [in, out]      PWDFDEVICE_INIT        *DeviceInit,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DeviceAttributes,&#10;  [out]          WDFDEVICE              *Device&#10;);">WdfDeviceCreate</a>.</p>
-
 <p>If the driver does not call <strong>WdfDeviceInitSetIoTypeEx</strong>, the framework sets the driver's buffer-access method to <strong>WdfDeviceIoBuffered</strong>, for the specified device.</p>
-
 <p>Calling <strong>WdfDeviceInitSetIoTypeEx</strong> from a KMDF filter driver has no effect. For KMDF filter drivers, the framework uses the I/O type that the next-lower driver in the driver stack specifies.</p>
-
 <p>A UMDF filter driver can, however, register preferences for buffer-access method by calling <strong>WdfDeviceInitSetIoTypeEx</strong>.</p>
-
 <p>All UMDF drivers in a driver stack must use the same method for accessing a device's buffers. If UMDF determines that some drivers prefer either buffered I/O or direct I/O for a device while other drivers prefer only buffered I/O for the device, UMDF uses buffered I/O for all drivers. If one or more of a stack's drivers prefer only buffered I/O while others prefer only direct I/O, UMDF logs an event to the system event log and does not start the driver stack.</p>
-
 <p>For more information about buffer-access methods, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/accessing-data-buffers-in-wdf-drivers">Accessing Data Buffers</a>.</p>
-
 <p>This method is the UMDF 2.0 equivalent of  <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfdeviceinitialize2-setiotypepreference">IWDFDeviceInitialize2::SetIoTypePreference</a>.</p>
-
-<h4 id="examples">Examples</h4>
-
+<h4>Examples</h4>
 <p>The following code example initializes a <a href="wdf_io_type_config" title="typedef struct _WDF_IO_TYPE_CONFIG {&#10;  ULONG              Size;&#10;  WDF_DEVICE_IO_TYPE ReadWriteIoType;&#10;  WDF_DEVICE_IO_TYPE DeviceControlIoType;&#10;  ULONG              DirectTransferThreshold;&#10;} WDF_IO_TYPE_CONFIG, *PWDF_IO_TYPE_CONFIG;">WDF_IO_TYPE_CONFIG</a> structure, sets the driver's buffer-access preferences to direct I/O, specifies that transfers smaller than 32 KB should use buffered I/O, and calls <strong>WdfDeviceInitSetIoTypeEx</strong>.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="wdf_io_type_config" title="typedef struct _WDF_IO_TYPE_CONFIG {&#10;  ULONG              Size;&#10;  WDF_DEVICE_IO_TYPE ReadWriteIoType;&#10;  WDF_DEVICE_IO_TYPE DeviceControlIoType;&#10;  ULONG              DirectTransferThreshold;&#10;} WDF_IO_TYPE_CONFIG, *PWDF_IO_TYPE_CONFIG;">WDF_IO_TYPE_CONFIG</a></span><span class="w"> </span><span class="n">ioConfig</span><span class="p">;</span>
-<span class="n"><a href="wdf_io_type_config_init" title="VOID WDF_IO_TYPE_CONFIG_INIT(&#10;  [out] PWDF_IO_TYPE_CONFIG IoTypeConfig&#10;);">WDF_IO_TYPE_CONFIG_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">ioConfig</span><span class="p">);</span>
-<span class="n">ioConfig</span><span class="p">.</span><span class="n">ReadWriteIoType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDeviceIoDirect</span><span class="p">;</span>
-<span class="n">ioConfig</span><span class="p">.</span><span class="n">DeviceControlIoType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">WdfDeviceIoDirect</span><span class="p">;</span>
-<span class="n">ioConfig</span><span class="p">.</span><span class="n">DirectTransferThreshold</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">32</span><span class="p">;</span>
-
-<span class="n">WdfDeviceInitSetIoTypeEx</span><span class="p">(</span><span class="n">DeviceInit</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ioConfig</span><span class="p">);</span>
-<span class="p">}</span>
+<pre><code><a href="wdf_io_type_config" title="typedef struct _WDF_IO_TYPE_CONFIG {&#10;  ULONG              Size;&#10;  WDF_DEVICE_IO_TYPE ReadWriteIoType;&#10;  WDF_DEVICE_IO_TYPE DeviceControlIoType;&#10;  ULONG              DirectTransferThreshold;&#10;} WDF_IO_TYPE_CONFIG, *PWDF_IO_TYPE_CONFIG;">WDF_IO_TYPE_CONFIG</a> ioConfig;
+<a href="wdf_io_type_config_init" title="VOID WDF_IO_TYPE_CONFIG_INIT(&#10;  [out] PWDF_IO_TYPE_CONFIG IoTypeConfig&#10;);">WDF_IO_TYPE_CONFIG_INIT</a>(&amp;ioConfig);
+ioConfig.ReadWriteIoType = WdfDeviceIoDirect;
+ioConfig.DeviceControlIoType = WdfDeviceIoDirect;
+ioConfig.DirectTransferThreshold = 32;
+WdfDeviceInitSetIoTypeEx(DeviceInit, &amp;ioConfig);
+}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wudfddi/nf-wudfddi-iwdfdeviceinitialize2-setiotypepreference">IWDFDeviceInitialize2::SetIoTypePreference</a></p>
-
 <p><a href="wdf_io_type_config" title="typedef struct _WDF_IO_TYPE_CONFIG {&#10;  ULONG              Size;&#10;  WDF_DEVICE_IO_TYPE ReadWriteIoType;&#10;  WDF_DEVICE_IO_TYPE DeviceControlIoType;&#10;  ULONG              DirectTransferThreshold;&#10;} WDF_IO_TYPE_CONFIG, *PWDF_IO_TYPE_CONFIG;">WDF_IO_TYPE_CONFIG</a></p>
-
 <p><a href="wdf_io_type_config_init" title="VOID WDF_IO_TYPE_CONFIG_INIT(&#10;  [out] PWDF_IO_TYPE_CONFIG IoTypeConfig&#10;);">WDF_IO_TYPE_CONFIG_INIT</a></p>
-
 <p><a href="wdfdevicegetdevicestackiotype" title="VOID WdfDeviceGetDeviceStackIoType(&#10;  [in]  WDFDEVICE          Device,&#10;  [out] WDF_DEVICE_IO_TYPE *ReadWriteIoType,&#10;  [out] WDF_DEVICE_IO_TYPE *IoControlIoType&#10;);">WdfDeviceGetDeviceStackIoType</a></p>
-
 <p><a href="wdfdeviceinitsetiotype" title="VOID WdfDeviceInitSetIoType(&#10;  [in] PWDFDEVICE_INIT    DeviceInit,&#10;  [in] WDF_DEVICE_IO_TYPE IoType&#10;);">WdfDeviceInitSetIoType</a></p>
 <hr>
 <div class="ntdoc-description-links">

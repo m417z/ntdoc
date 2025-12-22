@@ -64,59 +64,36 @@
 <h1>Windows Driver Kit DDI reference (ns-printoem-_unidrv_private_devmode)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="_unidrv_private_devmode-structure">_UNIDRV_PRIVATE_DEVMODE structure</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>_UNIDRV_PRIVATE_DEVMODE structure</h1>
+<h2>Description</h2>
 <p>The <strong>UNIDRV_PRIVATE_DEVMODE</strong> structure enables Unidrv plug-ins to determine the size of the private portion of Unidrv's <strong>DEVMODEW</strong> structure.</p>
-
-<h2 id="members">Members</h2>
-
-<h3 id="wreserved"><code>wReserved</code></h3>
-
+<h2>Members</h2>
+<h3><code>wReserved</code></h3>
 <p>Reserved for system use.</p>
-
-<h3 id="wsize"><code>wSize</code></h3>
-
+<h3><code>wSize</code></h3>
 <p>The size, in bytes, of the private portion of Unidrv's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/wingdi/ns-wingdi-devmodew"><strong>DEVMODEW</strong></a> structure.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>For information about the public and private sections of the <strong>DEVMODEW</strong> structure, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/the-devmodew-structure"><strong>DEVMODEW</strong></a>.</p>
-
 <p><em>Printoem.h</em> defines a macro for determining the size of the private portion of Unidrv's <strong>DEVMODEW</strong> structure.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">#define <a href="get_unidrv_private_devmode_size" title="void GET_UNIDRV_PRIVATE_DEVMODE_SIZE(&#10;  pdm&#10;);">GET_UNIDRV_PRIVATE_DEVMODE_SIZE</a>(pdm)\</span>
-<span class="cp">    ( ( (pdm)-&gt;dmDriverExtra &gt; (<a href="field_offset" title="void FIELD_OFFSET(&#10;  type,&#10;  field&#10;);">FIELD_OFFSET</a>(UNIDRV_PRIVATE_DEVMODE, wSize) + sizeof(<a href="word" title="typedef unsigned short WORD;">WORD</a>)) ) ? \</span>
-<span class="cp">    ((PUNIDRV_PRIVATE_DEVMODE)((PBYTE)(pdm) + (pdm)-&gt; dmSize)) -&gt; wSize : 0 )</span>
+<pre><code>#define <a href="get_unidrv_private_devmode_size" title="void GET_UNIDRV_PRIVATE_DEVMODE_SIZE(&#10;  pdm&#10;);">GET_UNIDRV_PRIVATE_DEVMODE_SIZE</a>(pdm)\
+    ( ( (pdm)-&gt;dmDriverExtra &gt; (<a href="field_offset" title="void FIELD_OFFSET(&#10;  type,&#10;  field&#10;);">FIELD_OFFSET</a>(UNIDRV_PRIVATE_DEVMODE, wSize) + sizeof(<a href="word" title="typedef unsigned short WORD;">WORD</a>)) ) ? \
+    ((PUNIDRV_PRIVATE_DEVMODE)((PBYTE)(pdm) + (pdm)-&gt; dmSize)) -&gt; wSize : 0 )
 </code></pre>
-</div>
-
 <p>The pdm argument in the <strong><a href="get_unidrv_private_devmode_size" title="void GET_UNIDRV_PRIVATE_DEVMODE_SIZE(&#10;  pdm&#10;);">GET_UNIDRV_PRIVATE_DEVMODE_SIZE</a></strong> macro is a pointer to a <strong>DEVMODEW</strong> structure. The macro determines whether the value of the <strong>dmDriverExtra</strong> member of the <strong>DEVMODEW</strong> structure is larger than the byte offset of the <strong>wSize</strong> member of the UNIDRV_PRIVATE_DEVMODE structure. If so, the macro returns the value of the <strong>wSize</strong> member in the UNIDRV_PRIVATE_DEVMODE structure. If not, the macro returns zero.</p>
-
 <p>To safely determine the address of the private portion of your plug-in's <strong>DEVMODEW</strong> structure, do the following:</p>
-
 <ol>
 <li><p>Call the <strong><a href="get_unidrv_private_devmode_size" title="void GET_UNIDRV_PRIVATE_DEVMODE_SIZE(&#10;  pdm&#10;);">GET_UNIDRV_PRIVATE_DEVMODE_SIZE</a></strong> macro, passing the address of the <strong>DEVMODEW</strong> structure in the call.</p></li>
 <li><p>Verify that (pdm)->dmDriverExtra is larger than the value returned by the macro. (The macro returns the value of the <strong>wSize</strong> member of the <strong>UNIDRV_PRIVATE_DEVMODE</strong> structure.)</p></li>
 <li><p>Determine the address of the private portion of your plug-in's <strong>DEVMODEW</strong> structure as follows.</p></li>
 </ol>
-
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="n">pdmPlugin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">PBYTE</span><span class="p">)(</span><span class="n">pdm</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">pdm</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">dmSize</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">wSize</span><span class="p">;</span>
-<span class="w">   </span>
+<pre><code>    pdmPlugin = (PBYTE)(pdm) + (pdm)-&gt;dmSize + wSize;
+   
 </code></pre>
-</div>
-
 <p>The preceding example starts with the address of the public <strong>DEVMODEW</strong> structure (pdm), adds the number of bytes of this structure (pdm->dmSize), and then adds the size in bytes of the Unidrv private <strong>DEVMODEW</strong> structure (<strong>wSize</strong>). A plug-in's private <strong>DEVMODEW</strong> data begins at this memory address. If there are multiple plug-ins chained together, the address returned by this example is that of the first plug-in's private <strong>DEVMODEW</strong> data. The second plug-in's private <strong>DEVMODEW</strong> data follows the first plug-in's private <strong>DEVMODEW</strong> data, the third plug-in's private <strong>DEVMODEW</strong> data follows that of the second plug-in's private <strong>DEVMODEW</strong> data, and so on. A plug-in developer who needs to determine the address of the <em>n</em>-th plug-in's private <strong>DEVMODEW</strong> data must know the sizes of the private <strong>DEVMODEW</strong> data for the first <em>n</em> - 1 plug-ins.</p>
-
 <ol>
 <li>Verify that the private portion of your plug-in's <strong>DEVMODEW</strong> structure begins with a valid <a href="oem_dmextraheader" title="typedef struct _OEM_DMEXTRAHEADER {&#10;  DWORD dwSize;&#10;  DWORD dwSignature;&#10;  DWORD dwVersion;&#10;} OEM_DMEXTRAHEADER, *POEM_DMEXTRAHEADER;">OEM_DMEXTRAHEADER</a> structure.</li>
 </ol>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="pscript5_private_devmode" title="typedef struct _PSCRIPT5_PRIVATE_DEVMODE {&#10;  WORD wReserved[57];&#10;  WORD wSize;&#10;} PSCRIPT5_PRIVATE_DEVMODE, *PPSCRIPT5_PRIVATE_DEVMODE;">PSCRIPT5_PRIVATE_DEVMODE</a></p>
 <hr>
 <div class="ntdoc-description-links">

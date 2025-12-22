@@ -63,63 +63,44 @@
 <h1>Windows Driver Kit DDI reference (nf-acxcircuit-acxcircuitresumeio)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>AcxCircuitResumeIo</strong> function is used to resume circuit I/O after it has been temporarily stopped.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="circuit"><code>Circuit</code></h3>
-
+<h2>Parameters</h2>
+<h3><code>Circuit</code></h3>
 <p>An existing ACXCIRCUIT object. For more information about ACX objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">Summary of ACX Objects</a>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>It is not recommended to use this version of the stop IO call, but rather <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxcircuit/nf-acxcircuit-acxcircuitresumeiowithtag">AcxCircuitResumeIoWithTag macro</a> as it provides additional diagnostic information by using a Tag.</p>
-
-<h3 id="example">Example</h3>
-
+<h3>Example</h3>
 <p>Example usage is shown below.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="w">    </span><span class="n">BOOLEAN</span><span class="w">                         </span><span class="n">stoppedIo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
-<span class="w">    </span><span class="n">circuit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="acxpingetcircuit" title="ACXCIRCUIT AcxPinGetCircuit(&#10;  [in] ACXPIN AcxPin&#10;);">AcxPinGetCircuit</a></span><span class="p">(</span><span class="n">pin</span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="c1">// Temporarily disable this circuit&#39;s I/Os while we are updating the</span>
-<span class="w">    </span><span class="c1">// formats. This thread cannot be an I/O dispatched thread else we deadlock.</span>
-<span class="w">    </span><span class="c1">//</span>
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="acxcircuitstopio" title="void AcxCircuitStopIo(&#10;  Circuit,&#10;  Flags&#10;);">AcxCircuitStopIo</a></span><span class="p">(</span><span class="n">circuit</span><span class="p">,</span><span class="w"> </span><span class="n">AcxStopIoNoFlags</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n"><a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a></span><span class="p">(</span><span class="n">status</span><span class="p">))</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">HDTrace</span><span class="p">(</span><span class="n">TRACE_LEVEL_ERROR</span><span class="p">,</span><span class="w"> </span><span class="n">FLAG_INFO</span><span class="p">,</span>
-<span class="w">                </span><span class="s">&quot;Failed to stop I/O on circuit %p, %!STATUS!&quot;</span><span class="p">,</span>
-<span class="w">                </span><span class="n">circuit</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">);</span>
-<span class="w">        </span><span class="n"><a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a></span><span class="p">(</span><span class="n">FALSE</span><span class="p">);</span>
-<span class="w">        </span><span class="k">goto</span><span class="w"> </span><span class="n">exit</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="n">stoppedIo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TRUE</span><span class="p">;</span>
-
-<span class="w">   </span><span class="c1">// Code to update format list not shown here</span>
-
-<span class="p">...</span>
-
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">stoppedIo</span><span class="p">)</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="n">AcxCircuitResumeIo</span><span class="p">(</span><span class="n">circuit</span><span class="p">);</span>
-<span class="w">        </span><span class="n">stoppedIo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">FALSE</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
+<pre><code>
+    BOOLEAN                         stoppedIo = FALSE;
+    circuit = <a href="acxpingetcircuit" title="ACXCIRCUIT AcxPinGetCircuit(&#10;  [in] ACXPIN AcxPin&#10;);">AcxPinGetCircuit</a>(pin);
+    //
+    // Temporarily disable this circuit's I/Os while we are updating the
+    // formats. This thread cannot be an I/O dispatched thread else we deadlock.
+    //
+    status = <a href="acxcircuitstopio" title="void AcxCircuitStopIo(&#10;  Circuit,&#10;  Flags&#10;);">AcxCircuitStopIo</a>(circuit, AcxStopIoNoFlags);
+    if (!<a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>(status))
+    {
+        HDTrace(TRACE_LEVEL_ERROR, FLAG_INFO,
+                "Failed to stop I/O on circuit %p, %!STATUS!",
+                circuit, status);
+        <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(FALSE);
+        goto exit;
+    }
+    stoppedIo = TRUE;
+   // Code to update format list not shown here
+...
+    if (stoppedIo)
+    {
+        AcxCircuitResumeIo(circuit);
+        stoppedIo = FALSE;
+    }
 </code></pre>
-</div>
-
-<h3 id="acx-requirements">ACX requirements</h3>
-
+<h3>ACX requirements</h3>
 <p><strong>Minimum ACX version:</strong> 1.0</p>
-
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxcircuit/nf-acxcircuit-acxcircuitresumeiowithtag">AcxCircuitResumeIoWithTag macro</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxcircuit/">acxcircuit.h header</a></li>

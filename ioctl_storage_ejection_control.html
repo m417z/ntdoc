@@ -67,57 +67,34 @@
 <h1>Windows Driver Kit DDI reference (ni-ntddstor-ioctl_storage_ejection_control)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="ioctl_storage_ejection_control-ioctl">IOCTL_STORAGE_EJECTION_CONTROL IOCTL</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>IOCTL_STORAGE_EJECTION_CONTROL IOCTL</h1>
+<h2>Description</h2>
 <p>Locks the device to prevent removal of the media. If the driver can prevent the media from being removed while the drive is in use, the driver disables or enables the mechanism that ejects media, thereby locking the drive. A caller must open the device with FILE_READ_ATTRIBUTES to send this request.</p>
-
 <p>Unlike <a href="ioctl_storage_media_removal" title="// CTL_CODE(0x002d, 0x201, METHOD_BUFFERED, FILE_READ_ACCESS)&#10;#define IOCTL_STORAGE_MEDIA_REMOVAL 0x002D4804">IOCTL_STORAGE_MEDIA_REMOVAL</a>, the driver tracks <strong>IOCTL_STORAGE_EJECTION_CONTROL</strong> requests by caller and ignores unlock requests for which it has not received a lock request from the same caller, thereby preventing other callers from unlocking the drive.</p>
-
 <p>A driver for a removable-media device - can support this IOCTL must do the following:</p>
-
 <ol>
 <li>Keep a lock count, tagged by caller, in the device object extension.</li>
 <li>Keep the lock count per physical device.</li>
 <li>When called with this IOCTL, if the flag to prevent removing the media is set, increment the count; if the flag is clear and the driver has previously received a lock request from the same caller, decrement the count.</li>
 <li>Prevent removal of the media unless all lock counts are zero.</li>
 </ol>
-
 <p>Under normal circumstances, the caller who locked the device using IOCTL_STORAGE_EJECTION_CONTROL, unlocks the device by sending IOCTL_STORAGE_EJECTION_CONTROL again with <strong>Irp->AssociatedIrp.SystemBuffer</strong> set to a boolean value of <strong>FALSE</strong>. However, sometimes the caller fails to unlock the device properly.</p>
-
 <p>To ensure that media removal locks are released properly, the class driver keeps track of callers who lock the media with IOCTL_STORAGE_EJECTION_CONTROL. If the caller terminates without unlocking the device, the class driver unlocks the device.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="major-code">Major code</h3>
-
-<h3 id="input-buffer">Input buffer</h3>
-
+<h2>Parameters</h2>
+<h3>Major code</h3>
+<h3>Input buffer</h3>
 <p>The buffer at <strong>Irp->AssociatedIrp.SystemBuffer</strong> contains a Boolean value, with <strong>TRUE</strong> indicating that the driver should lock the media in the drive.</p>
-
-<h3 id="input-buffer-length">Input buffer length</h3>
-
+<h3>Input buffer length</h3>
 <p>The length of a Boolean.</p>
-
-<h3 id="output-buffer">Output buffer</h3>
-
+<h3>Output buffer</h3>
 <p>None.</p>
-
-<h3 id="output-buffer-length">Output buffer length</h3>
-
+<h3>Output buffer length</h3>
 <p>None.</p>
-
-<h3 id="inputoutput-buffer">Input/output buffer</h3>
-
-<h3 id="inputoutput-buffer-length">Input/output buffer length</h3>
-
-<h3 id="status-block">Status block</h3>
-
+<h3>Input/output buffer</h3>
+<h3>Input/output buffer length</h3>
+<h3>Status block</h3>
 <p>The <strong>Information</strong> field is set to zero. The <strong>Status</strong> field is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, or possibly to STATUS_INVALID_DEVICE_REQUEST, STATUS_NO_MEDIA_IN_DEVICE, or STATUS_DEVICE_NOT_CONNECTED.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="ioctl_storage_eject_media" title="// CTL_CODE(0x002d, 0x202, METHOD_BUFFERED, FILE_READ_ACCESS)&#10;#define IOCTL_STORAGE_EJECT_MEDIA 0x002D4808">IOCTL_STORAGE_EJECT_MEDIA</a></p>
 <hr>
 <div class="ntdoc-description-links">
@@ -132,55 +109,34 @@
 </div>
 <div class="ntdoc-description">
 <h1>IOCTL_STORAGE_EJECTION_CONTROL IOCTL</h1>
-
 <h2>Description</h2>
-
 <p>Enables or disables the mechanism that ejects media. Disabling the mechanism locks the drive.</p>
-
 <p>To perform this operation, call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol"><strong>DeviceIoControl</strong></a> function with the following parameters.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">BOOL</span><span class="w"> </span><span class="n">DeviceIoControl</span><span class="p">(</span>
-<span class="w">  </span><span class="p">(</span><span class="n">HANDLE</span><span class="p">)</span><span class="w"> </span><span class="n">hDevice</span><span class="p">,</span><span class="w">                 </span><span class="c1">// handle to device</span>
-<span class="w">  </span><span class="n">IOCTL_STORAGE_EJECTION_CONTROL</span><span class="p">,</span><span class="w">   </span><span class="c1">// dwIoControlCode</span>
-<span class="w">  </span><span class="p">(</span><span class="n">LPVOID</span><span class="p">)</span><span class="w"> </span><span class="n">lpInBuffer</span><span class="p">,</span><span class="w">              </span><span class="c1">// input buffer</span>
-<span class="w">  </span><span class="p">(</span><span class="n"><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></span><span class="p">)</span><span class="w"> </span><span class="n">nInBufferSize</span><span class="p">,</span><span class="w">            </span><span class="c1">// size of input buffer</span>
-<span class="w">  </span><span class="nb">NULL</span><span class="p">,</span><span class="w">                             </span><span class="c1">// lpOutBuffer</span>
-<span class="w">  </span><span class="mi">0</span><span class="p">,</span><span class="w">                                </span><span class="c1">// nOutBufferSize</span>
-<span class="w">  </span><span class="p">(</span><span class="n">LPDWORD</span><span class="p">)</span><span class="w"> </span><span class="n">lpBytesReturned</span><span class="p">,</span><span class="w">        </span><span class="c1">// number of bytes returned</span>
-<span class="w">  </span><span class="p">(</span><span class="n">LPOVERLAPPED</span><span class="p">)</span><span class="w"> </span><span class="n">lpOverlapped</span><span class="w">       </span><span class="c1">// OVERLAPPED structure</span>
-<span class="p">);</span>
+<pre><code>BOOL DeviceIoControl(
+  (HANDLE) hDevice,                 // handle to device
+  IOCTL_STORAGE_EJECTION_CONTROL,   // dwIoControlCode
+  (LPVOID) lpInBuffer,              // input buffer
+  (<a href="dword" title="typedef unsigned long DWORD;">DWORD</a>) nInBufferSize,            // size of input buffer
+  NULL,                             // lpOutBuffer
+  0,                                // nOutBufferSize
+  (LPDWORD) lpBytesReturned,        // number of bytes returned
+  (LPOVERLAPPED) lpOverlapped       // OVERLAPPED structure
+);
 </code></pre>
-</div>
-
 <h2>Parameters</h2>
-
 <h3>Input buffer</h3>
-
 <h3>Input buffer length</h3>
-
 <h3>Output buffer</h3>
-
 <h3>Output buffer length</h3>
-
 <h3>Input/output buffer</h3>
-
 <h3>Input/output buffer length</h3>
-
 <h3>Status block</h3>
-
 <p>Irp->IoStatus.Status is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request is successful.</p>
-
 <p>Otherwise, Status to the appropriate error condition as a <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code.</p>
-
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/ntstatus-values">NTSTATUS Values</a>.</p>
-
 <h2>Remarks</h2>
-
 <p>The driver tracks <strong>IOCTL_STORAGE_EJECTION_CONTROL</strong> requests by caller. It ignores requests to enable the ejection mechanism unless it has received a request to disable the ejection mechanism from the same caller. This prevents other callers from unlocking the drive.</p>
-
 <h2>See also</h2>
-
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/desktop/DevIO/device-management-control-codes">Device Management Control Codes</a></li>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ioapiset/nf-ioapiset-deviceiocontrol">DeviceIoControl</a></li>

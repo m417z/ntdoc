@@ -63,42 +63,24 @@
 <h1>Windows Driver Kit DDI reference (nf-d3dkmthk-d3dkmtnotifyworksubmission)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p><strong>D3DKMTNotifyWorkSubmission</strong> notifies the kernel-mode display driver (KMD) that the user-mode display driver (UMD) has submitted work to the GPU.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="unnamedparam1"><code>unnamedParam1</code></h3>
-
+<h2>Parameters</h2>
+<h3><code>unnamedParam1</code></h3>
 <p>Pointer to a <strong><a href="d3dkmt_notify_work_submission" title="typedef struct _D3DKMT_NOTIFY_WORK_SUBMISSION {&#10;  D3DKMT_HANDLE                       hDoorbell;&#10;  D3DKMT_NOTIFY_WORK_SUBMISSION_FLAGS Flags;&#10;} D3DKMT_NOTIFY_WORK_SUBMISSION;">D3DKMT_NOTIFY_WORK_SUBMISSION</a></strong> structure that identifies the hardware queue on which the work was submitted.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>D3DKMTNotifyWorkSubmission</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if it succeeds in pinging KMD. Otherwise, it returns an appropriate error code such as STATUS_INVALID_PARAMETER if an invalid hardware queue or flag are specified.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>In the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/user-mode-work-submission">user-mode work submission</a> model, KMD isn't involved in work submission and so isn't aware when new work is submitted on a HWQueue. This low latency work submission path is the main motivation of the model. However, there are certain niche scenarios and hardware limitations when KMD needs to be notified whenever work is submitted on a HWQueue. For example, a GPU hardware scheduler requires KMD to switch the hardware runlist from normal to realtime when a realtime context submits work. If KMD isn't involved in work submission then it can't trigger the runlist switch immediately, which results in delaying the realtime work execution.</p>
-
 <p>To accommodate this need, KMD can specify the doorbell connection status as D3DDDI_DOORBELL_STATUS_CONNECTED_NOTIFY at <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmthk/nf-d3dkmthk-d3dkmtcreatedoorbell">doorbell creation time</a>. Whenever UMD sees this doorbell status, it adjusts its work submission workflow such that after writing a new command and ringing the doorbell, it calls into the kernel using <strong>D3DKMTNotifyWorkSubmission</strong>. <em>Dxgkrnl</em> forwards this call to KMD using <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_notifyworksubmission"><strong>DxgkDdiNotifyWorkSubmission</strong></a>.</p>
-
 <p><strong>D3DKMTNotifyWorkSubmission</strong> is a simple ping from UMD to <em>Dxgkrnl</em> to KMD, notifying the latter that new work has been submitted on a particular HWQueue so that KMD can initiate specific actions such as switching a runlist to realtime.</p>
-
 <p>KMD can also request notification dynamically after doorbell creation. If KMD detects a condition where it should be notified of work submission on this hardware queue, then it can first disconnect the doorbell by calling <em>Dxgkrnl</em>'s <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkcb_disconnectdoorbell"><strong>DxgkCbDisconnectDoorbell</strong></a> with status D3DDDI_DOORBELL_STATUS_DISCONNECTED_RETRY. Later, when UMD tries to reconnect the doorbell, KMD can make the connection with status D3DDDI_DOORBELL_STATUS_CONNECTED_NOTIFY.</p>
-
 <p>Drivers should use this mechanism in very specific and infrequent scenarios because it involves a round trip from UMD to KMD on every work submission, and if it is used for broad scenarios then it defeats the purpose of a low latency user mode submission model.</p>
-
 <p>For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/display/user-mode-work-submission">User-mode work submission</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><strong><a href="d3dkmt_notify_work_submission" title="typedef struct _D3DKMT_NOTIFY_WORK_SUBMISSION {&#10;  D3DKMT_HANDLE                       hDoorbell;&#10;  D3DKMT_NOTIFY_WORK_SUBMISSION_FLAGS Flags;&#10;} D3DKMT_NOTIFY_WORK_SUBMISSION;">D3DKMT_NOTIFY_WORK_SUBMISSION</a></strong></p>
-
 <p><strong><a href="d3dkmtcreatedoorbell" title="NTSTATUS D3DKMTCreateDoorbell(&#10;  D3DKMT_CREATE_DOORBELL *unnamedParam1&#10;);">D3DKMTCreateDoorbell</a></strong></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkcb_disconnectdoorbell"><strong>DxgkCbDisconnectDoorbell</strong></a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dkmddi/nc-d3dkmddi-dxgkddi_notifyworksubmission"><strong>DxgkDdiNotifyWorkSubmission</strong></a></p>
 <hr>
 <div class="ntdoc-description-links">

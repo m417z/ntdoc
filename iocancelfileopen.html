@@ -64,65 +64,38 @@
 <h1>Windows Driver Kit DDI reference (nf-ntddk-iocancelfileopen)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>IoCancelFileOpen</strong> routine can be used by a file system filter driver to close a file that has been opened by a file system driver in the filter driver's device stack.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="deviceobject-in"><code>DeviceObject</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>DeviceObject</code> [in]</h3>
 <p>Pointer to the top of the device stack immediately below the filter driver's device object.</p>
-
-<h3 id="fileobject-in"><code>FileObject</code> [in]</h3>
-
+<h3><code>FileObject</code> [in]</h3>
 <p>Pointer to the file object for the file to be closed.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>If a file system filter driver determines that a file-open or file-create request must fail after the lower-level drivers have already completed the request with <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, it can use <strong>IoCancelFileOpen</strong> to close the file opened by the lower-level drivers.</p>
-
 <p>Although STATUS_REPARSE is a success <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value, it is not necessary to call <strong>IoCancelFileOpen</strong> for a create operation that was completed with STATUS_REPARSE, because this status value indicates that the file was not successfully opened.</p>
-
 <p>A successful call to <strong>IoCancelFileOpen</strong> has the following effect: To minifilters and legacy filters that are above the caller in the file system stack, the create request appears to have failed. To those that are below the caller, the file appears to have been opened (or created) and then closed.</p>
-
 <p>Note that <strong>IoCancelFileOpen</strong> does not undo any modifications to the file. For example, <strong>IoCancelFileOpen</strong> does not delete a newly created file or restore a file that was overwritten or superseded to its previous state.</p>
-
 <p>A typical example is as follows:</p>
-
 <ul>
 <li><p>A filter driver exists between a higher-level filter driver and a lower-level file system driver.</p></li>
 <li><p>The filter driver passes an <a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a> request down the device stack to the file system driver, and the file system driver completes the <a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a> request with status <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.</p></li>
 <li><p>Before the filter driver completes the create request, it determines that the file must be closed.</p></li>
 <li><p>The filter driver uses <strong>IoCancelFileOpen</strong> to close the file that was opened by the file system driver.</p></li>
 </ul>
-
 <p>After calling <strong>IoCancelFileOpen</strong>, the filter driver should complete the create request with an appropriate error code such as STATUS_UNSUCCESSFUL or STATUS_ACCESS_DENIED. In addition, it should set the <strong>Irp->IoStatus.Information</strong> field to zero.</p>
-
 <p><strong>IoCancelFileOpen</strong> must be called before any handles are created for the file. Callers can check the <strong>Flags</strong> member of the <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a> structure that the <em>FileObject</em> parameter points to. If the <a href="fo_handle_created" title="#define FO_HANDLE_CREATED 0x00040000">FO_HANDLE_CREATED</a> flag is set, this means that one or more handles have been created for the file, so it is not safe to call <strong>IoCancelFileOpen</strong>.</p>
-
 <p><strong>IoCancelFileOpen</strong> sets the <a href="fo_file_open_cancelled" title="#define FO_FILE_OPEN_CANCELLED 0x00200000">FO_FILE_OPEN_CANCELLED</a> flag in the <strong>Flags</strong> member of the file object that <em>FileObject</em> points to. This flag indicates that the <a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a> request has been canceled, and an <a href="irp_mj_close" title="#define IRP_MJ_CLOSE 0x02">IRP_MJ_CLOSE</a> request will be issued for this file object. Once the create operation has been canceled, it cannot be reissued - that is, STATUS_REPARSE cannot be returned by the legacy filter driver if it has called the <strong>IoCreateFileOpen</strong> routine.</p>
-
 <p>Minifilters should use <a href="fltcancelfileopen" title="VOID FLTAPI FltCancelFileOpen(&#10;  [in] PFLT_INSTANCE Instance,&#10;  [in] PFILE_OBJECT  FileObject&#10;);">FltCancelFileOpen</a> instead of <strong>IoCancelFileOpen</strong>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="fltcancelfileopen" title="VOID FLTAPI FltCancelFileOpen(&#10;  [in] PFLT_INSTANCE Instance,&#10;  [in] PFILE_OBJECT  FileObject&#10;);">FltCancelFileOpen</a></p>
-
 <p><a href="fltreissuesynchronousio" title="VOID FLTAPI FltReissueSynchronousIo(&#10;  [in] PFLT_INSTANCE      InitiatingInstance,&#10;  [in] PFLT_CALLBACK_DATA CallbackData&#10;);">FltReissueSynchronousIo</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-close">IRP_MJ_CLOSE</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-create">IRP_MJ_CREATE</a></p>
-
 <p><a href="iocreatefile" title="NTSTATUS IoCreateFile(&#10;  [out]          PHANDLE            FileHandle,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              Disposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           CREATE_FILE_TYPE   CreateFileType,&#10;  [in, optional] PVOID              InternalParameters,&#10;  [in]           ULONG              Options&#10;);">IoCreateFile</a></p>
-
 <p><a href="iocreatefileex" title="NTSTATUS IoCreateFileEx(&#10;  [out]          PHANDLE                   FileHandle,&#10;  [in]           ACCESS_MASK               DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES        ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK          IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER            AllocationSize,&#10;  [in]           ULONG                     FileAttributes,&#10;  [in]           ULONG                     ShareAccess,&#10;  [in]           ULONG                     Disposition,&#10;  [in]           ULONG                     CreateOptions,&#10;  [in, optional] PVOID                     EaBuffer,&#10;  [in]           ULONG                     EaLength,&#10;  [in]           CREATE_FILE_TYPE          CreateFileType,&#10;  [in, optional] PVOID                     InternalParameters,&#10;  [in]           ULONG                     Options,&#10;  [in, optional] PIO_DRIVER_CREATE_CONTEXT DriverContext&#10;);">IoCreateFileEx</a></p>
-
 <p><a href="iocreatefilespecifydeviceobjecthint" title="NTSTATUS IoCreateFileSpecifyDeviceObjectHint(&#10;  [out]          PHANDLE            FileHandle,&#10;  [in]           ACCESS_MASK        DesiredAccess,&#10;  [in]           POBJECT_ATTRIBUTES ObjectAttributes,&#10;  [out]          PIO_STATUS_BLOCK   IoStatusBlock,&#10;  [in, optional] PLARGE_INTEGER     AllocationSize,&#10;  [in]           ULONG              FileAttributes,&#10;  [in]           ULONG              ShareAccess,&#10;  [in]           ULONG              Disposition,&#10;  [in]           ULONG              CreateOptions,&#10;  [in, optional] PVOID              EaBuffer,&#10;  [in]           ULONG              EaLength,&#10;  [in]           CREATE_FILE_TYPE   CreateFileType,&#10;  [in, optional] PVOID              InternalParameters,&#10;  [in]           ULONG              Options,&#10;  [in, optional] PVOID              DeviceObject&#10;);">IoCreateFileSpecifyDeviceObjectHint</a></p>
-
 <p><a href="ntcreatefile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></p>
-
 <p><a href="ntopenfile" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG OpenOptions&#10;    );">ZwOpenFile</a></p>
 <hr>
 <div class="ntdoc-description-links">

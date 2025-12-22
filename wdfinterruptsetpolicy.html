@@ -66,70 +66,40 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfinterrupt-wdfinterruptsetpolicy)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wdfinterruptsetpolicy-function">WdfInterruptSetPolicy function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WdfInterruptSetPolicy function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfInterruptSetPolicy</strong> method specifies the interrupt priority, processor affinity, and affinity policy for a specified interrupt.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="interrupt-in"><code>Interrupt</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Interrupt</code> [in]</h3>
 <p>A handle to a framework interrupt object.</p>
-
-<h3 id="policy-in"><code>Policy</code> [in]</h3>
-
+<h3><code>Policy</code> [in]</h3>
 <p>A <a href="wdf_interrupt_policy" title="typedef enum _WDF_INTERRUPT_POLICY {&#10;  WdfIrqPolicyMachineDefault = 0,&#10;  WdfIrqPolicyAllCloseProcessors,&#10;  WdfIrqPolicyOneCloseProcessor,&#10;  WdfIrqPolicyAllProcessorsInMachine,&#10;  WdfIrqPolicySpecifiedProcessors,&#10;  WdfIrqPolicySpreadMessagesAcrossAllProcessors&#10;} WDF_INTERRUPT_POLICY, *PWDF_INTERRUPT_POLICY;">WDF_INTERRUPT_POLICY</a>-typed enumerator that specifies a processor affinity policy for the interrupt.</p>
-
-<h3 id="priority-in"><code>Priority</code> [in]</h3>
-
+<h3><code>Priority</code> [in]</h3>
 <p>A <a href="wdf_interrupt_priority" title="typedef enum _WDF_INTERRUPT_PRIORITY {&#10;  WdfIrqPriorityUndefined = 0,&#10;  WdfIrqPriorityLow,&#10;  WdfIrqPriorityNormal,&#10;  WdfIrqPriorityHigh&#10;} WDF_INTERRUPT_PRIORITY, *PWDF_INTERRUPT_PRIORITY;">WDF_INTERRUPT_PRIORITY</a>-typed enumerator that specifies a priority for the interrupt.</p>
-
-<h3 id="targetprocessorset-in"><code>TargetProcessorSet</code> [in]</h3>
-
+<h3><code>TargetProcessorSet</code> [in]</h3>
 <p>A <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/interrupt-affinity-and-priority#about-kaffinity"><strong>KAFFINITY</strong></a>-typed value that specifies a processor affinity for the interrupt, if the <em>Policy</em> parameter is set to <strong>WdfIrqPolicySpecifiedProcessors</strong>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
 <p>Windows Vista and later versions of the operating system allow drivers to specify an interrupt's priority, processor affinity, and affinity policy. For information about how to use the registry to override the values that <strong>WdfInterruptSetPolicy</strong> sets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/interrupt-affinity-and-priority">Interrupt Affinity and Priority</a>.</p>
-
 <p>If a driver is running on an operating system version that is earlier than Windows Vista, the framework ignores the values that the driver specifies when it calls <strong>WdfInterruptSetPolicy</strong>.</p>
-
 <p>For more information about registry values and INF sections that specify an interrupt's priority, processor affinity, and affinity policy, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/interrupt-affinity-and-priority">Interrupt Affinity and Priority</a>.</p>
-
 <p>If a driver calls <strong>WdfInterruptSetPolicy</strong>, it typically does so in its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function, after calling <a href="wdfinterruptcreate" title="NTSTATUS WdfInterruptCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in]           PWDF_INTERRUPT_CONFIG  Configuration,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]          WDFINTERRUPT           *Interrupt&#10;);">WdfInterruptCreate</a>.</p>
-
 <p>If your driver creates interrupts in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_prepare_hardware">EvtDevicePrepareHardware</a>, do not use <strong>WdfInterruptSetPolicy</strong> or <a href="wdfinterruptsetextendedpolicy" title="VOID WdfInterruptSetExtendedPolicy(&#10;  [in] WDFINTERRUPT                   Interrupt,&#10;  [in] PWDF_INTERRUPT_EXTENDED_POLICY PolicyAndGroup&#10;);">WdfInterruptSetExtendedPolicy</a>. Instead, apply policy in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdffdo/nc-wdffdo-evt_wdf_device_filter_resource_requirements">EvtDeviceFilterAddResourceRequirements</a>, by directly manipulating the interrupt resource requirement that this callback function receives in its <em>IoResourceRequirementsList</em> parameter.</p>
-
 <p>For more information about handling interrupts in framework-based drivers, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/handling-hardware-interrupts">Handling Hardware Interrupts</a>.</p>
-
-<h4 id="examples">Examples</h4>
-
+<h4>Examples</h4>
 <p>The following code example assigns a device interrupt to processor 0, with normal priority.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">#define <a href="affinity_mask" title="#define AFFINITY_MASK(n) ((KAFFINITY)1 &lt;&lt; (n))">AFFINITY_MASK</a>(n) ((<a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a>)1 &lt;&lt; (n))</span>
-
-<span class="n">WdfInterruptSetPolicy</span><span class="p">(</span>
-<span class="w">                      </span><span class="n">Interrupt</span><span class="p">,</span>
-<span class="w">                      </span><span class="n">WdfIrqPolicySpecifiedProcessors</span><span class="p">,</span>
-<span class="w">                      </span><span class="n">WdfIrqPriorityNormal</span><span class="p">,</span>
-<span class="w">                      </span><span class="n"><a href="affinity_mask" title="#define AFFINITY_MASK(n) ((KAFFINITY)1 &lt;&lt; (n))">AFFINITY_MASK</a></span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="w">                      </span><span class="p">);</span>
+<pre><code>#define <a href="affinity_mask" title="#define AFFINITY_MASK(n) ((KAFFINITY)1 &lt;&lt; (n))">AFFINITY_MASK</a>(n) ((<a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a>)1 &lt;&lt; (n))
+WdfInterruptSetPolicy(
+                      Interrupt,
+                      WdfIrqPolicySpecifiedProcessors,
+                      WdfIrqPriorityNormal,
+                      <a href="affinity_mask" title="#define AFFINITY_MASK(n) ((KAFFINITY)1 &lt;&lt; (n))">AFFINITY_MASK</a>(0)
+                      );
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a></p>
-
 <p><a href="wdfinterruptcreate" title="NTSTATUS WdfInterruptCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in]           PWDF_INTERRUPT_CONFIG  Configuration,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  [out]          WDFINTERRUPT           *Interrupt&#10;);">WdfInterruptCreate</a></p>
-
 <p><a href="wdfinterruptsetextendedpolicy" title="VOID WdfInterruptSetExtendedPolicy(&#10;  [in] WDFINTERRUPT                   Interrupt,&#10;  [in] PWDF_INTERRUPT_EXTENDED_POLICY PolicyAndGroup&#10;);">WdfInterruptSetExtendedPolicy</a></p>
 <hr>
 <div class="ntdoc-description-links">

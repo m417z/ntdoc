@@ -67,74 +67,43 @@
 <h1>Windows Driver Kit DDI reference (ns-d3dhal-_d3dhal_dp2texblt)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="_d3dhal_dp2texblt-structure">_D3DHAL_DP2TEXBLT structure</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>_D3DHAL_DP2TEXBLT structure</h1>
+<h2>Description</h2>
 <p>The D3DHAL_DP2TEXBLT structure is used for texture blts when <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dhal/nc-d3dhal-lpd3dhal_drawprimitives2cb">D3dDrawPrimitives2</a> responds to the D3DDP2OP_TEXBLT command token.</p>
-
-<h2 id="members">Members</h2>
-
-<h3 id="dwdddestsurface"><code>dwDDDestSurface</code></h3>
-
+<h2>Members</h2>
+<h3><code>dwDDDestSurface</code></h3>
 <p>Specifies the handle to the destination texture.</p>
-
-<h3 id="dwddsrcsurface"><code>dwDDSrcSurface</code></h3>
-
+<h3><code>dwDDSrcSurface</code></h3>
 <p>Specifies the handle to the source texture.</p>
-
-<h3 id="pdest"><code>pDest</code></h3>
-
+<h3><code>pDest</code></h3>
 <p>Specifies the destination point where the blt should be performed, that is, the point in the destination surface (<strong>dwDDDestSurface</strong>) to begin the blt. These <em>x</em> and <em>y</em> members of the POINT structure are specified in screen coordinates.</p>
-
-<h3 id="rsrc"><code>rSrc</code></h3>
-
+<h3><code>rSrc</code></h3>
 <p>Specifies the rectangle to be blitted in the source texture, that is, the source rectangle in the source surface (<strong>dwDDSrcSurface</strong>) to blt from.</p>
-
-<h3 id="dwflags"><code>dwFlags</code></h3>
-
+<h3><code>dwFlags</code></h3>
 <p>Reserved for system use.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>The <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ddrawint/nc-ddrawint-pdd_createsurfaceex">D3dCreateSurfaceEx</a> callback creates the small integer handles to the textures that can be used as source and destination textures for texture blts.</p>
-
 <p>The D3DHAL_DP2TEXBLT structure is used with a D3DDP2OP_TEXBLT command stream token to inform the drivers to perform a blt operation from a source texture to a destination texture. A texture can also be cubic environment map. The driver should copy a rectangle specified by <strong>rSrc</strong> in the source texture to the location specified by <strong>pDest</strong> in the destination texture. The destination and source textures are identified by handles that the driver was notified with during texture creation time. If the driver is capable of managing textures, then it is possible that the destination handle is 0. This indicates to the driver that it should preload the texture into video memory (or wherever the hardware efficiently textures from). In this case, the driver can ignore <strong>rSrc</strong> and <strong>pDest</strong>.</p>
-
 <p>Note that for MIP mapped textures, only one D3DDP2OP_TEXBLT instruction is inserted into the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dhal/nc-d3dhal-lpd3dhal_drawprimitives2cb">D3dDrawPrimitives2</a> command stream. In this case, the driver is expected to blt all the MIP map levels present in the texture. The regions to be copied in MIP map sublevels can be obtained by dividing <strong>rSrc</strong> and<strong>pDest</strong> by 2 at each level.</p>
-
 <p>It is possible that the source and destination textures may contain different numbers of MIP map levels. In this case, the driver is expected to blt the common levels. For example, if a 256x256 source texture has 8 MIP map levels, and if the destination is a 64x64 texture with 6 levels, then the driver should blt the 6 corresponding levels from the source. The driver can expect the dimensions of the top MIP level of the destination texture to always be less than or equal to the dimensions of the top MIP level of the source texture.</p>
-
 <p>Note that the source and destination handles always refer to the top level surfaces and never to any MIP map sublevel. Due to an error in the application, it is possible that the destination texture contains extra MIP map levels. For example, a source 256x256 texture may contain five levels, but the destination 256x256 texture may contain eight. The driver is expected to safely handle this case, but it is not expected to produce correct results. Due to legacy application compatibility issues, Direct3D does not prevent such source/destination texture pairs from being passed on to the driver.</p>
-
 <p>The driver can expect the pixel formats of the source and destination textures to be identical and, in general, the specified blt is safe to perform. Other than the single case mentioned above, the driver should not expect to be presented with any situation that makes it impossible to perform a blt.</p>
-
 <p>If the driver wants to perform asynchronous blts from system memory to video memory, then it should implement the DirectDraw HAL call <strong>GetSysmemBltStatus</strong>, otherwise, inconsistencies may arise.</p>
-
 <p>With TexBlt it is not necessary for the driver to perform any synchronization because TexBlts are always issued in the proper order along with rendering commands. Before this, it was necessary for the driver to correctly handle the case when a DirectDraw blt modified any texture that was referenced by rendering commands in any Direct3D context. When multiple contexts are present, Direct3D does not issue TexBlts. This means that the driver writer can omit synchronization code in the TexBlt code path (but still needs synchronizing for blts).</p>
-
 <p><strong>Sample</strong></p>
-
 <p>The following pseudocode shows how a subrectangle should be computed for consecutive MIP levels, to go to MIP level i + 1 from MIP level i:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">rect</span><span class="p">.</span><span class="n">left</span><span class="w"> </span><span class="o">&gt;&gt;=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="n">rect</span><span class="p">.</span><span class="n">top</span><span class="w"> </span><span class="o">&gt;&gt;=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="n"><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></span><span class="w"> </span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">rect</span><span class="p">.</span><span class="n">right</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="n"><a href="dword" title="typedef unsigned long DWORD;">DWORD</a></span><span class="w"> </span><span class="n">bottom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">rect</span><span class="p">.</span><span class="n">bottom</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
-<span class="n">rect</span><span class="p">.</span><span class="n">right</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">right</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">rect</span><span class="p">.</span><span class="n">left</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">?</span>
-<span class="w">    </span><span class="p">(</span><span class="n">rect</span><span class="p">.</span><span class="n">left</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="n">right</span><span class="p">);</span>
-<span class="n">rect</span><span class="p">.</span><span class="n">bottom</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">((</span><span class="n">bottom</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">rect</span><span class="p">.</span><span class="n">top</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">?</span>
-<span class="w">    </span><span class="p">(</span><span class="n">rect</span><span class="p">.</span><span class="n">top</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="p">(</span><span class="n">bottom</span><span class="p">);</span>
+<pre><code>rect.left &gt;&gt;= 1;
+rect.top &gt;&gt;= 1;
+<a href="dword" title="typedef unsigned long DWORD;">DWORD</a> right = (rect.right + 1) &gt;&gt; 1;
+<a href="dword" title="typedef unsigned long DWORD;">DWORD</a> bottom = (rect.bottom + 1) &gt;&gt; 1;
+rect.right = ((right - rect.left) &lt; 1) ?
+    (rect.left + 1) : (right);
+rect.bottom = ((bottom - rect.top ) &lt; 1) ?
+    (rect.top + 1) : (bottom);
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p>D3DDP2OP_TEXBLT</p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ddrawint/nc-ddrawint-pdd_createsurfaceex">D3dCreateSurfaceEx</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/d3dhal/nc-d3dhal-lpd3dhal_drawprimitives2cb">D3dDrawPrimitives2</a></p>
 <hr>
 <div class="ntdoc-description-links">

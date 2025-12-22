@@ -67,36 +67,21 @@
 <h1>Windows Driver Kit DDI reference (nf-ntddk-keexpandkernelstackandcalloutex)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>KeExpandKernelStackAndCalloutEx</strong> routine calls a routine and guarantees that a specified amount of stack space is available for this call.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="callout"><code>Callout</code></h3>
-
+<h2>Parameters</h2>
+<h3><code>Callout</code></h3>
 <p>A function pointer to an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine. <strong>KeExpandKernelStackAndCalloutEx</strong> expands the stack, if necessary, before it calls this routine.</p>
-
-<h3 id="size"><code>Size</code></h3>
-
+<h3><code>Size</code></h3>
 <p>Specifies the number of bytes of stack space to provide for the call to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine. This value must be large enough to accommodate the stack usage of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine and of any call that this routine might make. The Size value must not exceed MAXIMUM_EXPANSION_SIZE.</p>
-
-<h3 id="wait"><code>Wait</code></h3>
-
+<h3><code>Wait</code></h3>
 <p>Specifies whether the routine should wait to allocate the required stack space if this space is not immediately available. Set Wait to <strong>TRUE</strong> if the routine can wait for an expanded stack to be allocated. Otherwise, set Wait to <strong>FALSE</strong>. This parameter must be <strong>FALSE</strong> if <strong>KeExpandKernelStackAndCalloutEx</strong> is called at IRQL = DISPATCH_LEVEL.</p>
-
-<h3 id="context"><code>Context</code></h3>
-
+<h3><code>Context</code></h3>
 <p>Reserved. Always set this parameter to NULL.</p>
-
-<h3 id="parameter"><code>Parameter</code></h3>
-
+<h3><code>Parameter</code></h3>
 <p>Specifies the parameter value to pass to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine.</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p><strong>KeExpandKernelStackAndCalloutEx</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the call is successful. Possible return values include the following error codes.</p>
-
 <table>
 <thead>
 <tr>
@@ -123,42 +108,30 @@
 </tr>
 </tbody>
 </table>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>This routine first determines whether a minimum of <em>Size</em> bytes is available on the current stack for the call to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine. If not, <strong>KeExpandKernelStackAndCalloutEx</strong> tries to expand the current stack by <em>Size</em> bytes. If the current stack cannot be expanded by this amount, <strong>KeExpandKernelStackAndCalloutEx</strong> temporarily allocates a new kernel stack segment. If a stack of the required size is available, <strong>KeExpandKernelStackAndCalloutEx</strong> uses this stack to call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine.</p>
-
 <p>If <strong>KeExpandKernelStackAndCalloutEx</strong> is unable to obtain the required stack space, it returns without calling the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine. <strong>KeExpandKernelStackAndCalloutEx</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> only if it is able to call the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine. Otherwise, it returns an error code.</p>
-
 <p><strong>KeExpandKernelStackAndCalloutEx</strong> is not declared in a header file. To use this routine in your driver, include the following function declaration in your driver code:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="cp">#if (NTDDI_VERSION &gt;= NTDDI_VISTA)</span>
-<span class="n">__checkReturn</span>
-<span class="n">__drv_minIRQL</span><span class="p">(</span><span class="n">PASSIVE_LEVEL</span><span class="p">)</span>
-<span class="n">__drv_maxIRQL</span><span class="p">(</span><span class="n">DISPATCH_LEVEL</span><span class="p">)</span>
-<span class="n">__drv_reportError</span><span class="p">(</span><span class="s">&quot;DISPATCH_LEVEL is only supported on Windows 7 or later versions of Windows.&quot;</span><span class="p">)</span>
-<span class="n">NTKERNELAPI</span>
-<span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="n">KeExpandKernelStackAndCalloutEx</span><span class="w"> </span><span class="p">(</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">PEXPAND_STACK_CALLOUT</span><span class="w"> </span><span class="n">Callout</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in_opt</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Parameter</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n"><a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a></span><span class="w"> </span><span class="n">Size</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in</span><span class="w"> </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">Wait</span><span class="p">,</span>
-<span class="w">    </span><span class="n">__in_opt</span><span class="w"> </span><span class="n">PVOID</span><span class="w"> </span><span class="n">Context</span>
-<span class="w">    </span><span class="p">);</span>
-<span class="cp">#endif</span>
+<pre><code>#if (NTDDI_VERSION &gt;= NTDDI_VISTA)
+__checkReturn
+__drv_minIRQL(PASSIVE_LEVEL)
+__drv_maxIRQL(DISPATCH_LEVEL)
+__drv_reportError("DISPATCH_LEVEL is only supported on Windows 7 or later versions of Windows.")
+NTKERNELAPI
+<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+KeExpandKernelStackAndCalloutEx (
+    __in PEXPAND_STACK_CALLOUT Callout,
+    __in_opt PVOID Parameter,
+    __in <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> Size,
+    __in BOOLEAN Wait,
+    __in_opt PVOID Context
+    );
+#endif
 </code></pre>
-</div>
-
 <p>The <strong><a href="keexpandkernelstackandcallout" title="NTSTATUS&#10;KeExpandKernelStackAndCallout (&#10;    _In_ PEXPAND_STACK_CALLOUT Callout,&#10;    _In_opt_ PVOID Parameter,&#10;    _In_ SIZE_T Size&#10;    );">KeExpandKernelStackAndCallout</a></strong> routine is similar to <strong>KeExpandKernelStackAndCalloutEx</strong> but does not have <em>Wait</em> and <em>Context</em> parameters. In addition, <strong><a href="keexpandkernelstackandcallout" title="NTSTATUS&#10;KeExpandKernelStackAndCallout (&#10;    _In_ PEXPAND_STACK_CALLOUT Callout,&#10;    _In_opt_ PVOID Parameter,&#10;    _In_ SIZE_T Size&#10;    );">KeExpandKernelStackAndCallout</a></strong> must always be called at IRQL &lt;= APC_LEVEL, whereas <strong>KeExpandKernelStackAndCalloutEx</strong> can be called at DISPATCH_LEVEL (but only if <em>Wait</em> is <strong>FALSE</strong>).</p>
-
 <p>The calling thread must not call the <strong><a href="psterminatesystemthread" title="NTSTATUS PsTerminateSystemThread(&#10;  [in] NTSTATUS ExitStatus&#10;);">PsTerminateSystemThread</a></strong> routine until the thread's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine returns. <strong><a href="psterminatesystemthread" title="NTSTATUS PsTerminateSystemThread(&#10;  [in] NTSTATUS ExitStatus&#10;);">PsTerminateSystemThread</a></strong> checks to determine if the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a> routine is still active and, if it is, causes a bug check.</p>
-
 <p>In Windows Vista and Windows Server 2008, <strong>KeExpandKernelStackAndCalloutEx</strong> must be called at IRQL &lt;= APC_LEVEL. In Windows 7, Windows Server 2008 R2, and later versions of Windows, this routine can be called at IRQL &lt;= DISPATCH_LEVEL. However, the <em>Wait</em> parameter must be <strong>FALSE</strong> if the routine is called at DISPATCH_LEVEL. If <em>Wait</em> is <strong>TRUE</strong>, the call must occur at IRQL &lt;= APC_LEVEL.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ntddk/nc-ntddk-expand_stack_callout"><em>ExpandedStackCall</em></a>
 <strong><a href="keexpandkernelstackandcallout" title="NTSTATUS&#10;KeExpandKernelStackAndCallout (&#10;    _In_ PEXPAND_STACK_CALLOUT Callout,&#10;    _In_opt_ PVOID Parameter,&#10;    _In_ SIZE_T Size&#10;    );">KeExpandKernelStackAndCallout</a></strong>
 <strong><a href="psterminatesystemthread" title="NTSTATUS PsTerminateSystemThread(&#10;  [in] NTSTATUS ExitStatus&#10;);">PsTerminateSystemThread</a></strong></p>

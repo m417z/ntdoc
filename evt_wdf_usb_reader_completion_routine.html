@@ -69,63 +69,37 @@ VOID EvtWdfUsbReaderCompletionRoutine(
 <h1>Windows Driver Kit DDI reference (nc-wdfusb-evt_wdf_usb_reader_completion_routine)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="evt_wdf_usb_reader_completion_routine-callback-function">EVT_WDF_USB_READER_COMPLETION_ROUTINE callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>EVT_WDF_USB_READER_COMPLETION_ROUTINE callback function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>A driver's <em>EvtUsbTargetPipeReadComplete</em> event callback function informs the driver that a continuous reader has successfully completed a read request.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="pipe-in"><code>Pipe</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Pipe</code> [in]</h3>
 <p>A handle to a framework pipe object.</p>
-
-<h3 id="buffer-in"><code>Buffer</code> [in]</h3>
-
+<h3><code>Buffer</code> [in]</h3>
 <p>A handle to a framework memory object that represents a buffer that contains data from the device.</p>
-
-<h3 id="numbytestransferred-in"><code>NumBytesTransferred</code> [in]</h3>
-
+<h3><code>NumBytesTransferred</code> [in]</h3>
 <p>The number of bytes of data that are in the read buffer.</p>
-
-<h3 id="context-in"><code>Context</code> [in]</h3>
-
+<h3><code>Context</code> [in]</h3>
 <p>Driver-defined context information that the driver specified in the <strong>EvtUsbTargetPipeReadCompleteContext</strong> member of the pipe's <a href="wdf_usb_continuous_reader_config" title="typedef struct _WDF_USB_CONTINUOUS_READER_CONFIG {&#10;  ULONG                                 Size;&#10;  size_t                                TransferLength;&#10;  size_t                                HeaderLength;&#10;  size_t                                TrailerLength;&#10;  UCHAR                                 NumPendingReads;&#10;  PWDF_OBJECT_ATTRIBUTES                BufferAttributes;&#10;  PFN_WDF_USB_READER_COMPLETION_ROUTINE EvtUsbTargetPipeReadComplete;&#10;  WDFCONTEXT                            EvtUsbTargetPipeReadCompleteContext;&#10;  PFN_WDF_USB_READERS_FAILED            EvtUsbTargetPipeReadersFailed;&#10;} WDF_USB_CONTINUOUS_READER_CONFIG, *PWDF_USB_CONTINUOUS_READER_CONFIG;">WDF_USB_CONTINUOUS_READER_CONFIG</a> structure.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>To register an <em>EvtUsbTargetPipeReadComplete</em> callback function, the driver must place the function's address in a <a href="wdf_usb_continuous_reader_config" title="typedef struct _WDF_USB_CONTINUOUS_READER_CONFIG {&#10;  ULONG                                 Size;&#10;  size_t                                TransferLength;&#10;  size_t                                HeaderLength;&#10;  size_t                                TrailerLength;&#10;  UCHAR                                 NumPendingReads;&#10;  PWDF_OBJECT_ATTRIBUTES                BufferAttributes;&#10;  PFN_WDF_USB_READER_COMPLETION_ROUTINE EvtUsbTargetPipeReadComplete;&#10;  WDFCONTEXT                            EvtUsbTargetPipeReadCompleteContext;&#10;  PFN_WDF_USB_READERS_FAILED            EvtUsbTargetPipeReadersFailed;&#10;} WDF_USB_CONTINUOUS_READER_CONFIG, *PWDF_USB_CONTINUOUS_READER_CONFIG;">WDF_USB_CONTINUOUS_READER_CONFIG</a> structure.</p>
-
 <p>If a driver has created a continuous reader for a USB pipe, the framework calls the driver's <em>EvtUsbTargetPipeReadComplete</em> callback function each time the driver's I/O target successfully completes a read request. The callback function is called at the IRQL at which the I/O target completed the read request, which is typically IRQL = DISPATCH_LEVEL, but no higher than DISPATCH_LEVEL. (If the I/O target does not successfully complete a request, the framework calls the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfusb/nc-wdfusb-evt_wdf_usb_readers_failed">EvtUsbTargetPipeReadersFailed</a> callback function.)</p>
-
 <p>To access the buffer that contains data that was read from the device, the driver can call <a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a>. The framework writes the data into the buffer, after the header that is defined by the <strong>HeaderLength</strong> member of the <a href="wdf_usb_continuous_reader_config" title="typedef struct _WDF_USB_CONTINUOUS_READER_CONFIG {&#10;  ULONG                                 Size;&#10;  size_t                                TransferLength;&#10;  size_t                                HeaderLength;&#10;  size_t                                TrailerLength;&#10;  UCHAR                                 NumPendingReads;&#10;  PWDF_OBJECT_ATTRIBUTES                BufferAttributes;&#10;  PFN_WDF_USB_READER_COMPLETION_ROUTINE EvtUsbTargetPipeReadComplete;&#10;  WDFCONTEXT                            EvtUsbTargetPipeReadCompleteContext;&#10;  PFN_WDF_USB_READERS_FAILED            EvtUsbTargetPipeReadersFailed;&#10;} WDF_USB_CONTINUOUS_READER_CONFIG, *PWDF_USB_CONTINUOUS_READER_CONFIG;">WDF_USB_CONTINUOUS_READER_CONFIG</a> structure. Note that the pointer that <strong><a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a></strong> returns points to the beginning of the header, but the <em>EvtUsbTargetPipeReadComplete</em> callback function's <em>NumBytesTransferred</em> parameter does <em>not</em> include the header's length.</p>
-
 <p>By default, the framework deletes the buffer's memory object after the <em>EvtUsbTargetPipeReadComplete</em> callback function returns. However, you might want the memory object to remain valid after the callback function returns. For example, you might want your driver to store the object handle in the framework pipe object's context space so that the driver can process the memory object's contents after the callback function returns. To extend the lifetime of the memory object, the callback function must pass the memory object's handle to <a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a>. Subsequently, the driver must call <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a> so that the framework can delete the object.</p>
-
 <p>The framework synchronizes calls to the <em>EvtUsbTargetPipeReadComplete</em> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfusb/nc-wdfusb-evt_wdf_usb_readers_failed">EvtUsbTargetPipeReadersFailed</a> callback functions according to the following rules:</p>
-
 <ul>
 <li>These callback functions do not run simultaneously for an individual USB pipe.</li>
 <li>If the driver creates multiple continuous readers for multiple USB pipes, with multiple <em>EvtUsbTargetPipeReadComplete</em> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfusb/nc-wdfusb-evt_wdf_usb_readers_failed">EvtUsbTargetPipeReadersFailed</a> callback functions, the multiple callback functions can run simultaneously.</li>
 <li>If the driver has specified the default <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfusb/ns-wdfusb-_wdf_usb_continuous_reader_config">NumPendingReads</a> value or a value that is greater than 1, and if a read request completes while the <em>EvtUsbTargetPipeReadComplete</em> callback function is executing, the framework can call the <em>EvtUsbTargetPipeReadComplete</em> callback function again before the callback function returns.</li>
 <li>The framework does not synchronize these callback functions with any other callback functions.</li>
 </ul>
-
 <p>In the <strong>BufferAttributes</strong> member of the <a href="wdf_usb_continuous_reader_config" title="typedef struct _WDF_USB_CONTINUOUS_READER_CONFIG {&#10;  ULONG                                 Size;&#10;  size_t                                TransferLength;&#10;  size_t                                HeaderLength;&#10;  size_t                                TrailerLength;&#10;  UCHAR                                 NumPendingReads;&#10;  PWDF_OBJECT_ATTRIBUTES                BufferAttributes;&#10;  PFN_WDF_USB_READER_COMPLETION_ROUTINE EvtUsbTargetPipeReadComplete;&#10;  WDFCONTEXT                            EvtUsbTargetPipeReadCompleteContext;&#10;  PFN_WDF_USB_READERS_FAILED            EvtUsbTargetPipeReadersFailed;&#10;} WDF_USB_CONTINUOUS_READER_CONFIG, *PWDF_USB_CONTINUOUS_READER_CONFIG;">WDF_USB_CONTINUOUS_READER_CONFIG</a> structure, your driver can specify <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_cleanup">EvtCleanupCallback</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a> callback functions for the memory object. If you specify an <em>EvtCleanupCallback</em> callback function, the framework will call that callback function when it attempts to delete the memory object, after the <em>EvtUsbTargetPipeReadComplete</em> callback function returns. If the <em>EvtUsbTargetPipeReadComplete</em> callback function has called <a href="wdfobjectreference" title="VOID WdfObjectReference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectReference</a>, the <em>EvtCleanupCallback</em> callback function (if provided) must not call <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a>.</p>
-
 <p>The driver must call <a href="wdfobjectdereference" title="VOID WdfObjectDereference(&#10;  [in] WDFOBJECT Handle&#10;);">WdfObjectDereference</a> when it has finished using the memory object. The framework can then call the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfobject/nc-wdfobject-evt_wdf_object_context_destroy">EvtDestroyCallback</a> callback function (if provided) and delete the memory object.</p>
-
 <p>For more information about the <em>EvtUsbTargetPipeReadComplete</em> callback function and USB I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/usb-i-o-targets">USB I/O Targets</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfusb/nc-wdfusb-evt_wdf_usb_readers_failed">EvtUsbTargetPipeReadersFailed</a></p>
-
 <p><a href="wdf_usb_continuous_reader_config" title="typedef struct _WDF_USB_CONTINUOUS_READER_CONFIG {&#10;  ULONG                                 Size;&#10;  size_t                                TransferLength;&#10;  size_t                                HeaderLength;&#10;  size_t                                TrailerLength;&#10;  UCHAR                                 NumPendingReads;&#10;  PWDF_OBJECT_ATTRIBUTES                BufferAttributes;&#10;  PFN_WDF_USB_READER_COMPLETION_ROUTINE EvtUsbTargetPipeReadComplete;&#10;  WDFCONTEXT                            EvtUsbTargetPipeReadCompleteContext;&#10;  PFN_WDF_USB_READERS_FAILED            EvtUsbTargetPipeReadersFailed;&#10;} WDF_USB_CONTINUOUS_READER_CONFIG, *PWDF_USB_CONTINUOUS_READER_CONFIG;">WDF_USB_CONTINUOUS_READER_CONFIG</a></p>
-
 <p><a href="wdfmemorygetbuffer" title="PVOID WdfMemoryGetBuffer(&#10;  [in]            WDFMEMORY Memory,&#10;  [out, optional] size_t    *BufferSize&#10;);">WdfMemoryGetBuffer</a></p>
 <hr>
 <div class="ntdoc-description-links">

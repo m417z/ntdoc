@@ -64,96 +64,58 @@
 <h1>Windows Driver Kit DDI reference (nf-wdfiotarget-wdfiotargetstop)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="wdfiotargetstop-function">WdfIoTargetStop function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>WdfIoTargetStop function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF and UMDF]</p>
-
 <p>The <strong>WdfIoTargetStop</strong> method stops sending queued requests to a local or remote I/O target.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="iotarget-in"><code>IoTarget</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>IoTarget</code> [in]</h3>
 <p>A handle to a local or remote I/O target object that was obtained from a previous call to <a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a> or <a href="wdfiotargetcreate" title="NTSTATUS WdfIoTargetCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES IoTargetAttributes,&#10;  [out]          WDFIOTARGET            *IoTarget&#10;);">WdfIoTargetCreate</a>, or from a method that a specialized I/O target supplies.</p>
-
-<h3 id="action-in"><code>Action</code> [in]</h3>
-
+<h3><code>Action</code> [in]</h3>
 <p>A <a href="wdf_io_target_sent_io_action" title="typedef enum _WDF_IO_TARGET_SENT_IO_ACTION {&#10;  WdfIoTargetSentIoUndefined = 0,&#10;  WdfIoTargetCancelSentIo,&#10;  WdfIoTargetWaitForSentIoToComplete,&#10;  WdfIoTargetLeaveSentIoPending&#10;} WDF_IO_TARGET_SENT_IO_ACTION;">WDF_IO_TARGET_SENT_IO_ACTION</a>-typed value that specifies how the framework should handle I/O requests that the driver has sent to the I/O target, if the target has not completed the requests.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>A bug check occurs if the driver supplies an invalid object handle.</p>
-
 <p>If your driver can detect recoverable device errors, you might want your driver to call <strong>WdfIoTargetStop</strong> to temporarily stop sending requests, then later call <a href="wdfiotargetstart" title="NTSTATUS WdfIoTargetStart(&#10;  [in] WDFIOTARGET IoTarget&#10;);">WdfIoTargetStart</a> to resume sending requests.</p>
-
 <p>While stopped, an I/O target continues to accept new requests but does not deliver the queued requests to the appropriate driver.</p>
-
 <p>For more information about possible states for I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/controlling-a-general-i-o-target-s-state">Controlling a General I/O Target's State</a>.</p>
-
 <p>If a driver calls <a href="wdfusbtargetpipeconfigcontinuousreader" title="NTSTATUS WdfUsbTargetPipeConfigContinuousReader(&#10;  [in] WDFUSBPIPE                        Pipe,&#10;  [in] PWDF_USB_CONTINUOUS_READER_CONFIG Config&#10;);">WdfUsbTargetPipeConfigContinuousReader</a> to configure a continuous reader for a USB pipe, the driver's <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_d0_exit">EvtDeviceD0Exit</a> callback function must call <strong>WdfIoTargetStop</strong> to stop the reader.</p>
-
 <p>If a driver has called <strong>WdfIoTargetStop</strong>, it can still send a request to the target by setting the <strong>WDF_REQUEST_OPTION_IGNORE_TARGET_STATE</strong> flag in the request's <a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a> structure. If a driver sets this flag, the driver can send a request, such as a request to reset a USB pipe (see <a href="wdfusbtargetpiperesetsynchronously" title="NTSTATUS WdfUsbTargetPipeResetSynchronously(&#10;  [in]           WDFUSBPIPE                Pipe,&#10;  [in, optional] WDFREQUEST                Request,&#10;  [in, optional] PWDF_REQUEST_SEND_OPTIONS RequestOptions&#10;);">WdfUsbTargetPipeResetSynchronously</a>), to a device after the driver has called <strong>WdfIoTargetStop</strong>.</p>
-
 <p>When a driver calls <strong>WdfIoTargetStop</strong>, the framework does not attempt to cancel or wait for I/O requests that were previously sent to the target using either the <strong>WDF_REQUEST_SEND_OPTION_IGNORE_TARGET_STATE</strong> flag or the <strong>WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET</strong> flag in the request's <a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a> structure.</p>
-
 <p>Your driver must call <a href="wdfiotargetstart" title="NTSTATUS WdfIoTargetStart(&#10;  [in] WDFIOTARGET IoTarget&#10;);">WdfIoTargetStart</a> and <strong>WdfIoTargetStop</strong> synchronously. After the driver calls one of these functions, it must not call either function before the first call returns.</p>
-
 <p>Your driver can call <strong>WdfIoTargetStop</strong> multiple times from a single thread without calling <a href="wdfiotargetstart" title="NTSTATUS WdfIoTargetStart(&#10;  [in] WDFIOTARGET IoTarget&#10;);">WdfIoTargetStart</a>. For example, your driver might do the following:</p>
-
 <ol>
 <li>Call <strong>WdfIoTargetStop</strong> and specify an <em>Action</em> value of <strong>WdfIoTargetLeaveSentIoPending</strong>.</li>
 <li>Determine whether the target should resume processing I/O requests.</li>
 <li>If the target should resume, call <a href="wdfiotargetstart" title="NTSTATUS WdfIoTargetStart(&#10;  [in] WDFIOTARGET IoTarget&#10;);">WdfIoTargetStart</a>. Otherwise, call <strong>WdfIoTargetStop</strong> again with an <em>Action</em> value of <strong>WdfIoTargetCancelSentIo</strong>.</li>
 </ol>
-
 <p><strong>Note</strong> <strong>WdfIoTargetStop</strong> is not thread safe. It is not safe to call <strong>WdfIoTargetStop</strong> simultaneously from different threads.</p>
-
 <p>For more information about I/O targets, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/using-i-o-targets">Using I/O Targets</a>.</p>
-
 <p>If the driver has called <a href="wdfusbtargetpipeconfigcontinuousreader" title="NTSTATUS WdfUsbTargetPipeConfigContinuousReader(&#10;  [in] WDFUSBPIPE                        Pipe,&#10;  [in] PWDF_USB_CONTINUOUS_READER_CONFIG Config&#10;);">WdfUsbTargetPipeConfigContinuousReader</a> for the pipe, <strong>WdfIoTargetStop</strong> must be called at IRQL = PASSIVE_LEVEL.</p>
-
 <p>If the driver has not called <a href="wdfusbtargetpipeconfigcontinuousreader" title="NTSTATUS WdfUsbTargetPipeConfigContinuousReader(&#10;  [in] WDFUSBPIPE                        Pipe,&#10;  [in] PWDF_USB_CONTINUOUS_READER_CONFIG Config&#10;);">WdfUsbTargetPipeConfigContinuousReader</a> and if the <em>Action</em> parameter of <strong>WdfIoTargetStop</strong> is <strong>WdfIoTargetLeaveSentIoPending</strong>, <strong>WdfIoTargetStop</strong> can be called at IRQL &lt;= DISPATCH_LEVEL. Otherwise, <strong>WdfIoTargetStop</strong> is called at IRQL = PASSIVE_LEVEL.</p>
-
-<h4 id="examples">Examples</h4>
-
+<h4>Examples</h4>
 <p>The following code example shows how an <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_d0_exit">EvtDeviceD0Exit</a> callback function can call <strong>WdfIoTargetStop</strong>, if the driver uses a continuous reader for a USB pipe.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="nf">MyEvtDeviceD0Exit</span><span class="p">(</span>
-<span class="w">    </span><span class="n">IN</span><span class="w">  </span><span class="n">WDFDEVICE</span><span class="w"> </span><span class="n">Device</span><span class="p">,</span>
-<span class="w">    </span><span class="n">IN</span><span class="w">  </span><span class="n"><a href="wdf_power_device_state" title="typedef enum _WDF_POWER_DEVICE_STATE {&#10;  WdfPowerDeviceInvalid = 0,&#10;  WdfPowerDeviceD0,&#10;  WdfPowerDeviceD1,&#10;  WdfPowerDeviceD2,&#10;  WdfPowerDeviceD3,&#10;  WdfPowerDeviceD3Final,&#10;  WdfPowerDevicePrepareForHibernation,&#10;  WdfPowerDeviceMaximum&#10;} WDF_POWER_DEVICE_STATE, *PWDF_POWER_DEVICE_STATE;">WDF_POWER_DEVICE_STATE</a></span><span class="w"> </span><span class="n">TargetState</span>
-<span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">PDEVICE_CONTEXT</span><span class="w">  </span><span class="n">pDeviceContext</span><span class="p">;</span>
-<span class="w">    </span><span class="n">pDeviceContext</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GetMyDeviceContext</span><span class="p">(</span><span class="n">Device</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">WdfIoTargetStop</span><span class="p">(</span>
-<span class="w">                    </span><span class="n"><a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a></span><span class="p">(</span><span class="n">pDeviceContext</span><span class="o">-&gt;</span><span class="n">InterruptPipe</span><span class="p">),</span>
-<span class="w">                    </span><span class="n">WdfIoTargetCancelSentIo</span>
-<span class="w">                    </span><span class="p">);</span>
-
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
-<span class="p">}</span>
+<pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+MyEvtDeviceD0Exit(
+    IN  WDFDEVICE Device,
+    IN  <a href="wdf_power_device_state" title="typedef enum _WDF_POWER_DEVICE_STATE {&#10;  WdfPowerDeviceInvalid = 0,&#10;  WdfPowerDeviceD0,&#10;  WdfPowerDeviceD1,&#10;  WdfPowerDeviceD2,&#10;  WdfPowerDeviceD3,&#10;  WdfPowerDeviceD3Final,&#10;  WdfPowerDevicePrepareForHibernation,&#10;  WdfPowerDeviceMaximum&#10;} WDF_POWER_DEVICE_STATE, *PWDF_POWER_DEVICE_STATE;">WDF_POWER_DEVICE_STATE</a> TargetState
+)
+{
+    PDEVICE_CONTEXT  pDeviceContext;
+    pDeviceContext = GetMyDeviceContext(Device);
+    WdfIoTargetStop(
+                    <a href="wdfusbtargetpipegetiotarget" title="WDFIOTARGET WdfUsbTargetPipeGetIoTarget(&#10;  [in] WDFUSBPIPE Pipe&#10;);">WdfUsbTargetPipeGetIoTarget</a>(pDeviceContext-&gt;InterruptPipe),
+                    WdfIoTargetCancelSentIo
+                    );
+    return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+}
 </code></pre>
-</div>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdf_device_d0_exit">EvtDeviceD0Exit</a></p>
-
 <p><a href="wdf_request_send_options" title="typedef struct _WDF_REQUEST_SEND_OPTIONS {&#10;  ULONG    Size;&#10;  ULONG    Flags;&#10;  LONGLONG Timeout;&#10;} WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;">WDF_REQUEST_SEND_OPTIONS</a></p>
-
 <p><a href="wdfdevicegetiotarget" title="WDFIOTARGET WdfDeviceGetIoTarget(&#10;  [in] WDFDEVICE Device&#10;);">WdfDeviceGetIoTarget</a></p>
-
 <p><a href="wdfiotargetcreate" title="NTSTATUS WdfIoTargetCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES IoTargetAttributes,&#10;  [out]          WDFIOTARGET            *IoTarget&#10;);">WdfIoTargetCreate</a></p>
-
 <p><a href="wdfiotargetstart" title="NTSTATUS WdfIoTargetStart(&#10;  [in] WDFIOTARGET IoTarget&#10;);">WdfIoTargetStart</a></p>
-
 <p><a href="wdfusbtargetpipeconfigcontinuousreader" title="NTSTATUS WdfUsbTargetPipeConfigContinuousReader(&#10;  [in] WDFUSBPIPE                        Pipe,&#10;  [in] PWDF_USB_CONTINUOUS_READER_CONFIG Config&#10;);">WdfUsbTargetPipeConfigContinuousReader</a></p>
-
 <p><a href="wdfusbtargetpiperesetsynchronously" title="NTSTATUS WdfUsbTargetPipeResetSynchronously(&#10;  [in]           WDFUSBPIPE                Pipe,&#10;  [in, optional] WDFREQUEST                Request,&#10;  [in, optional] PWDF_REQUEST_SEND_OPTIONS RequestOptions&#10;);">WdfUsbTargetPipeResetSynchronously</a></p>
 <hr>
 <div class="ntdoc-description-links">

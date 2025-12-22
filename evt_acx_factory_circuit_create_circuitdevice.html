@@ -69,109 +69,72 @@
 <h1>Windows Driver Kit DDI reference (nc-acxcircuit-evt_acx_factory_circuit_create_circuitdevice)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h2 id="description">Description</h2>
-
+<h2>Description</h2>
 <p>The <strong>EVT_ACX_FACTORY_CIRCUIT_CREATE_CIRCUITDEVICE</strong> callback is invoked by ACX when the driver must create a WDFDEVICE for a new ACXCIRCUIT object.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="parent"><code>Parent</code></h3>
-
+<h2>Parameters</h2>
+<h3><code>Parent</code></h3>
 <p>A WDFDEVICE object (described in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/summary-of-framework-objects">Summary of Framework Objects</a>) that is the parent of the WDFDEVICE referenced in Device object.</p>
-
-<h3 id="factory"><code>Factory</code></h3>
-
+<h3><code>Factory</code></h3>
 <p>The existing circuit factory ACXFACTORYCIRCUIT Object. For more information about ACX objects, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-summary-of-objects">Summary of ACX Objects</a>.</p>
-
-<h3 id="config"><code>Config</code></h3>
-
+<h3><code>Config</code></h3>
 <p>An <a href="acx_factory_circuit_add_circuit" title="typedef struct _ACX_FACTORY_CIRCUIT_ADD_CIRCUIT {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  GUID             CircuitUniqueId;&#10;  HANDLE           CompositeProperties;&#10;  HANDLE           FactoryProperties;&#10;  HANDLE           CircuitProperties;&#10;  PCUNICODE_STRING TargetSymbolicLinkName;&#10;} ACX_FACTORY_CIRCUIT_ADD_CIRCUIT, *PACX_FACTORY_CIRCUIT_ADD_CIRCUIT;">ACX_FACTORY_CIRCUIT_ADD_CIRCUIT</a> structure that defines the configuration for the new ACXCIRCUIT.</p>
-
-<h3 id="device"><code>Device</code></h3>
-
+<h3><code>Device</code></h3>
 <p>A pointer to a location that receives a handle to the new WDFDEVICE framework object (described in <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/summary-of-framework-objects">Summary of Framework Objects</a>).</p>
-
-<h2 id="return-value">Return value</h2>
-
+<h2>Return value</h2>
 <p>Returns <code><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></code> if the call was successful. Otherwise, it returns an appropriate error code. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-ntstatus-values">Using NTSTATUS Values</a>.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>An AcxFactoryCircuit represents a factory object capable of creating an ACXCIRCUIT on demand.
 A driver can register one or more ACXFACTORYCIRCUIT with ACX, this action will let ACX know that the driver is capable of creating ACXCIRCUITs of a well defined type.</p>
-
 <p>ACX invokes the ACXFACTORYCIRCUIT's callbacks when it detects that an audio path requires one of the factory provided ACXCIRCUITs.</p>
-
 <p>The ACXFACTORYCIRCUIT object supports dynamic ACXCIRCUITs, this means that each ACXCIRCUIT created by the factory is associated with a WDFDEVICE and these two objects have the same lifetime.</p>
-
 <p>An AcxFactoryCircuit has a dedicated WDF queue. For more information about WDF queues, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-queue-objects">Framework Queue Objects</a>.</p>
-
-<h3 id="example">Example</h3>
-
+<h3>Example</h3>
 <p>Example usage is shown below.</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span>
-<span class="nf">Dsp_EvtAcxFactoryCircuitCreateCircuitDevice</span><span class="p">(</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w">  </span><span class="n">WDFDEVICE</span><span class="w">                         </span><span class="n">Parent</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w">  </span><span class="n">ACXFACTORYCIRCUIT</span><span class="w">                 </span><span class="n">Factory</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_In_</span><span class="w">  </span><span class="n"><a href="acx_factory_circuit_add_circuit" title="typedef struct _ACX_FACTORY_CIRCUIT_ADD_CIRCUIT {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  GUID             CircuitUniqueId;&#10;  HANDLE           CompositeProperties;&#10;  HANDLE           FactoryProperties;&#10;  HANDLE           CircuitProperties;&#10;  PCUNICODE_STRING TargetSymbolicLinkName;&#10;} ACX_FACTORY_CIRCUIT_ADD_CIRCUIT, *PACX_FACTORY_CIRCUIT_ADD_CIRCUIT;">PACX_FACTORY_CIRCUIT_ADD_CIRCUIT</a></span><span class="w">  </span><span class="n">CircuitConfig</span><span class="p">,</span>
-<span class="w">    </span><span class="n">_Out_</span><span class="w"> </span><span class="n">WDFDEVICE</span><span class="o">*</span><span class="w"> </span><span class="n">Device</span>
-<span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">ACXOBJECTBAG</span><span class="w"> </span><span class="n">circuitProperties</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">PAGED_CODE</span><span class="p">();</span>
-
-<span class="w">    </span><span class="n"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a></span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n"><a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a></span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a></span><span class="w"> </span><span class="n">attributes</span><span class="p">;</span>
-
-<span class="w">    </span><span class="o">*</span><span class="n">Device</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-
-<span class="w">    </span><span class="c1">// Create object bag from the CircuitProperties</span>
-<span class="w">    </span><span class="n"><a href="acx_objectbag_config" title="typedef struct _ACX_OBJECTBAG_CONFIG {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  WDFKEY           ParentKey;&#10;  PCUNICODE_STRING Name;&#10;  HANDLE           Handle;&#10;} ACX_OBJECTBAG_CONFIG, *PACX_OBJECTBAG_CONFIG;">ACX_OBJECTBAG_CONFIG</a></span><span class="w"> </span><span class="n">propConfig</span><span class="p">;</span>
-<span class="w">    </span><span class="n"><a href="acx_objectbag_config_init" title="VOID ACX_OBJECTBAG_CONFIG_INIT(&#10;  PACX_OBJECTBAG_CONFIG Config&#10;);">ACX_OBJECTBAG_CONFIG_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">propConfig</span><span class="p">);</span>
-<span class="w">    </span><span class="n">propConfig</span><span class="p">.</span><span class="n">Handle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CircuitConfig</span><span class="o">-&gt;</span><span class="n">CircuitProperties</span><span class="p">;</span>
-<span class="w">    </span><span class="n">propConfig</span><span class="p">.</span><span class="n">Flags</span><span class="w"> </span><span class="o">|=</span><span class="w"> </span><span class="n">AcxObjectBagConfigOpenWithHandle</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n"><a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">attributes</span><span class="p">);</span>
-
-<span class="w">    </span><span class="n">RETURN_NTSTATUS_IF_FAILED</span><span class="p">(</span><span class="n"><a href="acxobjectbagopen" title="NTSTATUS AcxObjectBagOpen(&#10;  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  PACX_OBJECTBAG_CONFIG  Config,&#10;  ACXOBJECTBAG           *ObjectBag&#10;);">AcxObjectBagOpen</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">attributes</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">propConfig</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">circuitProperties</span><span class="p">));</span>
-
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">cleanupPropConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scope_exit</span><span class="p">([</span><span class="o">=</span><span class="p">]()</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n"><a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a></span><span class="p">(</span><span class="n">circuitProperties</span><span class="p">);</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">);</span>
-
-<span class="w">    </span><span class="c1">// Retrieve the intended Circuit ID from the object bag</span>
-<span class="w">    </span><span class="n">GUID</span><span class="w"> </span><span class="n">circuitId</span><span class="p">;</span>
-<span class="w">    </span><span class="n">RETURN_NTSTATUS_IF_FAILED</span><span class="p">(</span><span class="n">Dsp_DetermineCircuitGuidFromVendorProperties</span><span class="p">(</span><span class="n">circuitProperties</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">circuitId</span><span class="p">));</span>
-
-<span class="w">    </span><span class="c1">// Call the appropriate CreateCircuitDevice based on the Circuit ID</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">IsEqualGUID</span><span class="p">(</span><span class="n">circuitId</span><span class="p">,</span><span class="w"> </span><span class="n">DSP_CIRCUIT_MICROPHONE_GUID</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">IsEqualGUID</span><span class="p">(</span><span class="n">circuitId</span><span class="p">,</span><span class="w"> </span><span class="n">DSP_CIRCUIT_UNIVERSALJACK_CAPTURE_GUID</span><span class="p">))</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">DspC_EvtAcxFactoryCircuitCreateCircuitDevice</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span><span class="w"> </span><span class="n">Factory</span><span class="p">,</span><span class="w"> </span><span class="n">CircuitConfig</span><span class="p">,</span><span class="w"> </span><span class="n">Device</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">else</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">IsEqualGUID</span><span class="p">(</span><span class="n">circuitId</span><span class="p">,</span><span class="w"> </span><span class="n">DSP_CIRCUIT_SPEAKER_GUID</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">IsEqualGUID</span><span class="p">(</span><span class="n">circuitId</span><span class="p">,</span><span class="w"> </span><span class="n">DSP_CIRCUIT_UNIVERSALJACK_RENDER_GUID</span><span class="p">))</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">DspR_EvtAcxFactoryCircuitCreateCircuitDevice</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span><span class="w"> </span><span class="n">Factory</span><span class="p">,</span><span class="w"> </span><span class="n">CircuitConfig</span><span class="p">,</span><span class="w"> </span><span class="n">Device</span><span class="p">);</span>
-<span class="w">    </span><span class="p">}</span>
-
-<span class="w">    </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">STATUS_NOT_SUPPORTED</span><span class="p">;</span>
-<span class="w">    </span><span class="n">DrvLogError</span><span class="p">(</span><span class="n">g_SDCAVDspLog</span><span class="p">,</span><span class="w"> </span><span class="n">FLAG_INIT</span><span class="p">,</span><span class="w"> </span><span class="sa">L</span><span class="s">&quot;Unexpected CircuitId %!GUID!, %!STATUS!&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">circuitId</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
-<span class="p">}</span>
+<pre><code><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+Dsp_EvtAcxFactoryCircuitCreateCircuitDevice(
+    _In_  WDFDEVICE                         Parent,
+    _In_  ACXFACTORYCIRCUIT                 Factory,
+    _In_  <a href="acx_factory_circuit_add_circuit" title="typedef struct _ACX_FACTORY_CIRCUIT_ADD_CIRCUIT {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  GUID             CircuitUniqueId;&#10;  HANDLE           CompositeProperties;&#10;  HANDLE           FactoryProperties;&#10;  HANDLE           CircuitProperties;&#10;  PCUNICODE_STRING TargetSymbolicLinkName;&#10;} ACX_FACTORY_CIRCUIT_ADD_CIRCUIT, *PACX_FACTORY_CIRCUIT_ADD_CIRCUIT;">PACX_FACTORY_CIRCUIT_ADD_CIRCUIT</a>  CircuitConfig,
+    _Out_ WDFDEVICE* Device
+)
+{
+    ACXOBJECTBAG circuitProperties;
+    PAGED_CODE();
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
+    <a href="wdf_object_attributes" title="typedef struct _WDF_OBJECT_ATTRIBUTES {&#10;  ULONG                          Size;&#10;  PFN_WDF_OBJECT_CONTEXT_CLEANUP EvtCleanupCallback;&#10;  PFN_WDF_OBJECT_CONTEXT_DESTROY EvtDestroyCallback;&#10;  WDF_EXECUTION_LEVEL            ExecutionLevel;&#10;  WDF_SYNCHRONIZATION_SCOPE      SynchronizationScope;&#10;  WDFOBJECT                      ParentObject;&#10;  size_t                         ContextSizeOverride;&#10;  PCWDF_OBJECT_CONTEXT_TYPE_INFO ContextTypeInfo;&#10;} WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;">WDF_OBJECT_ATTRIBUTES</a> attributes;
+    *Device = NULL;
+    // Create object bag from the CircuitProperties
+    <a href="acx_objectbag_config" title="typedef struct _ACX_OBJECTBAG_CONFIG {&#10;  ULONG            Size;&#10;  ULONG            Flags;&#10;  WDFKEY           ParentKey;&#10;  PCUNICODE_STRING Name;&#10;  HANDLE           Handle;&#10;} ACX_OBJECTBAG_CONFIG, *PACX_OBJECTBAG_CONFIG;">ACX_OBJECTBAG_CONFIG</a> propConfig;
+    <a href="acx_objectbag_config_init" title="VOID ACX_OBJECTBAG_CONFIG_INIT(&#10;  PACX_OBJECTBAG_CONFIG Config&#10;);">ACX_OBJECTBAG_CONFIG_INIT</a>(&amp;propConfig);
+    propConfig.Handle = CircuitConfig-&gt;CircuitProperties;
+    propConfig.Flags |= AcxObjectBagConfigOpenWithHandle;
+    <a href="wdf_object_attributes_init" title="VOID WDF_OBJECT_ATTRIBUTES_INIT(&#10;  [out] PWDF_OBJECT_ATTRIBUTES Attributes&#10;);">WDF_OBJECT_ATTRIBUTES_INIT</a>(&amp;attributes);
+    RETURN_NTSTATUS_IF_FAILED(<a href="acxobjectbagopen" title="NTSTATUS AcxObjectBagOpen(&#10;  PWDF_OBJECT_ATTRIBUTES Attributes,&#10;  PACX_OBJECTBAG_CONFIG  Config,&#10;  ACXOBJECTBAG           *ObjectBag&#10;);">AcxObjectBagOpen</a>(&amp;attributes, &amp;propConfig, &amp;circuitProperties));
+    auto cleanupPropConfig = scope_exit([=]() {
+        <a href="wdfobjectdelete" title="VOID WdfObjectDelete(&#10;  [in] WDFOBJECT Object&#10;);">WdfObjectDelete</a>(circuitProperties);
+        }
+    );
+    // Retrieve the intended Circuit ID from the object bag
+    GUID circuitId;
+    RETURN_NTSTATUS_IF_FAILED(Dsp_DetermineCircuitGuidFromVendorProperties(circuitProperties, &amp;circuitId));
+    // Call the appropriate CreateCircuitDevice based on the Circuit ID
+    if (IsEqualGUID(circuitId, DSP_CIRCUIT_MICROPHONE_GUID) || IsEqualGUID(circuitId, DSP_CIRCUIT_UNIVERSALJACK_CAPTURE_GUID))
+    {
+        return DspC_EvtAcxFactoryCircuitCreateCircuitDevice(Parent, Factory, CircuitConfig, Device);
+    }
+    else if (IsEqualGUID(circuitId, DSP_CIRCUIT_SPEAKER_GUID) || IsEqualGUID(circuitId, DSP_CIRCUIT_UNIVERSALJACK_RENDER_GUID))
+    {
+        return DspR_EvtAcxFactoryCircuitCreateCircuitDevice(Parent, Factory, CircuitConfig, Device);
+    }
+    status = STATUS_NOT_SUPPORTED;
+    DrvLogError(g_SDCAVDspLog, FLAG_INIT, L"Unexpected CircuitId %!GUID!, %!STATUS!", &amp;circuitId, status);
+    return status;
+}
 </code></pre>
-</div>
-
-<h3 id="acx-requirements">ACX requirements</h3>
-
+<h3>ACX requirements</h3>
 <p><strong>Minimum ACX version:</strong> 1.0</p>
-
 <p>For more information about ACX versions, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/acx-version-overview">ACX version overview</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/acxcircuit/">acxcircuit.h header</a></li>
 </ul>

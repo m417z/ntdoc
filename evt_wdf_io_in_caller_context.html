@@ -67,46 +67,26 @@ VOID EvtWdfIoInCallerContext(
 <h1>Windows Driver Kit DDI reference (nc-wdfdevice-evt_wdf_io_in_caller_context)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="evt_wdf_io_in_caller_context-callback-function">EVT_WDF_IO_IN_CALLER_CONTEXT callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>EVT_WDF_IO_IN_CALLER_CONTEXT callback function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF only]</p>
-
 <p>A driver's <em>EvtIoInCallerContext</em> event callback function preprocesses an I/O request before the framework places it into an I/O queue.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="device-in"><code>Device</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Device</code> [in]</h3>
 <p>A handle to a framework device object.</p>
-
-<h3 id="request-in"><code>Request</code> [in]</h3>
-
+<h3><code>Request</code> [in]</h3>
 <p>A handle to a framework request object.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>The framework calls a driver's <em>EvtIoInCallerContext</em> callback function so that the driver can examine each I/O request, and possibly perform preliminary processing on the request, before the framework places it in an I/O queue. To register an <em>EvtIoInCallerContext</em> callback function for a device, the driver calls <a href="wdfdeviceinitsetioincallercontextcallback" title="VOID WdfDeviceInitSetIoInCallerContextCallback(&#10;  [in] PWDFDEVICE_INIT              DeviceInit,&#10;  [in] PFN_WDF_IO_IN_CALLER_CONTEXT EvtIoInCallerContext&#10;);">WdfDeviceInitSetIoInCallerContextCallback</a>.</p>
-
 <p>If a driver registers an <em>EvtIoInCallerContext</em> callback function for a device, the framework calls the callback function each time it receives an I/O request for the device. The callback function is called in the thread context of the process that sent the I/O request to the driver. This process is either the next-higher level driver or, if the driver is at the top of the driver stack, a user-mode application.</p>
-
 <p>This callback function's primary purpose is to enable framework-based drivers to support the buffer-access method that is called <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/accessing-data-buffers-in-wdf-drivers">neither buffered nor direct I/O</a>. For this buffer-access method, the driver must access received buffers in the originator's process context.</p>
-
 <p>After the callback function has obtained a request's buffers, it can store buffer addresses or handles in the request object's context storage. (The driver sets the size of the request object's context storage area by calling <a href="wdfdeviceinitsetrequestattributes" title="VOID WdfDeviceInitSetRequestAttributes(&#10;  [in] PWDFDEVICE_INIT        DeviceInit,&#10;  [in] PWDF_OBJECT_ATTRIBUTES RequestAttributes&#10;);">WdfDeviceInitSetRequestAttributes</a>.)</p>
-
 <p>Because the request does not yet belong to an I/O queue, the framework does not lock or synchronize the request. The driver is responsible for any synchronization that might be necessary. For more information about synchronization, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/synchronization-techniques-for-wdf-drivers">Synchronization Techniques for Framework-Based Drivers</a>.</p>
-
 <p>After the callback function has finished preprocessing the request, it must either queue it by calling <a href="wdfdeviceenqueuerequest" title="NTSTATUS WdfDeviceEnqueueRequest(&#10;  [in] WDFDEVICE  Device,&#10;  [in] WDFREQUEST Request&#10;);">WdfDeviceEnqueueRequest</a> or complete it by calling <a href="wdfrequestcomplete" title="VOID WdfRequestComplete(&#10;  [in] WDFREQUEST Request,&#10;  [in] NTSTATUS   Status&#10;);">WdfRequestComplete</a> (if an error is detected).</p>
-
 <p>For more information about the <em>EvtIoInCallerContext</em> callback function, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/managing-i-o-queues">Intercepting an I/O Request before it is Queued</a> and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/accessing-data-buffers-in-wdf-drivers">Accessing Data Buffers in Framework-Based Drivers</a>.</p>
-
 <p>If a driver has configured an I/O queue to support <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/guaranteeing-forward-progress-of-i-o-operations">guaranteed forward progress</a>, the framework might not call the driver's <em>EvtIoInCallerContext</em> callback function during low-memory situations. If all of the framework's reserved request objects are in use, the framework postpones processing the I/O request until a reserved request object is available. In this situation, the framework cannot call the <em>EvtIoInCallerContext</em> callback function for the postponed I/O request because, when a reserved request object becomes available, the framework will no longer be running in the thread context of the process that sent the I/O request to the driver.</p>
-
 <p>The <em>EvtIoInCallerContext</em> callback function is called at the IRQL of the calling thread. If the calling thread is from a user-mode application, the callback function is called at IRQL = PASSIVE_LEVEL. If the calling thread is from a higher-level kernel-mode driver, your driver's <em>EvtIoInCallerContext</em> callback function can be called at IRQL &lt;= DISPATCH_LEVEL if both the callback function and the higher-level driver are designed to pass the request at IRQL &lt;= DISPATCH_LEVEL.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdevice/nc-wdfdevice-evt_wdfdevice_wdm_irp_preprocess">EvtDeviceWdmIrpPreprocess</a></p>
 <hr>
 <div class="ntdoc-description-links">

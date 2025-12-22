@@ -62,66 +62,38 @@
 <h1>Windows Driver Kit DDI reference (ni-ntifs-ioctl_redir_query_path)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="ioctl_redir_query_path-ioctl">IOCTL_REDIR_QUERY_PATH IOCTL</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>IOCTL_REDIR_QUERY_PATH IOCTL</h1>
+<h2>Description</h2>
 <p>The <strong>IOCTL_REDIR_QUERY_PATH</strong> control code is sent by the multiple UNC provider (MUP) to network redirectors to determine which provider can handle a specific UNC path in a name-based operation, typically an <a href="irp_mj_create" title="#define IRP_MJ_CREATE 0x00">IRP_MJ_CREATE</a> request. This request is referred to as "prefix resolution."</p>
-
 <p>MUP is a kernel-mode component responsible for channeling all remote file system accesses that use a UNC name to a network redirector (the UNC provider) capable of handling the remote file system requests. MUP is involved when a UNC path is used as illustrated by the following example that could be executed from a command line:</p>
-
 <pre><code>notepad \\server\public\readme.txt
 </code></pre>
-
 <p>MUP is not involved during an operation that creates a mapped drive letter (the "NET USE" command, for example). This operation is handled by the multiple provider router (MPR) and a user-mode WNet provider DLL for the network redirector. However, a user-mode WNet provider DLL might communicate directly with a kernel-mode network redirector driver during this operation.</p>
-
 <p>On Windows Server 2003, Windows XP, and Windows 2000, remote file operations that are performed on a mapped drive that does not represent a Distributed File System (DFS) drive don't go through MUP. These operations go directly to the network provider that handled the drive letter mapping.</p>
-
 <p>For network redirectors that conform to the Windows Vista redirector model, MUP is involved even when a mapped network drive is used. File operations performed on the mapped drive go through MUP to the network redirector. Note that in this case, MUP simply passes the operation to the network redirector that is involved.</p>
-
 <p>The <strong>IOCTL_REDIR_QUERY_PATH</strong> control code is sent to network redirectors that have registered with MUP as Universal Naming Convention (UNC) providers by calling <strong><a href="fsrtlregisteruncprovider" title="NTSTATUS FsRtlRegisterUncProvider(&#10;  [out] PHANDLE          MupHandle,&#10;        PCUNICODE_STRING RedirectorDeviceName,&#10;  [in]  BOOLEAN          MailslotsSupported&#10;);">FsRtlRegisterUncProvider</a></strong>. There can be multiple UNC providers registered with MUP.</p>
-
 <p>The prefix resolution operation serves two purposes:</p>
-
 <ul>
 <li><p>The name-based operation that resulted in the prefix resolution is routed to the provider that claims the prefix. If successful, MUP ensures that subsequent handle-based operations (<a href="irp_mj_read" title="#define IRP_MJ_READ 0x03">IRP_MJ_READ</a> and <a href="irp_mj_write" title="#define IRP_MJ_WRITE 0x04">IRP_MJ_WRITE</a>, for example) go to the same provider completely bypassing MUP.</p></li>
 <li><p>The provider and the prefix that it claimed are entered in a prefix cache that is maintained by MUP. For subsequent name-based operations, MUP uses this prefix cache to determine whether a provider has already claimed a prefix before MUP attempts to perform a prefix resolution. Each entry in this prefix cache is subject to a timeout (referred to as TTL) once it is added to the cache. An entry is thrown away after this timeout expires, at which point of time, MUP will perform prefix resolution again for this prefix on a subsequent name-based operation.</p></li>
 </ul>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="major-code">Major code</h3>
-
+<h2>Parameters</h2>
+<h3>Major code</h3>
 <p>IOCTL_REDIR_QUERY_PATH</p>
-
-<h3 id="input-buffer">Input buffer</h3>
-
+<h3>Input buffer</h3>
 <p><strong>IrpSp->Parameters.DeviceIoControl.Type3InputBuffer</strong> is set to a <strong><a href="query_path_request" title="typedef struct _QUERY_PATH_REQUEST {&#10;  ULONG                PathNameLength;&#10;  PIO_SECURITY_CONTEXT SecurityContext;&#10;  WCHAR                FilePathName[1];&#10;} QUERY_PATH_REQUEST, *PQUERY_PATH_REQUEST;">QUERY_PATH_REQUEST</a></strong> data structure that contains the request.</p>
-
-<h3 id="input-buffer-length">Input buffer length</h3>
-
+<h3>Input buffer length</h3>
 <p>Length of the input buffer, in bytes, which must be at least <code>sizeof(<a href="query_path_request" title="typedef struct _QUERY_PATH_REQUEST {&#10;  ULONG                PathNameLength;&#10;  PIO_SECURITY_CONTEXT SecurityContext;&#10;  WCHAR                FilePathName[1];&#10;} QUERY_PATH_REQUEST, *PQUERY_PATH_REQUEST;">QUERY_PATH_REQUEST</a>)</code>.</p>
-
-<h3 id="output-buffer">Output buffer</h3>
-
+<h3>Output buffer</h3>
 <p><strong><a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a>->UserBuffer</strong> is set to a <strong><a href="query_path_response" title="typedef struct _QUERY_PATH_RESPONSE {&#10;  ULONG LengthAccepted;&#10;} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;">QUERY_PATH_RESPONSE</a></strong> data structure that contains the response.</p>
-
-<h3 id="output-buffer-length">Output buffer length</h3>
-
+<h3>Output buffer length</h3>
 <p>Length of the output buffer, in bytes, which must be at least <code>sizeof(<a href="query_path_response" title="typedef struct _QUERY_PATH_RESPONSE {&#10;  ULONG LengthAccepted;&#10;} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;">QUERY_PATH_RESPONSE</a>)</code>.</p>
-
-<h3 id="inputoutput-buffer">Input/output buffer</h3>
-
+<h3>Input/output buffer</h3>
 <p>n/a</p>
-
-<h3 id="inputoutput-buffer-length">Input/output buffer length</h3>
-
+<h3>Input/output buffer length</h3>
 <p>n/a</p>
-
-<h3 id="status-block">Status block</h3>
-
+<h3>Status block</h3>
 <p>The <strong>Status</strong> member is set to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success if the \\server\share prefix name is recognized or to an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value, such as one of the following:</p>
-
 <table>
 <thead>
 <tr>
@@ -156,36 +128,22 @@
 </tr>
 </tbody>
 </table>
-
 <p>If the network redirector is unable to resolve a prefix, it must return an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code that closely matches the intended semantics from the above list of recommended <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> codes. A network redirector must not return the actual encountered error (STATUS_CONNECTION_REFUSED, for example) directly to MUP if the <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code is not from the above list.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>Network redirectors should only honor kernel-mode senders of this IOCTL, by verifying that <strong>Irp->RequestorMode</strong> is <strong>KernelMode</strong>.</p>
-
 <p>Note that IOCTL_REDIR_QUERY_PATH is a METHOD_NEITHER IOCTL. This means that the input and output buffers might not be at the same address. A common mistake by UNC providers is to assume that the input buffer and the output buffer are the same and to use the input buffer pointer to provide the response.</p>
-
 <p>When a UNC provider receives an IOCTL_REDIR_QUERY_PATH request, it has to determine whether it can handle the UNC path specified in the <strong>FilePathName</strong> member of the <strong><a href="query_path_request" title="typedef struct _QUERY_PATH_REQUEST {&#10;  ULONG                PathNameLength;&#10;  PIO_SECURITY_CONTEXT SecurityContext;&#10;  WCHAR                FilePathName[1];&#10;} QUERY_PATH_REQUEST, *PQUERY_PATH_REQUEST;">QUERY_PATH_REQUEST</a></strong> structure. If so, it has to update the <strong>LengthAccepted</strong> member of the <strong><a href="query_path_response" title="typedef struct _QUERY_PATH_RESPONSE {&#10;  ULONG LengthAccepted;&#10;} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;">QUERY_PATH_RESPONSE</a></strong> structure with the length, in bytes, of the prefix it has claimed and complete the <a href="irp" title="typedef struct _IRP {&#10;  CSHORT                    Type;&#10;  USHORT                    Size;&#10;  PMDL                      MdlAddress;&#10;  ULONG                     Flags;&#10;  union {&#10;    struct _IRP     *MasterIrp;&#10;    __volatile LONG IrpCount;&#10;    PVOID           SystemBuffer;&#10;  } AssociatedIrp;&#10;  LIST_ENTRY                ThreadListEntry;&#10;  IO_STATUS_BLOCK           IoStatus;&#10;  KPROCESSOR_MODE           RequestorMode;&#10;  BOOLEAN                   PendingReturned;&#10;  CHAR                      StackCount;&#10;  CHAR                      CurrentLocation;&#10;  BOOLEAN                   Cancel;&#10;  KIRQL                     CancelIrql;&#10;  CCHAR                     ApcEnvironment;&#10;  UCHAR                     AllocationFlags;&#10;...">IRP</a> with <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>. If the provider cannot handle the UNC path specified, it must fail the IOCTL_REDIR_QUERY_PATH request with an appropriate <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> error code and must not update the <strong>LengthAccepted</strong> member of the <strong><a href="query_path_response" title="typedef struct _QUERY_PATH_RESPONSE {&#10;  ULONG LengthAccepted;&#10;} QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;">QUERY_PATH_RESPONSE</a></strong> structure. Providers must not modify any of the other members or the <strong>FilePathName</strong> string under any condition.</p>
-
 <p>The length of the prefix claimed by the provider depends on an individual UNC provider. Most providers usually claim the \\<em>servername</em>\<em>sharename</em> part of a path of the form \\<em>servername</em>\<em>sharename</em>\<em>path</em>. For example, if a provider claimed \\<em>server</em>\<em>public</em> given a path \\<em>server</em>\<em>public</em>\<em>dir1</em>\<em>dir2</em>, all name-based operations for the prefix \\<em>server</em>\<em>public</em> (\\<em>server</em>\<em>public</em>\<em>file1</em>, for example) will be routed to that provider automatically without any prefix resolution because the prefix is already in the prefix cache. However, a path with the prefix \\<em>server</em>\<em>marketing</em>\<em>presentation</em> will go through prefix resolution.</p>
-
 <p>If a network redirector claims a server name (\\<em>server</em>, for example), all requests for shares on this server will go to this network redirector. This behavior is only acceptable if there is no possibility of another share on the same server being accessed by a different network redirector. For example, a network redirector that claims \\<em>server</em> of a UNC path will prevent access by other network redirectors to other shares on this server (WebDAV access to \\<em>server</em>\<em>web</em>, for example).</p>
-
 <p>For more information, see the following articles:</p>
-
 <ul>
 <li><p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/support-for-unc-naming-and-mup">Support for UNC Naming and MUP</a></p></li>
 <li><p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/mup-changes-in-microsoft-windows-vista">MUP Changes in Microsoft Windows Vista</a></p></li>
 </ul>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><strong><a href="fsrtlderegisteruncprovider" title="VOID FsRtlDeregisterUncProvider(&#10;  [in] HANDLE Handle&#10;);">FsRtlDeregisterUncProvider</a></strong></p>
-
 <p><strong><a href="fsrtlregisteruncprovider" title="NTSTATUS FsRtlRegisterUncProvider(&#10;  [out] PHANDLE          MupHandle,&#10;        PCUNICODE_STRING RedirectorDeviceName,&#10;  [in]  BOOLEAN          MailslotsSupported&#10;);">FsRtlRegisterUncProvider</a></strong></p>
-
 <p><strong><a href="fsrtlregisteruncproviderex" title="NTSTATUS FsRtlRegisterUncProviderEx(&#10;  [out] PHANDLE                  MupHandle,&#10;  [in]  PCUNICODE_STRING         RedirDevName,&#10;  [in]  PDEVICE_OBJECT           DeviceObject,&#10;  [in]  FSRTL_UNC_PROVIDER_FLAGS Flags&#10;);">FsRtlRegisterUncProviderEx</a></strong></p>
-
 <p><strong><a href="ioctl_redir_query_path_ex" title="// CTL_CODE(0x0014, 0x064, METHOD_NEITHER, FILE_ANY_ACCESS)&#10;#define IOCTL_REDIR_QUERY_PATH_EX 0x00140193">IOCTL_REDIR_QUERY_PATH_EX</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">

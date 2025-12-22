@@ -62,65 +62,36 @@
 <h1>Windows Driver Kit DDI reference (ni-usbioctl-ioctl_internal_usb_register_composite_device)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="ioctl_internal_usb_register_composite_device-ioctl">IOCTL_INTERNAL_USB_REGISTER_COMPOSITE_DEVICE IOCTL</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>IOCTL_INTERNAL_USB_REGISTER_COMPOSITE_DEVICE IOCTL</h1>
+<h2>Description</h2>
 <p>The <strong>IOCTL_INTERNAL_USB_REGISTER_COMPOSITE_DEVICE</strong>
 I/O request registers the driver of a USB multi-function device (composite driver) with the underlying USB driver stack.</p>
-
 <p>This request is sent by a driver that replaces the Microsoft-provided composite driver, Usbccgp.sys, and implements the function suspend and remote wake-up feature, per the Universal Serial Bus (USB) 3.0 specification.</p>
-
 <p><strong>IOCTL_INTERNAL_USB_REGISTER_COMPOSITE_DEVICE</strong> is a kernel-mode I/O control request. This request targets the USB hub physical device object (PDO). This request must be sent at an interrupt request level (IRQL) of PASSIVE_LEVEL.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="major-code">Major code</h3>
-
+<h2>Parameters</h2>
+<h3>Major code</h3>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-internal-device-control">IRP_MJ_INTERNAL_DEVICE_CONTROL</a></p>
-
-<h3 id="input-buffer">Input buffer</h3>
-
+<h3>Input buffer</h3>
 <p><strong>Parameters.Others.Argument1</strong> is a pointer to a caller-allocated and initialized <a href="register_composite_device" title="typedef struct _REGISTER_COMPOSITE_DEVICE {&#10;  USHORT                        Version;&#10;  USHORT                        Size;&#10;  USBDI_HANDLE                  Reserved;&#10;  COMPOSITE_DEVICE_CAPABILITIES CapabilityFlags;&#10;  ULONG                         FunctionCount;&#10;} REGISTER_COMPOSITE_DEVICE, *PREGISTER_COMPOSITE_DEVICE;">REGISTER_COMPOSITE_DEVICE</a> structure that contains information about the parent driver. To initialize the structure, call the <a href="usbd_buildregistercompositedevice" title="VOID USBD_BuildRegisterCompositeDevice(&#10;  [in]  USBD_HANDLE                   USBDHandle,&#10;  [in]  COMPOSITE_DEVICE_CAPABILITIES CapabilityFlags,&#10;  [in]  ULONG                         FunctionCount,&#10;  [out] PREGISTER_COMPOSITE_DEVICE    RegisterCompositeDevice&#10;);">USBD_BuildRegisterCompositeDevice</a> routine.</p>
-
 <p>The <strong>AssociatedIrp.SystemBuffer</strong> member points to a caller-allocated buffer that is large enough to hold an array of function handles (typed USBD_FUNCTION_HANDLE) for functions in the USB composite device. The number of elements in the array is indicated by the <strong>FunctionCount</strong> member of <a href="register_composite_device" title="typedef struct _REGISTER_COMPOSITE_DEVICE {&#10;  USHORT                        Version;&#10;  USHORT                        Size;&#10;  USBDI_HANDLE                  Reserved;&#10;  COMPOSITE_DEVICE_CAPABILITIES CapabilityFlags;&#10;  ULONG                         FunctionCount;&#10;} REGISTER_COMPOSITE_DEVICE, *PREGISTER_COMPOSITE_DEVICE;">REGISTER_COMPOSITE_DEVICE</a>. To obtain the number of functions, inspect the descriptors returned by a get-configuration request.</p>
-
-<h3 id="input-buffer-length">Input buffer length</h3>
-
+<h3>Input buffer length</h3>
 <p>The size of a <a href="register_composite_device" title="typedef struct _REGISTER_COMPOSITE_DEVICE {&#10;  USHORT                        Version;&#10;  USHORT                        Size;&#10;  USBDI_HANDLE                  Reserved;&#10;  COMPOSITE_DEVICE_CAPABILITIES CapabilityFlags;&#10;  ULONG                         FunctionCount;&#10;} REGISTER_COMPOSITE_DEVICE, *PREGISTER_COMPOSITE_DEVICE;">REGISTER_COMPOSITE_DEVICE</a> structure.</p>
-
-<h3 id="output-buffer">Output buffer</h3>
-
+<h3>Output buffer</h3>
 <p>On output, the buffer pointed to by <strong>AssociatedIrp.SystemBuffer</strong> member is filled with function handles for functions in the multi-function device.</p>
-
-<h3 id="output-buffer-length">Output buffer length</h3>
-
+<h3>Output buffer length</h3>
 <p>The size of function handles for functions in the device.</p>
-
-<h3 id="inputoutput-buffer">Input/output buffer</h3>
-
-<h3 id="inputoutput-buffer-length">Input/output buffer length</h3>
-
-<h3 id="status-block">Status block</h3>
-
+<h3>Input/output buffer</h3>
+<h3>Input/output buffer length</h3>
+<h3>Status block</h3>
 <p>The USB driver stack sets <strong>Irp->IoStatus.Status</strong> to <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the request completes successfully. <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> indicates that the function handles are valid.</p>
-
 <p>In case of an error, <strong>Irp->IoStatus.Status</strong> contains an appropriate error status. For example, if the composite driver sends the request more than once, the <strong>Status</strong> is set to STATUS_INVALID_DEVICE_REQUEST.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>The purpose of <strong>IOCTL_INTERNAL_USB_REGISTER_COMPOSITE_DEVICE</strong> is for the composite driver to send a registration request to the USB driver stack. In the registration request, the composite driver specifies the number of functions supported by the device. Therefore, you must send the <strong>IOCTL_INTERNAL_USB_REGISTER_COMPOSITE_DEVICE</strong> request after determining the number of functions. Typically, that information is retrieved in the composite driver's start-device routine <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mn-start-device">IRP_MN_START_DEVICE</a>. Note that number of interfaces in a configuration <em>can</em> indicate the number of functions, but not always. Certain multi-function devices expose multiple interfaces related to one function. To obtain the number of functions, you must inspect various descriptors that are related to a particular configuration. Those descriptors can be obtained through a get-descriptor request.</p>
-
 <p>In response to the registration request, the USB driver stack provides a list of handles for the functions in the device. For a code example, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/usbcon/register-a-composite-driver">How to Register a Composite Device</a>.</p>
-
 <p>After the composite driver is registered, the driver can configure the remote wake-up feature. By using the function handle, the composite driver can send a request <a href="ioctl_internal_usb_request_remote_wake_notification" title="// CTL_CODE(0x0049, 0x002, METHOD_NEITHER, FILE_ANY_ACCESS)&#10;#define IOCTL_INTERNAL_USB_REQUEST_REMOTE_WAKE_NOTIFICATION 0x0049000B">IOCTL_INTERNAL_USB_REQUEST_REMOTE_WAKE_NOTIFICATION</a> to get remote wake-up notifications from the USB driver stack, when the associated function sends a resume signal.</p>
-
 <p>In order to remove the composite driver's association with the USB driver stack and release all resources that are allocated for registration, the driver must send the <a href="ioctl_internal_usb_unregister_composite_device" title="// CTL_CODE(0x0049, 0x001, METHOD_NEITHER, FILE_ANY_ACCESS)&#10;#define IOCTL_INTERNAL_USB_UNREGISTER_COMPOSITE_DEVICE 0x00490007">IOCTL_INTERNAL_USB_UNREGISTER_COMPOSITE_DEVICE</a> request.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/usbcon/register-a-composite-driver">How to Register a Composite Device</a></p>
-
 <p><a href="ioctl_internal_usb_unregister_composite_device" title="// CTL_CODE(0x0049, 0x001, METHOD_NEITHER, FILE_ANY_ACCESS)&#10;#define IOCTL_INTERNAL_USB_UNREGISTER_COMPOSITE_DEVICE 0x00490007">IOCTL_INTERNAL_USB_UNREGISTER_COMPOSITE_DEVICE</a></p>
 <hr>
 <div class="ntdoc-description-links">

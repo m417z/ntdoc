@@ -68,65 +68,38 @@ VOID EvtSercx2PurgeFifos(
 <h1>Windows Driver Kit DDI reference (nc-sercx-evt_sercx2_purge_fifos)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="evt_sercx2_purge_fifos-callback-function">EVT_SERCX2_PURGE_FIFOS callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>EVT_SERCX2_PURGE_FIFOS callback function</h1>
+<h2>Description</h2>
 <p>The <em>EvtSerCx2PurgeFifos</em> event callback function is called by version 2 of the serial framework extension (SerCx2) to purge the FIFO buffers in the serial controller hardware.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="device-in"><code>Device</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>Device</code> [in]</h3>
 <p>A WDFDEVICE handle to the framework device object that represents the serial controller. The serial controller driver created this object in its <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfdriver/nc-wdfdriver-evt_wdf_driver_device_add">EvtDriverDeviceAdd</a> callback function. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercx2initializedevice">SerCx2InitializeDevice</a>.</p>
-
-<h3 id="purgerxfifo-in"><code>PurgeRxFifo</code> [in]</h3>
-
+<h3><code>PurgeRxFifo</code> [in]</h3>
 <p>Whether to purge the receive FIFO. If this parameter is set to <strong>TRUE</strong>, purge the receive FIFO. If <strong>FALSE</strong>, do not purge the receive FIFO.</p>
-
-<h3 id="purgetxfifo-in"><code>PurgeTxFifo</code> [in]</h3>
-
+<h3><code>PurgeTxFifo</code> [in]</h3>
 <p>Whether to purge the transmit FIFO. If this parameter is set to <strong>TRUE</strong>, purge the transmit FIFO. If <strong>FALSE</strong>, do not purge the transmit FIFO.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>Your serial controller driver must implement this function. The driver registers the function in the call to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercx2initializedevice">SerCx2InitializeDevice</a> method that finishes the initialization of the framework device object for the serial controller.</p>
-
 <p>SerCx2 calls the <em>EvtSerCx2PurgeFifos</em> function when a client (peripheral driver) sends an <a href="ioctl_serial_purge" title="// CTL_CODE(0x001b, 0x013, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_PURGE 0x001B004C">IOCTL_SERIAL_PURGE</a> control request that requires either one or both of the FIFO buffers in the serial controller hardware to be purged. If the <strong><a href="ioctl_serial_purge" title="// CTL_CODE(0x001b, 0x013, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_PURGE 0x001B004C">IOCTL_SERIAL_PURGE</a></strong> control request requires pending read or write (<a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ifs/irp-mj-read">IRP_MJ_READ</a> or <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/irp-mj-write">IRP_MJ_WRITE</a>) requests to be canceled, SerCx2 cancels these requests before it calls the <em>EvtSerCx2PurgeFifos</em> function.</p>
-
 <p>SerCx2 also calls the <em>EvtSerCx2PurgeFifos</em> function when a client opens a logical connection to the serial controller device and obtains a file handle to this connection. For more information, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/framework-file-objects">Framework File Objects</a>.</p>
-
-<h4 id="examples">Examples</h4>
-
+<h4>Examples</h4>
 <p>To define an <em>EvtSerCx2PurgeFifos</em> callback function, you must first provide a function declaration that identifies the type of callback function you're defining. Windows provides a set of callback function types for drivers. Declaring a function using the callback function types helps <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/code-analysis-for-drivers">Code Analysis for Drivers</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/static-driver-verifier">Static Driver Verifier</a> (SDV), and other verification tools find errors, and it's a requirement for writing drivers for the Windows operating system.</p>
-
 <p>For example, to define an <em>EvtSerCx2PurgeFifos</em> callback function that is named <code>MyPurgeFifos</code>, use the <strong>EVT_SERCX2_PURGE_FIFOS</strong> function type, as shown in this code example:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">EVT_SERCX2_PURGE_FIFOS</span><span class="w">  </span><span class="n">MyPurgeFifos</span><span class="p">;</span>
+<pre><code>EVT_SERCX2_PURGE_FIFOS  MyPurgeFifos;
 </code></pre>
-</div>
-
 <p>Then, implement your callback function as follows:</p>
-
-<div class="codehilite">
-<pre><span></span><code><span class="n">_Use_decl_annotations_</span>
-<span class="n">VOID</span>
-<span class="w">  </span><span class="n">MyPurgeFifos</span><span class="p">(</span>
-<span class="w">    </span><span class="n">WDFDEVICE</span><span class="w">  </span><span class="n">Device</span><span class="p">,</span>
-<span class="w">    </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">PurgeRxFifo</span><span class="p">,</span>
-<span class="w">    </span><span class="n">BOOLEAN</span><span class="w"> </span><span class="n">PurgeTxFifo</span>
-<span class="w">    </span><span class="p">)</span>
-<span class="w">  </span><span class="p">{...}</span>
+<pre><code>_Use_decl_annotations_
+VOID
+  MyPurgeFifos(
+    WDFDEVICE  Device,
+    BOOLEAN PurgeRxFifo,
+    BOOLEAN PurgeTxFifo
+    )
+  {...}
 </code></pre>
-</div>
-
 <p>The <strong>EVT_SERCX2_PURGE_FIFOS</strong> function type is defined in the Sercx.h header file. To more accurately identify errors when you run the code analysis tools, be sure to add the _Use_decl_annotations_ annotation to your function definition. The _Use_decl_annotations_ annotation ensures that the annotations that are applied to the <strong>EVT_SERCX2_PURGE_FIFOS</strong> function type in the header file are used. For more information about the requirements for function declarations, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/devtest/declaring-functions-by-using-function-role-types-for-kmdf-drivers">Declaring Functions by Using Function Role Types for KMDF Drivers</a>. For more information about _Use_decl_annotations_, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/visualstudio/code-quality/annotating-function-behavior">Annotating Function Behavior</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a href="ioctl_serial_purge" title="// CTL_CODE(0x001b, 0x013, METHOD_BUFFERED, FILE_ANY_ACCESS)&#10;#define IOCTL_SERIAL_PURGE 0x001B004C">IOCTL_SERIAL_PURGE</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/sercx/nf-sercx-sercx2initializedevice">SerCx2InitializeDevice</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -68,75 +68,44 @@ VOID EvtWdfChildListIdentificationDescriptionCopy(
 <h1>Windows Driver Kit DDI reference (nc-wdfchildlist-evt_wdf_child_list_identification_description_copy)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<h1 id="evt_wdf_child_list_identification_description_copy-callback-function">EVT_WDF_CHILD_LIST_IDENTIFICATION_DESCRIPTION_COPY callback function</h1>
-
-<h2 id="description">Description</h2>
-
+<h1>EVT_WDF_CHILD_LIST_IDENTIFICATION_DESCRIPTION_COPY callback function</h1>
+<h2>Description</h2>
 <p>[Applies to KMDF only]</p>
-
 <p>A driver's <em>EvtChildListIdentificationDescriptionCopy</em> event callback function copies a child identification description from one specified location to another.</p>
-
-<h2 id="parameters">Parameters</h2>
-
-<h3 id="childlist-in"><code>ChildList</code> [in]</h3>
-
+<h2>Parameters</h2>
+<h3><code>ChildList</code> [in]</h3>
 <p>A handle to a framework child-list object.</p>
-
-<h3 id="sourceidentificationdescription-in"><code>SourceIdentificationDescription</code> [in]</h3>
-
+<h3><code>SourceIdentificationDescription</code> [in]</h3>
 <p>A pointer to a <a href="wdf_child_identification_description_header" title="typedef struct _WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER {&#10;  ULONG IdentificationDescriptionSize;&#10;} WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER, *PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER;">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER</a> structure that identifies the source location of the child identification description.</p>
-
-<h3 id="destinationidentificationdescription-out"><code>DestinationIdentificationDescription</code> [out]</h3>
-
+<h3><code>DestinationIdentificationDescription</code> [out]</h3>
 <p>A pointer to a <a href="wdf_child_identification_description_header" title="typedef struct _WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER {&#10;  ULONG IdentificationDescriptionSize;&#10;} WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER, *PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER;">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER</a> structure that identifies the destination location of the child identification description.</p>
-
-<h2 id="remarks">Remarks</h2>
-
+<h2>Remarks</h2>
 <p>If a bus driver is using <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/dynamic-enumeration">dynamic enumeration</a>, it can register an <em>EvtChildListIdentificationDescriptionCopy</em> callback function by calling <a href="wdffdoinitsetdefaultchildlistconfig" title="VOID WdfFdoInitSetDefaultChildListConfig(&#10;  [in, out]      PWDFDEVICE_INIT        DeviceInit,&#10;  [in]           PWDF_CHILD_LIST_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DefaultChildListAttributes&#10;);">WdfFdoInitSetDefaultChildListConfig</a> or <a href="wdfchildlistcreate" title="NTSTATUS WdfChildListCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in]           PWDF_CHILD_LIST_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES ChildListAttributes,&#10;  [out]          WDFCHILDLIST           *ChildList&#10;);">WdfChildListCreate</a>.</p>
-
 <p>The framework copies information from one driver-supplied identification description to another when it needs to update an existing description with new information, or when it needs to pass the contents of an identification description to the driver.</p>
-
 <p>The <em>EvtChildListIdentificationDescriptionCopy</em> callback function must copy the contents of a source description to a destination description. A driver must supply this callback function if the framework cannot call <a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a> to copy the identification description. (The framework cannot call <strong><a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a></strong> if the description contains pointers to additional memory.)</p>
-
 <p>If your driver does not provide an <em>EvtChildListIdentificationDescriptionCopy</em> callback function, the framework copies identification descriptions by calling <a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a>.</p>
-
 <p>The following steps describe a possible scenario:</p>
-
 <ol>
 <li>The driver that is traversing a child list calls <a href="wdfchildlistretrievenextdevice" title="NTSTATUS WdfChildListRetrieveNextDevice(&#10;  [in]      WDFCHILDLIST             ChildList,&#10;  [in]      PWDF_CHILD_LIST_ITERATOR Iterator,&#10;  [out]     WDFDEVICE                *Device,&#10;  [in, out] PWDF_CHILD_RETRIEVE_INFO Info&#10;);">WdfChildListRetrieveNextDevice</a>. The driver supplies a <a href="wdf_child_retrieve_info" title="typedef struct _WDF_CHILD_RETRIEVE_INFO {&#10;  ULONG                                                 Size;&#10;  PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER          IdentificationDescription;&#10;  PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER                 AddressDescription;&#10;  WDF_CHILD_LIST_RETRIEVE_DEVICE_STATUS                 Status;&#10;  PFN_WDF_CHILD_LIST_IDENTIFICATION_DESCRIPTION_COMPARE EvtChildListIdentificationDescriptionCompare;&#10;} WDF_CHILD_RETRIEVE_INFO, *PWDF_CHILD_RETRIEVE_INFO;">WDF_CHILD_RETRIEVE_INFO</a> structure so that it can receive the child device's identification description.</li>
 <li>The framework calls the <em>EvtChildListIdentificationDescriptionCopy</em> callback function (if it exists) or <a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a> to copy the device's identification description. The source of the copy operation is the framework's internal copy of the description. The destination is memory that the driver allocated and identified in its <a href="wdf_child_retrieve_info" title="typedef struct _WDF_CHILD_RETRIEVE_INFO {&#10;  ULONG                                                 Size;&#10;  PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER          IdentificationDescription;&#10;  PWDF_CHILD_ADDRESS_DESCRIPTION_HEADER                 AddressDescription;&#10;  WDF_CHILD_LIST_RETRIEVE_DEVICE_STATUS                 Status;&#10;  PFN_WDF_CHILD_LIST_IDENTIFICATION_DESCRIPTION_COMPARE EvtChildListIdentificationDescriptionCompare;&#10;} WDF_CHILD_RETRIEVE_INFO, *PWDF_CHILD_RETRIEVE_INFO;">WDF_CHILD_RETRIEVE_INFO</a> structure.</li>
 </ol>
-
 <p>The framework can use <a href="rtlcopymemory" title="void RtlCopyMemory(&#10;  Destination,&#10;  Source,&#10;  Length&#10;);">RtlCopyMemory</a> to copy an identification description, if the description consists of a single structure with a predetermined size that is specified by the <strong>IdentificationDescriptionSize</strong> member of the <a href="wdf_child_identification_description_header" title="typedef struct _WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER {&#10;  ULONG IdentificationDescriptionSize;&#10;} WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER, *PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER;">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER</a> structure. However, sometimes the description must also contain additional information that is stored in dynamically allocated memory. In this case, you will typically define a description structure so that a member points to the dynamically allocated memory, and your driver must provide an <em>EvtChildListIdentificationDescriptionCopy</em> callback function. The callback function must do the following:</p>
-
 <ol>
 <li>In the callback function's <em>SourceIdentificationDescription</em> and <em>DestinationIdentificationDescription</em> structures, find the pointers to dynamically allocated memory.</li>
 <li>Copy the dynamically allocated memory from the source to the destination, using the pointers.</li>
 <li>Copy other structure members from the callback function's <em>SourceIdentificationDescription</em> structure to the callback function's <em>DestinationIdentificationDescription</em> structure.</li>
 </ol>
-
 <p>The only <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfchildlist/">framework child-list object method</a> that a driver's <em>EvtChildListIdentificationDescriptionCopy</em> callback function can call is <a href="wdfchildlistgetdevice" title="WDFDEVICE WdfChildListGetDevice(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListGetDevice</a>.</p>
-
 <p>The framework acquires an internal child-list object lock before calling the <em>EvtChildListIdentificationDescriptionCopy</em> callback function. The callback function must only perform operations that are related to the copy operation, such as calling framework memory object methods and accessing object context space. It must not call methods that access other drivers.</p>
-
 <p>If your driver supplies an <em>EvtChildListIdentificationDescriptionCopy</em> callback function, it might also need <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfchildlist/nc-wdfchildlist-evt_wdf_child_list_identification_description_duplicate">EvtChildListIdentificationDescriptionDuplicate</a>, <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfchildlist/nc-wdfchildlist-evt_wdf_child_list_identification_description_compare">EvtChildListIdentificationDescriptionCompare</a>, and <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfchildlist/nc-wdfchildlist-evt_wdf_child_list_identification_description_cleanup">EvtChildListIdentificationDescriptionCleanup</a> callback functions.</p>
-
 <p>For more information about dynamic enumeration, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/wdf/enumerating-the-devices-on-a-bus">Enumerating the Devices on a Bus</a>.</p>
-
-<h2 id="see-also">See also</h2>
-
+<h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfchildlist/nc-wdfchildlist-evt_wdf_child_list_identification_description_cleanup">EvtChildListIdentificationDescriptionCleanup</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfchildlist/nc-wdfchildlist-evt_wdf_child_list_identification_description_compare">EvtChildListIdentificationDescriptionCompare</a></p>
-
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/wdfchildlist/nc-wdfchildlist-evt_wdf_child_list_identification_description_duplicate">EvtChildListIdentificationDescriptionDuplicate</a></p>
-
 <p><a href="wdf_child_identification_description_header" title="typedef struct _WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER {&#10;  ULONG IdentificationDescriptionSize;&#10;} WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER, *PWDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER;">WDF_CHILD_IDENTIFICATION_DESCRIPTION_HEADER</a></p>
-
 <p><a href="wdfchildlistcreate" title="NTSTATUS WdfChildListCreate(&#10;  [in]           WDFDEVICE              Device,&#10;  [in]           PWDF_CHILD_LIST_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES ChildListAttributes,&#10;  [out]          WDFCHILDLIST           *ChildList&#10;);">WdfChildListCreate</a></p>
-
 <p><a href="wdfchildlistgetdevice" title="WDFDEVICE WdfChildListGetDevice(&#10;  [in] WDFCHILDLIST ChildList&#10;);">WdfChildListGetDevice</a></p>
-
 <p><a href="wdffdoinitsetdefaultchildlistconfig" title="VOID WdfFdoInitSetDefaultChildListConfig(&#10;  [in, out]      PWDFDEVICE_INIT        DeviceInit,&#10;  [in]           PWDF_CHILD_LIST_CONFIG Config,&#10;  [in, optional] PWDF_OBJECT_ATTRIBUTES DefaultChildListAttributes&#10;);">WdfFdoInitSetDefaultChildListConfig</a></p>
 <hr>
 <div class="ntdoc-description-links">
