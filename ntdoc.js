@@ -30,13 +30,21 @@
             console.error(e);
         }
 
-        // Highlight.js is deferred to run after DOMContentLoaded. Wait for it
-        // to make sure it runs synchronously, so that tooltips can be added to
-        // code elements after they are highlighted.
-        if (document.readyState === 'loading') {
-            window.addEventListener('DOMContentLoaded', highlightCodeAndAddTooltips);
-        } else {
-            highlightCodeAndAddTooltips();
+        // Highlight.js, must run before tippy to allow tooltips in code.
+        try {
+            if (typeof hljs !== 'undefined') {
+                highlightCode();
+            }
+        } catch (e) {
+            console.error(e);
+        }
+
+        try {
+            if (typeof tippy !== 'undefined') {
+                addTooltips();
+            }
+        } catch (e) {
+            console.error(e);
         }
     }
 
@@ -263,25 +271,6 @@
         descriptionsContainer.prepend(selectElement);
     }
 
-    function highlightCodeAndAddTooltips() {
-        // Highlight.js, must run before tippy to allow tooltips in code.
-        try {
-            if (typeof hljs !== 'undefined') {
-                highlightCode();
-            }
-        } catch (e) {
-            console.error(e);
-        }
-
-        try {
-            if (typeof tippy !== 'undefined') {
-                addTooltips();
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
     function highlightCode() {
         const cssSelector = [
             'pre code[class^="language-"]',
@@ -299,7 +288,8 @@
 
         hljs.addPlugin(hljsMergeHTMLPlugin());
 
-        hljs.highlightAll();
+        const blocks = document.querySelectorAll(cssSelector);
+        blocks.forEach(hljs.highlightElement);
     }
 
     function addTooltips() {
