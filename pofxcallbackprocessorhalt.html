@@ -85,7 +85,7 @@
 <p>The <strong>ProcessorHalt</strong> routine prepares the processor to be halted.</p>
 <h2>Parameters</h2>
 <h3><code>Flags</code> [in]</h3>
-<p>Flags that indicate the properties of the idle state that the processor will enter. The <strong>Flags</strong> parameter is set to zero or to the bitwise-OR of one or more of the following flag bits.</p>
+<p>Flags that indicate the properties of the idle state that the processor will enter. The <em>Flags</em> parameter is set to zero or to the bitwise-OR of one or more of the following flag bits.</p>
 <table>
 <thead>
 <tr>
@@ -98,7 +98,7 @@
 <tr>
 <td>PROCESSOR_HALT_CACHE_FLUSH_OVERRIDE</td>
 <td>0x01</td>
-<td>The PEP's <strong>Halt</strong> callback routine is responsible for flushing the processor's caches. If this flag is not set, <strong>ProcessorHalt</strong> will flush the caches on entry to the processor idle state, and will invalidate the caches on exit from this state.</td>
+<td>The PEP's <em>Halt</em> callback routine is responsible for flushing the processor's caches. If this flag is not set, <strong>ProcessorHalt</strong> will flush the caches on entry to the processor idle state, and will invalidate the caches on exit from this state.</td>
 </tr>
 <tr>
 <td>PROCESSOR_HALT_CACHE_COHERENT</td>
@@ -113,7 +113,7 @@
 <tr>
 <td>PROCESSOR_HALT_RETURN_NOT_SAFE</td>
 <td>0x08</td>
-<td>The PEP's <strong>Halt</strong> callback routine is guaranteed to not return. Set this flag if the <strong>Halt</strong> callback transitions the processor to a context-losing, power-gated state that cannot be canceled by hardware. When this flag is set, the operating system will treat a return from the <strong>Halt</strong> callback as a fatal error.</td>
+<td>The PEP's <em>Halt</em> callback routine is guaranteed to not return. Set this flag if the <em>Halt</em> callback transitions the processor to a context-losing, power-gated state that cannot be canceled by hardware. When this flag is set, the operating system will treat a return from the <em>Halt</em> callback as a fatal error.</td>
 </tr>
 <tr>
 <td>PROCESSOR_HALT_VIA_PSCI_CPU_SUSPEND</td>
@@ -123,9 +123,9 @@
 </tbody>
 </table>
 <h3><code>Context</code> [in, out, optional]</h3>
-<p>A pointer to a PEP-defined processor-halt context. This pointer is passed as a parameter to the <strong>Halt</strong> callback routine. This context is opaque to the Windows <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#device-power-management">power management framework</a> (PoFx).</p>
+<p>A pointer to a PEP-defined processor-halt context. This pointer is passed as a parameter to the <em>Halt</em> callback routine. This context is opaque to the Windows <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#device-power-management">power management framework</a> (PoFx).</p>
 <h3><code>Halt</code> [in]</h3>
-<p>A pointer to a PEP-implemented <strong>Halt</strong> callback routine. PoFx calls this routine after preparations to halt the processor have been completed. During this callback, the PEP is expected to transition the processor to the <strong>halted</strong> state.</p>
+<p>A pointer to a PEP-implemented <em>Halt</em> callback routine. PoFx calls this routine after preparations to halt the processor have been completed. During this callback, the PEP is expected to transition the processor to the <em>halted</em> state.</p>
 <h2>Return value</h2>
 <p><strong>ProcessorHalt</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the processor is successfully prepared to be halted. Possible error return values include the following status code.</p>
 <table>
@@ -138,17 +138,17 @@
 <tbody>
 <tr>
 <td>STATUS_INVALID_PARAMETER</td>
-<td>The <strong>Halt</strong> parameter is NULL; or an invalid flag value was specified in <strong>Flags</strong>; or <strong>Flags</strong> contains an illegal combination of flag bits. For more information, see Remarks.</td>
+<td>The <em>Halt</em> parameter is NULL; or an invalid flag value was specified in <em>Flags</em>; or <em>Flags</em> contains an illegal combination of flag bits. For more information, see Remarks.</td>
 </tr>
 <tr>
 <td>STATUS_UNSUCCESSFUL</td>
-<td>The PEP's <strong>Halt</strong> callback routine unexpectedly returned from an idle state in which the processor's hardware context was not preserved.</td>
+<td>The PEP's <em>Halt</em> callback routine unexpectedly returned from an idle state in which the processor's hardware context was not preserved.</td>
 </tr>
 </tbody>
 </table>
 <h2>Remarks</h2>
 <p>This routine is implemented by the power management framework (PoFx) and is called by the platform extension plug-in (PEP). The <strong>ProcessorHalt</strong> member of the <a href="pep_kernel_information_struct_v3" title="typedef struct _PEP_KERNEL_INFORMATION_STRUCT_V3 {&#10;  USHORT                                   Version;&#10;  USHORT                                   Size;&#10;  POHANDLE                                 Plugin;&#10;  PPOFXCALLBACKREQUESTWORKER               RequestWorker;&#10;  PPOFXCALLBACKENUMERATEUNMASKEDINTERRUPTS EnumerateUnmaskedInterrupts;&#10;  PPOFXCALLBACKPROCESSORHALT               ProcessorHalt;&#10;  PPOFXCALLBACKREQUESTINTERRUPT            RequestInterrupt;&#10;  PPOFXCALLBACKCRITICALRESOURCE            TransitionCriticalResource;&#10;  PPOFXCALLBACKPROCESSORIDLEVETO           ProcessorIdleVeto;&#10;  PPOFXCALLBACKPLATFORMIDLEVETO            PlatformIdleVeto;&#10;  PPOFXCALLBACKUPDATEPROCESSORIDLESTATE    UpdateProcessorIdleState;&#10;  PPOFXCALLBACKUPDATEPLATFORMIDLESTATE     UpdatePlatformIdleState;&#10;  PPOFXCALLBACKREQUESTCOMMON               RequestCommon;&#10;} PEP_KERNEL_INFORMATION_STRUCT_V3, *PPEP_KERNEL_INFORMATION_STRUCT_V3;">PEP_KERNEL_INFORMATION_STRUCT_V3</a> structure is a pointer to a <strong>ProcessorHalt</strong> routine.</p>
-<p>Before halting the processor, the PEP calls the <strong>ProcessorHalt</strong> routine to give PoFx an opportunity to save the processor's hardware context. If necessary, <strong>ProcessorHalt</strong> saves this state internally in PoFx so that the state can later be restored when the processor exits the idle state. After preparing the processor to enter the idle state, <strong>ProcessorHalt</strong> calls the PEP's <strong>Halt</strong> callback routine to halt the processor.</p>
+<p>Before halting the processor, the PEP calls the <strong>ProcessorHalt</strong> routine to give PoFx an opportunity to save the processor's hardware context. If necessary, <strong>ProcessorHalt</strong> saves this state internally in PoFx so that the state can later be restored when the processor exits the idle state. After preparing the processor to enter the idle state, <strong>ProcessorHalt</strong> calls the PEP's <em>Halt</em> callback routine to halt the processor.</p>
 <p>As part of the PEP's handling of a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pepfx/ns-pepfx-_pep_ppm_idle_execute">PEP_NOTIFY_PPM_IDLE_EXECUTE</a> notification, the PEP must transition the processor to the idle state that the PEP has selected. The following are the two ways to enter the processor idle state:</p>
 <ul>
 <li>For a processor idle state in which the processor's caches remain coherent so that all system and processor state is maintained, the PEP can enter the idle state directly without first calling <strong>ProcessorHalt</strong>.</li>
@@ -158,7 +158,7 @@
 <ul>
 <li>
 <p>PROCESSOR_HALT_CONTEXT_RETAINED = 1 and PROCESSOR_HALT_RETURN_NOT_SAFE = 1</p>
-<p>The PEP's <strong>Halt</strong> callback routine must return from any state in which context is retained.</p>
+<p>The PEP's <em>Halt</em> callback routine must return from any state in which context is retained.</p>
 </li>
 <li>
 <p>PROCESSOR_HALT_CACHE_FLUSH_OVERRIDE = 1 and PROCESSOR_HALT_CACHE_COHERENT = 1</p>
@@ -173,7 +173,7 @@
 <p>Any idle states that lose processor hardware context (and therefore use the [multiprocessor parking protocol](https://acpica.org/sites/acpica/files/MP Startup for ARM platforms.doc) to exit the idle state and return control to the operating system) are not cache-coherent states.</p>
 </li>
 </ul>
-<p>If the <strong>Flags</strong> parameter contains an illegal combination of flag bits, <strong>ProcessorHalt</strong> fails and returns STATUS_INVALID_PARAMETER.</p>
+<p>If the <em>Flags</em> parameter contains an illegal combination of flag bits, <strong>ProcessorHalt</strong> fails and returns STATUS_INVALID_PARAMETER.</p>
 <p>The PEP can call this routine at IRQL &lt;= HIGH_LEVEL.</p>
 <h2>See also</h2>
 <p><a href="pep_kernel_information_struct_v3" title="typedef struct _PEP_KERNEL_INFORMATION_STRUCT_V3 {&#10;  USHORT                                   Version;&#10;  USHORT                                   Size;&#10;  POHANDLE                                 Plugin;&#10;  PPOFXCALLBACKREQUESTWORKER               RequestWorker;&#10;  PPOFXCALLBACKENUMERATEUNMASKEDINTERRUPTS EnumerateUnmaskedInterrupts;&#10;  PPOFXCALLBACKPROCESSORHALT               ProcessorHalt;&#10;  PPOFXCALLBACKREQUESTINTERRUPT            RequestInterrupt;&#10;  PPOFXCALLBACKCRITICALRESOURCE            TransitionCriticalResource;&#10;  PPOFXCALLBACKPROCESSORIDLEVETO           ProcessorIdleVeto;&#10;  PPOFXCALLBACKPLATFORMIDLEVETO            PlatformIdleVeto;&#10;  PPOFXCALLBACKUPDATEPROCESSORIDLESTATE    UpdateProcessorIdleState;&#10;  PPOFXCALLBACKUPDATEPLATFORMIDLESTATE     UpdatePlatformIdleState;&#10;  PPOFXCALLBACKREQUESTCOMMON               RequestCommon;&#10;} PEP_KERNEL_INFORMATION_STRUCT_V3, *PPEP_KERNEL_INFORMATION_STRUCT_V3;">PEP_KERNEL_INFORMATION_STRUCT_V3</a></p>
@@ -195,7 +195,7 @@
 <p>The <strong>ProcessorHalt</strong> routine prepares the processor to be halted.</p>
 <h2>Parameters</h2>
 <h3><code>Flags</code> [in]</h3>
-<p>Flags that indicate the properties of the idle state that the processor will enter. The <strong>Flags</strong> parameter is set to zero or to the bitwise-OR of one or more of the following flag bits.</p>
+<p>Flags that indicate the properties of the idle state that the processor will enter. The <em>Flags</em> parameter is set to zero or to the bitwise-OR of one or more of the following flag bits.</p>
 <table>
 <thead>
 <tr>
@@ -208,7 +208,7 @@
 <tr>
 <td>PROCESSOR_HALT_CACHE_FLUSH_OVERRIDE</td>
 <td>0x01</td>
-<td>The PEP's <strong>Halt</strong> callback routine is responsible for flushing the processor's caches. If this flag is not set, <strong>ProcessorHalt</strong> will flush the caches on entry to the processor idle state, and will invalidate the caches on exit from this state.</td>
+<td>The PEP's <em>Halt</em> callback routine is responsible for flushing the processor's caches. If this flag is not set, <strong>ProcessorHalt</strong> will flush the caches on entry to the processor idle state, and will invalidate the caches on exit from this state.</td>
 </tr>
 <tr>
 <td>PROCESSOR_HALT_CACHE_COHERENT</td>
@@ -223,7 +223,7 @@
 <tr>
 <td>PROCESSOR_HALT_RETURN_NOT_SAFE</td>
 <td>0x08</td>
-<td>The PEP's <strong>Halt</strong> callback routine is guaranteed to not return. Set this flag if the <strong>Halt</strong> callback transitions the processor to a context-losing, power-gated state that cannot be canceled by hardware. When this flag is set, the operating system will treat a return from the <strong>Halt</strong> callback as a fatal error.</td>
+<td>The PEP's <em>Halt</em> callback routine is guaranteed to not return. Set this flag if the <em>Halt</em> callback transitions the processor to a context-losing, power-gated state that cannot be canceled by hardware. When this flag is set, the operating system will treat a return from the <em>Halt</em> callback as a fatal error.</td>
 </tr>
 <tr>
 <td>PROCESSOR_HALT_VIA_PSCI_CPU_SUSPEND</td>
@@ -233,9 +233,9 @@
 </tbody>
 </table>
 <h3><code>Context</code> [in, out, optional]</h3>
-<p>A pointer to a PEP-defined processor-halt context. This pointer is passed as a parameter to the <strong>Halt</strong> callback routine. This context is opaque to the Windows <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#device-power-management">power management framework</a> (PoFx).</p>
+<p>A pointer to a PEP-defined processor-halt context. This pointer is passed as a parameter to the <em>Halt</em> callback routine. This context is opaque to the Windows <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/_kernel/#device-power-management">power management framework</a> (PoFx).</p>
 <h3><code>Halt</code> [in]</h3>
-<p>A pointer to a PEP-implemented <strong>Halt</strong> callback routine. PoFx calls this routine after preparations to halt the processor have been completed. During this callback, the PEP is expected to transition the processor to the <strong>halted</strong> state.</p>
+<p>A pointer to a PEP-implemented <em>Halt</em> callback routine. PoFx calls this routine after preparations to halt the processor have been completed. During this callback, the PEP is expected to transition the processor to the <em>halted</em> state.</p>
 <h2>Return value</h2>
 <p><strong>ProcessorHalt</strong> returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> if the processor is successfully prepared to be halted. Possible error return values include the following status code.</p>
 <table>
@@ -248,17 +248,17 @@
 <tbody>
 <tr>
 <td>STATUS_INVALID_PARAMETER</td>
-<td>The <strong>Halt</strong> parameter is NULL; or an invalid flag value was specified in <strong>Flags</strong>; or <strong>Flags</strong> contains an illegal combination of flag bits. For more information, see Remarks.</td>
+<td>The <em>Halt</em> parameter is NULL; or an invalid flag value was specified in <em>Flags</em>; or <em>Flags</em> contains an illegal combination of flag bits. For more information, see Remarks.</td>
 </tr>
 <tr>
 <td>STATUS_UNSUCCESSFUL</td>
-<td>The PEP's <strong>Halt</strong> callback routine unexpectedly returned from an idle state in which the processor's hardware context was not preserved.</td>
+<td>The PEP's <em>Halt</em> callback routine unexpectedly returned from an idle state in which the processor's hardware context was not preserved.</td>
 </tr>
 </tbody>
 </table>
 <h2>Remarks</h2>
 <p>This routine is implemented by the power management framework (PoFx) and is called by the platform extension plug-in (PEP). The <strong>ProcessorHalt</strong> member of the <a href="pep_kernel_information_struct_v3" title="typedef struct _PEP_KERNEL_INFORMATION_STRUCT_V3 {&#10;  USHORT                                   Version;&#10;  USHORT                                   Size;&#10;  POHANDLE                                 Plugin;&#10;  PPOFXCALLBACKREQUESTWORKER               RequestWorker;&#10;  PPOFXCALLBACKENUMERATEUNMASKEDINTERRUPTS EnumerateUnmaskedInterrupts;&#10;  PPOFXCALLBACKPROCESSORHALT               ProcessorHalt;&#10;  PPOFXCALLBACKREQUESTINTERRUPT            RequestInterrupt;&#10;  PPOFXCALLBACKCRITICALRESOURCE            TransitionCriticalResource;&#10;  PPOFXCALLBACKPROCESSORIDLEVETO           ProcessorIdleVeto;&#10;  PPOFXCALLBACKPLATFORMIDLEVETO            PlatformIdleVeto;&#10;  PPOFXCALLBACKUPDATEPROCESSORIDLESTATE    UpdateProcessorIdleState;&#10;  PPOFXCALLBACKUPDATEPLATFORMIDLESTATE     UpdatePlatformIdleState;&#10;  PPOFXCALLBACKREQUESTCOMMON               RequestCommon;&#10;} PEP_KERNEL_INFORMATION_STRUCT_V3, *PPEP_KERNEL_INFORMATION_STRUCT_V3;">PEP_KERNEL_INFORMATION_STRUCT_V3</a> structure is a pointer to a <strong>ProcessorHalt</strong> routine.</p>
-<p>Before halting the processor, the PEP calls the <strong>ProcessorHalt</strong> routine to give PoFx an opportunity to save the processor's hardware context. If necessary, <strong>ProcessorHalt</strong> saves this state internally in PoFx so that the state can later be restored when the processor exits the idle state. After preparing the processor to enter the idle state, <strong>ProcessorHalt</strong> calls the PEP's <strong>Halt</strong> callback routine to halt the processor.</p>
+<p>Before halting the processor, the PEP calls the <strong>ProcessorHalt</strong> routine to give PoFx an opportunity to save the processor's hardware context. If necessary, <strong>ProcessorHalt</strong> saves this state internally in PoFx so that the state can later be restored when the processor exits the idle state. After preparing the processor to enter the idle state, <strong>ProcessorHalt</strong> calls the PEP's <em>Halt</em> callback routine to halt the processor.</p>
 <p>As part of the PEP's handling of a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/pepfx/ns-pepfx-_pep_ppm_idle_execute">PEP_NOTIFY_PPM_IDLE_EXECUTE</a> notification, the PEP must transition the processor to the idle state that the PEP has selected. The following are the two ways to enter the processor idle state:</p>
 <ul>
 <li>For a processor idle state in which the processor's caches remain coherent so that all system and processor state is maintained, the PEP can enter the idle state directly without first calling <strong>ProcessorHalt</strong>.</li>
@@ -268,7 +268,7 @@
 <ul>
 <li>
 <p>PROCESSOR_HALT_CONTEXT_RETAINED = 1 and PROCESSOR_HALT_RETURN_NOT_SAFE = 1</p>
-<p>The PEP's <strong>Halt</strong> callback routine must return from any state in which context is retained.</p>
+<p>The PEP's <em>Halt</em> callback routine must return from any state in which context is retained.</p>
 </li>
 <li>
 <p>PROCESSOR_HALT_CACHE_FLUSH_OVERRIDE = 1 and PROCESSOR_HALT_CACHE_COHERENT = 1</p>
@@ -283,7 +283,7 @@
 <p>Any idle states that lose processor hardware context (and therefore use the [multiprocessor parking protocol](https://acpica.org/sites/acpica/files/MP Startup for ARM platforms.doc) to exit the idle state and return control to the operating system) are not cache-coherent states.</p>
 </li>
 </ul>
-<p>If the <strong>Flags</strong> parameter contains an illegal combination of flag bits, <strong>ProcessorHalt</strong> fails and returns STATUS_INVALID_PARAMETER.</p>
+<p>If the <em>Flags</em> parameter contains an illegal combination of flag bits, <strong>ProcessorHalt</strong> fails and returns STATUS_INVALID_PARAMETER.</p>
 <p>The PEP can call this routine at IRQL &lt;= HIGH_LEVEL.</p>
 <h2>See also</h2>
 <p><a href="pep_kernel_information_struct_v3" title="typedef struct _PEP_KERNEL_INFORMATION_STRUCT_V3 {&#10;  USHORT                                   Version;&#10;  USHORT                                   Size;&#10;  POHANDLE                                 Plugin;&#10;  PPOFXCALLBACKREQUESTWORKER               RequestWorker;&#10;  PPOFXCALLBACKENUMERATEUNMASKEDINTERRUPTS EnumerateUnmaskedInterrupts;&#10;  PPOFXCALLBACKPROCESSORHALT               ProcessorHalt;&#10;  PPOFXCALLBACKREQUESTINTERRUPT            RequestInterrupt;&#10;  PPOFXCALLBACKCRITICALRESOURCE            TransitionCriticalResource;&#10;  PPOFXCALLBACKPROCESSORIDLEVETO           ProcessorIdleVeto;&#10;  PPOFXCALLBACKPLATFORMIDLEVETO            PlatformIdleVeto;&#10;  PPOFXCALLBACKUPDATEPROCESSORIDLESTATE    UpdateProcessorIdleState;&#10;  PPOFXCALLBACKUPDATEPLATFORMIDLESTATE     UpdatePlatformIdleState;&#10;  PPOFXCALLBACKREQUESTCOMMON               RequestCommon;&#10;} PEP_KERNEL_INFORMATION_STRUCT_V3, *PPEP_KERNEL_INFORMATION_STRUCT_V3;">PEP_KERNEL_INFORMATION_STRUCT_V3</a></p>
