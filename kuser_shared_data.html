@@ -115,19 +115,44 @@
 
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TimeZoneId;
 
+    //
+    // Minimum size of a large page on the system, in bytes.
+    //
+    // N.B. Returned by GetLargePageMinimum() function.
+    //
+
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LargePageMinimum;
 
     //
-    // This value controls the AIT Sampling rate.
+    // This value controls the Application Impact Telemetry (AIT) Sampling rate.
+    //
+    // This value determines how frequently the system records AIT events,
+    // which are used by the Application Experience and compatibility
+    // subsystems to evaluate application behavior, performance, and
+    // potential compatibility issues.
+    // 
+    // Lower values increase sampling frequency, while higher values reduce it.
+    // The kernel updates this field as part of its internal telemetry and
+    // heuristics logic.
     //
 
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> AitSamplingValue;
 
     //
-    // This value controls switchback processing.
+    // This value controls Application Compatibility (AppCompat) switchback processing.
     //
 
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> AppCompatFlag;
+    union
+    {
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> AppCompatFlag;
+        struct
+        {
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SwitchbackEnabled : 1;    // Basic switchback processing
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ExtendedHeuristics : 1;   // Extended switchback heuristics
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TelemetryFallback : 1;    // Telemetry-driven fallback
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved : 29;
+        } AppCompatFlags;
+    };
 
     //
     // Current Kernel Root RNG state seed version
@@ -138,8 +163,27 @@
     //
     // This value controls assertion failure handling.
     //
+    // Historically (prior to Windows 10), this value was also used by
+    // Code Integrity (CI), AppLocker, and related security components to
+    // determine the minimum validation requirements for executable images,
+    // drivers, and privileged operations.
+    // 
+    // In modern Windows versions, this field is used primarily by the kernel&#x27;s
+    // diagnostic and validation infrastructure to decide how assertion failures
+    // should be handled (e.g., logging, debugger break-in, or bugcheck).
 
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> GlobalValidationRunlevel;
+
+    //
+    // Monotonic stamp incremented by the kernel whenever the system&#x27;s
+    // time zone bias value changes.
+    //
+    // N.B. This field must be accessed via the <a href="rtlgetsystemtimeandbias" title="NTSYSAPI&#10;KSYSTEM_TIME&#10;NTAPI&#10;RtlGetSystemTimeAndBias(&#10;    _Out_ KSYSTEM_TIME TimeZoneBias,&#10;    _Out_opt_ PLARGE_INTEGER TimeZoneBiasEffectiveStart,&#10;    _Out_opt_ PLARGE_INTEGER TimeZoneBiasEffectiveEnd&#10;    );">RtlGetSystemTimeAndBias</a> API for
+    //      an accurate result.
+    // This value is read before and after accessing the bias fields to determine
+    // whether the time zone data changed during the read. If the stamp differs,
+    // the caller must re-read the bias values to ensure consistency.
+    //
 
     volatile <a href="long" title="typedef long LONG;">LONG</a> TimeZoneBiasStamp;
 
@@ -160,6 +204,15 @@
     <a href="nt_product_type" title="typedef enum _NT_PRODUCT_TYPE&#10;{&#10;    NtProductWinNt = 1,&#10;    NtProductLanManNt,&#10;    NtProductServer&#10;} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;">NT_PRODUCT_TYPE</a> NtProductType;
     BOOLEAN ProductTypeIsValid;
     BOOLEAN Reserved0[1];
+
+    //
+    // Native hardware processor architecture of the running system.
+    //
+    // N.B. User‑mode components read this field to determine the true system
+    // architecture, especially in WOW64 scenarios where the process architecture
+    // differs from the native one.
+    //
+
     <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> NativeProcessorArchitecture;
 
     //
@@ -369,6 +422,10 @@
         } DUMMYSTRUCTNAME2;
     } DUMMYUNIONNAME2;
 
+    //
+    // Reserved padding field to preserve structure alignment and compatibility.
+    //
+
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DataFlagsPad[1];
 
     //
@@ -379,6 +436,16 @@
     //
 
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> TestRetInstruction;
+
+    //
+    // Query‑performance counter (QPC) frequency, in counts per second.
+    //
+    // N.B. This value represents the fixed frequency of the system&#x27;s high‑resolution
+    // performance counter. It is used by user‑mode time routines to convert QPC
+    // ticks into elapsed time without requiring a system call. The frequency is
+    // constant for the lifetime of the system and reflects the hardware or
+    // virtualized timer source selected by the kernel.
+    //
 
     <a href="longlong" title="typedef __int64 LONGLONG;">LONGLONG</a> QpcFrequency;
 
@@ -552,10 +619,19 @@
     volatile <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> QpcBias;
 
     //
-    // Number of active processors and groups.
+    // Number of active logical processors.
     //
 
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ActiveProcessorCount;
+
+    //
+    // Number of active processor groups.
+    //
+    // N.B. This value is volatile because group membership and processor
+    // availability may change dynamically due to hot‑add, hot‑remove,
+    // or power management events.
+    //
+
     volatile <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> ActiveGroupCount;
 
     //
@@ -673,7 +749,7 @@
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/322ca2d2dc7dcfbe5746c4b42f8c4514fb798097/phnt/include/ntexapi.h#L6938">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/366ffc5939fa6a3759ab10b50c50553f44d67b7e/phnt/include/ntexapi.h#L7145">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ntddk.h
 

@@ -45,16 +45,52 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTEXAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
+/**
+ * The SYSTEM_HYPERVISOR_USER_SHARED_DATA structure contains information shared with the hypervisor and user-mode.
+ *
+ * This structure is populated by the hypervisor (when present) to allow user‑mode components to perform
+ * high‑resolution time calculations without requiring a hypercall or kernel transition.
+ */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _SYSTEM_HYPERVISOR_USER_SHARED_DATA
 {
+    /**
+     * Lock used to synchronize updates to the timing fields.
+     *
+     * The hypervisor increments this value before and after updating the
+     * QPC multiplier and bias. User‑mode callers can sample this value
+     * before and after reading the timing fields to detect whether an
+     * update occurred mid‑read and retry if necessary.
+     */
     volatile <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TimeUpdateLock;
+
+    /**
+     *  Reserved field - The hypervisor does not assign this field.
+     */
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved0;
+
+    /**
+     * Multiplier used to convert hypervisor QPC ticks to host time.
+     *
+     * This value is applied to the hypervisor’s virtualized performance
+     * counter to compute a stable, high‑resolution timebase. The multiplier
+     * is chosen by the hypervisor based on the underlying hardware timer
+     * source and virtualization mode.
+     */
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> QpcMultiplier;
+
+    /**
+     * Bias applied after QPC multiplication to produce final time.
+     *
+     * The hypervisor uses this bias to align the virtualized QPC value with
+     * the host’s notion of system time. Combined with QpcMultiplier, this
+     * allows user‑mode components to compute consistent time values even
+     * under virtualization.
+     */
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> QpcBias;
 } SYSTEM_HYPERVISOR_USER_SHARED_DATA, *PSYSTEM_HYPERVISOR_USER_SHARED_DATA;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/322ca2d2dc7dcfbe5746c4b42f8c4514fb798097/phnt/include/ntexapi.h#L5956">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/366ffc5939fa6a3759ab10b50c50553f44d67b7e/phnt/include/ntexapi.h#L6010">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
