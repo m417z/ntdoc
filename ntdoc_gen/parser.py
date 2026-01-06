@@ -353,6 +353,9 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     code = code.replace('\nEXTERN_C_START\n', '\n\n')
     code = code.replace('\nEXTERN_C_END\n', '\n\n')
 
+    # Remove leading spaces for PHNT_MODE defines.
+    code = re.sub(r'^[ \t]+(#define PHNT_MODE )', r'\1', code, flags=re.MULTILINE)
+
     # Remove other stuff.
     code = code.replace('\n// Options\n\n//#define PHNT_NO_INLINE_INIT_STRING\n', '\n\n\n\n')
 
