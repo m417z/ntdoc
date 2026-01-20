@@ -4,7 +4,19 @@ Specifies the total size, in bytes, of memory allocated for the structure. Up to
 
 ### Length
 
-Total allocated size of the process parameter block, including the fixed structure and variable-length string data (such as `DllPath`, `ImagePathName`, `CommandLine`, `WindowTitle`, `DesktopInfo`, `ShellInfo`, `RuntimeData`) stored contiguously after the structure.
+Total allocated size of the process parameter block, including the fixed structure and the following variable-length string data stored contiguously after the structure:
+
+* `CurrentDirectory.DosPath`
+* `DllPath`
+* `ImagePathName`
+* `CommandLine`
+* `WindowTitle`
+* `DesktopInfo`
+* `ShellInfo`
+* `RuntimeData`
+* `RedirectionDllName`
+
+Note that this does not include data allocated separately and referenced via pointers that are always absolute, such as the `Environment` pointer.
 
 ### Flags
 
@@ -12,20 +24,20 @@ Process parameter flags. These flags control various behaviors during process cr
 
 | Flag | Value | Description |
 |------|-------|-------------|
-| `RTL_USER_PROC_PARAMS_NORMALIZED` | `0x00000001` | Structure is normalized by `RtlNormalizeProcessParams`. Pointers are absolute addresses rather than offsets. |
+| `RTL_USER_PROC_PARAMS_NORMALIZED` | `0x00000001` | Structure is normalized by `RtlNormalizeProcessParams`. Pointers that are specified above (in the `Length` field description) are absolute addresses rather than offsets. |
 | `RTL_USER_PROC_PROFILE_USER` | `0x00000002` | |
 | `RTL_USER_PROC_PROFILE_KERNEL` | `0x00000004` | |
 | `RTL_USER_PROC_PROFILE_SERVER` | `0x00000008` | |
 | `RTL_USER_PROC_UNKNOWN` | `0x00000010` | |
-| `RTL_USER_PROC_RESERVE_1MB` | `0x00000020` | |
-| `RTL_USER_PROC_RESERVE_16MB` | `0x00000040` | |
+| `RTL_USER_PROC_RESERVE_1MB` | `0x00000020` | The system should reserve a region at the lower addresses (the NULL page) at process creation. See also `PS_MEMORY_RESERVE` and `PS_ATTRIBUTE_MEMORY_RESERVE`. |
+| `RTL_USER_PROC_RESERVE_16MB` | `0x00000040` | The system should reserve a region at the lower addresses (the NULL page) at process creation. See also `PS_MEMORY_RESERVE` and `PS_ATTRIBUTE_MEMORY_RESERVE`. |
 | `RTL_USER_PROC_CASE_SENSITIVE` | `0x00000080` | |
 | `RTL_USER_PROC_DISABLE_HEAP_DECOMMIT` | `0x00000100` | |
 | `RTL_USER_PROC_PROCESS_OR_1` | `0x00000200` | |
 | `RTL_USER_PROC_PROCESS_OR_2` | `0x00000400` | |
 | `RTL_USER_PROC_DLL_REDIRECTION_LOCAL` | `0x00001000` | |
-| `RTL_USER_PROC_APP_MANIFEST_PRESENT` | `0x00002000` | |
-| `RTL_USER_PROC_IMAGE_KEY_MISSING` | `0x00004000` | |
+| `RTL_USER_PROC_APP_MANIFEST_PRESENT` | `0x00002000` | The system has detected an application manifest upon process creation. |
+| `RTL_USER_PROC_IMAGE_KEY_MISSING` | `0x00004000` | The corresponding Image File Execution Options (IFEO) key was not found at process creation. |
 | `RTL_USER_PROC_DEV_OVERRIDE_ENABLED` | `0x00008000` | Required for DotLocal to work on certain codepaths. Set in `PspSetupUserProcessAddressSpace` from `PspGlobalFlags.DevOverrideEnabled`. Controlled by system-global IFEO `DevOverrideEnable`. [Documented by sixtyvividtails](https://x.com/sixtyvividtails/status/1719785195086266581). |
 | `RTL_USER_PROC_OPTIN_PROCESS` | `0x00020000` | |
 | `RTL_USER_PROC_SESSION_OWNER` | `0x00040000` | |
@@ -34,8 +46,8 @@ Process parameter flags. These flags control various behaviors during process cr
 | `RTL_USER_PROC_NO_IMAGE_EXPANSION_MITIGATION` | `0x02000000` | |
 | `RTL_USER_PROC_APPX_LOADER_ALTERNATE_FORWARDER` | `0x04000000` | |
 | `RTL_USER_PROC_APPX_GLOBAL_OVERRIDE` | `0x08000000` | |
-| `RTL_USER_PROC_LOADER_FORWARDER` | `0x20000000` | |
-| `RTL_USER_PROC_EXIT_PROCESS_NORMAL` | `0x40000000` | |
+| `RTL_USER_PROC_ONECORE_FORWARDERS_ENABLED` | `0x20000000` | Enables the loader to use OneCore API set forwarders when resolving DLL imports. Set in `PspSetupUserProcessAddressSpace` from `_ESERVERSILO_GLOBALS.OneCoreForwardersEnabled`. [Documented by sixtyvividtails](https://x.com/sixtyvividtails/status/1832175457229255082). |
+| `RTL_USER_PROC_EXIT_PROCESS_NORMAL` | `0x40000000` | Allows processes with `AppModelPolicy_ProcessEnd_TerminateProcess` to opt back in to the normal `ExitProcess` path that detaches from DLLs on exit. |
 | `RTL_USER_PROC_SECURE_PROCESS` | `0x80000000` | |
 
 ### DebugFlags
@@ -50,43 +62,59 @@ Handle identifying the console session associated with the process. Inherited fr
 | `RTL_USER_PROC_CREATE_NEW_CONSOLE` | Process created with `CREATE_NEW_CONSOLE` flag. |
 | `RTL_USER_PROC_CREATE_NO_WINDOW` | Process created with `CREATE_NO_WINDOW` flag. |
 
+For running console processes, this field usually stores the console connection handle (`\Device\ConDrv\Connect`).
+
 ### ConsoleFlags
 
-| Value | Description |
-|-------|-------------|
-| `0x01` | Set when process is created with `CREATE_NEW_PROCESS_GROUP` without `CREATE_NEW_CONSOLE`. |
+| Flag | Value | Description |
+|------|-------|-------------|
+| `CONSOLE_IGNORE_CTRL_C` | `0x01` | Set when process is created with `CREATE_NEW_PROCESS_GROUP` without `CREATE_NEW_CONSOLE`. Allows the process to temporarily block Ctrl+C requests. You can set/remove this flag via `SetConsoleCtrlHandler(NULL, TRUE/FALSE)`. |
 
 ### StandardInput
 
 Handle to the standard input stream. Corresponds to `STARTUPINFO.hStdInput`.
 
+For console processes, this field usually stores a `\Device\ConDrv\Input` handle.
+
 ### StandardOutput
 
 Handle to the standard output stream. Corresponds to `STARTUPINFO.hStdOutput`.
+
+For console processes, this field usually stores a `\Device\ConDrv\Output` handle.
 
 ### StandardError
 
 Handle to the standard error stream. Corresponds to `STARTUPINFO.hStdError`.
 
+For console processes, this field usually stores a `\Device\ConDrv\Output` handle (same as the standard output).
+
 ### CurrentDirectory
 
 A `CURDIR` structure containing the current directory path and handle.
 
-The `DosPath` member is specified as a DOS-like path, e.g., `"C:\Windows\System32"`.
+The `DosPath` member is specified as a DOS-like path, e.g., `C:\Windows\System32`.
 
 The `Handle` member is an open handle to the current directory file object.
+
+Note that the caller should always check the normalization flag before attempting to use `DosPath` as-is.
 
 ### DllPath
 
 DOS-like paths separated by `;` where the system should search for DLL files.
 
+Note that the caller should always check the normalization flag before attempting to use the value as is.
+
 ### ImagePathName
 
-Full path in DOS-like format to the process executable image, e.g., `"C:\Windows\System32\notepad.exe"`.
+Full path in DOS-like format to the process executable image, e.g., `C:\Windows\System32\notepad.exe`.
+
+Note that the caller should always check the normalization flag before attempting to use the value as is.
 
 ### CommandLine
 
 The command line string passed to the process.
+
+Note that the caller should always check the normalization flag before attempting to use the value as is.
 
 ### Environment
 
@@ -152,21 +180,29 @@ Specifies how the window should be shown. Corresponds to `STARTUPINFO.wShowWindo
 
 For console processes, the title displayed in the title bar if a new console window is created. If `NULL`, the executable file name is used. When `STARTF_TITLEISAPPID` is set, contains an AppUserModelID instead. Corresponds to `STARTUPINFO.lpTitle`.
 
+Note that the caller should always check the normalization flag before attempting to use the value as is.
+
 ### DesktopInfo
 
-Name of the WindowStation and Desktop objects where the process is assigned, in the format `"WindowStation\Desktop"`, e.g., `"WinSta0\Default"`. Corresponds to `STARTUPINFO.lpDesktop`.
+Name of the WindowStation and Desktop objects where the process is assigned, in the format `WindowStation\Desktop`, e.g., `WinSta0\Default`. Corresponds to `STARTUPINFO.lpDesktop`.
+
+Note that the caller should always check the normalization flag before attempting to use the value as is.
 
 ### ShellInfo
 
-Corresponds to `STARTUPINFO.lpReserved`. Historically used by Program Manager to pass startup information as a comma-separated string in format `"dde.#,hotkey.#,ntvdm.#"`.
+Corresponds to `STARTUPINFO.lpReserved`. Historically used by Program Manager to pass startup information as a comma-separated string in format `dde.#,hotkey.#,ntvdm.#`.
 
 Source: [Undocumented CreateProcess](https://www.catch22.net/tuts/system/undocumented-createprocess/) by Catch22.
+
+Note that the caller should always check the normalization flag before attempting to use the value as is.
 
 ### RuntimeData
 
 Corresponds to `STARTUPINFO.lpReserved2`/`cbReserved2`. Used by the C runtime to pass open file handles to child processes.
 
 Source: [Undocumented CreateProcess](https://www.catch22.net/tuts/system/undocumented-createprocess/) by Catch22.
+
+Note that the caller should always check the normalization flag before attempting to use the value as is.
 
 ### CurrentDirectories[RTL_MAX_DRIVE_LETTERS]
 
@@ -176,9 +212,13 @@ Source: [Geoff Chappell](https://www.geoffchappell.com/studies/windows/km/ntoskr
 
 ### EnvironmentSize
 
+Specifies the total size, in bytes, of memory allocated for the `Environment` structure.
+
 Added in Windows Vista.
 
 ### EnvironmentVersion
+
+The number of times the environment block has changed. Incremented every time by `RtlSetEnvironmentStrings` and `RtlSetEnvironmentVar`.
 
 Added in Windows 7.
 
@@ -188,19 +228,27 @@ Added in Windows 8.
 
 ### ProcessGroupId
 
+The console group identifier to narrow down control signal delivery.
+
 Added in Windows 8.
 
 ### LoaderThreads
 
-Number of worker threads for parallel DLL loading during process initialization. If 0, defaults to 4; if greater than 16, capped at 16. The thread pool is created with one less than this value since the main thread also participates in loading. Can be overridden via IFEO `MaxLoaderThreads` registry value. Added in Windows 10.
+Number of worker threads for parallel DLL loading during process initialization. If 0, defaults to 4; if greater than 16, capped at 16. The thread pool is created with one less than this value since the main thread also participates in loading. Can be overridden via IFEO `MaxLoaderThreads` registry value.
 
 Source: [Windows 10 Parallel Loading Breakdown](https://blogs.blackberry.com/en/2017/10/windows-10-parallel-loading-breakdown) by BlackBerry.
 
+Added in Windows 10.
+
 ### RedirectionDllName
 
-Path to a DLL that provides import redirection for packaged applications (Desktop Bridge). If set, the loader calls `LdrpLoadDll` to load it during process initialization. For non-packaged apps, the DLL must be Microsoft-signed. Configured via `ImportRedirectionTable` in the app manifest. Added in Windows 10 version 1809.
+Path to a DLL that provides import redirection for packaged applications (Desktop Bridge). If set, the loader calls `LdrpLoadDll` to load it during process initialization. For non-packaged apps, the DLL must be Microsoft-signed. Configured via `ImportRedirectionTable` in the app manifest.
 
 Source: [DLL Import Redirection in Windows 10 1909](https://www.tiraniddo.dev/2020/02/dll-import-redirection-in-windows-10_8.html) by James Forshaw.
+
+Note that the caller should always check the normalization flag before attempting to use the value as is.
+
+Added in Windows 10 version 1809.
 
 ### HeapPartitionName
 
