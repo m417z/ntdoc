@@ -170,7 +170,7 @@ Flags indicating which `STARTUPINFO` fields contain valid data. Corresponds to `
 | `STARTF_PREVENTPINNING` | `0x2000` | Prevent taskbar pinning |
 | `STARTF_UNTRUSTEDSOURCE` | `0x8000` | Process started from untrusted source |
 | `STARTF_INHERITDESKTOP` | `0x40000000` | Inherit desktop from parent process. |
-| `STARTF_SCREENSAVER` | `0x80000000` | Used for screensavers; affects thread priority handling. |
+| `STARTF_SCREENSAVER` | `0x80000000` | Process starts at `NORMAL_PRIORITY`, then drops to `IDLE_PRIORITY` on first `GetMessage` call. Only WinLogon is permitted to use this flag. |
 
 ### ShowWindowFlags
 
