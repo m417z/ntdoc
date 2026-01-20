@@ -4,7 +4,7 @@ Specifies the total size, in bytes, of memory allocated for the structure. Up to
 
 ### Length
 
-Total allocated size of the process parameter block, including the fixed structure and the following variable-length string data stored contiguously after the structure:
+Total size of the process parameter block, including the fixed structure and the following variable-length string data stored contiguously after the structure:
 
 * `CurrentDirectory.DosPath`
 * `DllPath`
@@ -58,9 +58,9 @@ Handle identifying the console session associated with the process. Inherited fr
 
 | Value | Description |
 |-------|-------------|
-| `RTL_USER_PROC_DETACHED_PROCESS` | Process created with `DETACHED_PROCESS` flag. |
-| `RTL_USER_PROC_CREATE_NEW_CONSOLE` | Process created with `CREATE_NEW_CONSOLE` flag. |
-| `RTL_USER_PROC_CREATE_NO_WINDOW` | Process created with `CREATE_NO_WINDOW` flag. |
+| `RTL_USER_PROC_DETACHED_PROCESS` | Process was created with the `DETACHED_PROCESS` flag. |
+| `RTL_USER_PROC_CREATE_NEW_CONSOLE` | Process was created with the `CREATE_NEW_CONSOLE` flag. |
+| `RTL_USER_PROC_CREATE_NO_WINDOW` | Process was created with the `CREATE_NO_WINDOW` flag. |
 
 For running console processes, this field usually stores the console connection handle (`\Device\ConDrv\Connect`).
 
