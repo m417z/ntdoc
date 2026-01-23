@@ -22,7 +22,7 @@ For the list of process-specific access masks, see `NtOpenProcess`.
 
 To avoid retaining unused resources, call `NtClose` to close the returned handles when they are no longer required.
 
-This function bypasses some access checks if the caller has the `SeDebugPrivilege` enabled.
+This function bypasses some access checks if the caller has the `SeDebugPrivilege` privilege enabled.
 
 # Related Win32 API
 This functionality is not exposed in Win32 API.
