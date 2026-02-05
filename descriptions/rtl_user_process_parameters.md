@@ -236,7 +236,7 @@ Added in Windows 8.
 
 Number of worker threads for parallel DLL loading during process initialization. If 0, defaults to 4; if greater than 16, capped at 16. The thread pool is created with one less than this value since the main thread also participates in loading. Can be overridden via IFEO `MaxLoaderThreads` registry value.
 
-Source: [Windows 10 Parallel Loading Breakdown](https://blogs.blackberry.com/en/2017/10/windows-10-parallel-loading-breakdown) by BlackBerry.
+Source: [Windows 10 Parallel Loading Breakdown](https://web.archive.org/web/20251114020746/https://blogs.blackberry.com/en/2017/10/windows-10-parallel-loading-breakdown) by BlackBerry.
 
 Added in Windows 10.
 
