@@ -15,6 +15,7 @@ def markdown_to_html(text: str) -> str:
     html: str = cmarkgfm.markdown_to_html_with_extensions(
         text,
         extensions=[
+            'autolink',
             'table',
         ],
     )
