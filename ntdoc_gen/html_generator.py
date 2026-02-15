@@ -173,6 +173,21 @@ class HtmlLinksAdder:
         return self.add_links_regex_compiled.sub(repl, html)
 
 
+def auto_link_urls(html: str) -> str:
+    """Convert plain-text URLs to clickable links."""
+    def repl(match):
+        start_index = match.start()
+        a_open_count = html.count('<a', 0, start_index)
+        a_end_count = html.count('</a>', 0, start_index)
+        if a_open_count > a_end_count:
+            return match.group(0)
+
+        url = match.group(0)
+        return f'<a target="_blank" href="{url}">{url}</a>'
+
+    return re.sub(r'\bhttps://[^\s<>"]+', repl, html)
+
+
 def validate_chunks_amount(id: str, chunks: List[Chunk]):
     chunks_per_origin = defaultdict(int)
     for chunk in chunks:
@@ -219,6 +234,7 @@ def get_code_elements_html(
 
     for chunk in chunks:
         html_content = chunk_to_html(chunk)
+        html_content = auto_link_urls(html_content)
         html += '<div class="ntdoc-code-element">\n'
         html += html_links_adder.add_links(html_content, id)
         html += '</div>\n'
