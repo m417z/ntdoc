@@ -52,13 +52,19 @@ jobs:
             --windows-docs-path ../windows-docs
       - name: Deploy
         run: |
-          git clone --depth 1 --single-branch --branch gh-pages https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git gh-pages
-          cd gh-pages
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          git rm -rf .
-          cp -r ../main/docs/. .
-          touch .nojekyll
-          git add -A
-          git diff --cached --quiet || git commit -m "deploy: $(git -C ../main rev-parse HEAD)"
-          git push origin gh-pages
+          src_dir=main/docs
+          deploy_dir="${{ runner.temp }}/deploy"
+          deploy_branch=gh-pages
+
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          echo Cloning the repository
+          git clone --branch $deploy_branch --single-branch --depth 1 --no-checkout https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git "$deploy_dir"
+          echo Adding generated files to the repository
+          git --git-dir="$deploy_dir/.git" --work-tree="$src_dir" add -A
+          touch "$deploy_dir/.nojekyll"
+          git -C "$deploy_dir" add .nojekyll
+          echo Committing changes
+          git -C "$deploy_dir" diff --cached --quiet || git -C "$deploy_dir" commit -m "deploy: $(git -C "$src_dir" rev-parse HEAD)"
+          echo Pushing to GitHub
+          git -C "$deploy_dir" push origin $deploy_branch
