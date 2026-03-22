@@ -44,49 +44,123 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTEXAPI_H
 
-</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">typedef struct _PROCESS_ENERGY_VALUES_EXTENSION
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * \brief Extended energy accounting values for a process, providing activity timelines
+ * and additional duration/input statistics not present in <a href="process_energy_values" title="typedef struct _PROCESS_ENERGY_VALUES&#10;{&#10;    /**&#10;     * CPU cycles accumulated per QoS bucket and cycle type.&#10;     * First index: QoS bucket (PROCESS_ENERGY_VALUES_QOS_INDEX).&#10;     * Second index: cycle type — user [0] or kernel [1] (PROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX).&#10;     */&#10;    ULONGLONG Cycles[ProcessEnergyValuesQoSMax][ProcessEnergyValuesCycleTypeMax];&#10;    /**&#10;     * Energy consumed by disk I/O, in arbitrary energy units.&#10;     */&#10;    ULONGLONG DiskEnergy;&#10;    /**&#10;     * Tail energy attributed to network activity.&#10;     */&#10;    ULONGLONG NetworkTailEnergy;&#10;    /**&#10;     * Tail energy attributed to Mobile Broadband (MBB) activity.&#10;     */&#10;    ULONGLONG MBBTailEnergy;&#10;...">PROCESS_ENERGY_VALUES</a>.
+ *
+ * \details Added in REDSTONE2; the Timelines array grew from 9 to 14 entries in REDSTONE3.
+ * The Durations union and the input/audio fields are REDSTONE3+.
+ */
+</span><span class="ntdoc-code-body language-cpp">typedef struct _PROCESS_ENERGY_VALUES_EXTENSION
 {
     union
     {
-        <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> Timelines[14]; // 9 for REDSTONE2, 14 for REDSTONE3/4/5
+        /** Activity timelines indexed by resource type (9 entries pre-RS3, 14 entries RS3+). */
+        <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> Timelines[14]; // 9 for REDSTONE2, 14 for REDSTONE3/4/5
         struct
         {
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> CpuTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> DiskTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> NetworkTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> MBBTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> ForegroundTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> DesktopVisibleTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> CompositionRenderedTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> CompositionDirtyGeneratedTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> CompositionDirtyPropagatedTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> InputTimeline; // REDSTONE3
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> AudioInTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> AudioOutTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> DisplayRequiredTimeline;
-            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG EndTime;&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> KeyboardInputTimeline;
+            /**
+             * CPU activity timeline.
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> CpuTimeline;
+            /**
+             * Disk I/O activity timeline.
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> DiskTimeline;
+            /**
+             * Network activity timeline.
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> NetworkTimeline;
+            /**
+             * Mobile Broadband (MBB) activity timeline.
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> MBBTimeline;
+            /**
+             * Foreground visibility timeline.
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> ForegroundTimeline;
+            /**
+             * Desktop visible timeline.
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> DesktopVisibleTimeline;
+            /**
+             * DWM composition rendered timeline.
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> CompositionRenderedTimeline;
+            /**
+             * DWM composition dirty-generated timeline.
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> CompositionDirtyGeneratedTimeline;
+            /**
+             * DWM composition dirty-propagated timeline.
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> CompositionDirtyPropagatedTimeline;
+            /**
+             * Input activity timeline (REDSTONE3+).
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> InputTimeline; // REDSTONE3
+            /**
+             * Audio input (microphone) activity timeline (REDSTONE3+).
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> AudioInTimeline;
+            /**
+             * Audio output (speaker/headphone) activity timeline (REDSTONE3+).
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> AudioOutTimeline;
+            /**
+             * Display-required (screen-on prevention) timeline (REDSTONE3+).
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> DisplayRequiredTimeline;
+            /**
+             * Keyboard input activity timeline (REDSTONE3+).
+             */
+            <a href="timeline_bitmap" title="typedef union _TIMELINE_BITMAP&#10;{&#10;    /** Raw 64-bit value combining EndTime and Bitmap. */&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        /**&#10;         * The slot index of the most recent time slot represented by the bitmap.&#10;         * Real time ≈ EndTime * 4096 milliseconds.&#10;         */&#10;        ULONG EndTime;&#10;        /**&#10;         * Bit-mask of activity slots; bit 0 is the most recent slot.&#10;         * One set bit represents approximately 4.096 seconds of activity.&#10;         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.&#10;         */&#10;        ULONG Bitmap;&#10;    };&#10;} TIMELINE_BITMAP, *PTIMELINE_BITMAP;">TIMELINE_BITMAP</a> KeyboardInputTimeline;
         } DUMMYSTRUCTNAME;
     } DUMMYUNIONNAME;
 
     union // REDSTONE3
     {
+        /**
+         * Activity state durations for extended resource types (REDSTONE3+).
+         */
         <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> Durations[5];
         struct
         {
+            /**
+             * Duration the process received user input (REDSTONE3+).
+             */
             <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> InputDuration;
+            /**
+             * Duration the process used audio input (REDSTONE3+).
+             */
             <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> AudioInDuration;
+            /**
+             * Duration the process used audio output (REDSTONE3+).
+             */
             <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> AudioOutDuration;
+            /**
+             * Duration the process prevented display power-off (REDSTONE3+).
+             */
             <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> DisplayRequiredDuration;
+            /**
+             * Duration the process ran in PSM background state (REDSTONE3+).
+             */
             <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> PSMBackgroundDuration;
         } DUMMYSTRUCTNAME;
     } DUMMYUNIONNAME;
 
+    /**
+     * Number of keyboard input events attributed to the process (REDSTONE3+).
+     */
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> KeyboardInput;
+    /**
+     * Number of mouse input events attributed to the process (REDSTONE3+).
+     */
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MouseInput;
 } PROCESS_ENERGY_VALUES_EXTENSION, *PPROCESS_ENERGY_VALUES_EXTENSION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/9ed60a95bac9c3abb9c18e98225200000bb3df57/phnt/include/ntexapi.h#L5299">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/bdbdf39b03dec49fd16ef3aa1bab2b92b4b65b7d/phnt/include/ntexapi.h#L5417">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

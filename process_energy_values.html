@@ -44,34 +44,91 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTEXAPI_H
 
-</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">typedef struct _PROCESS_ENERGY_VALUES
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * \brief Energy accounting values for a process, broken down by QoS bucket and cycle type.
+ *
+ * \details Contains CPU cycle counts, energy estimates, network/MBB byte counts,
+ * activity durations, and DWM composition statistics accumulated for a process.
+ * CPU cycles are indexed by QoS bucket (see <a href="process_energy_values_qos_index" title="typedef enum _PROCESS_ENERGY_VALUES_QOS_INDEX&#10;{&#10;    // Foreground / High QoS — threads running at foreground or high quality-of-service priority.&#10;    ProcessEnergyValuesQoSHighForeground = 0,&#10;    // Above-normal — threads running at above-normal priority.&#10;    ProcessEnergyValuesQoSAboveNormal = 1,&#10;    // Normal — threads running at normal priority.&#10;    ProcessEnergyValuesQoSNormal = 2,&#10;    // Background / Low QoS — threads running at background or low quality-of-service priority.&#10;    ProcessEnergyValuesQoSLowBackground = 3,&#10;    // The maximum number of QoS buckets.&#10;    ProcessEnergyValuesQoSMax = 4&#10;} PROCESS_ENERGY_VALUES_QOS_INDEX, *PPROCESS_ENERGY_VALUES_QOS_INDEX;">PROCESS_ENERGY_VALUES_QOS_INDEX</a>) and
+ * cycle type (see <a href="process_energy_values_cycle_type_index" title="typedef enum _PROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX&#10;{&#10;    // User-mode cycles accumulated by threads in this QoS bucket.&#10;    ProcessEnergyValuesCycleTypeUser = 0,&#10;    // Kernel-mode cycles accumulated by threads in this QoS bucket.&#10;    ProcessEnergyValuesCycleTypeKernel = 1,&#10;    // The maximum number of cycle types.&#10;    ProcessEnergyValuesCycleTypeMax = 2&#10;} PROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX, *PPROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX;">PROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX</a>).
+ */
+</span><span class="ntdoc-code-body language-cpp">typedef struct _PROCESS_ENERGY_VALUES
 {
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Cycles[4][2];
+    /**
+     * CPU cycles accumulated per QoS bucket and cycle type.
+     * First index: QoS bucket (<a href="process_energy_values_qos_index" title="typedef enum _PROCESS_ENERGY_VALUES_QOS_INDEX&#10;{&#10;    // Foreground / High QoS — threads running at foreground or high quality-of-service priority.&#10;    ProcessEnergyValuesQoSHighForeground = 0,&#10;    // Above-normal — threads running at above-normal priority.&#10;    ProcessEnergyValuesQoSAboveNormal = 1,&#10;    // Normal — threads running at normal priority.&#10;    ProcessEnergyValuesQoSNormal = 2,&#10;    // Background / Low QoS — threads running at background or low quality-of-service priority.&#10;    ProcessEnergyValuesQoSLowBackground = 3,&#10;    // The maximum number of QoS buckets.&#10;    ProcessEnergyValuesQoSMax = 4&#10;} PROCESS_ENERGY_VALUES_QOS_INDEX, *PPROCESS_ENERGY_VALUES_QOS_INDEX;">PROCESS_ENERGY_VALUES_QOS_INDEX</a>).
+     * Second index: cycle type — user [0] or kernel [1] (<a href="process_energy_values_cycle_type_index" title="typedef enum _PROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX&#10;{&#10;    // User-mode cycles accumulated by threads in this QoS bucket.&#10;    ProcessEnergyValuesCycleTypeUser = 0,&#10;    // Kernel-mode cycles accumulated by threads in this QoS bucket.&#10;    ProcessEnergyValuesCycleTypeKernel = 1,&#10;    // The maximum number of cycle types.&#10;    ProcessEnergyValuesCycleTypeMax = 2&#10;} PROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX, *PPROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX;">PROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX</a>).
+     */
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Cycles[ProcessEnergyValuesQoSMax][ProcessEnergyValuesCycleTypeMax];
+    /**
+     * Energy consumed by disk I/O, in arbitrary energy units.
+     */
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> DiskEnergy;
+    /**
+     * Tail energy attributed to network activity.
+     */
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> NetworkTailEnergy;
+    /**
+     * Tail energy attributed to Mobile Broadband (MBB) activity.
+     */
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> MBBTailEnergy;
+    /**
+     * Total bytes transmitted and received over network interfaces.
+     */
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> NetworkTxRxBytes;
+    /**
+     * Total bytes transmitted and received over Mobile Broadband (MBB) interfaces.
+     */
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> MBBTxRxBytes;
     union
     {
+        /**
+         * Activity state durations: [0] foreground, [1] desktop visible, [2] PSM foreground.
+         */
         <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> Durations[3];
         struct
         {
+            /**
+             * Duration the process was in the foreground.
+             */
             <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> ForegroundDuration;
+            /**
+             * Duration the process was visible on the desktop.
+             */
             <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> DesktopVisibleDuration;
+            /**
+             * Duration the process was in the PSM (Process State Manager) foreground state.
+             */
             <a href="energy_state_duration" title="typedef union _ENERGY_STATE_DURATION&#10;{&#10;    ULONGLONG Value;&#10;    struct&#10;    {&#10;        ULONG LastChangeTime;&#10;        ULONG Duration : 31;&#10;        ULONG IsInState : 1;&#10;    } DUMMYSTRUCTNAME;&#10;} ENERGY_STATE_DURATION, *PENERGY_STATE_DURATION;">ENERGY_STATE_DURATION</a> PSMForegroundDuration;
         } DUMMYSTRUCTNAME;
     } DUMMYUNIONNAME;
+    /**
+     * Number of frames rendered by the DWM compositor on behalf of this process.
+     */
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CompositionRendered;
+    /**
+     * Number of dirty regions generated by this process during DWM composition.
+     */
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CompositionDirtyGenerated;
+    /**
+     *  Number of dirty regions propagated from this process to other windows during DWM composition.
+     */
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CompositionDirtyPropagated;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved1;
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> AttributedCycles[4][2];
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> WorkOnBehalfCycles[4][2];
+    /**
+     * CPU cycles attributed to this process (e.g. from work performed on its behalf).
+     * Indexed identically to Cycles: [QoS bucket][cycle type].
+     */
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> AttributedCycles[ProcessEnergyValuesQoSMax][ProcessEnergyValuesCycleTypeMax];
+    /**
+     * CPU cycles consumed while performing work on behalf of another process.
+     * Indexed identically to Cycles: [QoS bucket][cycle type].
+     */
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> WorkOnBehalfCycles[ProcessEnergyValuesQoSMax][ProcessEnergyValuesCycleTypeMax];
 } PROCESS_ENERGY_VALUES, *PPROCESS_ENERGY_VALUES;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/9ed60a95bac9c3abb9c18e98225200000bb3df57/phnt/include/ntexapi.h#L5263">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/bdbdf39b03dec49fd16ef3aa1bab2b92b4b65b7d/phnt/include/ntexapi.h#L5306">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

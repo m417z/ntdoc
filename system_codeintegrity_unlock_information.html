@@ -44,7 +44,53 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTEXAPI_H
 
-</span><span class="ntdoc-code-intro language-cpp">// private
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * The SYSTEM_CODEINTEGRITY_UNLOCK_INFORMATION structure contains Code Integrity unlock state and validation token.
+ *
+ * **Purpose:**
+ *
+ * The UnlockId field is a 32-byte cryptographic validation token used to authenticate requests to temporarily
+ * disable Code Integrity (CI) enforcement. It works in conjunction with the three flag bits (Locked, UnlockApplied, UnlockIdValid)
+ * to control the application of code integrity bypass authorization.
+ *
+ * **Mechanism:**
+ *
+ * \b Token \b Generation: When needing to disable CI, a component (bootloader, recovery environment, or factory process)
+ * computes a 32-byte UnlockId using:
+ * - HMAC-SHA256 or similar cryptographic hash function
+ * - A kernel-embedded or TPM-stored secret key
+ * - Machine-specific data (boot state, firmware version, hardware configuration, etc.)
+ *
+ * \b Validation: The kernel validates the UnlockId by:
+ * - Recomputing the expected HMAC-SHA256 using its stored secret and machine state
+ * - Comparing against the provided UnlockId (32-byte comparison)
+ * - Setting the UnlockIdValid flag if the cryptographic match succeeds
+ * - Rejecting any token that fails validation
+ *
+ * \b Application: Once validated:
+ * - UnlockApplied flag is set (unlock request accepted by the kernel)
+ * - Locked flag may be cleared (CI enforcement disabled for this session)
+ * - Temporary bypass of code integrity checks is granted for authorized operations
+ *
+ * **Security Properties:**
+ *
+ * - \b 256-bit \b Token: The 32-byte (256-bit) size is standard for HMAC-SHA256 output, providing strong cryptographic security
+ * - \b Microsoft-Controlled \b Secret: UnlockId tokens are derived from a Microsoft-controlled secret key, preventing unauthorized bypasses
+ * - \b Machine \b Binding: Machine-specific data ensures tokens are valid only for the intended system
+ * - \b Temporal \b Scope: Unlock is session-scoped and typically used during controlled recovery or factory processes
+ *
+ * **Use Cases:**
+ *
+ * - \b Factory \b Reset (OOBE): Allow boot in non-secure mode during device initial setup and provisioning
+ * - \b Recovery \b Environment: Enable recovery tools to bypass CI during authorized system repairs
+ * - \b Secure \b Boot \b Bypass: Controlled disabling of code verification during authorized recovery scenarios
+ * - \b Development/Debugging: Microsoft-signed tokens for internal kernel validation and testing on development systems
+ *
+ * \note The UnlockId prevents unauthorized bypasses of code integrity protection and is only trusted after cryptographic validation succeeds.
+ * \note This structure is private to the kernel and not part of the public API.
+ * \note Available since Windows Redstone 4 (Windows 10 version 1803).
+ */
+// private
 </span><span class="ntdoc-code-body language-cpp">typedef struct _SYSTEM_CODEINTEGRITY_UNLOCK_INFORMATION
 {
     union
@@ -52,17 +98,62 @@
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;
         struct
         {
+            /** \brief Code Integrity is currently locked (enforced).
+             *
+             * When set (1), Code Integrity enforcement is active and code execution restrictions are applied.
+             * When clear (0), Code Integrity may be disabled if UnlockApplied is set and a valid token was provided.
+             */
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Locked : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UnlockApplied : 1; // Unlockable field removed 19H1
+
+            /** \brief Unlock request has been validated and applied.
+             *
+             * Set by the kernel when the provided UnlockId passes cryptographic validation and the unlock is authorized.
+             * When set, this flag indicates that CI enforcement has been temporarily disabled for this session.
+             * Field removed after Windows 10 v1909 (19H1) in newer releases.
+             */
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UnlockApplied : 1;
+
+            /** \brief UnlockId contains a valid, authenticated cryptographic token.
+             *
+             * Set by the kernel when the provided UnlockId passes HMAC-SHA256 validation against the kernel&#x27;s stored secret.
+             * This flag indicates that the token is cryptographically valid and can authorize CI bypass.
+             */
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UnlockIdValid : 1;
+
+            /** \brief Reserved flag bits for future use. */
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved : 29;
         };
     };
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> UnlockId[32]; // REDSTONE4
+
+    /** \brief 32-byte cryptographic validation token for Code Integrity unlock requests.
+     *
+     * This HMAC-SHA256 token authorizes temporary disabling of Code Integrity enforcement.
+     * The token is computed using a kernel-embedded secret key, machine-specific data, and cryptographic derivation.
+     *
+     * **Format:**
+     * - Size: 32 bytes (256 bits)
+     * - Algorithm: HMAC-SHA256
+     * - Derivation: Microsoft-controlled secret key + machine state
+     * - Validation: Kernel verifies token before granting CI bypass
+     *
+     * **Validation Process:**
+     * 1. Kernel recomputes expected HMAC-SHA256 from stored secret and current machine state
+     * 2. Compares computed HMAC against the provided UnlockId (byte-for-byte)
+     * 3. Sets UnlockIdValid flag if match succeeds; fails otherwise
+     * 4. If validation succeeds, kernel sets UnlockApplied and may clear Locked flag
+     *
+     * **Authorization Scenarios:**
+     * - Factory Reset (OOBE): Token allows non-secure boot during device provisioning
+     * - Recovery Mode: Token allows recovery environment to bypass code verification checks
+     * - Development/Debug: Microsoft-signed tokens for test systems and kernel development
+     *
+     * \note Available since Windows 10 Redstone 4 (version 1803, NTDDI_WIN10_RS4).
+     */
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> UnlockId[32];
 } SYSTEM_CODEINTEGRITY_UNLOCK_INFORMATION, *PSYSTEM_CODEINTEGRITY_UNLOCK_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/9ed60a95bac9c3abb9c18e98225200000bb3df57/phnt/include/ntexapi.h#L5933">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/bdbdf39b03dec49fd16ef3aa1bab2b92b4b65b7d/phnt/include/ntexapi.h#L6408">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

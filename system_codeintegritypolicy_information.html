@@ -45,46 +45,95 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTEXAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">// private
+/**
+ * \brief Code Integrity Policy configuration and HVCI (Hypervisor-enforced Code Integrity) settings.
+ *
+ * Contains the kernel&#x27;s code integrity policy enforcement options and Hardware-enforced Code Integrity (HVCI)
+ * configuration state. Enables applications to query the security posture of code integrity enforcement and
+ * virtualization-based security features. Available via <a href="ntquerysysteminformation" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQuerySystemInformation(&#10;    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,&#10;    _Out_writes_bytes_opt_(SystemInformationLength) PVOID SystemInformation,&#10;    _In_ ULONG SystemInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQuerySystemInformation</a>(SystemCodeIntegrityInformation).
+ *
+ * \since Windows 10
+ */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _SYSTEM_CODEINTEGRITYPOLICY_INFORMATION
 {
+    /**
+     * \brief Code integrity policy options (Options union).
+     *
+     * Union providing both raw 32-bit access and bitfield access to policy flags:
+     * - Enabled: Code integrity enforcement is active
+     * - Audit: Code integrity operates in audit mode (violations logged, not blocked)
+     * - RequireWHQL: Windows Hardware Quality Labs certification required for drivers
+     * - DisabledFlightSigning: Flight-signed binaries are blocked from loading
+     * - EnabledUMCI: User-mode Code Integrity enforcement enabled (signed DLL requirement)
+     * - EnabledUpdatePolicyNoReboot: Code integrity policy updates without system reboot
+     * - EnabledSecureSettingPolicy: Secure settings policy enforcement enabled
+     * - EnabledUnsignedSystemIntegrityPolicy: Unsigned system integrity policies allowed
+     * - DynamicCodePolicyEnabled: Dynamic code generation and modification is restricted
+     * - Spare: 19 reserved bits for future expansion
+     * - ReloadPolicyNoReboot: Policy reloaded without reboot (bit 28)
+     * - ConditionalLockdown: Conditional code integrity lockdown mode (bit 29)
+     * - NoLockdown: Code integrity lockdown is not active (bit 30)
+     * - Lockdown: Code integrity lockdown mode is enforced (bit 31)
+     */
     union
     {
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Options;
         struct
         {
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Enabled : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Audit : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RequireWHQL : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DisabledFlightSigning : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EnabledUMCI : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EnabledUpdatePolicyNoReboot : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EnabledSecureSettingPolicy : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EnabledUnsignedSystemIntegrityPolicy : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DynamicCodePolicyEnabled : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare : 19;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ReloadPolicyNoReboot : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ConditionalLockdown : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NoLockdown : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Lockdown : 1;
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Enabled : 1;                          ///&lt; Code integrity enforcement enabled
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Audit : 1;                            ///&lt; Audit mode (log violations, don&#x27;t block)
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RequireWHQL : 1;                      ///&lt; Require WHQL certification
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DisabledFlightSigning : 1;            ///&lt; Block flight-signed binaries
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EnabledUMCI : 1;                      ///&lt; User-mode code integrity enabled
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EnabledUpdatePolicyNoReboot : 1;      ///&lt; Update policy without reboot
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EnabledSecureSettingPolicy : 1;       ///&lt; Secure settings policy active
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EnabledUnsignedSystemIntegrityPolicy : 1;  ///&lt; Allow unsigned system integrity policies
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DynamicCodePolicyEnabled : 1;         ///&lt; Restrict dynamic code/JIT
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare : 19;                           ///&lt; Reserved for future use
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ReloadPolicyNoReboot : 1;             ///&lt; Policy reloaded without reboot
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ConditionalLockdown : 1;              ///&lt; Conditional lockdown mode
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NoLockdown : 1;                       ///&lt; Lockdown not enforced
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Lockdown : 1;                         ///&lt; Lockdown mode enforced
         } DUMMYSTRUCTNAME;
     } DUMMYUNIONNAME;
+    /**
+     * \brief Hardware-enforced Code Integrity (HVCI) options.
+     *
+     * Union providing both raw access and bitfield access to HVCI/VBS configuration:
+     * - HVCIEnabled: HVCI is active (code integrity enforcement via hypervisor)
+     * - HVCIStrict: Strict mode enforcement (higher security, lower performance)
+     * - HVCIDebug: Debug mode enabled (diagnostic/troubleshooting)
+     * - HVCISpare: 29 reserved bits for future HVCI expansion
+     */
     union
     {
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HVCIOptions;
         struct
         {
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HVCIEnabled : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HVCIStrict : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HVCIDebug : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HVCISpare : 29;
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HVCIEnabled : 1;                      ///&lt; HVCI enforced by hypervisor
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HVCIStrict : 1;                       ///&lt; Strict HVCI mode enforcement
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HVCIDebug : 1;                        ///&lt; HVCI debug mode active
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HVCISpare : 29;                       ///&lt; Reserved for future use
         } DUMMYSTRUCTNAME;
     } DUMMYUNIONNAME;
+    /**
+     * \brief Code integrity policy version.
+     *
+     * Version number incremented when the kernel reloads/updates the code integrity policy.
+     * Used to detect policy changes without requiring system restart.
+     */
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Version;
+    /**
+     * \brief Code integrity policy GUID.
+     *
+     * Uniquely identifies the loaded code integrity policy file. Changes when a different
+     * policy becomes active; can be used to correlate policy audit logs.
+     */
     GUID PolicyGuid;
 } SYSTEM_CODEINTEGRITYPOLICY_INFORMATION, *PSYSTEM_CODEINTEGRITYPOLICY_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/9ed60a95bac9c3abb9c18e98225200000bb3df57/phnt/include/ntexapi.h#L5608">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/bdbdf39b03dec49fd16ef3aa1bab2b92b4b65b7d/phnt/include/ntexapi.h#L5976">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
