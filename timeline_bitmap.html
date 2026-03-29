@@ -49,9 +49,19 @@
  *
  * \details Each bit in the Bitmap field represents a fixed-size time slot.
  * A set bit indicates the process was active during that slot.
- * Each slot is 4096 milliseconds (≈4.1 seconds) in duration.
+ * Each slot is 4096 milliseconds (~4.1 seconds) in duration.
  * The 32-bit bitmap covers approximately 131 seconds of recent history.
  * EndTime is a slot index (not wall-clock seconds); multiply by 4096 to get elapsed milliseconds.
+ *
+ * Timeline bitmap calculations:
+ * - To compute active duration from a bitmap: popcount(Bitmap) * 4096 milliseconds
+ * - To convert EndTime to elapsed time: EndTime * 4096 milliseconds
+ * - Total bitmap window: 32 slots * 4096 ms = 131,072 ms ~ 131 seconds
+ *
+ * The slot index comes from kernel timer accounting:
+ * KiTimelineBitmapTime = elapsed_ms &gt;&gt; 12,
+ * where elapsed_ms is the time since boot in milliseconds
+ * (from <a href="kuser_shared_data" title="typedef struct _KUSER_SHARED_DATA&#10;{&#10;    //&#10;    // Current low 32-bit of tick count and tick count multiplier.&#10;    //&#10;    // N.B. The tick count is updated each time the clock ticks.&#10;    //&#10;&#10;    ULONG TickCountLowDeprecated;&#10;    ULONG TickCountMultiplier;&#10;&#10;    //&#10;    // Current 64-bit interrupt time in 100ns units.&#10;    //&#10;&#10;    volatile KSYSTEM_TIME InterruptTime;&#10;&#10;    //&#10;    // Current 64-bit system time in 100ns units.&#10;    //&#10;...">KUSER_SHARED_DATA</a>.TickCountQuad).
  */
 </span><span class="ntdoc-code-body language-cpp">typedef union _TIMELINE_BITMAP
 {
@@ -61,20 +71,20 @@
     {
         /**
          * The slot index of the most recent time slot represented by the bitmap.
-         * Real time ≈ EndTime * 4096 milliseconds.
+         * Real time ~ EndTime * 4096 milliseconds.
          */
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EndTime;
         /**
          * Bit-mask of activity slots; bit 0 is the most recent slot.
          * One set bit represents approximately 4.096 seconds of activity.
-         * popcount(Bitmap) * 4096 ms ≈ total active duration within window.
+         * popcount(Bitmap) * 4096 ms ~ total active duration within window.
          */
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Bitmap;
     };
 } TIMELINE_BITMAP, *PTIMELINE_BITMAP;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8030be9396047dfa04ca77cec52c0c9c95c1e5dc/phnt/include/ntexapi.h#L5390">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/b68bf77e8beb9771c45b75fbdbf095fc164e7ddd/phnt/include/ntexapi.h#L5810">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

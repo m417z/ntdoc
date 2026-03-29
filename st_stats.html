@@ -47,15 +47,15 @@
 </span><span class="ntdoc-code-intro language-cpp">// rev
 </span><span class="ntdoc-code-body language-cpp">typedef struct _ST_STATS
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Version : 8;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Level : 4;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> StoreType : 4;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Version : 8; // <a href="system_store_stats_information_version" title="#define SYSTEM_STORE_STATS_INFORMATION_VERSION 2">SYSTEM_STORE_STATS_INFORMATION_VERSION</a>
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Level : 4; // <a href="st_stats_level" title="typedef enum _ST_STATS_LEVEL&#10;{&#10;    StStatsLevelBasic = 0,&#10;    StStatsLevelIoStats = 1,&#10;    StStatsLevelRegionSpace = 2, // requires SeProfileSingleProcessPrivilege&#10;    StStatsLevelSpaceBitmap = 3, // requires SeProfileSingleProcessPrivilege&#10;    StStatsLevelMax = 4&#10;} ST_STATS_LEVEL;">ST_STATS_LEVEL</a>
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> StoreType : 4; // <a href="sm_store_type" title="typedef enum _SM_STORE_TYPE&#10;{&#10;    StoreTypeInMemory=0,&#10;    StoreTypeFile=1,&#10;    StoreTypeMax=2&#10;} SM_STORE_TYPE;">SM_STORE_TYPE</a>
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NoDuplication : 1;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NoCompression : 1;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EncryptionStrength : 12;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> VirtualRegions : 1;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare0 : 1;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Size;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Size; // total bytes returned in the caller-supplied stats buffer
     <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> CompressionFormat;
     <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Spare;
 
@@ -65,22 +65,22 @@
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RegionCount;
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RegionCountMax;
         <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Granularity;
-        <a href="st_data_mgr_stats" title="typedef struct _ST_DATA_MGR_STATS&#10;{&#10;    ULONG RegionCount;&#10;    ULONG PagesStored;&#10;    ULONG UniquePagesStored;&#10;    ULONG LazyCleanupRegionCount;&#10;    struct {&#10;        ULONG RegionsInUse;&#10;        ULONG SpaceUsed;&#10;    } Space[8];&#10;} ST_DATA_MGR_STATS, *PST_DATA_MGR_STATS;">ST_DATA_MGR_STATS</a> UserData;
-        <a href="st_data_mgr_stats" title="typedef struct _ST_DATA_MGR_STATS&#10;{&#10;    ULONG RegionCount;&#10;    ULONG PagesStored;&#10;    ULONG UniquePagesStored;&#10;    ULONG LazyCleanupRegionCount;&#10;    struct {&#10;        ULONG RegionsInUse;&#10;        ULONG SpaceUsed;&#10;    } Space[8];&#10;} ST_DATA_MGR_STATS, *PST_DATA_MGR_STATS;">ST_DATA_MGR_STATS</a> Metadata;
-    } Basic;
+        <a href="st_data_mgr_stats" title="typedef struct _ST_DATA_MGR_STATS&#10;{&#10;    ULONG RegionCount;&#10;    ULONG PagesStored;&#10;    ULONG UniquePagesStored;&#10;    ULONG LazyCleanupRegionCount;&#10;    struct {&#10;        ULONG RegionsInUse;&#10;        ULONG SpaceUsed;&#10;    } Space[8]; // IDA: SmpProcessQueryStoreStats iterates all 8 buckets and sums RegionSize * RegionsInUse&#10;} ST_DATA_MGR_STATS, *PST_DATA_MGR_STATS;">ST_DATA_MGR_STATS</a> UserData;
+        <a href="st_data_mgr_stats" title="typedef struct _ST_DATA_MGR_STATS&#10;{&#10;    ULONG RegionCount;&#10;    ULONG PagesStored;&#10;    ULONG UniquePagesStored;&#10;    ULONG LazyCleanupRegionCount;&#10;    struct {&#10;        ULONG RegionsInUse;&#10;        ULONG SpaceUsed;&#10;    } Space[8]; // IDA: SmpProcessQueryStoreStats iterates all 8 buckets and sums RegionSize * RegionsInUse&#10;} ST_DATA_MGR_STATS, *PST_DATA_MGR_STATS;">ST_DATA_MGR_STATS</a> Metadata;
+    } Basic; // present for StStatsLevelBasic and higher
 
     struct
     {
-        <a href="st_io_stats" title="typedef struct _ST_IO_STATS&#10;{&#10;    ULONG PeriodCount;&#10;    ST_IO_STATS_PERIOD Periods[64];&#10;} ST_IO_STATS, *PST_IO_STATS;">ST_IO_STATS</a> IoStats;
+        <a href="st_io_stats" title="typedef struct _ST_IO_STATS&#10;{&#10;    ULONG PeriodCount; // number of valid exported periods, capped at 64&#10;    ST_IO_STATS_PERIOD Periods[64]; // IDA: StCopyIoStats flattens the internal ring buffer into chronological order&#10;} ST_IO_STATS, *PST_IO_STATS;">ST_IO_STATS</a> IoStats;
         <a href="st_read_latency_stats" title="typedef struct _ST_READ_LATENCY_STATS&#10;{&#10;    ST_READ_LATENCY_BUCKET Buckets[8];&#10;} ST_READ_LATENCY_STATS, *PST_READ_LATENCY_STATS;">ST_READ_LATENCY_STATS</a> ReadLatencyStats;
-    } Io;
+    } Io; // present for StStatsLevelIoStats and higher
 
-    // <a href="st_stats_region_info" title="typedef struct _ST_STATS_REGION_INFO&#10;{&#10;    USHORT SpaceUsed;&#10;    UCHAR Priority;&#10;    UCHAR Spare;&#10;} ST_STATS_REGION_INFO, *PST_STATS_REGION_INFO;">ST_STATS_REGION_INFO</a>[RegionCountMax]
-    // <a href="st_stats_space_bitmap" title="typedef struct _ST_STATS_SPACE_BITMAP&#10;{&#10;    SIZE_T CompressedBytes;&#10;    ULONG BytesPerBit;&#10;    UCHAR StoreBitmap[1];&#10;} ST_STATS_SPACE_BITMAP, *PST_STATS_SPACE_BITMAP;">ST_STATS_SPACE_BITMAP</a>
+    // For StStatsLevelRegionSpace, variable-length <a href="st_stats_region_info" title="typedef struct _ST_STATS_REGION_INFO&#10;{&#10;    USHORT SpaceUsed;&#10;    UCHAR Priority;&#10;    UCHAR Spare;&#10;} ST_STATS_REGION_INFO, *PST_STATS_REGION_INFO;">ST_STATS_REGION_INFO</a>[Basic.RegionCountMax] follows.
+    // For StStatsLevelSpaceBitmap, <a href="st_stats_space_bitmap" title="typedef struct _ST_STATS_SPACE_BITMAP&#10;{&#10;    SIZE_T CompressedBytes;&#10;    ULONG BytesPerBit;&#10;    UCHAR StoreBitmap[1];&#10;} ST_STATS_SPACE_BITMAP, *PST_STATS_SPACE_BITMAP;">ST_STATS_SPACE_BITMAP</a> follows after the fixed header.
 } ST_STATS, *PST_STATS;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8030be9396047dfa04ca77cec52c0c9c95c1e5dc/phnt/include/ntexapi.h#L4365">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/b68bf77e8beb9771c45b75fbdbf095fc164e7ddd/phnt/include/ntexapi.h#L4620">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
