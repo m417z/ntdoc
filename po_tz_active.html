@@ -44,11 +44,65 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTPOAPI_H
 
-</span><span class="ntdoc-code-intro language-cpp">// CoolingMode flags
+</span><span class="ntdoc-code-intro language-cpp">// The <a href="grouppark" title="#define GroupPark 48 // in: PROCESSOR_GROUP_SELECTOR (clear), PROCESSOR_GROUP_PARK_MASK (set), PROCESSOR_GROUP_PARK_MASK_EX (set) // (KdDebuggerEnabled only)">GroupPark</a> infoclass supports debug-only input for forcing or clearing CPU parking masks.
+//
+//    <a href="ntpowerinformation" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtPowerInformation(&#10;    _In_ POWER_INFORMATION_LEVEL InformationLevel,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">NtPowerInformation</a> behavior:
+//   - requires KdDebuggerEnabled != 0
+//       - otherwise returns STATUS_ACCESS_DENIED
+//   - requires InputBuffer != NULL
+//   - requires OutputBuffer == NULL
+//
+//   Accepted input shapes:
+//   - InputBufferLength == 0x10
+//       - calls PpmParkApplyForcedMask(InputBuffer, NULL)
+//   - InputBufferLength == 0x18
+//       - calls PpmParkApplyForcedMask(InputBuffer, InputBuffer + 0x10)
+//   - InputBufferLength == 0x2
+//       - calls PpmParkClearForcedMask(InputBuffer)
+//
+//   Recovered layouts:
+//   typedef <a href="processor_group_park_mask" title="typedef struct _PROCESSOR_GROUP_PARK_MASK&#10;{&#10;    ULONGLONG ForceMask; // +0x00 Forced parked logical-processor mask for Group.&#10;    USHORT Group; // +0x08 Processor group index.&#10;    USHORT Reserved1; // +0x0A Must be zero.&#10;    USHORT Reserved2; // +0x0C Must be zero.&#10;    USHORT Reserved3; // +0x0E Must be zero.&#10;} PROCESSOR_GROUP_PARK_MASK, *PPROCESSOR_GROUP_PARK_MASK;">struct _PROCESSOR_GROUP_PARK_MASK</a>
+//   {
+//       <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ForceMask;   // +0x00
+//       <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Group;          // +0x08
+//       <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Reserved1;      // +0x0A
+//       <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Reserved2;      // +0x0C
+//       <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Reserved3;      // +0x0E
+//   } <a href="processor_group_park_mask" title="typedef struct _PROCESSOR_GROUP_PARK_MASK&#10;{&#10;    ULONGLONG ForceMask; // +0x00 Forced parked logical-processor mask for Group.&#10;    USHORT Group; // +0x08 Processor group index.&#10;    USHORT Reserved1; // +0x0A Must be zero.&#10;    USHORT Reserved2; // +0x0C Must be zero.&#10;    USHORT Reserved3; // +0x0E Must be zero.&#10;} PROCESSOR_GROUP_PARK_MASK, *PPROCESSOR_GROUP_PARK_MASK;">PROCESSOR_GROUP_PARK_MASK</a>;
+//
+//   For the 0x18 form:
+//   typedef <a href="processor_group_park_mask_ex" title="typedef struct _PROCESSOR_GROUP_PARK_MASK_EX&#10;{&#10;    ULONGLONG ForceMask; // +0x00 Forced parked logical-processor mask for Group.&#10;    USHORT Group; // +0x08 Processor group index.&#10;    USHORT Reserved1; // +0x0A Must be zero.&#10;    USHORT Reserved2; // +0x0C Must be zero.&#10;    USHORT Reserved3; // +0x0E Must be zero.&#10;    ULONGLONG SecondaryMask; // +0x10 Secondary forced mask; must be a subset of ForceMask.&#10;} PROCESSOR_GROUP_PARK_MASK_EX, *PPROCESSOR_GROUP_PARK_MASK_EX;">struct _PROCESSOR_GROUP_PARK_MASK_EX</a>
+//   {
+//       <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ForceMask;       // +0x00
+//       <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Group;              // +0x08
+//       <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Reserved1;          // +0x0A
+//       <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Reserved2;          // +0x0C
+//       <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Reserved3;          // +0x0E
+//       <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> SecondaryMask;   // +0x10
+//   } <a href="processor_group_park_mask_ex" title="typedef struct _PROCESSOR_GROUP_PARK_MASK_EX&#10;{&#10;    ULONGLONG ForceMask; // +0x00 Forced parked logical-processor mask for Group.&#10;    USHORT Group; // +0x08 Processor group index.&#10;    USHORT Reserved1; // +0x0A Must be zero.&#10;    USHORT Reserved2; // +0x0C Must be zero.&#10;    USHORT Reserved3; // +0x0E Must be zero.&#10;    ULONGLONG SecondaryMask; // +0x10 Secondary forced mask; must be a subset of ForceMask.&#10;} PROCESSOR_GROUP_PARK_MASK_EX, *PPROCESSOR_GROUP_PARK_MASK_EX;">PROCESSOR_GROUP_PARK_MASK_EX</a>;
+//
+//   For the 0x2 clear form:
+//   typedef <a href="processor_group_selector" title="typedef struct _PROCESSOR_GROUP_SELECTOR&#10;{&#10;    USHORT Group; // +0x00 Processor group index to clear.&#10;} PROCESSOR_GROUP_SELECTOR, *PPROCESSOR_GROUP_SELECTOR;">struct _PROCESSOR_GROUP_SELECTOR</a>
+//   {
+//       <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Group;
+//   } <a href="processor_group_selector" title="typedef struct _PROCESSOR_GROUP_SELECTOR&#10;{&#10;    USHORT Group; // +0x00 Processor group index to clear.&#10;} PROCESSOR_GROUP_SELECTOR, *PPROCESSOR_GROUP_SELECTOR;">PROCESSOR_GROUP_SELECTOR</a>;
+//
+//   Validation and meaning:
+//   - Group must be &lt; 0x20
+//   - all reserved words in the 0x10/0x18 form must be zero
+//   - in the 0x18 form, SecondaryMask must be a subset of ForceMask
+//   - on success it updates per-node forced parking state and reapplies park policy
+//
+//   So the practical meaning of <a href="grouppark" title="#define GroupPark 48 // in: PROCESSOR_GROUP_SELECTOR (clear), PROCESSOR_GROUP_PARK_MASK (set), PROCESSOR_GROUP_PARK_MASK_EX (set) // (KdDebuggerEnabled only)">GroupPark</a> is:
+//   - 0x10: force a park mask for one processor group
+//   - 0x18: force a primary and secondary mask for one processor group
+//   - 0x02: clear the forced park mask for a processor group
+
+// CoolingMode flags
 </span><span class="ntdoc-code-body language-cpp">#define PO_TZ_ACTIVE 0 // The system is currently in Active cooling mode.
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/2808a71426485b550f9d707a129ee83546c4d304/phnt/include/ntpoapi.h#L131">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0b9442d4cc9c45d5c0d74ebb262767c5af63c104/phnt/include/ntpoapi.h#L463">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="SYSTEM_POWER_CAPABILITIES_POLICY - NtDoc, the native NT API online documentation">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SYSTEM_POWER_CAPABILITIES_POLICY - NtDoc</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="manifest" href="icons/site.webmanifest">
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="icons/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+    <noscript id="dark-mode-toggle-stylesheets">
+        <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
+    </noscript>
+    <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
+    <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
+    <link rel="stylesheet" href="ntdoc.css">
+    <noscript>
+        <link rel="stylesheet" href="ntdoc-noscript.css">
+    </noscript>
+</head>
+<body>
+    <header>
+        <a href="."><img class="ntdoc-title-logo" src="logo.png" alt="logo"></a>
+        <h1 class="ntdoc-title">
+            SYSTEM_POWER_CAPABILITIES_POLICY - NtDoc
+        </h1>
+        <div class="ntdoc-subtitle">
+            Native API online documentation, based on the System Informer
+            (formerly Process Hacker) <a target="_blank"
+            href="https://github.com/winsiderss/systeminformer/tree/master/phnt">phnt
+            headers</a>
+        </div>
+        <div id="ntdoc-search-select"></div>
+    </header>
+    <div class="ntdoc-code-elements">
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTPOAPI_H
+
+</span><span class="ntdoc-code-intro language-cpp">//
+// PopInitializePowerPolicySimulate initializes the power-manager simulation
+//
+// - HKLM\System\CurrentControlSet\Control\Session Manager\ <a href="dword" title="typedef unsigned long DWORD;">DWORD</a> PowerPolicySimulate = 1
+// - later <a href="ntpowerinformation" title="NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtPowerInformation(&#10;    _In_ POWER_INFORMATION_LEVEL InformationLevel,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">NtPowerInformation</a> handlers check bits in PowerPolicySimulate
+// - those bits unlock test-only behavior such as accepting synthetic capability/policy input
+//
+//  <a href="power_information_level" title="#define POWER_INFORMATION_LEVEL ULONG">POWER_INFORMATION_LEVEL</a>
+//
+//  - <a href="systempowercapabilities" title="#define SystemPowerCapabilities 4 // out: SYSTEM_POWER_CAPABILITIES">SystemPowerCapabilities</a> (4)
+//      - if InputBuffer != NULL, the set/simulate path is only allowed when PowerPolicySimulate &amp; 1
+//      - that lets the caller inject simulated SYSTEM_POWER_CAPABILITIES
+//  - <a href="systempowerstatehandler" title="#define SystemPowerStateHandler 6 // in: POWER_STATE_HANDLER // (kernel-mode only)">SystemPowerStateHandler</a> (6)
+//      - registration itself does not require PowerPolicySimulate
+//      - but the handler registration path checks PowerPolicySimulate bits to decide whether to publish simulated capabilities via PopChangeCapability
+//      - bits used here: 0x08, 0x20, 0x40, 0x2000
+//
+//  <a href="power_information_level_internal" title="typedef enum _POWER_INFORMATION_LEVEL_INTERNAL&#10;{&#10;    PowerInternalAcpiInterfaceRegister,                         // in: POWER_INTERNAL_ACPI_INTERFACE_REGISTER_INPUT, out: POWER_INTERNAL_ACPI_INTERFACE_REGISTER_OUTPUT&#10;    PowerInternalS0LowPowerIdleInfo,                            // out: POWER_S0_LOW_POWER_IDLE_INFO&#10;    PowerInternalReapplyBrightnessSettings,                     // in: void&#10;    PowerInternalUserAbsencePrediction,                         // out: POWER_USER_ABSENCE_PREDICTION&#10;    PowerInternalUserAbsencePredictionCapability,               // out: POWER_USER_ABSENCE_PREDICTION_CAPABILITY&#10;    PowerInternalPoProcessorLatencyHint,                        // out: POWER_PROCESSOR_LATENCY_HINT&#10;    PowerInternalStandbyNetworkRequest,                         // out: POWER_STANDBY_NETWORK_REQUEST (requires PopNetBIServiceSid)&#10;    PowerInternalDirtyTransitionInformation,                    // out: BOOLEAN&#10;    PowerInternalSetBackgroundTaskState,                        // out: POWER_SET_BACKGROUND_TASK_STATE&#10;    PowerInternalTtmOpenTerminal,                               // in: POWER_INTERNAL_TTM_OPEN_TERMINAL_INPUT, out: POWER_INTERNAL_TTM_TERMINAL_HANDLE_OUTPUT // requires SeShutdownPrivilege and terminalPowerManagement capability&#10;    PowerInternalTtmCreateTerminal,                             // in: POWER_INTERNAL_TTM_CREATE_TERMINAL_INPUT, out: POWER_INTERNAL_TTM_CREATE_TERMINAL_OUTPUT // requires SeShutdownPrivilege and terminalPowerManagement capability&#10;    PowerInternalTtmEvacuateDevices,                            // in: POWER_INTERNAL_TTM_EVACUATE_DEVICES_INPUT // requires SeShutdownPrivilege and terminalPowerManagement capability&#10;    PowerInternalTtmCreateTerminalEventQueue,                   // in: POWER_INTERNAL_TTM_CREATE_EVENT_QUEUE_INPUT, out: POWER_INTERNAL_TTM_EVENT_QUEUE_HANDLE_OUTPUT // requires SeShutdownPrivilege and terminalPowerManagement capability&#10;    PowerInternalTtmGetTerminalEvent,                           // in: POWER_INTERNAL_TTM_GET_TERMINAL_EVENT_INPUT, out: POWER_INTERNAL_TTM_TERMINAL_EVENT // requires SeShutdownPrivilege and terminalPowerManagement capability&#10;    PowerInternalTtmSetDefaultDeviceAssignment,                 // in: POWER_INTERNAL_TTM_SET_DEFAULT_DEVICE_ASSIGNMENT_INPUT // requires SeShutdownPrivilege and terminalPowerManagement capability&#10;    PowerInternalTtmAssignDevice,                               // in: POWER_INTERNAL_TTM_ASSIGN_DEVICE_INPUT // requires SeShutdownPrivilege and terminalPowerManagement capability&#10;    PowerInternalTtmSetDisplayState,                            // in: POWER_INTERNAL_TTM_SET_DISPLAY_STATE_INPUT // requires SeShutdownPrivilege and terminalPowerManagement capability&#10;    PowerInternalTtmSetDisplayTimeouts,                         // in: POWER_INTERNAL_TTM_SET_DISPLAY_TIMEOUTS_INPUT // requires SeShutdownPrivilege and terminalPowerManagement capability&#10;...">POWER_INFORMATION_LEVEL_INTERNAL</a>
+//
+//  - PowerInternalUserAbsencePrediction (3)
+//      - the update path only works when PowerPolicySimulate &amp; 1
+//      - otherwise it returns STATUS_INVALID_PARAMETER
+//      - on success it calls PopUpdateSmartUserPresencePredictions(...)
+//
+
+</span><span class="ntdoc-code-body language-cpp">typedef struct _SYSTEM_POWER_CAPABILITIES_POLICY // SYSTEM_POWER_CAPABILITIES
+{
+    // Misc supported system features
+    BOOLEAN PowerButtonPresent;
+    BOOLEAN SleepButtonPresent;
+    BOOLEAN LidPresent;
+    BOOLEAN SystemS1;
+    BOOLEAN SystemS2;
+    BOOLEAN SystemS3;
+    BOOLEAN SystemS4; // hibernate
+    BOOLEAN SystemS5; // off
+    BOOLEAN HiberFilePresent;
+    BOOLEAN FullWake;
+    BOOLEAN VideoDimPresent;
+    BOOLEAN ApmPresent;
+    BOOLEAN UpsPresent;
+    // Processors
+    BOOLEAN ThermalControl;
+    BOOLEAN ProcessorThrottle;
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> ProcessorMinThrottle;
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> ProcessorMaxThrottle;
+    BOOLEAN FastSystemS4;
+    BOOLEAN Hiberboot;
+    BOOLEAN WakeAlarmPresent;
+    BOOLEAN AoAc;
+    // Disk
+    BOOLEAN DiskSpinDown;
+    // HiberFile
+    <a href="byte" title="typedef unsigned char BYTE;">BYTE</a> HiberFileType;
+    BOOLEAN AoAcConnectivitySupported;
+    <a href="byte" title="typedef unsigned char BYTE;">BYTE</a> spare3[6];
+    // System Battery
+    BOOLEAN SystemBatteriesPresent;
+    BOOLEAN BatteriesAreShortTerm;
+    <a href="battery_reporting_scale" title="typedef struct {&#10;  ULONG Granularity;&#10;  ULONG Capacity;&#10;} BATTERY_REPORTING_SCALE, *PBATTERY_REPORTING_SCALE;">BATTERY_REPORTING_SCALE</a> BatteryScale[3];
+    // Wake
+    <a href="system_power_state" title="typedef enum _SYSTEM_POWER_STATE {&#10;  PowerSystemUnspecified,&#10;  PowerSystemWorking,&#10;  PowerSystemSleeping1,&#10;  PowerSystemSleeping2,&#10;  PowerSystemSleeping3,&#10;  PowerSystemHibernate,&#10;  PowerSystemShutdown,&#10;  PowerSystemMaximum&#10;} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;">SYSTEM_POWER_STATE</a> AcOnLineWake;
+    <a href="system_power_state" title="typedef enum _SYSTEM_POWER_STATE {&#10;  PowerSystemUnspecified,&#10;  PowerSystemWorking,&#10;  PowerSystemSleeping1,&#10;  PowerSystemSleeping2,&#10;  PowerSystemSleeping3,&#10;  PowerSystemHibernate,&#10;  PowerSystemShutdown,&#10;  PowerSystemMaximum&#10;} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;">SYSTEM_POWER_STATE</a> SoftLidWake;
+    <a href="system_power_state" title="typedef enum _SYSTEM_POWER_STATE {&#10;  PowerSystemUnspecified,&#10;  PowerSystemWorking,&#10;  PowerSystemSleeping1,&#10;  PowerSystemSleeping2,&#10;  PowerSystemSleeping3,&#10;  PowerSystemHibernate,&#10;  PowerSystemShutdown,&#10;  PowerSystemMaximum&#10;} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;">SYSTEM_POWER_STATE</a> RtcWake;
+    <a href="system_power_state" title="typedef enum _SYSTEM_POWER_STATE {&#10;  PowerSystemUnspecified,&#10;  PowerSystemWorking,&#10;  PowerSystemSleeping1,&#10;  PowerSystemSleeping2,&#10;  PowerSystemSleeping3,&#10;  PowerSystemHibernate,&#10;  PowerSystemShutdown,&#10;  PowerSystemMaximum&#10;} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;">SYSTEM_POWER_STATE</a> MinDeviceWakeState; // note this may change on driver load
+    <a href="system_power_state" title="typedef enum _SYSTEM_POWER_STATE {&#10;  PowerSystemUnspecified,&#10;  PowerSystemWorking,&#10;  PowerSystemSleeping1,&#10;  PowerSystemSleeping2,&#10;  PowerSystemSleeping3,&#10;  PowerSystemHibernate,&#10;  PowerSystemShutdown,&#10;  PowerSystemMaximum&#10;} SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;">SYSTEM_POWER_STATE</a> DefaultLowLatencyWake;
+} SYSTEM_POWER_CAPABILITIES_POLICY, *PSYSTEM_POWER_CAPABILITIES_POLICY;
+</span><span class="ntdoc-code-footer language-cpp">
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0b9442d4cc9c45d5c0d74ebb262767c5af63c104/phnt/include/ntpoapi.h#L182">View code on GitHub</a></span></code></pre></div>
+</div>
+<div class="ntdoc-descriptions">
+<div class="ntdoc-description-title">
+<h1>NtDoc</h1>
+</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<div class="ntdoc-description-none">
+<p>No description available.</p>
+</div>
+<div class="ntdoc-description-links">
+<a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/system_power_capabilities_policy.md">Edit description on GitHub</a>
+</div>
+</div>
+</div>
+
+    <!-- For sticky footer: https://stackoverflow.com/a/34146411 -->
+    <div class="spacer"></div>
+    <footer>
+        By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
+        <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
+        <dark-mode-toggle permanent></dark-mode-toggle>
+    </footer>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YWF4NP61SX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YWF4NP61SX');
+    </script>
+    <script src="modules/jquery-3.7.0.min.js"></script>
+    <script src="modules/q-1.5.1.js"></script>
+    <script src="modules/virtual-select/virtual-select-jquery.min.js"></script>
+    <script src="modules/popper-2.11.8.min.js"></script>
+    <script src="modules/tippy-6.3.7.min.js"></script>
+    <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
+    <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
+    <script src="ntdoc.js"></script>
+</body>
+</html>
