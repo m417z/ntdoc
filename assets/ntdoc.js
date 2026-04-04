@@ -169,6 +169,64 @@
         });
         controlButtonsContainer.append(wrapperForButtonCopy);
 
+        const buttonLayout = document.createElement('button');
+        buttonLayout.classList.add('ntdoc-code-control-button-autohide');
+        buttonLayout.textContent = '📝';
+        buttonLayout.title = 'Layout';
+        buttonLayout.addEventListener('click', () => {
+            const typeName = document.querySelector('header').dataset.id;
+            const url = 'https://cristeigabriela.github.io/bb-viewer/#/q/' + encodeURIComponent(typeName) + '?ds=phnt';
+
+            const overlay = document.createElement('div');
+            overlay.classList.add('ntdoc-layout-overlay');
+
+            const popup = document.createElement('div');
+            popup.classList.add('ntdoc-layout-popup');
+
+            const closeButton = document.createElement('button');
+            closeButton.classList.add('ntdoc-layout-close');
+            closeButton.textContent = '✕';
+
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.title = 'Layout';
+            iframe.referrerPolicy = 'no-referrer';
+            iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-downloads';
+
+            popup.append(closeButton, iframe);
+            overlay.append(popup);
+
+            const removeOverlay = () => {
+                overlay.remove();
+                for (const child of document.body.children) {
+                    child.removeAttribute('inert');
+                }
+            };
+
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    removeOverlay();
+                }
+            });
+            closeButton.addEventListener('click', removeOverlay);
+
+            for (const child of document.body.children) {
+                child.setAttribute('inert', '');
+            }
+            document.body.append(overlay);
+        });
+        controlButtonsContainer.append(buttonLayout);
+        if (typeof tippy !== 'undefined') {
+            tippy(controlButtonsContainer.querySelectorAll('[title]'), {
+                content(reference) {
+                    const title = reference.getAttribute('title');
+                    reference.removeAttribute('title');
+                    return title;
+                },
+                theme: 'ntdoc',
+            });
+        }
+
         const codeElements = codeElementsContainer.querySelectorAll(':scope > .ntdoc-code-element');
         if (codeElements.length > 1) {
             let currentBlockIndex = 0;

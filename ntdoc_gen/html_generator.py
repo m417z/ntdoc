@@ -471,7 +471,7 @@ def organize_chunks_to_dir(
         html = get_code_elements_html(id_chunks, id, html_links_adder)
         html += get_descriptions_html(id_chunks, id, msdn_docs_path, html_links_adder)
 
-        html_page = html_page_template.replace('{{id}}', id_to_id_human[id]).replace('{{content}}', html)
+        html_page = html_page_template.replace('{{id}}', escape(id_to_id_human[id])).replace('{{content}}', html)
         (out_path / f'{id}.html').write_text(html_page)
 
     with (out_path / 'ident-to-id.json').open('w') as f:
