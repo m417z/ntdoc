@@ -170,7 +170,6 @@
         controlButtonsContainer.append(wrapperForButtonCopy);
 
         const buttonLayout = document.createElement('button');
-        buttonLayout.classList.add('ntdoc-code-control-button-autohide');
         buttonLayout.textContent = '📝';
         buttonLayout.title = 'Layout';
         buttonLayout.addEventListener('click', () => {
