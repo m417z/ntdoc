@@ -2,7 +2,7 @@ This structure is partially [documented in Windows Driver Kit](https://learn.mic
 
 
 # Introduction
-KUSER_SHARED_DATA structure defines layout of the memory region, shared between kernelmode and usermode. It occupies a single physical page, mapped in oskernel at fixed address `0xFFFF'F780'0000'0000` (0xFFFFF78000000000), and in all but the _Minimal_ processes at `0x7FFE'0000` (0x7FFE0000). Since win11 23H2, the fixed virtual address in kernel is read-only; `nt!MmWriteableSharedUserData` holds a randomized virtual address of the writeable kernelmode mapping.
+KUSER_SHARED_DATA structure defines layout of the memory region, shared between kernelmode and usermode. It occupies a single physical page, mapped in oskernel at fixed address `0xFFFF'F780'0000'0000` (0xFFFFF78000000000), and in all but the _Minimal_ processes at `0x7FFE'0000` (0x7FFE0000). Since win11 23H2, the fixed virtual address in kernel is read-only; `nt!MmWriteableSharedUserData` holds a randomized virtual address of the writable kernelmode mapping.
 
 
 # Definition
