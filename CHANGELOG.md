@@ -2,6 +2,9 @@
 
 All notable documentation content changes are documented in this file.
 <!-- content -->
+## 4 Apr 2026
+Added integration with the [Benowin Blanc](https://github.com/cristeigabriela/bb) project to inspect struct layouts, field offsets, enum values, constants, `#define` macros, and function declarations with full ABI breakdowns.
+
 ## 20 Jan 2026
 Documented most fields in `RTL_USER_PROCESS_PARAMETERS` ([#31](https://github.com/m417z/ntdoc/pull/31)).
 
