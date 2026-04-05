@@ -169,21 +169,21 @@
         });
         controlButtonsContainer.append(wrapperForButtonCopy);
 
-        const buttonLayout = document.createElement('button');
-        buttonLayout.textContent = '📝';
-        buttonLayout.title = 'Layout';
-        buttonLayout.addEventListener('click', () => {
+        const buttonInspect = document.createElement('button');
+        buttonInspect.textContent = '🔎';
+        buttonInspect.title = 'Inspect';
+        buttonInspect.addEventListener('click', () => {
             const typeName = document.querySelector('header').dataset.id;
             const url = 'https://cristeigabriela.github.io/bb-viewer/#/q/' + encodeURIComponent(typeName) + '?ds=phnt';
 
             const overlay = document.createElement('div');
-            overlay.classList.add('ntdoc-layout-overlay');
+            overlay.classList.add('ntdoc-inspect-overlay');
 
             const popup = document.createElement('div');
-            popup.classList.add('ntdoc-layout-popup');
+            popup.classList.add('ntdoc-inspect-popup');
 
             const closeButton = document.createElement('button');
-            closeButton.classList.add('ntdoc-layout-close');
+            closeButton.classList.add('ntdoc-inspect-close');
             closeButton.textContent = '✕';
 
             const savedNavigationEntry = window.navigation?.currentEntry;
@@ -191,7 +191,7 @@
 
             const iframe = document.createElement('iframe');
             iframe.src = url;
-            iframe.title = 'Layout';
+            iframe.title = 'Inspect';
             iframe.referrerPolicy = 'no-referrer';
             iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-downloads';
 
@@ -222,7 +222,7 @@
             }
             document.body.append(overlay);
         });
-        controlButtonsContainer.append(buttonLayout);
+        controlButtonsContainer.append(buttonInspect);
         if (typeof tippy !== 'undefined') {
             tippy(controlButtonsContainer.querySelectorAll('[title]'), {
                 content(reference) {
