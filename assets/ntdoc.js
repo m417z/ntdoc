@@ -186,6 +186,9 @@
             closeButton.classList.add('ntdoc-layout-close');
             closeButton.textContent = '✕';
 
+            const savedNavigationEntry = window.navigation?.currentEntry;
+            history.pushState({}, '');
+
             const iframe = document.createElement('iframe');
             iframe.src = url;
             iframe.title = 'Layout';
@@ -199,6 +202,11 @@
                 overlay.remove();
                 for (const child of document.body.children) {
                     child.removeAttribute('inert');
+                }
+
+                if (savedNavigationEntry) {
+                    // Navigate back past all iframe history entries.
+                    navigation.traverseTo(savedNavigationEntry.key);
                 }
             };
 
