@@ -176,8 +176,6 @@
             const typeName = document.querySelector('header').dataset.id;
             const url = 'https://cristeigabriela.github.io/bb-viewer/#/q/' + encodeURIComponent(typeName) + '?ds=phnt';
 
-            const savedHistoryLength = history.length;
-
             const overlay = document.createElement('div');
             overlay.classList.add('ntdoc-layout-overlay');
 
@@ -201,10 +199,6 @@
                 overlay.remove();
                 for (const child of document.body.children) {
                     child.removeAttribute('inert');
-                }
-                const delta = history.length - savedHistoryLength;
-                if (delta > 0) {
-                    history.go(-delta);
                 }
             };
 
