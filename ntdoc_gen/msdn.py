@@ -162,6 +162,7 @@ def msdn_docs_header_to_chunk(
         'HeaderDef',
         'LibDef',
         'UserDefined',
+        'Callback',
     ], (json_path, api_type)
 
     idents = doc_metadata.get('api_name', [])
