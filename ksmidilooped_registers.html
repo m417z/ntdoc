@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="KSMIDILOOPED_REGISTERS - NtDoc, the native NT API online documentation">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>KSMIDILOOPED_REGISTERS - NtDoc</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="manifest" href="icons/site.webmanifest">
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="icons/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+    <noscript id="dark-mode-toggle-stylesheets">
+        <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
+    </noscript>
+    <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
+    <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
+    <link rel="stylesheet" href="ntdoc.css">
+    <noscript>
+        <link rel="stylesheet" href="ntdoc-noscript.css">
+    </noscript>
+</head>
+<body>
+    <header data-id="KSMIDILOOPED_REGISTERS">
+        <a href="."><img class="ntdoc-title-logo" src="logo.png" alt="logo"></a>
+        <h1 class="ntdoc-title">
+            KSMIDILOOPED_REGISTERS - NtDoc
+        </h1>
+        <div class="ntdoc-subtitle">
+            Native API online documentation, based on the System Informer
+            (formerly Process Hacker) <a target="_blank"
+            href="https://github.com/winsiderss/systeminformer/tree/master/phnt">phnt
+            headers</a>
+        </div>
+        <div id="ntdoc-search-select"></div>
+    </header>
+    <div class="ntdoc-code-elements">
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ksmedia.h
+
+</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">typedef struct {
+  PVOID WritePosition;
+  PVOID ReadPosition;
+} KSMIDILOOPED_REGISTERS, *PKSMIDILOOPED_REGISTERS;</span><span class="ntdoc-code-footer language-cpp"></span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ksmedia/ns-ksmedia-ksmidilooped_registers">View the official Windows Driver Kit DDI reference</a></span></code></pre></div>
+</div>
+<div class="ntdoc-descriptions">
+<div class="ntdoc-description-title">
+<h1>NtDoc</h1>
+</div>
+<div class="ntdoc-description">
+<div class="ntdoc-description-none">
+<p>No description available.</p>
+</div>
+<div class="ntdoc-description-links">
+<a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/ksmidilooped_registers.md">Edit description on GitHub</a>
+</div>
+</div>
+<div class="ntdoc-description-title">
+<h1>Windows Driver Kit DDI reference (ns-ksmedia-ksmidilooped_registers)</h1>
+</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<h1>KSMIDILOOPED_REGISTERS structure</h1>
+<h2>Description</h2>
+<p>The <strong>KSMIDILOOPED_REGISTERS</strong> structure contains pointers to the read and write position registers for MIDI looped streaming operations.</p>
+<h2>Members</h2>
+<h3><code>WritePosition</code></h3>
+<p>Pointer to a <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> value that indicates the current write position within the looped streaming buffer, in bytes. The driver updates this register as it places new MIDI data into the buffer.</p>
+<h3><code>ReadPosition</code></h3>
+<p>Pointer to a <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> value that indicates the current read position within the looped streaming buffer, in bytes. The client updates this register as it consumes data from the buffer.</p>
+<h2>Remarks</h2>
+<p>This structure is returned by the <strong><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/ksproperty-midiloopedstreaming-registers">KSPROPERTY_MIDILOOPEDSTREAMING_REGISTERS</a></strong> property and provides direct access to the position registers used in MIDI looped streaming. These registers enable efficient, lock-free communication between the driver and client application by providing a way to track the current read and write positions in the circular buffer.</p>
+<p>The position registers are typically mapped into both the driver's and client's address spaces, allowing for high-performance, low-latency MIDI data streaming. The client reads from <strong>ReadPosition</strong> to <strong>WritePosition</strong>, while the driver writes from <strong>WritePosition</strong> onwards, wrapping around to the beginning of the buffer as needed.</p>
+<p>Both positions are byte offsets from the beginning of the looped streaming buffer and should be accessed atomically to ensure consistency.</p>
+<h3>Code sample</h3>
+<pre><code class="language-cpp">HRESULT
+    LoopedBufferCall(
+        _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>&amp; bufferSize
+    )
+    {
+        <a href="ksmidilooped_buffer_property" title="typedef struct {&#10;  KSPROPERTY Property;&#10;  ULONG      RequestedBufferSize;&#10;} KSMIDILOOPED_BUFFER_PROPERTY, *PKSMIDILOOPED_BUFFER_PROPERTY;">KSMIDILOOPED_BUFFER_PROPERTY</a> property {0};
+        <a href="ksmidilooped_buffer" title="typedef struct {&#10;  PVOID BufferAddress;&#10;  ULONG ActualBufferSize;&#10;} KSMIDILOOPED_BUFFER, *PKSMIDILOOPED_BUFFER;">KSMIDILOOPED_BUFFER</a> buffer{0};
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> propertySize {sizeof(property)};
+
+        property.Property.Set           = KSPROPSETID_MidiLoopedStreaming;
+        property.Property.Id            = KSPROPERTY_MIDILOOPEDSTREAMING_BUFFER;
+        property.Property.Flags         = KSPROPERTY_TYPE_GET;
+        property.RequestedBufferSize    = bufferSize;
+
+        RETURN_IF_FAILED(SyncIoctl(
+            m_Pin.get(),
+            <a href="ioctl_ks_property" title="// CTL_CODE(0x002f, 0x000, METHOD_NEITHER, FILE_ANY_ACCESS)&#10;#define IOCTL_KS_PROPERTY 0x002F0003">IOCTL_KS_PROPERTY</a>,
+            &amp;property,
+            propertySize,
+            &amp;buffer,
+            sizeof(buffer),
+            nullptr));
+
+        bufferSize = buffer.ActualBufferSize;
+
+        return S_OK;
+    }
+</code></pre>
+<h2>See also</h2>
+<ul>
+<li><strong><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/audio/ksproperty-midiloopedstreaming-registers">KSPROPERTY_MIDILOOPEDSTREAMING_REGISTERS</a></strong></li>
+<li><strong><a href="ksmidilooped_buffer" title="typedef struct {&#10;  PVOID BufferAddress;&#10;  ULONG ActualBufferSize;&#10;} KSMIDILOOPED_BUFFER, *PKSMIDILOOPED_BUFFER;">KSMIDILOOPED_BUFFER</a></strong></li>
+<li><strong><a href="ksmidilooped_event" title="typedef struct {&#10;  HANDLE WriteEvent;&#10;} KSMIDILOOPED_EVENT, *PKSMIDILOOPED_EVENT;">KSMIDILOOPED_EVENT</a></strong></li>
+<li><strong><a href="ksproperty_midiloopedstreaming" title="typedef enum {&#10;  KSPROPERTY_MIDILOOPEDSTREAMING_BUFFER,&#10;  KSPROPERTY_MIDILOOPEDSTREAMING_REGISTERS,&#10;  KSPROPERTY_MIDILOOPEDSTREAMING_NOTIFICATION_EVENT&#10;} KSPROPERTY_MIDILOOPEDSTREAMING;">KSPROPERTY_MIDILOOPEDSTREAMING</a></strong></li>
+</ul>
+<hr>
+<div class="ntdoc-description-links">
+<p>
+<a target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/ddi/ksmedia/ns-ksmedia-ksmidilooped_registers">View the official Windows Driver Kit DDI reference</a>
+</p>
+<a target="_blank" href="https://github.com/MicrosoftDocs/windows-driver-docs-ddi/blob/staging/wdk-ddi-src/content/ksmedia/ns-ksmedia-ksmidilooped_registers.md">Edit description on GitHub</a>
+</div>
+</div>
+</div>
+
+    <!-- For sticky footer: https://stackoverflow.com/a/34146411 -->
+    <div class="spacer"></div>
+    <footer>
+        By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
+        <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
+        <dark-mode-toggle permanent></dark-mode-toggle>
+    </footer>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YWF4NP61SX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YWF4NP61SX');
+    </script>
+    <script src="modules/jquery-3.7.0.min.js"></script>
+    <script src="modules/q-1.5.1.js"></script>
+    <script src="modules/virtual-select/virtual-select-jquery.min.js"></script>
+    <script src="modules/popper-2.11.8.min.js"></script>
+    <script src="modules/tippy-6.3.7.min.js"></script>
+    <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
+    <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
+    <script src="ntdoc.js"></script>
+</body>
+</html>
