@@ -17,7 +17,11 @@ def generate_docs(phnt_include_path: Path, msdn_docs_path: Optional[Path], ids_p
         chunks += split_header_to_chunks(p)
 
     if ntfill_path:
-        chunks += split_header_to_chunks(ntfill_path, ChunkOrigin.NTFILL)
+        ntfill_chunks = split_header_to_chunks(ntfill_path, ChunkOrigin.NTFILL)
+        header_name_comment = f'// {ntfill_path.name}\n'
+        for c in ntfill_chunks:
+            c.before.insert(0, (header_name_comment, ''))
+        chunks += ntfill_chunks
 
     if msdn_docs_path:
         chunks += msdn_docs_to_chunks(msdn_docs_path, ids_pattern)
