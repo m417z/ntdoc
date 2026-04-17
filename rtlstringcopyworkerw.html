@@ -53,7 +53,7 @@ RtlStringCopyWorkerW(
     _In_ _In_range_(&lt;, <a href="ntstrsafe_max_cch" title="#define NTSTRSAFE_MAX_CCH 2147483647 // max buffer size, in characters, that we support (same as INT_MAX)">NTSTRSAFE_MAX_CCH</a>) <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchToCopy);
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ea29a7a711c9687d2b303d5f9f83af7f4c4e03c3/phnt/include/ntstrsafe.h#L315">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/1bd0fa2f1847389521bb2be83e3172f543163dc8/phnt/include/ntstrsafe.h#L314">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTSTRSAFE_H_INCLUDED_
 // Below here are the worker functions that actually do the work
@@ -68,9 +68,10 @@ RtlStringCopyWorkerW(
             _In_ _In_range_(&lt;, <a href="ntstrsafe_max_cch" title="#define NTSTRSAFE_MAX_CCH 2147483647 // max buffer size, in characters, that we support (same as INT_MAX)">NTSTRSAFE_MAX_CCH</a>) <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchToCopy)
 {
     <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
-    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchNewDestLength = 0;
-
     // <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(cchDest != 0);
+
+#if (defined(_M_IX86) &amp;&amp; !defined(_M_HYBRID_X86_ARM64)) || (defined(_M_X64) &amp;&amp; !defined(_M_ARM64EC))
+    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchNewDestLength = 0;
 
     while (cchDest &amp;&amp; cchToCopy &amp;&amp; (*pszSrc != L&#x27;\0&#x27;))
     {
@@ -91,6 +92,27 @@ RtlStringCopyWorkerW(
     }
 
     *pszDest = L&#x27;\0&#x27;;
+#else
+    <a href="size_t" title="typedef unsigned __int64 size_t;">size_t</a> cchNewDestLength = wcsnlen(pszSrc, cchDest &lt; cchToCopy ? cchDest : cchToCopy);
+
+    if (cchDest == cchNewDestLength)
+    {
+        // we are going to truncate pszDest
+        if (cchNewDestLength &gt; 0)
+        {
+            cchNewDestLength--;
+        }
+
+        status = STATUS_BUFFER_OVERFLOW;
+    }
+
+    memcpy(pszDest, pszSrc, cchNewDestLength * sizeof(*pszSrc));
+#pragma warning(push)
+#pragma warning(disable:<a href="__warning_write_overrun" title="#define __WARNING_WRITE_OVERRUN 6386">__WARNING_WRITE_OVERRUN</a>)
+    // <a href="assert" title="#define ASSERT( exp ) \&#10;    ((!(exp)) ? \&#10;        (RtlAssert( (PVOID)#exp, (PVOID)__FILE__, __LINE__, NULL ),FALSE) : \&#10;        TRUE)">ASSERT</a>(cchNewDestLength &lt; cchDest);
+    pszDest[cchNewDestLength] = L&#x27;\0&#x27;;
+#pragma warning(pop)
+#endif
 
     if (pcchNewDestLength)
     {
@@ -102,7 +124,7 @@ RtlStringCopyWorkerW(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ea29a7a711c9687d2b303d5f9f83af7f4c4e03c3/phnt/include/ntstrsafe.h#L12288">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/1bd0fa2f1847389521bb2be83e3172f543163dc8/phnt/include/ntstrsafe.h#L12357">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTSTRSAFE_H_INCLUDED_
 // Do not call these functions, they are worker functions for internal use within this file
@@ -114,7 +136,7 @@ RtlStringCopyWorkerW(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ea29a7a711c9687d2b303d5f9f83af7f4c4e03c3/phnt/include/ntstrsafe.h#L13050">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/1bd0fa2f1847389521bb2be83e3172f543163dc8/phnt/include/ntstrsafe.h#L13142">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

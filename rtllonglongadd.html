@@ -80,23 +80,31 @@ RtlLongLongAdd(
     )
 {
     <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> status;
-    <a href="longlong" title="typedef __int64 LONGLONG;">LONGLONG</a> llResult = llAugend + llAddend;
+
+    //
+    // Signed integer overflow is undefined and must be avoided.
+    // Compilers do sometimes propagate undefined.
+    // Unsigned integer overflow is well defined to silently wraparound
+    // mod 2^n and may be used without problem.
+    //
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ullResult = ((<a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a>)llAugend) + (<a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a>)llAddend;
 
     //
     // Adding positive to negative never overflows.
     // If you add two positive numbers, you expect a positive result.
     // If you add two negative numbers, you expect a negative result.
-    // Overflow if inputs are the same sign and output is not that sign.
+    // Overflow if inputs have the same sign and output has the other sign.
+    // Unsigned greater than signed maximum, cast to signed, will be negative.
     //
     if (((llAugend &lt; 0) == (llAddend &lt; 0))  &amp;&amp;
-        ((llAugend &lt; 0) != (llResult &lt; 0)))
+        ((llAugend &lt; 0) != (ullResult &gt; (<a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a>)<a href="longlong_max" title="#define LONGLONG_MAX 9223372036854775807i64">LONGLONG_MAX</a>)))
     {
         *pllResult = <a href="longlong_error" title="#define LONGLONG_ERROR (-1i64)">LONGLONG_ERROR</a>;
         status = STATUS_INTEGER_OVERFLOW;
     }
     else
     {
-        *pllResult = llResult;
+        *pllResult = (<a href="longlong" title="typedef __int64 LONGLONG;">LONGLONG</a>)ullResult;
         status = <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>;
     }
 
@@ -106,7 +114,7 @@ RtlLongLongAdd(
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ea29a7a711c9687d2b303d5f9f83af7f4c4e03c3/phnt/include/ntintsafe.h#L8021">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/1bd0fa2f1847389521bb2be83e3172f543163dc8/phnt/include/ntintsafe.h#L8076">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ntintsafe.h
 
