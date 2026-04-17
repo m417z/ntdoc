@@ -3,3 +3,4 @@
 URL_PHNT_REPOSITORY = 'https://github.com/winsiderss/systeminformer'
 URL_DESCRIPTIONS = 'https://github.com/m417z/ntdoc/blob/main/descriptions'
 PHNT_REPOSITORY_COMMIT = 'master'  # Updated from command line
+NTFILL_REPOSITORY_COMMIT = 'master'  # Updated from command line

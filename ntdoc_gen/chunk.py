@@ -8,6 +8,7 @@ from typing import Dict, List, Tuple
 
 class ChunkOrigin(IntEnum):
     PHNT = auto()
+    NTFILL = auto()
     MSDN_DDI = auto()
     MSDN_WIN32 = auto()
     MSDN_DRIVER_FUZZY = auto()

@@ -46,6 +46,10 @@ def pop_next_chunk_struct_union(code: list[str]) -> str:
         if line.startswith('}'):
             break
 
+    if line.rstrip('\n') == '}':
+        line = code.pop(0)
+        chunk += line
+
     last_char = line.rstrip('\n')[-1]
     while last_char != ';':
         assert last_char == ',', line
@@ -249,14 +253,21 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     if chunk == 'typedef NTSTATUS FN_DISPATCH(PVOID);':
         return ['FN_DISPATCH']
 
-    if match := re.match(r'(typedef\s+)_Function_class_\((\w+)\)', chunk):
-        ident = match.group(2)
-        chunk = re.sub(r'(typedef\s+)_Function_class_\((\w+)\)', r'\g<1>', chunk)
+    # Example:
+    # typedef _Function_class_(PROCESSOR_IDLE_HANDLER)
+    # NTSTATUS FASTCALL PROCESSOR_IDLE_HANDLER(...
+    if chunk.startswith('typedef') and (match := re.search(r'\s+_Function_class_\((\w+)\)', chunk)):
+        ident = match.group(1)
 
-        # Example:
-        # typedef _Function_class_(PROCESSOR_IDLE_HANDLER)
-        # NTSTATUS FASTCALL PROCESSOR_IDLE_HANDLER(...
-        if match := re.match(r'typedef\s+(?:\w+\s+(?:NTAPI|APIENTRY)\s+|NTSTATUS\s+(?:(?:FASTCALL|STDAPIVCALLTYPE)\s+)?)(\w+)\(', chunk):
+        chunk = re.sub(r'^typedef\s+', '', chunk)
+        chunk = re.sub(r'_Function_class_\(\w+\)\s+', '', chunk)
+        chunk = re.sub(r'_IRQL_requires_\(\w+\)\s+', '', chunk)
+        chunk = re.sub(r'_IRQL_requires_max_\(\w+\)\s+', '', chunk)
+        chunk = re.sub(r'_IRQL_requires_same_\s+', '', chunk)
+        chunk = re.sub(r'_Must_inspect_result_\s+', '', chunk)
+        chunk = re.sub(r'\w+\s+((NTAPI|APIENTRY)\s+)?|NTSTATUS\s+(FASTCALL|STDAPIVCALLTYPE)\s+', '', chunk)
+
+        if match := re.match(r'(\w+)\(', chunk):
             assert match.group(1) == ident, (match.group(1), ident)
         else:
             assert False, chunk
@@ -281,6 +292,11 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return idents
 
     assert 'typedef' not in chunk, chunk
+
+    # Example:
+    # extern POBJECT_TYPE *IoDriverObjectType;
+    if match := re.fullmatch(r'extern\s+\w+\s*\*?\s*(\w+)\s*;', chunk):
+        return [match.group(1)]
 
     if match := re.search(r'(?:NTAPI|NTAPI_INLINE)\s+(\w+)\s*\(', chunk):
         return [match.group(1)]
@@ -320,7 +336,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     assert False, chunk
 
 
-def split_header_to_chunks(path: Path) -> List[Chunk]:
+def split_header_to_chunks(path: Path, origin: ChunkOrigin = ChunkOrigin.PHNT) -> List[Chunk]:
     code = path.read_text()
     original_newline_count = code.count('\n')
 
@@ -497,7 +513,7 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
         code_url = f'{path.name}#L{line_number}'
 
         result.append(Chunk(
-            origin=ChunkOrigin.PHNT,
+            origin=origin,
             code_url=code_url,
             idents=idents,
             before=[(remove_markers(x), remove_markers(y)) for x, y in before],

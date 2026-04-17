@@ -13,6 +13,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--path", help="phnt include path", required=True)
     parser.add_argument("-c", "--commit", help="phnt commit")
+    parser.add_argument("--ntfill-path", help="path to ntfill.h")
+    parser.add_argument("--ntfill-commit", help="ntfill commit")
     parser.add_argument(
         "-w",
         "--windows-docs-path",
@@ -35,11 +37,16 @@ def main():
     if args.commit is not None:
         config.PHNT_REPOSITORY_COMMIT = args.commit
 
+    ntfill_path = Path(args.ntfill_path) if args.ntfill_path else None
+
+    if args.ntfill_commit is not None:
+        config.NTFILL_REPOSITORY_COMMIT = args.ntfill_commit
+
     windows_docs_path = Path(args.windows_docs_path) if args.windows_docs_path else None
 
     start = time.time()
 
-    generate_docs(phnt_include_path, windows_docs_path, args.ids_pattern)
+    generate_docs(phnt_include_path, windows_docs_path, args.ids_pattern, ntfill_path)
 
     end = time.time()
     print(f'Finished in {end - start:.2f}s')

@@ -51,6 +51,9 @@ def chunk_to_html(chunk: Chunk) -> str:
     if origin == ChunkOrigin.PHNT:
         code_full_url = config.URL_PHNT_REPOSITORY + f'/blob/{config.PHNT_REPOSITORY_COMMIT}/phnt/include/' + code_url
         code_link_title = 'View code on GitHub'
+    elif origin == ChunkOrigin.NTFILL:
+        code_full_url = config.URL_PHNT_REPOSITORY + f'/blob/{config.NTFILL_REPOSITORY_COMMIT}/KSystemInformer/include/' + code_url
+        code_link_title = 'View code on GitHub'
     elif is_msdn_chunk_origin(origin):
         code_full_url = get_msdn_doc_url(chunk)
         code_link_title = f'View the official {get_msdn_origin_title(chunk.origin)}'
