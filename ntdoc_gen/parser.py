@@ -324,6 +324,42 @@ def split_header_to_chunks(path: Path) -> List[Chunk]:
     code = path.read_text()
     original_newline_count = code.count('\n')
 
+    # Temporary workaround for ntstrsafe.h.
+    if path.name == 'ntstrsafe.h':
+        str_from = R"""
+
+    _When_(_Old_(*ppszSrc) != NULL, _Unchanged_(*ppszSrc))
+_When_(_Old_(*ppszSrc) == NULL, _At_(*ppszSrc, _Post_z_))
+    NTSTRSAFEWORKERDDI
+    RtlStringExValidateSrcA(
+            _Inout_ _Deref_post_notnull_ STRSAFE_PCNZCH* ppszSrc,
+            _Inout_opt_
+            _Deref_out_range_(<, cchMax)
+            _Deref_out_range_(<=, _Old_(*pcchToRead)) size_t* pcchToRead,
+            _In_ const size_t cchMax,
+            _In_ DWORD dwFlags)
+{
+"""
+        str_to = re.sub(r'(^\n\n) +(_When_)', r'\1\2', str_from)
+        code = code.replace(str_from, str_to)
+
+        str_from = R"""
+
+    _When_(_Old_(*ppszSrc) != NULL, _Unchanged_(*ppszSrc))
+_When_(_Old_(*ppszSrc) == NULL, _At_(*ppszSrc, _Post_z_))
+    NTSTRSAFEWORKERDDI
+    RtlStringExValidateSrcW(
+            _Inout_ _Deref_post_notnull_ STRSAFE_PCNZWCH* ppszSrc,
+            _Inout_opt_
+            _Deref_out_range_(<, cchMax)
+            _Deref_out_range_(<=, _Old_(*pcchToRead)) size_t* pcchToRead,
+            _In_ const size_t cchMax,
+            _In_ DWORD dwFlags)
+{
+"""
+        str_to = re.sub(r'(^\n\n) +(_When_)', r'\1\2', str_from)
+        code = code.replace(str_from, str_to)
+
     # Tabs to spaces, only at the beginning of the line.
     code = re.sub(r'^\t+', lambda x: 4 * ' ' * len(x.group(0)), code, flags=re.MULTILINE)
 
