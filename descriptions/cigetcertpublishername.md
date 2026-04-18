@@ -1,4 +1,4 @@
-Parses a DER-encoded X.509 certificate and returns the publisher name as a `UNICODE_STRING`. Typically used after a successful signature verification to obtain a human-readable signer name from the certificate chain returned in a `MINCRYPT_POLICY_INFO` structure.
+Parses a DER-encoded certificate and returns the publisher name as a `UNICODE_STRING`. Typically used after a successful signature verification to obtain a human-readable signer name from the certificate chain returned in a `MINCRYPT_POLICY_INFO` structure.
 
 # Parameters
  - `Certificate` - a pointer to a `CRYPT_DER_BLOB` that contains the DER-encoded certificate to parse. This is typically the `Certificate` field of one of the `MINCRYPT_CHAIN_ELEMENT` entries reached via `MINCRYPT_POLICY_INFO.ChainInfo.ChainElements` after a call to `CiCheckSignedFile`, `CiVerifyHashInCatalog`, or `CiValidateFileObject`.

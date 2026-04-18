@@ -7,7 +7,7 @@ Verifies an Authenticode signature against a precomputed file hash. The caller i
  - `Signature` - a pointer to the raw `WIN_CERTIFICATE` bytes read from the PE security directory.
  - `SignatureSize` - the size of the signature blob, in bytes.
  - `PolicyInfo` - an optional pointer to a `MINCRYPT_POLICY_INFO` structure that receives information about the signer, including the certificate chain. The caller must release it with `CiFreePolicyInfo` when it is no longer needed.
- - `SigningTime` - an optional pointer that receives the counter-signed time of signing, when available.
+ - `SigningTime` - an optional pointer that receives the time of signing, when available.
  - `TimeStampPolicyInfo` - an optional pointer to a `MINCRYPT_POLICY_INFO` structure that receives information about the timestamping authority, with the same ownership and release rules as `PolicyInfo`.
 
 # Remarks

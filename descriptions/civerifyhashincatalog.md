@@ -1,4 +1,4 @@
-Searches the installed signature catalogs for an entry that matches the supplied file hash and verifies the signature on the containing catalog.
+Searches the signature catalogs known to the Code Integrity subsystem for an entry that matches the supplied file hash and verifies the signature on the containing catalog.
 
 # Parameters
  - `Hash` - a pointer to the file digest to look up in the catalogs.
@@ -8,8 +8,8 @@ Searches the installed signature catalogs for an entry that matches the supplied
  - `SecureProcess` - selects a stricter verification policy when non-zero. The precise semantics are not publicly documented.
  - `AcceptRoots` - additional bits controlling which root authorities are acceptable for the catalog signer. The precise encoding is not publicly documented; typical values are drawn from the `MINCRYPT_POLICY_*_ROOT` flags.
  - `PolicyInfo` - an optional pointer to a `MINCRYPT_POLICY_INFO` structure that receives information about the catalog signer. The caller must release it with `CiFreePolicyInfo` when it is no longer needed.
- - `CatalogName` - an optional pointer to a `UNICODE_STRING` that receives the full path of the catalog file that contained the matching hash. The buffer is allocated by the callee and must be released with `RtlFreeUnicodeString`.
- - `SigningTime` - an optional pointer that receives the counter-signed time of signing, when available.
+ - `CatalogName` - an optional pointer to a `UNICODE_STRING` that receives the name of the catalog file that contained the matching hash. The buffer is allocated by the callee and must be released with `RtlFreeUnicodeString`.
+ - `SigningTime` - an optional pointer that receives the time of signing, when available.
  - `TimeStampPolicyInfo` - an optional pointer to a `MINCRYPT_POLICY_INFO` structure that receives information about the timestamping authority, with the same ownership and release rules as `PolicyInfo`.
 
 # Remarks
