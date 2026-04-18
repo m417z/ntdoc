@@ -259,13 +259,16 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
     if chunk.startswith('typedef') and (match := re.search(r'\s+_Function_class_\((\w+)\)', chunk)):
         ident = match.group(1)
 
-        chunk = re.sub(r'^typedef\s+', '', chunk)
-        chunk = re.sub(r'_Function_class_\(\w+\)\s+', '', chunk)
-        chunk = re.sub(r'_IRQL_requires_\(\w+\)\s+', '', chunk)
-        chunk = re.sub(r'_IRQL_requires_max_\(\w+\)\s+', '', chunk)
-        chunk = re.sub(r'_IRQL_requires_same_\s+', '', chunk)
-        chunk = re.sub(r'_Must_inspect_result_\s+', '', chunk)
-        chunk = re.sub(r'\w+\s+((NTAPI|APIENTRY)\s+)?|NTSTATUS\s+(FASTCALL|STDAPIVCALLTYPE)\s+', '', chunk)
+        chunk = re.sub(r'^typedef\s+', ' ', chunk)
+        chunk = re.sub(r'\s+_Function_class_\(\w+\)\s+', ' ', chunk)
+        chunk = re.sub(r'\s+_IRQL_requires_\(\w+\)\s+', ' ', chunk)
+        chunk = re.sub(r'\s+_IRQL_requires_max_\(\w+\)\s+', ' ', chunk)
+        chunk = re.sub(r'\s+_IRQL_requires_same_\s+', ' ', chunk)
+        chunk = re.sub(r'\s+_Must_inspect_result_\s+', ' ', chunk)
+        chunk = re.sub(r'\s+\w+\*?\s+(NTAPI|APIENTRY|FASTCALL|STDAPIVCALLTYPE|FLTAPI)\s+', ' ', chunk)
+        chunk = re.sub(r'\s+NTKERNELAPI\s+\w+\*?\s+', ' ', chunk)
+        chunk = re.sub(r'^\s+\w+\*?\s+', ' ', chunk)
+        chunk = chunk.lstrip()
 
         if match := re.match(r'(\w+)\(', chunk):
             assert match.group(1) == ident, (match.group(1), ident)
