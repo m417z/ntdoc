@@ -205,6 +205,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return []
 
     # Remove comments and noise, then strip.
+    chunk_unstripped = chunk
     chunk = re.sub(r'\s*//.*$', '', chunk, flags=re.MULTILINE)
     # For WNF_USER_CALLBACK:
     chunk = chunk.replace('_Always_(_Post_satisfies_(return == STATUS_NO_MEMORY || return == STATUS_RETRY || return == STATUS_SUCCESS))', '')
@@ -274,6 +275,12 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
             assert match.group(1) == ident, (match.group(1), ident)
         else:
             assert False, chunk
+
+        # Use routine ident for typedefs of functions loaded at runtime.
+        if match := re.match(r'typedef\s+//\s+routine:\s+(\w+)( \(.*\))?\n', chunk_unstripped):
+            ident = match.group(1)
+        else:
+            assert not re.match(r'typedef\s+//', chunk_unstripped), chunk_unstripped
 
         return [ident]
 
