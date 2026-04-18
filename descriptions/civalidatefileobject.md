@@ -1,4 +1,4 @@
-Performs end-to-end Authenticode validation of a file given only a `FILE_OBJECT`. The routine maps the file into system address space, computes the Authenticode digest, and verifies the signature. The computed digest is returned to the caller through the `Thumbprint` output parameters.
+Verifies the signature of a file object and returns the policy info along with the timestamp and signing time. The routine maps the file into system address space, computes the Authenticode digest, and verifies the signature. The computed digest is returned to the caller through the `Thumbprint` output parameters.
 
 # Parameters
  - `FileObject` - a pointer to the `FILE_OBJECT` of the image to validate.

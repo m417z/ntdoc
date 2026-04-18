@@ -1,4 +1,4 @@
-Searches the signature catalogs known to the Code Integrity subsystem for an entry that matches the supplied file hash and verifies the signature on the containing catalog.
+For an input Authenticode file digest, validates that the digest is contained within a verified system catalog. Optionally returns information about the catalog.
 
 # Parameters
  - `Hash` - a pointer to the file digest to look up in the catalogs.
@@ -13,7 +13,7 @@ Searches the signature catalogs known to the Code Integrity subsystem for an ent
  - `TimeStampPolicyInfo` - an optional pointer to a `MINCRYPT_POLICY_INFO` structure that receives information about the timestamping authority, with the same ownership and release rules as `PolicyInfo`.
 
 # Remarks
-This function is exported from `ci.dll`.
+This function is exported from `ci.dll`. The [pedigest](https://github.com/mihaly044/pedigest) project demonstrates using it as a fallback when a PE image does not carry an embedded signature that `CiCheckSignedFile` can verify.
 
 Prior to build 6.1.7601.18519, the function had a legacy prototype that only accepted SHA-1 hashes and did not take explicit size and algorithm parameters.
 

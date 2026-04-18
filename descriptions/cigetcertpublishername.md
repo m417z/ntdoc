@@ -10,6 +10,8 @@ This function is exported from `ci.dll`.
 
 The exact portion of the certificate that is returned (for example, the subject common name versus the full subject) is not covered by any public documentation known to us.
 
+A minimal working usage example, including a matching `AllocateRoutine` implementation that allocates from `NonPagedPoolNx`, is available in the [CiGetCertPublisherName](https://github.com/kkent030315/CiGetCertPublisherName) project by kkent030315.
+
 # See also
  - `CiValidateFileObject`
  - `CiCheckSignedFile`

@@ -1,4 +1,4 @@
-Verifies an Authenticode signature against a precomputed file hash. The caller is responsible for mapping the image, parsing its PE headers, locating the `WIN_CERTIFICATE` in the security directory, and computing the Authenticode digest.
+For an input Authenticode file digest and an Authenticode signature, verifies that the digest is in the signature and that the signature validates. Optionally returns information about the signature. The caller is responsible for mapping the image, parsing its PE headers, locating the `WIN_CERTIFICATE` in the security directory, and computing the Authenticode digest.
 
 # Parameters
  - `Hash` - a pointer to the Authenticode digest of the file being verified.
