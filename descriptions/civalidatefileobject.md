@@ -14,6 +14,10 @@ Verifies the signature of a file object and returns the policy info along with t
 # Remarks
 This function is exported from `ci.dll`. Unlike `CiCheckSignedFile`, it performs the mapping and hashing of the image itself. It also applies a stricter policy than `CiCheckSignedFile`, which means that some images that `CiCheckSignedFile` would accept can be rejected here.
 
+In practice, several contributors have reported that with a zero `PolicyFlags` the function rejects images signed with non-Microsoft root certificates unless test-signing mode is enabled, and that setting `CI_POLICY_ACCEPT_ANY_ROOT_CERTIFICATE` (`0x20`) in `PolicyFlags` makes verification succeed on production systems. Reproduced on Windows 10 builds 19041 and 19045; see [CiDllDemo issue #5](https://github.com/Ido-Moshe-Github/CiDllDemo/issues/5).
+
+In the same thread, contributors also report that the function returns `STATUS_INVALID_IMAGE_HASH` for PE images signed using ECDSA. An OSR forum analysis linked from the thread attributes this to a `MinCrypt_DisableEcdsa` routine invoked from `CipInitialize` during Code Integrity startup.
+
 For more details, see [Code Integrity in the Kernel: A Look Into ci.dll](https://www.cybereason.com/blog/code-integrity-in-the-kernel-a-look-into-cidll) by Liron Zuarets and Ido Moshe.
 
 # See also
