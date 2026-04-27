@@ -72,9 +72,9 @@
     PVOID ActiveRpcHandle;
 
     //
-    // A pointer to the __declspec(thread) local storage array.
+    // Pointer to the per-thread TLS data vector (PVOID[LdrpTlsBitmap] heap block, or self-pointer when no TLS is active).
     //
-    PVOID ThreadLocalStoragePointer;
+    PVOID *ThreadLocalStoragePointer;
 
     //
     // A pointer to the Process Environment Block (<a href="peb" title="typedef struct _PEB&#10;{&#10;    //&#10;    // The process was cloned with an inherited address space.&#10;    //&#10;    BOOLEAN InheritedAddressSpace;&#10;&#10;    //&#10;    // The process has image file execution options (IFEO).&#10;    //&#10;    BOOLEAN ReadImageFileExecOptions;&#10;&#10;    //&#10;    // The process has a debugger attached.&#10;    //&#10;    BOOLEAN BeingDebugged;&#10;&#10;    union&#10;    {&#10;        BOOLEAN BitField;&#10;...">PEB</a>), which contains information about the process.
@@ -179,9 +179,9 @@
     <a href="activation_context_stack" title="typedef struct _ACTIVATION_CONTEXT_STACK&#10;{&#10;    PRTL_ACTIVATION_CONTEXT_STACK_FRAME ActiveFrame;&#10;    LIST_ENTRY FrameListCache;&#10;    ULONG Flags; // ACTIVATION_CONTEXT_STACK_FLAG_*&#10;    ULONG NextCookieSequenceNumber;&#10;    ULONG StackId;&#10;} ACTIVATION_CONTEXT_STACK, *PACTIVATION_CONTEXT_STACK;">ACTIVATION_CONTEXT_STACK</a> ActivationStack;
 
     //
-    // Opaque operation on behalf of another user or process.
+    // Scheduler ticket attributing this thread&#x27;s CPU usage to another thread. Set/cleared via <a href="ntsetinformationthread" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationThread(&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ THREADINFOCLASS ThreadInformationClass,&#10;    _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,&#10;    _In_ ULONG ThreadInformationLength&#10;    );">NtSetInformationThread</a>(ThreadWorkOnBehalfTicket).
     //
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> WorkingOnBehalfTicket[8];
+    <a href="alpc_work_on_behalf_ticket" title="typedef struct _ALPC_WORK_ON_BEHALF_TICKET&#10;{&#10;    ULONG ThreadId;&#10;    ULONG ThreadCreationTimeLow;&#10;} ALPC_WORK_ON_BEHALF_TICKET, *PALPC_WORK_ON_BEHALF_TICKET;">PALPC_WORK_ON_BEHALF_TICKET</a> WorkingOnBehalfTicket;
 
     //
     // The last exception status for the current thread.
@@ -242,7 +242,7 @@
     //
     // Reserved for GDI (Win32k).
     //
-    <a href="gdi_teb_batch" title="typedef struct _GDI_TEB_BATCH&#10;{&#10;    ULONG Offset;&#10;    ULONG_PTR HDC;&#10;    ULONG Buffer[GDI_BATCH_BUFFER_SIZE];&#10;} GDI_TEB_BATCH, *PGDI_TEB_BATCH;">GDI_TEB_BATCH</a> GdiTebBatch;
+    <a href="gdi_teb_batch" title="typedef struct _GDI_TEB_BATCH&#10;{&#10;    ULONG Offset : 30;&#10;    ULONG InProcessing : 1;&#10;    ULONG HasRenderingCommand : 1;&#10;    ULONG_PTR HDC;&#10;    ULONG Buffer[GDI_BATCH_BUFFER_SIZE];&#10;} GDI_TEB_BATCH, *PGDI_TEB_BATCH;">GDI_TEB_BATCH</a> GdiTebBatch;
     <a href="client_id" title="typedef struct _CLIENT_ID&#10;{&#10;    HANDLE UniqueProcess;&#10;    HANDLE UniqueThread;&#10;} CLIENT_ID, *PCLIENT_ID;">CLIENT_ID</a> RealClientId;
     HANDLE GdiCachedProcessHandle;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> GdiClientPID;
@@ -255,7 +255,7 @@
         //
         // User32 (Win32k) thread information.
         //
-        <a href="clientinfo" title="typedef struct tagCLIENTINFO&#10;{&#10;    ULONG_PTR CI_flags;&#10;    ULONG_PTR Spins;&#10;    ULONG ExpWinVer;&#10;    ULONG CompatFlags;&#10;    ULONG CompatFlags2;&#10;    ULONG TIFlags;&#10;    struct tagDESKTOPINFO* DeskInfo;&#10;    PVOID DesktopBase; // ClientDelta before RS2&#10;    HHOOK hkCurrent;&#10;    ULONG Hooks;&#10;    CALLBACKWND CallbackWnd;&#10;    ULONG HookCurrent;&#10;    LONG InDDEMLCallback;&#10;    struct tagCLIENTTHREADINFO* ClientThreadInfo;&#10;    ULONG_PTR HookData;&#10;    ULONG KeyCache;&#10;    UCHAR KeyState[8];&#10;    ULONG AsyncKeyCache;&#10;...">CLIENTINFO</a> Win32ClientInfo;
+        <a href="clientinfo" title="typedef struct tagCLIENTINFO&#10;{&#10;    ULONG_PTR Flags;                                // Flags for client information.&#10;    ULONG_PTR SpinCount;                            // Spin count or related synchronization value.&#10;    ULONG ExpectedWindowsVersion;                   // Expected Windows version for compatibility.&#10;    ULONG CompatibilityFlags;                       // Compatibility flags for the thread.&#10;    ULONG CompatibilityFlags2;                      // Additional compatibility flags for the thread.&#10;    ULONG ThreadFlags;                              // Thread information flags.&#10;    struct tagDESKTOPINFO* DesktopInfo;             // Pointer to desktop information for the thread.&#10;    PVOID DesktopBaseAddress;                       // Base address for the desktop heap (called ClientDelta before Windows 10 RS2).&#10;    HHOOK CurrentHook;                              // Handle to the currently active Windows hook.&#10;    ULONG InstalledHooks;                           // Bitmask of installed hooks.&#10;    CALLBACKWND CallbackWindow;                     // Structure holding information about a callback window.&#10;    ULONG CurrentHookIndex;                         // Index or identifier for the current hook.&#10;    LONG InDdeCallback;                             // Indicates if the thread is in a DDEML (Dynamic Data Exchange Management Library) callback.&#10;    struct tagCLIENTTHREADINFO* ClientThreadInfo;   // Pointer to thread-specific client information.&#10;    ULONG_PTR HookData;                             // Data associated with hooks.&#10;    ULONG KeyStateCache;                            // Cached key state.&#10;    UCHAR KeyState[8];                              // Array holding the current key state.&#10;    ULONG AsyncKeyCache;                            // Cached asynchronous key state.&#10;...">CLIENTINFO</a> Win32ClientInfo;
         <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> Win32ClientInfoArea[<a href="win32_client_info_length" title="#define WIN32_CLIENT_INFO_LENGTH 62">WIN32_CLIENT_INFO_LENGTH</a>];
     };
 #else
@@ -310,7 +310,7 @@
     PVOID Vdm;
 
     //
-    // Reserved for RPC. The pointer is XOR&#x27;ed with <a href="rpc_thread_pointer_key" title="#define RPC_THREAD_POINTER_KEY 0xABABABABDEDEDEDEui64">RPC_THREAD_POINTER_KEY</a>.
+    // Reserved for RPC. The pointer is XOR&#x27;ed with <a href="rpc_thread_pointer_key" title="#define RPC_THREAD_POINTER_KEY ULONG_PTR_C(0xABABABABDEDEDEDE)">RPC_THREAD_POINTER_KEY</a>.
     //
     PVOID ReservedForNtRpc;
 
@@ -410,9 +410,9 @@
     <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> ReservedForCodeCoverage;
 
     //
-    // Reserved.
+    // Per-thread state for the NT thread pool.
     //
-    PVOID ThreadPoolData;
+    <a href="tpp_thread_data" title="typedef struct _TPP_THREAD_DATA&#10;{&#10;    PVOID ActiveCallbackObject;             // Pointer to the TP object (TP_WORK/TP_TIMER/TP_IO/TP_WAIT) currently executing on this thread; NULL between callbacks&#10;    ULONG Flags;                            // Lifecycle flags: 0x3 = allocated, 0x4 = freeing&#10;    ULONG CallbackRecordIndex;              // Ring index (0 or 1) selecting which CallbackRecords slot to write next&#10;    ULONGLONG CallbackCount;                // Total callbacks dispatched on this thread&#10;    ULONGLONG ThreadStartTimestamp;         // InterruptTime at TppAllocThreadData&#10;    TPP_CALLBACK_RECORD CallbackRecords[2]; // Last two callback invocations (ring buffer keyed by CallbackRecordIndex)&#10;    TPP_CALLER_RECORD CallerRecords[2];     // Last two TpCaptureCaller snapshots (ring buffer keyed by CallerRecordIndex)&#10;    ULONG CallerRecordIndex;                // Ring index (0 or 1) selecting which CallerRecords slot to write next&#10;    ULONG Reserved;&#10;} TPP_THREAD_DATA, *PTPP_THREAD_DATA;">PTPP_THREAD_DATA</a> ThreadPoolData;
 
     //
     // Pointer to the TLS (Thread Local Storage) expansion slots for the thread.
@@ -546,7 +546,7 @@
     <a href="long" title="typedef long LONG;">LONG</a> WowTebOffset;
 
     //
-    // Pointer to the DLL containing the resource (valid after <a href="ldrfindresource_u" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;LdrFindResource_U(&#10;    _In_ PVOID DllHandle,&#10;    _In_reads_(Count) PULONG_PTR ResourcePath,&#10;    _In_ ULONG Count,&#10;    _Out_ PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry&#10;    );">LdrFindResource_U</a>/<a href="ldrresfindresource" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;LdrResFindResource(&#10;    _In_ PVOID DllHandle,&#10;    _In_ PCWSTR Type,&#10;    _In_ PCWSTR Name,&#10;    _In_ PCWSTR Language,&#10;    _Out_opt_ PVOID* ResourceBuffer,&#10;    _Out_opt_ PSIZE_T ResourceLength,&#10;    _Out_writes_bytes_opt_(CultureNameLength) PVOID CultureName, // WCHAR buffer[6]&#10;    _Out_opt_ PULONG CultureNameLength,&#10;    _In_opt_ ULONG Flags&#10;    );">LdrResFindResource</a>/etc... returns).
+    // Pointer to the DLL containing the resource (valid after <a href="ldrfindresource_u" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;LdrFindResource_U(&#10;    _In_ PVOID DllHandle,&#10;    _In_reads_(Count) PULONG_PTR ResourcePath,&#10;    _In_ ULONG Count,&#10;    _Out_ PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry&#10;    );">LdrFindResource_U</a>/<a href="ldrresfindresource" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;LdrResFindResource(&#10;    _In_ PVOID DllHandle,&#10;    _In_ PCWSTR Type,&#10;    _In_ PCWSTR Name,&#10;    _In_ PCWSTR Language,&#10;    _Out_opt_ PVOID* ResourceBuffer,&#10;    _Out_opt_ PSIZE_T ResourceLength,&#10;    _Out_writes_opt_(*CultureNameLength) PWSTR CultureName, // WCHAR buffer[6]&#10;    _Inout_opt_ PULONG CultureNameLength,&#10;    _In_ LDR_RESOURCE_QUERY_FLAGS Flags&#10;    );">LdrResFindResource</a>/etc... returns).
     //
     <a href="ldr_resloader_ret" title="typedef struct _LDR_RESLOADER_RET&#10;{&#10;    PVOID Module;&#10;    PVOID DataEntry;&#10;    PVOID TargetModule;&#10;} LDR_RESLOADER_RET, *PLDR_RESLOADER_RET;">PLDR_RESLOADER_RET</a> ResourceRetValue;
 
@@ -602,7 +602,7 @@
 } TEB, *PTEB;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/c0aa94b4f527bc3b534def637de641ee729edf8b/phnt/include/ntpebteb.h#L1037">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/5ed6e7cda5dee1ac8fc1361f8255523d20c4c617/phnt/include/ntpebteb.h#L1145">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// winternl.h
 
