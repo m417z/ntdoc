@@ -26,10 +26,10 @@ def pop_next_chunk_macro(code: list[str]) -> str:
 
 def starts_with_struct_union(code: list[str]) -> bool:
     line = code[0]
-    if match := re.fullmatch(r'(_Struct_size_bytes_\(.+?\)|_Enum_is_bitflag_)\s*', line):
+    if match := re.fullmatch(r'_Struct_size_bytes_\(.+?\)\s*', line):
         line = code[1]
 
-    return re.match(r'typedef\s+(DECLSPEC_ALIGN\(\d+\)\s+)?(struct|union|enum)\b', line) is not None
+    return re.match(r'typedef\s+((DECLSPEC_ALIGN\(\d+\)|_Enum_is_bitflag_)\s+)?(struct|union|enum)\b', line) is not None
 
 
 def pop_next_chunk_struct_union(code: list[str]) -> str:
@@ -219,7 +219,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     assert not chunk.startswith('#define '), chunk
 
-    if re.match(r'(?:(?:_Struct_size_bytes_\(.+?\)|_Enum_is_bitflag_)\s+)?typedef\s+(?:DECLSPEC_ALIGN\(\d+\)\s+)?(struct|union|enum)\b', chunk):
+    if re.match(r'(?:_Struct_size_bytes_\(.+?\)\s+)?typedef\s+(?:(?:DECLSPEC_ALIGN\(\d+\)|_Enum_is_bitflag_)\s+)?(struct|union|enum)\b', chunk):
         last_index = chunk.rfind('}')
         if last_index != -1:
             assert '{' in chunk, chunk
@@ -228,7 +228,7 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
             idents = idents.removesuffix(';')
 
             ident_full = None
-            match = re.search(r'^typedef (?:DECLSPEC_ALIGN\(\d+\) )?(struct|union|enum) .*?(\w+)\s*\{', chunk, flags=re.MULTILINE)
+            match = re.search(r'^typedef (?:(?:DECLSPEC_ALIGN\(\d+\)|_Enum_is_bitflag_) )?(struct|union|enum) .*?(\w+)\s*\{', chunk, flags=re.MULTILINE)
             assert match, chunk
             assert not match.group(2).startswith('DECLSPEC'), chunk
             ident_full = match.group(1) + ' ' + match.group(2)
