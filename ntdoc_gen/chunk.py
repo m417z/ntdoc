@@ -36,7 +36,7 @@ def remove_redundant_forward_declaration_chunks(chunks: List[Chunk]) -> List[Chu
     for chunk in chunks:
         if is_forward_declaration(chunk):
             # Conflicts with MSDN docs.
-            if chunk.idents[0] == 'PIRP':
+            if chunk.idents[0] in ['PIRP', 'PDEVCAPS']:
                 continue
 
             idents_unique = set(chunk.idents)

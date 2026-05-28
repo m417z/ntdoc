@@ -255,6 +255,11 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
         return ['FN_DISPATCH']
 
     # Example:
+    # DECLARE_HANDLE(BRUSHOBJ);
+    if match := re.match(r'DECLARE_HANDLE\((\w+)\);', chunk):
+        return [match.group(1)]
+
+    # Example:
     # typedef _Function_class_(PROCESSOR_IDLE_HANDLER)
     # NTSTATUS FASTCALL PROCESSOR_IDLE_HANDLER(...
     if chunk.startswith('typedef') and (match := re.search(r'\s+_Function_class_\((\w+)\)', chunk)):
@@ -406,8 +411,12 @@ _When_(_Old_(*ppszSrc) == NULL, _At_(*ppszSrc, _Post_z_))
         code,
         flags=re.DOTALL | re.MULTILINE,
     )
-    assert '/*' not in re.sub(r'//.*', '', code)
-    assert '*/' not in re.sub(r'//.*', '', code)
+
+    # Make sure no block comments are left. Identifier comments such as
+    # /*EXAMPLE*/ are allowed.
+    code_without_ident_comments = re.sub(r'/\*\w+\*/', '', code)
+    assert '/*' not in re.sub(r'//.*', '', code_without_ident_comments)
+    assert '*/' not in re.sub(r'//.*', '', code_without_ident_comments)
 
     # Remove extern "C" declarations.
     code = code.replace('\n#ifdef __cplusplus\nextern "C" {\n#endif\n', '\n\n\n\n')
