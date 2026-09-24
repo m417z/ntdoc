@@ -67,6 +67,7 @@ def organize_idents_to_ids(chunks: List[Chunk]) -> Dict[str, str]:
         'MOFRESOURCEINFOA': 'MOFRESOURCEINFO',
         'MOFRESOURCEINFOW': 'MOFRESOURCEINFO',
         'PESILO': 'PEJOB',
+        'QUERY_POTENTIAL_DRIPS_CONSTRAINT_INPUT': 'DEVICE_OBJECT',
         # MSDN docs has these unified, unify NtDoc entries too.
         'RtlIpv4AddressToStringA': 'RtlIpv4AddressToString',
         'RtlIpv4AddressToStringW': 'RtlIpv4AddressToString',

@@ -25,9 +25,14 @@ def pop_next_chunk_macro(code: list[str]) -> str:
 
 
 def starts_with_struct_union(code: list[str]) -> bool:
-    line = code[0]
-    if match := re.fullmatch(r'_Struct_size_bytes_\(.+?\)\s*', line):
-        line = code[1]
+    i = 0
+    if match := re.fullmatch(r'_Struct_size_bytes_\(.+?\)\s*', code[i]):
+        i += 1
+
+    while rstrip_line_with_comment(code[i]) == '':
+        i += 1
+
+    line = code[i]
 
     return re.match(r'typedef\s+((DECLSPEC_ALIGN\(\d+\)|_Enum_is_bitflag_)\s+)?(struct|union|enum)\b', line) is not None
 
@@ -95,6 +100,7 @@ def get_function_identifier(chunk: str) -> str:
 
     if match := re.findall(r'(\w+)\s*\(', chunk):
         match = [m for m in match if m not in [
+            '_Acquires_lock_',
             '_Always_',
             '_At_',
             '_Deref_out_range_',
@@ -116,6 +122,7 @@ def get_function_identifier(chunk: str) -> str:
             '_Outptr_result_buffer_',
             '_Post_equal_to_',
             '_Post_satisfies_',
+            '_Releases_lock_',
             '_String_length_',
             '_Success_',
             '_Unchanged_',
@@ -338,8 +345,10 @@ def get_chunk_identifiers(chunk: str) -> List[str]:
 
     if match := re.match(r'\s*(\w+)\s*\(', chunk):
         assert match.group(1) in [
+            '_Acquires_lock_',
             '_At_',
             '_Post_satisfies_',
+            '_Releases_lock_',
             '_Success_',
             '_When_',
         ], chunk
