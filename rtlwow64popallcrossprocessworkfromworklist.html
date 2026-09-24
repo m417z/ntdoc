@@ -45,16 +45,31 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
+/**
+ * The RtlWow64PopAllCrossProcessWorkFromWorkList routine atomically detaches all pending work
+ * items from the shared WOW64 cross-process work list and returns them as a self-contained,
+ * base-relative singly-linked chain.
+ *
+ * The 64-bit header at *WorkList is a bitfield:
+ *   [63]    Busy flag (set by a concurrent producer)
+ *   [62:32] Epoch counter (incremented on each successful pop)
+ *   [30:0]  Offset from WorkList to the first list entry (0 = empty)
+ *
+ * \param WorkList Pointer to the shared 64-bit work-list header.
+ * \param BusyFlag Receives the busy flag from the original header snapshot.
+ * \return Head of the detached work chain, or NULL if the list was empty or busy.
+ *         Each entry&#x27;s first <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> is a relative offset to the next entry.
+ */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
-PULONG
+<a href="wow64_cross_process_work_entry" title="typedef struct _WOW64_CROSS_PROCESS_WORK_ENTRY &#10;{&#10;    ULONG NextEntry;            // byte offset to next entry(0 == end of chain)&#10;    ULONG Command;              // work command/type (== 8 in the coalesce path of the pusher)&#10;    ULONG64 BaseAddress;        // target base address&#10;    ULONG64 RegionSize;         // region size&#10;    ULONG64 Reserved0;&#10;    ULONG64 Reserved1;&#10;} WOW64_CROSS_PROCESS_WORK_ENTRY, *PWOW64_CROSS_PROCESS_WORK_ENTRY;">PWOW64_CROSS_PROCESS_WORK_ENTRY</a>
 NTAPI
 RtlWow64PopAllCrossProcessWorkFromWorkList(
-    volatile signed __int64 *,
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> *
+    _In_ volatile <a href="wow64_cross_process_work_hdr" title="typedef union _WOW64_CROSS_PROCESS_WORK_HDR &#10;{&#10;    ULONG64 Value;&#10;    struct &#10;    {&#10;        ULONG FirstEntry : 31;   // byte offset from header base to first entry (0 == list empty)&#10;        ULONG Flag       : 1;    // status/reset flag (surfaced via ResetFlag)&#10;        ULONG Counter;           // ABA sequence counter, incremented on each CAS&#10;    } s;&#10;} WOW64_CROSS_PROCESS_WORK_HDR;">WOW64_CROSS_PROCESS_WORK_HDR</a>* WorkList,
+    _Out_ BOOLEAN *BusyFlag
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ac46d67c7c0fd885697ee6f49af6fc0e2bea9fba/phnt/include/ntrtl.h#L12398">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/7ace518a62708f87aa28c5b11f8784762fe735b2/phnt/include/ntrtl.h#L18176">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

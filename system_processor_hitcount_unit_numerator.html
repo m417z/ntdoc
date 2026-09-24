@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="SYSTEM_PROCESSOR_HITCOUNT_UNIT_NUMERATOR - NtDoc, the native NT API online documentation">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>SYSTEM_PROCESSOR_HITCOUNT_UNIT_NUMERATOR - NtDoc</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="manifest" href="icons/site.webmanifest">
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="icons/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+    <noscript id="dark-mode-toggle-stylesheets">
+        <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
+    </noscript>
+    <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
+    <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
+    <link rel="stylesheet" href="ntdoc.css">
+    <noscript>
+        <link rel="stylesheet" href="ntdoc-noscript.css">
+    </noscript>
+</head>
+<body>
+    <header data-id="SYSTEM_PROCESSOR_HITCOUNT_UNIT_NUMERATOR">
+        <a href="."><img class="ntdoc-title-logo" src="logo.png" alt="logo"></a>
+        <h1 class="ntdoc-title">
+            SYSTEM_PROCESSOR_HITCOUNT_UNIT_NUMERATOR - NtDoc
+        </h1>
+        <div class="ntdoc-subtitle">
+            Native API online documentation, based on the System Informer
+            (formerly Process Hacker) <a target="_blank"
+            href="https://github.com/winsiderss/systeminformer/tree/master/phnt">phnt
+            headers</a>
+        </div>
+        <div id="ntdoc-search-select"></div>
+    </header>
+    <div class="ntdoc-code-elements">
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTEXAPI_H
+
+</span><span class="ntdoc-code-intro language-cpp">//
+// The hit counts in <a href="system_processor_performance_state_distribution" title="typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION&#10;{&#10;    ULONG ProcessorNumber;&#10;    ULONG StateCount;&#10;    _Field_size_(StateCount) SYSTEM_PROCESSOR_PERFORMANCE_HITCOUNT States[1];&#10;} SYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION, *PSYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION;">SYSTEM_PROCESSOR_PERFORMANCE_STATE_DISTRIBUTION</a> are the raw data behind the
+// &quot;Processor Information&quot; counter set (counter set {b4fc721a-0378-476f-89ba-a5a79f810b36}).
+//
+// The weighted mean of the hit counts is &quot;% Processor Performance&quot; (counter 24), the average
+// performance of the processor while it is executing instructions, as a percentage of its nominal
+// performance:
+//
+//     PercentPerformance = SUM(dHits[i] * PercentFrequency[i]) / SUM(dHits[i])
+//
+// On hardware performance state (HWP/CPPC) systems the table is a two entry pseudo distribution
+// with PercentFrequency values of 0 and 255, encoded so the ordinary weighted mean above yields the
+// correct answer. The result may exceed 100 percent when the processor is above its nominal
+// frequency, and callers must not clamp it. &quot;Actual Frequency&quot; (counter 33) is:
+//
+//     ActualFrequency = PercentPerformance * NominalFrequency / 100
+//
+// where NominalFrequency comes from PowerInternalProcessorBrandedFrequency. Note that
+// <a href="processor_power_information" title="typedef struct _PROCESSOR_POWER_INFORMATION&#10;{&#10;    ULONG Number;&#10;    ULONG MaxMhz;&#10;    ULONG CurrentMhz;&#10;    ULONG MhzLimit;&#10;    ULONG MaxIdleState;&#10;    ULONG CurrentIdleState;&#10;} PROCESSOR_POWER_INFORMATION, *PPROCESSOR_POWER_INFORMATION;">PROCESSOR_POWER_INFORMATION</a>.CurrentMhz is a performance state value and does not track the
+// delivered frequency on turbo capable processors.
+//
+// The hit counts do not count events. They accumulate unhalted reference time, advancing only while
+// the processor is executing, which is what makes &quot;% Processor Utility&quot; (counter 26) recoverable.
+// Utility and performance share one numerator in the kernel and differ only in their divisor:
+// performance divides by unhalted time, utility divides by elapsed time. So:
+//
+//     UnhaltedTime100ns = SUM(dHits[i]) * HITCOUNT_UNIT_NUMERATOR / HITCOUNT_UNIT_DENOMINATOR
+//     PercentUtility    = PercentPerformance * UnhaltedTime100ns / dElapsed100ns
+//
+// which reduces to SUM(dHits[i] * PercentFrequency[i]) * 512 / (255 * dElapsed100ns).
+//
+// The unit was measured against the counter set on an x64 HWP system and agreed to within 0.03%
+// across idle and saturated processors, and confirmed on AMD (Zen 5, CPPC) where the unit implied by
+// the counter set matched 512/255 to within 0.01% and the recovered utility tracked &quot;% Processor
+// Utility&quot; to within 0.06 percentage points. Both report the two entry pseudo distribution. It is
+// unvalidated on ARM64 and on legacy performance state tables, which report an occurrence count
+// rather than these accumulators and have no PercentFrequency == 0 entry; the presence of that entry
+// discriminates between the two forms.
+//
+</span><span class="ntdoc-code-body language-cpp">#define SYSTEM_PROCESSOR_HITCOUNT_UNIT_NUMERATOR   512 // 512/255 of a 100ns interval, ~200.8ns
+</span><span class="ntdoc-code-footer language-cpp">
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/7ace518a62708f87aa28c5b11f8784762fe735b2/phnt/include/ntexapi.h#L4873">View code on GitHub</a></span></code></pre></div>
+</div>
+<div class="ntdoc-descriptions">
+<div class="ntdoc-description-title">
+<h1>NtDoc</h1>
+</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<div class="ntdoc-description-none">
+<p>No description available.</p>
+</div>
+<div class="ntdoc-description-links">
+<a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/system_processor_hitcount_unit_numerator.md">Edit description on GitHub</a>
+</div>
+</div>
+</div>
+
+    <!-- For sticky footer: https://stackoverflow.com/a/34146411 -->
+    <div class="spacer"></div>
+    <footer>
+        By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
+        <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
+        <dark-mode-toggle permanent></dark-mode-toggle>
+    </footer>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YWF4NP61SX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YWF4NP61SX');
+    </script>
+    <script src="modules/jquery-3.7.0.min.js"></script>
+    <script src="modules/q-1.5.1.js"></script>
+    <script src="modules/virtual-select/virtual-select-jquery.min.js"></script>
+    <script src="modules/popper-2.11.8.min.js"></script>
+    <script src="modules/tippy-6.3.7.min.js"></script>
+    <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
+    <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
+    <script src="ntdoc.js"></script>
+</body>
+</html>

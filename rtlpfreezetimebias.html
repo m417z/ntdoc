@@ -45,15 +45,25 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
-</span><span class="ntdoc-code-body language-cpp">NTSYSAPI
-<a href="longlong" title="typedef __int64 LONGLONG;">LONGLONG</a>
-NTAPI
-RtlpFreezeTimeBias(
-    void
-    );
+/**
+ * Accumulated system freeze/suspend bias, in 100-nanosecond units.
+ *
+ * \details Total time the system has spent in a frozen/suspended
+ * (connected-standby) state. Subtracted from the raw interrupt time to yield
+ * *unbiased* interrupt time:
+ * \code
+ * UnbiasedInterruptTime = SharedUserData-&gt;InterruptTime      // <a href="kuser_shared_data" title="typedef struct _KUSER_SHARED_DATA&#10;{&#10;    //&#10;    // Current low 32-bit of tick count and tick count multiplier.&#10;    //&#10;    // N.B. The tick count is updated each time the clock ticks.&#10;    //&#10;&#10;    ULONG TickCountLowDeprecated;&#10;    ULONG TickCountMultiplier;&#10;&#10;    //&#10;    // Current 64-bit interrupt time in 100ns units.&#10;    //&#10;&#10;    volatile KSYSTEM_TIME InterruptTime;&#10;&#10;    //&#10;    // Current 64-bit system time in 100ns units.&#10;    //&#10;...">KUSER_SHARED_DATA</a>+0x08
+ *                       - RtlpFreezeTimeBias                 // this value
+ *                       - SharedUserData-&gt;QpcBias;           // <a href="kuser_shared_data" title="typedef struct _KUSER_SHARED_DATA&#10;{&#10;    //&#10;    // Current low 32-bit of tick count and tick count multiplier.&#10;    //&#10;    // N.B. The tick count is updated each time the clock ticks.&#10;    //&#10;&#10;    ULONG TickCountLowDeprecated;&#10;    ULONG TickCountMultiplier;&#10;&#10;    //&#10;    // Current 64-bit interrupt time in 100ns units.&#10;    //&#10;&#10;    volatile KSYSTEM_TIME InterruptTime;&#10;&#10;    //&#10;    // Current 64-bit system time in 100ns units.&#10;    //&#10;...">KUSER_SHARED_DATA</a>+0x3B0
+ * \endcode
+ * Consumed by <a href="rtlqueryunbiasedinterrupttime" title="NTSYSAPI&#10;BOOLEAN&#10;NTAPI&#10;RtlQueryUnbiasedInterruptTime(&#10;    _Out_ PLARGE_INTEGER InterruptTime&#10;    );">RtlQueryUnbiasedInterruptTime</a> and the threadpool/WNF timer paths,
+ * which read it in a torn-read guard loop since it is a 64-bit value updated by
+ * the kernel.
+ */
+</span><span class="ntdoc-code-body language-cpp">NTSYSAPI <a href="longlong" title="typedef __int64 LONGLONG;">LONGLONG</a> RtlpFreezeTimeBias;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ac46d67c7c0fd885697ee6f49af6fc0e2bea9fba/phnt/include/ntrtl.h#L12694">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/7ace518a62708f87aa28c5b11f8784762fe735b2/phnt/include/ntrtl.h#L18722">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

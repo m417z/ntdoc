@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="RTL_MUI_REGISTRY_INFO - NtDoc, the native NT API online documentation">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>RTL_MUI_REGISTRY_INFO - NtDoc</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="manifest" href="icons/site.webmanifest">
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="icons/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+    <noscript id="dark-mode-toggle-stylesheets">
+        <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
+    </noscript>
+    <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
+    <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
+    <link rel="stylesheet" href="ntdoc.css">
+    <noscript>
+        <link rel="stylesheet" href="ntdoc-noscript.css">
+    </noscript>
+</head>
+<body>
+    <header data-id="RTL_MUI_REGISTRY_INFO">
+        <a href="."><img class="ntdoc-title-logo" src="logo.png" alt="logo"></a>
+        <h1 class="ntdoc-title">
+            RTL_MUI_REGISTRY_INFO - NtDoc
+        </h1>
+        <div class="ntdoc-subtitle">
+            Native API online documentation, based on the System Informer
+            (formerly Process Hacker) <a target="_blank"
+            href="https://github.com/winsiderss/systeminformer/tree/master/phnt">phnt
+            headers</a>
+        </div>
+        <div id="ntdoc-search-select"></div>
+    </header>
+    <div class="ntdoc-code-elements">
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
+
+</span><span class="ntdoc-code-intro language-cpp">// rev
+/**
+ * Converts a self-relative token security attribute (V1) into its absolute (pointer-based) form.
+ *
+ * \details Validates a <a href="token_security_attribute_relative_v1" title="typedef struct _TOKEN_SECURITY_ATTRIBUTE_RELATIVE_V1&#10;{&#10;    UNICODE_STRING Name;&#10;    USHORT ValueType;&#10;    USHORT Reserved;&#10;    ULONG Flags;&#10;    ULONG ValueCount;&#10;    union&#10;    {&#10;        ULONG Int64[ANYSIZE_ARRAY];&#10;        ULONG Uint64[ANYSIZE_ARRAY];&#10;        ULONG String[ANYSIZE_ARRAY];&#10;        ULONG Fqbn[ANYSIZE_ARRAY];&#10;        ULONG OctetString[ANYSIZE_ARRAY];&#10;    } Values;&#10;} TOKEN_SECURITY_ATTRIBUTE_RELATIVE_V1, *PTOKEN_SECURITY_ATTRIBUTE_RELATIVE_V1;">TOKEN_SECURITY_ATTRIBUTE_RELATIVE_V1</a> whose Name and
+ * per-value data are stored as byte offsets from the structure base, then emits
+ * an equivalent <a href="token_security_attribute_v1" title="typedef struct _TOKEN_SECURITY_ATTRIBUTE_V1&#10;{&#10;    UNICODE_STRING Name;&#10;    USHORT ValueType;&#10;    USHORT Reserved;&#10;    ULONG Flags;&#10;    ULONG ValueCount;&#10;    union&#10;    {&#10;        PLONG64 Int64;&#10;        PULONG64 Uint64;&#10;        PUNICODE_STRING String;&#10;        PTOKEN_SECURITY_ATTRIBUTE_FQBN_VALUE Fqbn;&#10;        PTOKEN_SECURITY_ATTRIBUTE_OCTET_STRING_VALUE OctetString;&#10;    } Values;&#10;} TOKEN_SECURITY_ATTRIBUTE_V1, *PTOKEN_SECURITY_ATTRIBUTE_V1;">TOKEN_SECURITY_ATTRIBUTE_V1</a> with real pointers into
+ * \p AbsoluteAttribute. Handling is dispatched on ValueType (INT64=1, <a href="uint64" title="typedef unsigned __int64 UINT64;">UINT64</a>=2,
+ * <a href="string" title="typedef struct _STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PCHAR Buffer;&#10;} STRING, *PSTRING, ANSI_STRING, *PANSI_STRING, OEM_STRING, *POEM_STRING;">STRING</a>=3, FQBN=5/6-array path, <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>=6, OCTET_STRING=16). All offsets and sizes
+ * are overflow- and bounds-checked against \p RelativeAttributeLength.
+ * \param[in] RelativeAttribute The source relative-format attribute.
+ * \param[in] RelativeAttributeLength Size, in bytes, of \p RelativeAttribute.
+ * \param[out] AbsoluteAttribute Receives the absolute-format attribute. May be
+ * NULL only when querying the required size.
+ * \param[in,out] AbsoluteAttributeLength On input, the byte capacity of
+ * \p AbsoluteAttribute; on output, the required/consumed size.
+ * \return 
+ * - <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success.
+ * - STATUS_INVALID_PARAMETER (0xC000000D) if \p RelativeAttribute or
+ *   \p AbsoluteAttributeLength is NULL, or output requested with NULL buffer.
+ * - STATUS_INVALID_BUFFER_SIZE (0xC0000077) if the input is truncated 
+ *   inconsistent with its declared offsets.
+ * - STATUS_INTEGER_OVERFLOW (0xC0000095) on size/offset arithmetic overflow.
+ * - STATUS_BUFFER_TOO_SMALL (0xC0000023) if \p AbsoluteAttribute is too small;
+ *   the required size is returned in \p AbsoluteAttributeLength.
+ */
+//NTSYSAPI
+//<a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
+//NTAPI
+//RtlpConvertRelativeToAbsoluteSecurityAttribute(
+//    _In_ <a href="token_security_attribute_relative_v1" title="typedef struct _TOKEN_SECURITY_ATTRIBUTE_RELATIVE_V1&#10;{&#10;    UNICODE_STRING Name;&#10;    USHORT ValueType;&#10;    USHORT Reserved;&#10;    ULONG Flags;&#10;    ULONG ValueCount;&#10;    union&#10;    {&#10;        ULONG Int64[ANYSIZE_ARRAY];&#10;        ULONG Uint64[ANYSIZE_ARRAY];&#10;        ULONG String[ANYSIZE_ARRAY];&#10;        ULONG Fqbn[ANYSIZE_ARRAY];&#10;        ULONG OctetString[ANYSIZE_ARRAY];&#10;    } Values;&#10;} TOKEN_SECURITY_ATTRIBUTE_RELATIVE_V1, *PTOKEN_SECURITY_ATTRIBUTE_RELATIVE_V1;">PTOKEN_SECURITY_ATTRIBUTE_RELATIVE_V1</a> RelativeAttribute,
+//    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RelativeAttributeLength,
+//    _Out_writes_bytes_opt_(*AbsoluteAttributeLength) <a href="token_security_attribute_v1" title="typedef struct _TOKEN_SECURITY_ATTRIBUTE_V1&#10;{&#10;    UNICODE_STRING Name;&#10;    USHORT ValueType;&#10;    USHORT Reserved;&#10;    ULONG Flags;&#10;    ULONG ValueCount;&#10;    union&#10;    {&#10;        PLONG64 Int64;&#10;        PULONG64 Uint64;&#10;        PUNICODE_STRING String;&#10;        PTOKEN_SECURITY_ATTRIBUTE_FQBN_VALUE Fqbn;&#10;        PTOKEN_SECURITY_ATTRIBUTE_OCTET_STRING_VALUE OctetString;&#10;    } Values;&#10;} TOKEN_SECURITY_ATTRIBUTE_V1, *PTOKEN_SECURITY_ATTRIBUTE_V1;">PTOKEN_SECURITY_ATTRIBUTE_V1</a> AbsoluteAttribute,
+//    _Inout_ PULONG AbsoluteAttributeLength
+//    );
+
+// rev
+//
+// Internal process MUI/NLS registry-information cache (ntdll!g_RegInfo).
+// Allocated (0xA8 bytes) by <a href="rtlpmuiregcreateregistryinfo" title="NTSYSAPI&#10;PRTL_MUI_REGISTRY_INFO&#10;NTAPI&#10;RtlpMuiRegCreateRegistryInfo(&#10;    VOID&#10;    );">RtlpMuiRegCreateRegistryInfo</a>; released selectively
+// by <a href="rtlpmuiregfreeregistryinfo" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlpMuiRegFreeRegistryInfo(&#10;    _Inout_ PRTL_MUI_REGISTRY_INFO RegistryInfo,&#10;    _In_ ULONG FreeMask&#10;    );">RtlpMuiRegFreeRegistryInfo</a>. Flags is a per-member ownership/validity mask;
+// each set bit designates an owned sub-allocation with its own destructor.
+//
+/**
+ * Holds the cached MUI (multilingual user interface) registry state used for language resolution.
+ */
+</span><span class="ntdoc-code-body language-cpp">typedef struct _RTL_MUI_REGISTRY_INFO
+{
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;                                  // +0x00 ownership mask (0x400 = self-owned)
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved0;                              // +0x04
+    PVOID Reserved1;                              // +0x08
+    PVOID Reserved2;                              // +0x10
+    PVOID SerializedData;                         // +0x18 (0x001) <a href="rtlfreeheap" title="_Success_(return != 0)&#10;NTSYSAPI&#10;LOGICAL&#10;NTAPI&#10;RtlFreeHeap(&#10;    _In_ HANDLE HeapHandle,&#10;    _In_opt_ ULONG Flags,&#10;    _Frees_ptr_opt_ _Post_invalid_ PVOID BaseAddress&#10;    );">RtlFreeHeap</a>
+    PVOID StringPool;                             // +0x20 (0x002) RtlpMuiRegFreeStringPool
+    PVOID UserLanguageConfigList;                 // +0x28 (0x004) RtlpMuiRegFreeLanguageConfigList
+    PVOID MachineLanguageConfigList;              // +0x30 (0x008) RtlpMuiRegFreeLanguageConfigList
+    PVOID LanguageList10;                         // +0x38 (0x010) RtlpMuiRegFreeLanguageList
+    PVOID LanguageList20;                         // +0x40 (0x020) RtlpMuiRegFreeLanguageList
+    PVOID Reserved3;                              // +0x48
+    PVOID LanguageList80;                         // +0x50 (0x080) RtlpMuiRegFreeLanguageList
+    PVOID LanguageList40;                         // +0x58 (0x040) RtlpMuiRegFreeLanguageList
+    PVOID LanguageList200;                        // +0x60 (0x200) RtlpMuiRegFreeLanguageList
+    struct _RTL_MUI_REGISTRY_INFO *Alternate;     // +0x68 nested (recursive free + <a href="rtlfreeheap" title="_Success_(return != 0)&#10;NTSYSAPI&#10;LOGICAL&#10;NTAPI&#10;RtlFreeHeap(&#10;    _In_ HANDLE HeapHandle,&#10;    _In_opt_ ULONG Flags,&#10;    _Frees_ptr_opt_ _Post_invalid_ PVOID BaseAddress&#10;    );">RtlFreeHeap</a>)
+    PVOID Reserved4;                              // +0x70
+    PVOID Reserved5;                              // +0x78
+    PVOID Reserved6;                              // +0x80
+    PVOID FallbackData;                           // +0x88 (0x800) <a href="rtlfreeheap" title="_Success_(return != 0)&#10;NTSYSAPI&#10;LOGICAL&#10;NTAPI&#10;RtlFreeHeap(&#10;    _In_ HANDLE HeapHandle,&#10;    _In_opt_ ULONG Flags,&#10;    _Frees_ptr_opt_ _Post_invalid_ PVOID BaseAddress&#10;    );">RtlFreeHeap</a>
+    PVOID Reserved7;                              // +0x90
+    PVOID Reserved8;                              // +0x98
+    PVOID Reserved9;                              // +0xA0
+} RTL_MUI_REGISTRY_INFO, *PRTL_MUI_REGISTRY_INFO;
+</span><span class="ntdoc-code-footer language-cpp">
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/7ace518a62708f87aa28c5b11f8784762fe735b2/phnt/include/ntrtl.h#L18640">View code on GitHub</a></span></code></pre></div>
+</div>
+<div class="ntdoc-descriptions">
+<div class="ntdoc-description-title">
+<h1>NtDoc</h1>
+</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<div class="ntdoc-description-none">
+<p>No description available.</p>
+</div>
+<div class="ntdoc-description-links">
+<a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/rtl_mui_registry_info.md">Edit description on GitHub</a>
+</div>
+</div>
+</div>
+
+    <!-- For sticky footer: https://stackoverflow.com/a/34146411 -->
+    <div class="spacer"></div>
+    <footer>
+        By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
+        <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
+        <dark-mode-toggle permanent></dark-mode-toggle>
+    </footer>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YWF4NP61SX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YWF4NP61SX');
+    </script>
+    <script src="modules/jquery-3.7.0.min.js"></script>
+    <script src="modules/q-1.5.1.js"></script>
+    <script src="modules/virtual-select/virtual-select-jquery.min.js"></script>
+    <script src="modules/popper-2.11.8.min.js"></script>
+    <script src="modules/tippy-6.3.7.min.js"></script>
+    <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
+    <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
+    <script src="ntdoc.js"></script>
+</body>
+</html>

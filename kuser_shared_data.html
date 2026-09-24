@@ -152,7 +152,7 @@
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TelemetryFallback : 1;    // Telemetry-driven fallback
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved : 29;
         } AppCompatFlags;
-    };
+    } DUMMYUNIONNAME;
 
     //
     // Current Kernel Root RNG state seed version
@@ -716,26 +716,6 @@
 
     XSTATE_CONFIGURATION XState;
 
-#if defined(NTDDI_WIN11_DT) &amp;&amp; (NTDDI_VERSION &gt;= NTDDI_WIN11_DT) // 26H1 and above
-
-    <a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a> UserPointerAuthMask;
-
-    //
-    // Extended processor state configuration (ARM64). The reserved space for
-    // other architectures is not available for reuse.
-    //
-
-#if defined(_ARM64_)
-    XSTATE_CONFIGURATION XStateArm64;
-#else
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved10[214];
-#endif
-
-    <a href="ksystem_time" title="typedef struct _KSYSTEM_TIME&#10;{&#10;    ULONG LowPart;&#10;    LONG High1Time;&#10;    LONG High2Time;&#10;} KSYSTEM_TIME, *PKSYSTEM_TIME;">KSYSTEM_TIME</a> FeatureConfigurationChangeStamp;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare;
-
-#else // Legacy block for 25H2 and earlier
-
     <a href="ksystem_time" title="typedef struct _KSYSTEM_TIME&#10;{&#10;    ULONG LowPart;&#10;    LONG High1Time;&#10;    LONG High2Time;&#10;} KSYSTEM_TIME, *PKSYSTEM_TIME;">KSYSTEM_TIME</a> FeatureConfigurationChangeStamp;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare;
 
@@ -752,12 +732,11 @@
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved10[210];
 #endif
 
-#endif // #if defined(NTDDI_WIN11_DT) &amp;&amp; (NTDDI_VERSION &gt;= NTDDI_WIN11_DT)
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ac46d67c7c0fd885697ee6f49af6fc0e2bea9fba/phnt/include/ntexapi.h#L8859">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/7ace518a62708f87aa28c5b11f8784762fe735b2/phnt/include/ntexapi.h#L10166">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ntddk.h
 
@@ -2694,7 +2673,7 @@ It has been enriched with field offsets and five special sigils to help you quic
 <p><em>rare updates on power events; &quot;manual&quot; via timed sleep</em></p>
 <p>Under certain conditions (e.g. after hibernation), OS makes 🡑InterruptTime to jump forward (OS &quot;biases&quot; it). This field accumulates all such adjustments, enabling clients to get unadulterated Interrupt Time. To get such unadulterated Unbiased Interrupt Time, take 🡑InterruptTime, and subtract 🡗InterruptTimeBias from it.</p>
 <p>⚠️ Field is NOT protected via 🡑TimeUpdateLock. To ensure coherence between this field and 🡑InterruptTime, read this value first, then 🡑InterruptTime, then this value again – and check it hasn't changed.</p>
-<p>Note <code>ntdll!<a href="rtlqueryunbiasedinterrupttime" title="NTSYSAPI&#10;BOOLEAN&#10;NTAPI&#10;RtlQueryUnbiasedInterruptTime(&#10;    _Out_ PLARGE_INTEGER InterruptTime&#10;    );">RtlQueryUnbiasedInterruptTime</a></code> does a bit more: it wraps that sequence into a pair of reads of exported <code>ntdll!<a href="rtlpfreezetimebias" title="NTSYSAPI&#10;LONGLONG&#10;NTAPI&#10;RtlpFreezeTimeBias(&#10;    void&#10;    );">RtlpFreezeTimeBias</a></code> [where OS accumulates Deep Freeze time for current process], and subtracts that too.</p>
+<p>Note <code>ntdll!<a href="rtlqueryunbiasedinterrupttime" title="NTSYSAPI&#10;BOOLEAN&#10;NTAPI&#10;RtlQueryUnbiasedInterruptTime(&#10;    _Out_ PLARGE_INTEGER InterruptTime&#10;    );">RtlQueryUnbiasedInterruptTime</a></code> does a bit more: it wraps that sequence into a pair of reads of exported <code>ntdll!<a href="rtlpfreezetimebias" title="NTSYSAPI LONGLONG RtlpFreezeTimeBias;">RtlpFreezeTimeBias</a></code> [where OS accumulates Deep Freeze time for current process], and subtracts that too.</p>
 <p>Updated on these paths:</p>
 <ol>
 <li><code>nt!KeAdjustInterruptTime</code>. Mostly on exit from sleep/hibernate; also if <code>TickcountRolloverDelay</code> 🡑 used.</li>

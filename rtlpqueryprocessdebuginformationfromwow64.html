@@ -45,16 +45,32 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
+/**
+ * The RtlpQueryProcessDebugInformationFromWow64 routine is a WOW64 thunk that queries critical-section owner debug information for a
+ * target process on behalf of a 32-bit caller.
+ *
+ * \details Creates a debug buffer, forwards to <a href="rtlqueryprocessdebuginformation" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlQueryProcessDebugInformation(&#10;    _In_ HANDLE UniqueProcessId,&#10;    _In_ ULONG Flags,&#10;    _Inout_ PRTL_DEBUG_INFORMATION Buffer&#10;    );">RtlQueryProcessDebugInformation</a>
+ * for the requested process, and marshals the resulting CriticalSectionHandle
+ * and CriticalSectionOwnerThread back into the WOW64 request block.
+ * \param[in] Flags Query flags; must be <a href="rtl_query_process_cs_owner" title="#define RTL_QUERY_PROCESS_CS_OWNER 0x00000400 // RtlQueryCriticalSectionOwner; rev">RTL_QUERY_PROCESS_CS_OWNER</a> (0x400)
+ * (0x800 is also accepted).
+ * \param[in,out] Wow64Info WOW64 request block carrying the target process id
+ * and a pointer to the caller&#x27;s result sink.
+ * \return
+ * - <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on success (and the underlying query status otherwise).
+ * - STATUS_INVALID_PARAMETER (0xC000000D) if \p Flags is not 0x400/0x800.
+ * - STATUS_NO_MEMORY (0xC0000017) if the debug buffer cannot be allocated.
+ */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NTAPI
 RtlpQueryProcessDebugInformationFromWow64(
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags,
-    _Inout_ PVOID ProcessInfo
+    _Inout_ <a href="rtl_query_process_debug_info_wow64" title="typedef struct _RTL_QUERY_PROCESS_DEBUG_INFO_WOW64&#10;{&#10;    ULONG UniqueProcessId; // Target PID&#10;    ULONG Padding;&#10;    ULONG32 DebugInformation; // 32-bit Wow64 pointer to RTL_QUERY_PROCESS_DEBUG_CS_OWNER32&#10;} RTL_QUERY_PROCESS_DEBUG_INFO_WOW64, *PRTL_QUERY_PROCESS_DEBUG_INFO_WOW64;">PRTL_QUERY_PROCESS_DEBUG_INFO_WOW64</a> Wow64Info
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ac46d67c7c0fd885697ee6f49af6fc0e2bea9fba/phnt/include/ntrtl.h#L12441">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/7ace518a62708f87aa28c5b11f8784762fe735b2/phnt/include/ntrtl.h#L18299">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

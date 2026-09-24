@@ -45,6 +45,28 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTEXAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">// private
+//
+// Query notes:
+//
+// This class is only serviced by <a href="ntquerysysteminformationex" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQuerySystemInformationEx(&#10;    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,&#10;    _In_reads_bytes_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(SystemInformationLength) PVOID SystemInformation,&#10;    _In_ ULONG SystemInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQuerySystemInformationEx</a>. The plain <a href="ntquerysysteminformation" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQuerySystemInformation(&#10;    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,&#10;    _Out_writes_bytes_opt_(SystemInformationLength) PVOID SystemInformation,&#10;    _In_ ULONG SystemInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQuerySystemInformation</a>
+// form fails with STATUS_INVALID_PARAMETER at every buffer size. The input buffer is a
+// <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> ProcessorGroup.
+//
+// The output is a bare array of one structure per active processor in the group, with no header and
+// no offset table. An undersized buffer fails with either STATUS_INFO_LENGTH_MISMATCH or
+// STATUS_BUFFER_TOO_SMALL depending on how short it is, so a retry loop must accept both. Both set
+// ReturnLength to the required size.
+//
+// The cycle counts are attributed to a coarse frequency band and efficiency class for heterogeneous
+// scheduler telemetry. They are not a continuous unhalted cycle counter and carry no delivered
+// frequency resolution, so they cannot be used to compute processor utility or performance; use
+// SystemProcessorPerformanceDistribution for that. On a homogeneous processor every cycle lands in
+// Cycles[SystemProcessorCycleStatsBucketHighestFrequency][SystemProcessorCycleStatsEfficiencyClassPrimary]
+// and the remaining cells stay zero.
+//
+/**
+ * The SYSTEM_PROCESSOR_CYCLE_STATS_INFORMATION structure contains per-processor cycle counts bucketed by frequency band and architectural efficiency class for heterogeneous scheduler telemetry (SystemProcessorCycleStatsInformation, queried via <a href="ntquerysysteminformationex" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQuerySystemInformationEx(&#10;    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,&#10;    _In_reads_bytes_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(SystemInformationLength) PVOID SystemInformation,&#10;    _In_ ULONG SystemInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQuerySystemInformationEx</a>).
+ */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _SYSTEM_PROCESSOR_CYCLE_STATS_INFORMATION
 {
     //
@@ -59,7 +81,7 @@
 } SYSTEM_PROCESSOR_CYCLE_STATS_INFORMATION, *PSYSTEM_PROCESSOR_CYCLE_STATS_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ac46d67c7c0fd885697ee6f49af6fc0e2bea9fba/phnt/include/ntexapi.h#L6438">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/7ace518a62708f87aa28c5b11f8784762fe735b2/phnt/include/ntexapi.h#L7399">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

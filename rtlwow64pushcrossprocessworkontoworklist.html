@@ -44,18 +44,30 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
 
-</span><span class="ntdoc-code-intro language-cpp">// rev
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * The RtlWow64PushCrossProcessWorkOntoWorkList routine atomically push a work entry onto the head of the active work list, coalescing with an adjacent existing entry where possible.
+ * \details If the current head entry describes a region immediately adjacent to
+ * \p Entry (matching \c Command == 8 and contiguous
+ * \c BaseAddress / \c RegionSize), the two are merged in place instead
+ * of linking a new node. The pre-merge state is snapshotted so the CAS
+ * can be safely retried on contention.
+ * \param[in,out] WorkList Pointer to the atomic work-list head.
+ * \param[in] Entry Address of the entry to enqueue. Passed by value as a \c <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> in the raw ABI (RDX).
+ * \param[out] ReclaimEntry Receives the prior head/merge target address, or 0.
+ * \return \c TRUE on success.
+ * \exception STATUS_INVALID_PARAMETER (0xC000000D) on range-check failure.  // rev
+ */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 BOOLEAN
 NTAPI
 RtlWow64PushCrossProcessWorkOntoWorkList(
-    volatile signed __int64 *,
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a>,
-    PULONGLONG
+    _Inout_  volatile <a href="wow64_cross_process_work_hdr" title="typedef union _WOW64_CROSS_PROCESS_WORK_HDR &#10;{&#10;    ULONG64 Value;&#10;    struct &#10;    {&#10;        ULONG FirstEntry : 31;   // byte offset from header base to first entry (0 == list empty)&#10;        ULONG Flag       : 1;    // status/reset flag (surfaced via ResetFlag)&#10;        ULONG Counter;           // ABA sequence counter, incremented on each CAS&#10;    } s;&#10;} WOW64_CROSS_PROCESS_WORK_HDR;">WOW64_CROSS_PROCESS_WORK_HDR</a> *WorkList,
+    _In_ <a href="wow64_cross_process_work_entry" title="typedef struct _WOW64_CROSS_PROCESS_WORK_ENTRY &#10;{&#10;    ULONG NextEntry;            // byte offset to next entry(0 == end of chain)&#10;    ULONG Command;              // work command/type (== 8 in the coalesce path of the pusher)&#10;    ULONG64 BaseAddress;        // target base address&#10;    ULONG64 RegionSize;         // region size&#10;    ULONG64 Reserved0;&#10;    ULONG64 Reserved1;&#10;} WOW64_CROSS_PROCESS_WORK_ENTRY, *PWOW64_CROSS_PROCESS_WORK_ENTRY;">WOW64_CROSS_PROCESS_WORK_ENTRY</a> *Entry,
+    _Out_ <a href="wow64_cross_process_work_entry" title="typedef struct _WOW64_CROSS_PROCESS_WORK_ENTRY &#10;{&#10;    ULONG NextEntry;            // byte offset to next entry(0 == end of chain)&#10;    ULONG Command;              // work command/type (== 8 in the coalesce path of the pusher)&#10;    ULONG64 BaseAddress;        // target base address&#10;    ULONG64 RegionSize;         // region size&#10;    ULONG64 Reserved0;&#10;    ULONG64 Reserved1;&#10;} WOW64_CROSS_PROCESS_WORK_ENTRY, *PWOW64_CROSS_PROCESS_WORK_ENTRY;">WOW64_CROSS_PROCESS_WORK_ENTRY</a> **ReclaimEntry
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/ac46d67c7c0fd885697ee6f49af6fc0e2bea9fba/phnt/include/ntrtl.h#L12423">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/7ace518a62708f87aa28c5b11f8784762fe735b2/phnt/include/ntrtl.h#L18217">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
