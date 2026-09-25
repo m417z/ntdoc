@@ -50,7 +50,7 @@
  *
  * \return <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> The return value is the number of milliseconds that have elapsed since the system was started.
  * \remarks The elapsed time is stored as a <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> value. Therefore, the time will wrap around to zero if the system
- * is run continuously for 49.7 days. To avoid this problem, use the <a href="ntgettickcount64" title="FORCEINLINE&#10;ULONGLONG&#10;NtGetTickCount64(&#10;    VOID&#10;    )&#10;{&#10;    ULARGE_INTEGER tickCount;&#10;&#10;#ifdef _WIN64&#10;&#10;    tickCount.QuadPart = USER_SHARED_DATA-&gt;TickCountQuad;&#10;&#10;#else&#10;&#10;    while (TRUE)&#10;    {&#10;        tickCount.HighPart = (ULONG)USER_SHARED_DATA-&gt;TickCount.High1Time;&#10;        tickCount.LowPart = USER_SHARED_DATA-&gt;TickCount.LowPart;&#10;&#10;        if (tickCount.HighPart == (ULONG)USER_SHARED_DATA-&gt;TickCount.High2Time)&#10;...">NtGetTickCount64</a> function. Otherwise, check
+ * is run continuously for 49.7 days. To avoid this problem, use the <a href="ntgettickcount64" title="FORCEINLINE&#10;ULONGLONG&#10;NtGetTickCount64(&#10;    VOID&#10;    )&#10;{&#10;    ULARGE_INTEGER tickCount;&#10;&#10;#ifdef _WIN64&#10;&#10;    tickCount.QuadPart = USER_SHARED_DATA-&gt;TickCountQuad;&#10;&#10;#else&#10;&#10;    while (TRUE)&#10;    {&#10;        // ARM64 builds default to /volatile:iso, where volatile loads have no ordering guarantee&#10;        // and the CPU can reorder them. Without acquire semantics it could read High2Time or LowPart&#10;        // before High1Time, and a torn value could pass the check because a stale High1Time would&#10;        // still match High2Time. The window is rare, but it exists. The kernel writes High2Time,&#10;...">NtGetTickCount64</a> function. Otherwise, check
  * for an overflow condition when comparing times. The resolution of the NtGetTickCount function is limited to
  * the resolution of the system timer, which is typically in the range of 10 milliseconds to 16 milliseconds.
  * The resolution of the NtGetTickCount function is not affected by adjustments made by the GetSystemTimeAdjustment function.
@@ -72,10 +72,15 @@ NtGetTickCount(
 
     while (TRUE)
     {
-        tickCount.HighPart = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)<a href="user_shared_data" title="#define USER_SHARED_DATA ((KUSER_SHARED_DATA * const)0x7ffe0000)">USER_SHARED_DATA</a>-&gt;TickCount.High1Time;
-        tickCount.LowPart = <a href="user_shared_data" title="#define USER_SHARED_DATA ((KUSER_SHARED_DATA * const)0x7ffe0000)">USER_SHARED_DATA</a>-&gt;TickCount.LowPart;
+        // ARM64 builds default to /volatile:iso, where volatile loads have no ordering guarantee
+        // and the CPU can reorder them. Without acquire semantics it could read High2Time or LowPart
+        // before High1Time, and a torn value could pass the check because a stale High1Time would
+        // still match High2Time. The window is rare, but it exists. The kernel writes High2Time,
+        // LowPart, then High1Time, so read High1Time, LowPart, then High2Time with acquire ordering.
+        tickCount.HighPart = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)ReadAcquire(&amp;<a href="user_shared_data" title="#define USER_SHARED_DATA ((KUSER_SHARED_DATA * const)0x7ffe0000)">USER_SHARED_DATA</a>-&gt;TickCount.High1Time);
+        tickCount.LowPart = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)ReadAcquire((volatile <a href="long" title="typedef long LONG;">LONG</a>*)&amp;<a href="user_shared_data" title="#define USER_SHARED_DATA ((KUSER_SHARED_DATA * const)0x7ffe0000)">USER_SHARED_DATA</a>-&gt;TickCount.LowPart);
 
-        if (tickCount.HighPart == (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)<a href="user_shared_data" title="#define USER_SHARED_DATA ((KUSER_SHARED_DATA * const)0x7ffe0000)">USER_SHARED_DATA</a>-&gt;TickCount.High2Time)
+        if (tickCount.HighPart == (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)ReadNoFence(&amp;<a href="user_shared_data" title="#define USER_SHARED_DATA ((KUSER_SHARED_DATA * const)0x7ffe0000)">USER_SHARED_DATA</a>-&gt;TickCount.High2Time))
             break;
 
         YieldProcessor();
@@ -89,7 +94,7 @@ NtGetTickCount(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/7ace518a62708f87aa28c5b11f8784762fe735b2/phnt/include/ntexapi.h#L11001">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/415353f50b441d2067a839694a02ab6cf1be23c9/phnt/include/ntexapi.h#L11006">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
