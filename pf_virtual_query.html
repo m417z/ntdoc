@@ -43,42 +43,30 @@
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTPFAPI_H
-// begin_private
 
-</span><span class="ntdoc-code-intro language-cpp">// rev
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * The PF_VIRTUAL_QUERY structure queries extended working-set information for a process.
+ */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _PF_VIRTUAL_QUERY
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Version;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Version;                              // Request version: <a href="pf_virtual_query_version" title="#define PF_VIRTUAL_QUERY_VERSION 1">PF_VIRTUAL_QUERY_VERSION</a> (1).
     union
     {
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;                            // Mutually exclusive page-table options; valid mask 0x3.
         struct
         {
-            /*
-             * Fault page-table state in for the queried user VAs.
-             * From MiWorkingSetInfoCheckPageTable, when the queried user address has a leaf PTE that is in transition or non-present with a paging-file offset,
-             * this takes the MiMakeSystemAddressValid path to make the backing page-table state resident before retrying the query.
-             * Use this for ordinary committed user pages when you want page-table faults resolved rather than merely reported.
-             * Mutually exclusive with ReportPageTables.
-             */
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FaultInPageTables : 1;
-            /*
-             * Report page-table-related state for the queried user VAs in the returned <a href="memory_working_set_ex_information" title="typedef struct _MEMORY_WORKING_SET_EX_INFORMATION&#10;{&#10;    PVOID VirtualAddress;                             // The virtual address.&#10;    MEMORY_WORKING_SET_EX_BLOCK VirtualAttributes;    // The attributes of the page at VirtualAddress.&#10;} MEMORY_WORKING_SET_EX_INFORMATION, *PMEMORY_WORKING_SET_EX_INFORMATION;">MEMORY_WORKING_SET_EX_INFORMATION</a> entries.
-             * From MiWorkingSetInfoCheckPageTable, this produces PageTable = 1 when the queried user address has a leaf PTE that is in transition or non-present with a paging-file offset,
-             * i.e. ordinary committed user pages after trimming/page-out. Mutually exclusive with FaultInPageTables.
-             */
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ReportPageTables : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare : 30;
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FaultInPageTables : 1;        // Fault page-table state in for the queried user VAs.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ReportPageTables : 1;         // Report page-table-related state for the queried user VAs in the returned <a href="memory_working_set_ex_information" title="typedef struct _MEMORY_WORKING_SET_EX_INFORMATION&#10;{&#10;    PVOID VirtualAddress;                             // The virtual address.&#10;    MEMORY_WORKING_SET_EX_BLOCK VirtualAttributes;    // The attributes of the page at VirtualAddress.&#10;} MEMORY_WORKING_SET_EX_INFORMATION, *PMEMORY_WORKING_SET_EX_INFORMATION;">MEMORY_WORKING_SET_EX_INFORMATION</a> entries.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare : 30;                   // Reserved field; initialize to zero and do not interpret on output.
         };
     };
-    PVOID QueryBuffer; // <a href="memory_working_set_ex_information" title="typedef struct _MEMORY_WORKING_SET_EX_INFORMATION&#10;{&#10;    PVOID VirtualAddress;                             // The virtual address.&#10;    MEMORY_WORKING_SET_EX_BLOCK VirtualAttributes;    // The attributes of the page at VirtualAddress.&#10;} MEMORY_WORKING_SET_EX_INFORMATION, *PMEMORY_WORKING_SET_EX_INFORMATION;">MEMORY_WORKING_SET_EX_INFORMATION</a>[NumberOfPages] (input: VirtualAddress[], output: VirtualAttributes[])
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> QueryBufferSize; // NumberOfPages * sizeof(<a href="memory_working_set_ex_information" title="typedef struct _MEMORY_WORKING_SET_EX_INFORMATION&#10;{&#10;    PVOID VirtualAddress;                             // The virtual address.&#10;    MEMORY_WORKING_SET_EX_BLOCK VirtualAttributes;    // The attributes of the page at VirtualAddress.&#10;} MEMORY_WORKING_SET_EX_INFORMATION, *PMEMORY_WORKING_SET_EX_INFORMATION;">MEMORY_WORKING_SET_EX_INFORMATION</a>)
-    HANDLE ProcessHandle;
+    PVOID QueryBuffer;                          // <a href="memory_working_set_ex_information" title="typedef struct _MEMORY_WORKING_SET_EX_INFORMATION&#10;{&#10;    PVOID VirtualAddress;                             // The virtual address.&#10;    MEMORY_WORKING_SET_EX_BLOCK VirtualAttributes;    // The attributes of the page at VirtualAddress.&#10;} MEMORY_WORKING_SET_EX_INFORMATION, *PMEMORY_WORKING_SET_EX_INFORMATION;">MEMORY_WORKING_SET_EX_INFORMATION</a>[NumberOfPages] (input: VirtualAddress[], output: VirtualAttributes[])
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> QueryBufferSize;                     // NumberOfPages * sizeof(<a href="memory_working_set_ex_information" title="typedef struct _MEMORY_WORKING_SET_EX_INFORMATION&#10;{&#10;    PVOID VirtualAddress;                             // The virtual address.&#10;    MEMORY_WORKING_SET_EX_BLOCK VirtualAttributes;    // The attributes of the page at VirtualAddress.&#10;} MEMORY_WORKING_SET_EX_INFORMATION, *PMEMORY_WORKING_SET_EX_INFORMATION;">MEMORY_WORKING_SET_EX_INFORMATION</a>)
+    HANDLE ProcessHandle;                       // Handle identifying the process whose working set is queried.
 } PF_VIRTUAL_QUERY, *PPF_VIRTUAL_QUERY;
 </span><span class="ntdoc-code-footer language-cpp">
-// end_private
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/415353f50b441d2067a839694a02ab6cf1be23c9/phnt/include/ntpfapi.h#L733">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/511abd7e1d9e39e8320751d5365a042d30d8d985/phnt/include/ntpfapi.h#L980">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

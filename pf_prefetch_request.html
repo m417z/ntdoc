@@ -43,59 +43,61 @@
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTPFAPI_H
-// begin_private
 
-</span><span class="ntdoc-code-intro language-cpp">// rev
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * The PF_PREFETCH_REQUEST structure supplies a variable-length file and private-page prefetch request.
+ */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _PF_PREFETCH_REQUEST
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Version;                   // <a href="pf_prefetch_request_version" title="#define PF_PREFETCH_REQUEST_VERSION 13">PF_PREFETCH_REQUEST_VERSION</a>
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Size;                      // entire buffer size
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> VolumeCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrefetchFileCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PathCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SourceCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UnicodeTextSize;
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> PrefetchPriority;
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> VolumePrefetchPriority;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> VolumeInfoOffset;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved0;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrefetchFileInfoOffset;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved1;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PathInfoOffset;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved2;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SourceInfoOffset;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved3;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UnicodeTextOffset;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved4;
-    PVOID CompletionEvent;           // optional KEVENT handle on input, object pointer after capture
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Version;                              // <a href="pf_prefetch_request_version" title="#define PF_PREFETCH_REQUEST_VERSION 13">PF_PREFETCH_REQUEST_VERSION</a>
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Size;                                 // Entire buffer size, including the 0x80-byte header (x64).
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> VolumeCount;                          // Number of <a href="pf_prefetch_volume_info" title="typedef struct _PF_PREFETCH_VOLUME_INFO&#10;{&#10;    LARGE_INTEGER VolumeCreationTime;           // Volume creation time used to verify volume identity.&#10;    ULONG VolumeSerialNumber;                   // Volume serial number used to verify volume identity.&#10;    union&#10;    {&#10;        ULONG Flags;                            // Packed power-state flag (bit 0) and file count (bits 1..31).&#10;        struct&#10;        {&#10;            ULONG CheckPowerState : 1;          // Requests a volume power-state check before prefetching.&#10;            ULONG PrefetchFileCount : 31;       // Number of PF_PREFETCH_FILE_INFO records for the volume.&#10;        };&#10;    };&#10;    union&#10;    {&#10;        ULONGLONG PrefetchFileInfoOffset;       // Byte offset from PF_PREFETCH_REQUEST to the file-record array.&#10;        PPF_PREFETCH_FILE_INFO PrefetchFileInfo; // Kernel-private patched view.&#10;    };&#10;    ULONG VolumePathLength;                     // WCHAR count, excluding terminator; 1..0x7ffe.&#10;    ULONG Reserved;                             // Reserved field; initialize to zero and do not interpret on output.&#10;...">PF_PREFETCH_VOLUME_INFO</a> records.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrefetchFileCount;                    // Total number of <a href="pf_prefetch_file_info" title="typedef struct _PF_PREFETCH_FILE_INFO&#10;{&#10;    ULONG Flags;                                // File-prefetch request/result flags.&#10;    ULONG Reserved;                             // Reserved field; initialize to zero and do not interpret on output.&#10;    ULONGLONG FileIndexNumber;                  // File identifier used for metadata prefetch and file-ID opens.&#10;    PF_PREFETCH_RANGE_INFO Ranges;              // Descriptor of the byte ranges to prefetch.&#10;    union&#10;    {&#10;        ULONGLONG PathOffset;                   // Byte offset from PF_PREFETCH_REQUEST to the optional UTF-16 path.&#10;        PWSTR Path;                             // Kernel-private patched view.&#10;    };&#10;    ULONG PathLength;                           // WCHAR count, excluding terminator; 1..0x7ffe when present.&#10;    ULONG Reserved1;                            // Reserved field; initialize to zero and do not interpret on output.&#10;} PF_PREFETCH_FILE_INFO, *PPF_PREFETCH_FILE_INFO;">PF_PREFETCH_FILE_INFO</a> records.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RangeCount;                           // Number of <a href="pf_prefetch_range" title="typedef struct _PF_PREFETCH_RANGE&#10;{&#10;    ULONGLONG Offset;                           // File byte offset or virtual address, not a PFN.&#10;    ULONG Length;                               // Nonzero byte count.&#10;    ULONG Reserved;                             // Reserved field; initialize to zero and do not interpret on output.&#10;} PF_PREFETCH_RANGE, *PPF_PREFETCH_RANGE;">PF_PREFETCH_RANGE</a> records, not paths.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SourceCount;                          // Number of <a href="pf_prefetch_source_info" title="typedef struct _PF_PREFETCH_SOURCE_INFO&#10;{&#10;    ULONG Type;                                 // PFS_PRIVATE_PAGE_SOURCE_TYPE: kernel (0) or process (2).&#10;    ULONG ProcessId;                            // Process identifier when Type is PfsPrivateSourceProcess.&#10;    ULONG ImagePathHash;                        // Image-path hash associated with the private-page source.&#10;    ULONG Reserved;                             // Reserved field; initialize to zero and do not interpret on output.&#10;    ULONGLONG UniqueProcessHash;                // Zero or the process ID/create-time hash.&#10;    PF_PREFETCH_RANGE_INFO RangeInfo;           // Descriptor of the source virtual-address byte ranges.&#10;} PF_PREFETCH_SOURCE_INFO, *PPF_PREFETCH_SOURCE_INFO;">PF_PREFETCH_SOURCE_INFO</a> records.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UnicodeTextSize;                      // Bytes.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> PrefetchPriority;                    // 0..7.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> VolumePrefetchPriority;              // 0..7.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> VolumeInfoOffset;                     // Byte offset to the volume records; zero when VolumeCount is zero.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved0;                            // Reserved field; initialize to zero and do not interpret on output.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrefetchFileInfoOffset;               // Byte offset to the file records; zero when PrefetchFileCount is zero.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved1;                            // Reserved field; initialize to zero and do not interpret on output.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RangeInfoOffset;                      // Byte offset to <a href="pf_prefetch_range" title="typedef struct _PF_PREFETCH_RANGE&#10;{&#10;    ULONGLONG Offset;                           // File byte offset or virtual address, not a PFN.&#10;    ULONG Length;                               // Nonzero byte count.&#10;    ULONG Reserved;                             // Reserved field; initialize to zero and do not interpret on output.&#10;} PF_PREFETCH_RANGE, *PPF_PREFETCH_RANGE;">PF_PREFETCH_RANGE</a> records; zero when RangeCount is zero.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved2;                            // Reserved field; initialize to zero and do not interpret on output.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SourceInfoOffset;                     // Byte offset to private-source records; zero when SourceCount is zero.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved3;                            // Reserved field; initialize to zero and do not interpret on output.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UnicodeTextOffset;                    // Byte offset to the UTF-16 text area; zero when UnicodeTextSize is zero.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved4;                            // Reserved field; initialize to zero and do not interpret on output.
+    HANDLE CompletionEvent;                     // Optional event handle; captured as an object in the kernel&#x27;s private copy.
     union
     {
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;                            // Packed request flags and scenario selector.
         struct
         {
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ContinueIO : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LowPowerMode : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UseScenarioTimeouts : 1;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ReservedFlags : 29;
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ContinueIO : 1;               // Bit 0: Continue-I/O flag retained from the reconstructed layout.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LowPowerMode : 1;             // Bit 1: Low-power flag retained from the reconstructed layout.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UseScenarioTimeouts : 1;      // Bit 2: Selects scenario-timeout and trickled-prefetch processing.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OtherFlags : 3;               // Accepted bits whose semantics are not yet identified.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ReservedFlags : 2;            // Must be zero.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ScenarioType : 8;             // <a href="pf_phased_scenario_type" title="typedef enum _PF_PHASED_SCENARIO_TYPE&#10;{&#10;    PfScenarioTypeNone,                         // 0: No active phased scenario.&#10;    PfScenarioTypeStandby,                      // 1: Standby scenario.&#10;    PfScenarioTypeHibernate,                    // 2: Hibernation scenario.&#10;    PfScenarioTypeFUS,                          // 3: Fast user switching scenario.&#10;    PfScenarioTypeBoot,                         // 4: Boot scenario.&#10;    PfScenarioTypeHiberBoot,                    // 5: Hybrid boot scenario.&#10;    PfScenarioTypeMax                           // 6: Maximum sentinel; not a scenario.&#10;} PF_PHASED_SCENARIO_TYPE;">PF_PHASED_SCENARIO_TYPE</a>, 0..5.
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare : 16;                   // Reserved field; initialize to zero and do not interpret on output.
         };
     };
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> ScenarioType;              // must be &lt; 6
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Reserved5[3];
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MetadataPrefetchCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrivatePrefetchCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved6;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrivatePageCount;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MetadataPrefetchTime;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved7;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved8;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrivatePrefetchTime;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved9;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved10;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FilePrefetchCount;                    // Output count of files considered for prefetching.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MetadataPrefetchCount;                // Output count of metadata prefetch operations.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrivatePrefetchCount;                 // Output count of private-source prefetch operations.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FilePageCount;                        // Output page count for the first file-prefetch pass.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FilePageCountSecondPass;              // Output page count for the second file-prefetch pass.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrivatePageCount;                     // Output count of private pages submitted for prefetching.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MetadataPrefetchTime;                 // Milliseconds.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FilePrefetchTime;                     // Milliseconds.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FilePrefetchTimeSecondPass;           // Milliseconds.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PrivatePrefetchTime;                  // Milliseconds.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved5;                            // Reserved field; initialize to zero and do not interpret on output.
 } PF_PREFETCH_REQUEST, *PPF_PREFETCH_REQUEST;
 </span><span class="ntdoc-code-footer language-cpp">
-// end_private
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/415353f50b441d2067a839694a02ab6cf1be23c9/phnt/include/ntpfapi.h#L305">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/511abd7e1d9e39e8320751d5365a042d30d8d985/phnt/include/ntpfapi.h#L429">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

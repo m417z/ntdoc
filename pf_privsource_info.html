@@ -43,34 +43,40 @@
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTPFAPI_H
-// begin_private
 
-</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">typedef struct _PF_PRIVSOURCE_INFO
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * The PF_PRIVSOURCE_INFO structure contains identity and memory-use information for a private-page source.
+ */
+</span><span class="ntdoc-code-body language-cpp">typedef struct _PF_PRIVSOURCE_INFO
 {
-    <a href="pfs_private_page_source" title="typedef struct _PFS_PRIVATE_PAGE_SOURCE&#10;{&#10;    PFS_PRIVATE_PAGE_SOURCE_TYPE Type;&#10;    union&#10;    {&#10;        ULONG SessionId;&#10;        ULONG ProcessId;&#10;    };&#10;    ULONG ImagePathHash;&#10;    ULONG_PTR UniqueProcessHash;&#10;} PFS_PRIVATE_PAGE_SOURCE, *PPFS_PRIVATE_PAGE_SOURCE;">PFS_PRIVATE_PAGE_SOURCE</a> DbInfo;
-    PVOID EProcess;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> WsPrivatePages;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> TotalPrivatePages;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SessionID;
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> ImageName[16];
+    <a href="pfs_private_page_source" title="typedef struct _PFS_PRIVATE_PAGE_SOURCE&#10;{&#10;    PFS_PRIVATE_PAGE_SOURCE_TYPE Type;          // Source category selecting kernel, session or process interpretation.&#10;    union&#10;    {&#10;        ULONG SessionId;                        // Session identifier for a session source.&#10;        ULONG ProcessId;                        // Process identifier for a process source.&#10;    };&#10;    ULONG ImagePathHash;                        // Hash identifying the source image path.&#10;    ULONG_PTR UniqueProcessHash;                // Hash derived from the process identifier and creation time.&#10;} PFS_PRIVATE_PAGE_SOURCE, *PPFS_PRIVATE_PAGE_SOURCE;">PFS_PRIVATE_PAGE_SOURCE</a> DbInfo;             // Private-page source identity.
     union
     {
-        <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> WsSwapPages;                 // process only PF_PRIVSOURCE_QUERY_WS_SWAP_PAGES.
-        <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> SessionPagedPoolPages;       // session only.
-        <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> StoreSizePages;              // process only PF_PRIVSOURCE_QUERY_STORE_INFO.
+        PVOID EProcess;                         // Legacy name; NOT an EPROCESS address on build 26100.
+        <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> ProcessId;                    // Process ID, or 0xffffffff for the kernel entry.
     };
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> WsTotalPages;            // process/session only.
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DeepFreezeTimeMs;         // process only.
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ModernApp : 1;            // process only.
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DeepFrozen : 1;           // process only. If set, DeepFreezeTimeMs contains the time at which the freeze occurred
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Foreground : 1;           // process only.
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PerProcessStore : 1;      // process only.
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare : 28;
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> WsPrivatePages;                      // Private pages resident in the source working set.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> TotalPrivatePages;                   // Total private-page count reported for the source.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SessionID;                            // Session identifier associated with the source.
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> ImageName[16];                        // Short source image name in a 16-byte array.
+    union
+    {
+        <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> WsSwapPages;                     // Process working-set swap pages when <a href="pf_privsource_query_request_flags_querywspages" title="#define PF_PRIVSOURCE_QUERY_REQUEST_FLAGS_QUERYWSPAGES 0x1 // Bit 0: Query process working-set swap-page counts.">PF_PRIVSOURCE_QUERY_REQUEST_FLAGS_QUERYWSPAGES</a> is selected.
+        <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> SessionPagedPoolPages;           // Legacy session paged-pool page count.
+        <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> StoreSizePages;                  // Process store size, in pages, when <a href="pf_privsource_query_request_flags_querycompressedpages" title="#define PF_PRIVSOURCE_QUERY_REQUEST_FLAGS_QUERYCOMPRESSEDPAGES 0x2 // Bit 1: Query process memory-store page counts.">PF_PRIVSOURCE_QUERY_REQUEST_FLAGS_QUERYCOMPRESSEDPAGES</a> is selected.
+    };
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> WsTotalPages;                        // Total working-set page count for a process or legacy session source.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DeepFreezeTimeMs;                     // Process freeze timestamp, in milliseconds, when DeepFrozen is set.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ModernApp : 1;                        // Process has the application identity attribute checked by the kernel.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DeepFrozen : 1;                       // Process only. If set, DeepFreezeTimeMs contains the time at which the freeze occurred.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Foreground : 1;                       // Process is classified as foreground.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PerProcessStore : 1;                  // Process has an associated memory store.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HasVmContext : 1;                     // Process has a non-NULL VM context.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Spare : 27;                           // Reserved field; initialize to zero and do not interpret on output.
 } PF_PRIVSOURCE_INFO, *PPF_PRIVSOURCE_INFO;
 </span><span class="ntdoc-code-footer language-cpp">
-// end_private
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/415353f50b441d2067a839694a02ab6cf1be23c9/phnt/include/ntpfapi.h#L456">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/511abd7e1d9e39e8320751d5365a042d30d8d985/phnt/include/ntpfapi.h#L604">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
