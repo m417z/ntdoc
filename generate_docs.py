@@ -2,11 +2,12 @@
 """NT Documentation Generator - Main CLI entry point."""
 
 import argparse
+import sys
 import time
 from pathlib import Path
 
 from ntdoc_gen import config
-from ntdoc_gen.generator import generate_docs
+from ntdoc_gen.generator import generate_docs, lint_headers
 
 
 def main():
@@ -30,6 +31,15 @@ def main():
             " quickly generate a subset of the docs"
         ),
     )
+    parser.add_argument(
+        "--lint",
+        action="store_true",
+        help=(
+            "instead of generating the docs, check the headers for code which"
+            " compiles but is likely a mistake, such as unbalanced brackets in"
+            " macros, and exit with an error if any is found"
+        ),
+    )
     args = parser.parse_args()
 
     phnt_include_path = Path(args.path)
@@ -41,6 +51,13 @@ def main():
 
     if args.ntfill_commit is not None:
         config.NTFILL_REPOSITORY_COMMIT = args.ntfill_commit
+
+    if args.lint:
+        warnings = lint_headers(phnt_include_path, ntfill_path)
+        for warning in warnings:
+            print(f'Lint warning: {warning}')
+        print(f'Lint warning count: {len(warnings)}')
+        sys.exit(1 if warnings else 0)
 
     windows_docs_path = Path(args.windows_docs_path) if args.windows_docs_path else None
 

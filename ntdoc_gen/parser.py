@@ -1,556 +1,625 @@
 """C/C++ header file parsing functions."""
 
 import re
+from dataclasses import dataclass, field
+from enum import Enum, auto
 from pathlib import Path
 from typing import List, Optional, Tuple
 
 from .chunk import Chunk, ChunkOrigin
 
 
-def rstrip_line_with_comment(code: str) -> str:
-    if '//' in code:
-        return code[:code.index('//')].rstrip()
-    return code.rstrip()
+class ParseError(Exception):
+    pass
 
 
-def pop_next_chunk_custom_marker(code: list[str]) -> str:
-    return code.pop(0)
+class TokenKind(Enum):
+    # Except for DIRECTIVE, the values are the group names in TOKEN_REGEX.
+    IDENT = 'ident'
+    NUMBER = 'number'
+    STRING = 'string'
+    CHAR = 'char'
+    PUNCT = 'punct'
+    OTHER = 'other'
+    COMMENT = 'comment'
+    DIRECTIVE = 'directive'
 
 
-def pop_next_chunk_macro(code: list[str]) -> str:
-    macro = code.pop(0)
-    while macro.rstrip('\n').endswith('\\'):
-        macro += code.pop(0)
-    return macro
+@dataclass
+class Token:
+    kind: TokenKind
+    text: str
+    line: int  # 0-based line of the first character.
+    end_line: int  # 0-based line of the last character.
+    col: int
+    # For a directive, its tokens after the '#', without comments.
+    sub: List['Token'] = field(default_factory=lambda: list[Token]())
 
 
-def starts_with_struct_union(code: list[str]) -> bool:
-    i = 0
-    if match := re.fullmatch(r'_Struct_size_bytes_\(.+?\)\s*', code[i]):
-        i += 1
+TOKEN_REGEX = re.compile(r'''
+    (?P<ws>[^\S\n]+|\\\n)
+  | (?P<nl>\n)
+  | (?P<comment>//(?:[^\n\\]|\\.)*|/\*.*?\*/)
+  | (?P<string>(?:L|u8|u|U)?"(?:[^"\\\n]|\\.)*")
+  | (?P<char>(?:L|u8|u|U)?'(?:[^'\\\n]|\\.)*')
+  | (?P<ident>[A-Za-z_]\w*)
+  | (?P<number>\.?\d(?:[eEpP][+-]|[\w.])*)
+  | (?P<punct>\.\.\.|<<=|>>=|->|\+\+|--|<<|>>|<=|>=|==|!=|&&|\|\||\#\#|::|[-+*/%&|^]=|[{}()\[\];,.?:~!%^&*+\-=<>|/\#])
+  | (?P<other>\S)
+''', re.VERBOSE | re.DOTALL)
 
-    while rstrip_line_with_comment(code[i]) == '':
-        i += 1
+OPEN_TO_CLOSE = {'(': ')', '[': ']', '{': '}'}
+CLOSE_TO_OPEN = {v: k for k, v in OPEN_TO_CLOSE.items()}
 
-    line = code[i]
+AGGREGATE_KEYWORDS = ('struct', 'union', 'enum')
 
-    return re.match(r'typedef\s+((DECLSPEC_ALIGN\(\d+\)|_Enum_is_bitflag_)\s+)?(struct|union|enum)\b', line) is not None
+# Statements of the form MACRO(...); which don't declare anything.
+NON_DECLARING_MACROS = ('C_ASSERT', 'static_assert', '_Static_assert', 'DEFINE_ENUM_FLAG_OPERATORS')
 
-
-def pop_next_chunk_struct_union(code: list[str]) -> str:
-    line = code.pop(0)
-    chunk = line
-    if rstrip_line_with_comment(line).endswith(';'):
-        return chunk
-
-    assert ';' not in rstrip_line_with_comment(line), line
-
-    while True:
-        line = code.pop(0)
-        chunk += line
-        if line.startswith('}'):
-            break
-
-    if line.rstrip('\n') == '}':
-        line = code.pop(0)
-        chunk += line
-
-    last_char = line.rstrip('\n')[-1]
-    while last_char != ';':
-        assert last_char == ',', line
-        line = code.pop(0)
-        chunk += line
-        last_char = line.rstrip('\n')[-1]
-
-    return chunk
+CPP_FUNCTION_QUALIFIERS = ('noexcept', 'const', 'volatile', 'override', 'final')
 
 
-def starts_with_function_definition(code: list[str]) -> bool:
-    had_brackets = False
-    for line in code:
-        line = rstrip_line_with_comment(line)
+def tokenize(code: str, filename: str) -> List[Token]:
+    """Tokenize C code. Each preprocessor directive becomes a single token."""
+    tokens: List[Token] = []
+    pos = 0
+    line = 0
+    line_start = 0
+    at_line_start = True
+    directive: Optional[Token] = None
+    directive_start = 0
 
-        if '(' in line:
-            had_brackets = True
+    while pos < len(code):
+        if code.startswith('/*', pos) and code.find('*/', pos + 2) == -1:
+            raise ParseError(f'{filename}:{line + 1}: unterminated block comment')
 
-        if ')' in line:
-            assert had_brackets
+        match = TOKEN_REGEX.match(code, pos)
+        assert match
+        group = match.lastgroup
+        assert group is not None
+        text = match.group(0)
+        token_line = line
+        col = pos - line_start
+        if '\n' in text:
+            line += text.count('\n')
+            line_start = pos + text.rindex('\n') + 1
+        pos = match.end()
 
-        if line.endswith(';'):
-            return False
-        assert ';' not in line, line
-
-        if '{' in line:
-            assert line.endswith('{'), line
-            return had_brackets
-
-    assert False, code
-
-
-def get_function_identifier(chunk: str) -> str:
-    if match := re.search(r'\{\s*(?://.*)?$', chunk, flags=re.MULTILINE):
-        chunk = chunk[:match.start()]
-    elif match := re.search(r';\s*(?://.*)?$', chunk, flags=re.MULTILINE):
-        chunk = chunk[:match.start()]
-    else:
-        assert False, chunk
-
-    assert ';' not in chunk, chunk
-    assert '{' not in chunk, chunk
-
-    if match := re.findall(r'(\w+)\s*\(', chunk):
-        match = [m for m in match if m not in [
-            '_Acquires_lock_',
-            '_Always_',
-            '_At_',
-            '_Deref_out_range_',
-            '_In_range_',
-            '_In_reads_',
-            '_In_reads_bytes_',
-            '_In_reads_opt_',
-            '_In_reads_or_z_',
-            '_Inout_updates_',
-            '_Inout_updates_bytes_',
-            '_Old_',
-            '_Out_writes_',
-            '_Out_writes_bytes_',
-            '_Out_writes_bytes_all_',
-            '_Out_writes_bytes_opt_',
-            '_Out_writes_to_',
-            '_Outptr_opt_result_buffer_',
-            '_Outptr_opt_result_bytebuffer_',
-            '_Outptr_result_buffer_',
-            '_Post_equal_to_',
-            '_Post_satisfies_',
-            '_Releases_lock_',
-            '_String_length_',
-            '_Success_',
-            '_Unchanged_',
-            '_When_',
-            'sizeof',
-        ]]
-        if len(match) == 1:
-            return match[0]
-        assert False, (chunk, match)
-
-    assert False, chunk
-
-
-def pop_next_chunk_function_definition(code: list[str]) -> str:
-    chunk = ''
-    while True:
-        line = code.pop(0)
-        chunk += line
-        if line.startswith('}'):
-            assert line.rstrip() == '}', line
-            break
-    return chunk
-
-
-def pop_next_chunk_default(code: list[str]) -> str:
-    chunk = ''
-    while True:
-        line = code.pop(0)
-        chunk += line
-        if rstrip_line_with_comment(line).endswith(';'):
-            break
-        assert ';' not in rstrip_line_with_comment(line), line
-    return chunk
-
-
-def pop_next_chunk(code: list[str]) -> Optional[Tuple[str, str, int]]:
-    intro = ''
-
-    while len(code) > 0 and rstrip_line_with_comment(code[0]) == '':
-        line = code.pop(0)
-        if intro == '' and line.strip() == '':
+        if group == 'nl':
+            if directive is not None:
+                tokens.append(directive)
+                directive = None
+            at_line_start = True
             continue
 
-        intro += line
+        if group == 'ws':
+            continue
 
-    lines_left = len(code)
-    if lines_left == 0:
-        return None
+        kind = TokenKind(group)
+        token = Token(kind, text, token_line, line, col)
 
-    assert not code[0].startswith(' '), code[0]
+        if directive is not None:
+            directive.text = code[directive_start:pos]
+            directive.end_line = line
+            if kind != TokenKind.COMMENT:
+                directive.sub.append(token)
+            continue
 
-    if code[0].startswith('@'):
-        chunk = pop_next_chunk_custom_marker(code)
-    elif code[0].startswith('#'):
-        chunk = pop_next_chunk_macro(code)
-    elif starts_with_struct_union(code):
-        chunk = pop_next_chunk_struct_union(code)
-    elif starts_with_function_definition(code):
-        chunk = pop_next_chunk_function_definition(code)
-    else:
-        chunk = pop_next_chunk_default(code)
+        if kind == TokenKind.OTHER:
+            raise ParseError(f'{filename}:{token_line + 1}: unexpected character {text!r}')
 
-    return intro, chunk, lines_left
+        if kind == TokenKind.PUNCT and text == '#' and at_line_start:
+            directive = Token(TokenKind.DIRECTIVE, text, token_line, line, col)
+            directive_start = match.start()
+            continue
+
+        if kind != TokenKind.COMMENT:
+            at_line_start = False
+        tokens.append(token)
+
+    if directive is not None:
+        tokens.append(directive)
+
+    return tokens
 
 
-def get_chunk_identifiers(chunk: str) -> List[str]:
-    if chunk.startswith('#include'):
-        # push/pop pack includes are handled separately.
-        assert 'pshpack' not in chunk.lower(), chunk
-        assert 'poppack' not in chunk.lower(), chunk
-        return []
+def is_annotation(name: str) -> bool:
+    """Whether the identifier is an annotation or attribute macro, e.g. _In_ or DECLSPEC_ALIGN."""
+    # Unlike all-caps names such as the _FOO_ struct tag, SAL names contain a lowercase letter.
+    return ((re.fullmatch(r'_[A-Z]\w*_', name) is not None and not name.isupper()) or
+            name.startswith('DECLSPEC_') or
+            name in ('__declspec', '__attribute__', 'alignas', '_Alignas'))
 
-    if (chunk.startswith('#error') or
-        chunk.startswith('#undef') or
-        chunk.startswith('#define PHNT_') or
-        chunk.startswith('C_ASSERT(') or
-        chunk.startswith('static_assert(') or
-        chunk.startswith('static_assert (') or
-        chunk.startswith('#pragma region') or
-        chunk.startswith('#pragma endregion') or
-        chunk.startswith('#pragma warning') or
-        chunk.startswith('#pragma prefast') or
-        chunk.startswith('#pragma intrinsic') or
-        chunk.startswith('#pragma deprecated') or
-        chunk.startswith('#pragma comment(lib,') or
-        chunk.rstrip() == '#pragma once'):
-        return []
 
-    # Remove comments and noise, then strip.
-    chunk_unstripped = chunk
-    chunk = re.sub(r'\s*//.*$', '', chunk, flags=re.MULTILINE)
-    # For WNF_USER_CALLBACK:
-    chunk = chunk.replace('_Always_(_Post_satisfies_(return == STATUS_NO_MEMORY || return == STATUS_RETRY || return == STATUS_SUCCESS))', '')
-    chunk = chunk.strip()
+def find_group_end(tokens: List[Token], start: int) -> int:
+    """Return the index of the bracket which closes the one at tokens[start]."""
+    depth = 0
+    for i in range(start, len(tokens)):
+        if tokens[i].kind != TokenKind.PUNCT:
+            continue
+        if tokens[i].text in OPEN_TO_CLOSE:
+            depth += 1
+        elif tokens[i].text in CLOSE_TO_OPEN:
+            depth -= 1
+            if depth == 0:
+                return i
+    raise ParseError(f'unclosed {tokens[start].text!r}')
 
-    if re.fullmatch(r'#define +\w+', chunk):
-        return []
 
-    if match := re.match(r'#define +(\w+)[( ]', chunk):
-        return [match.group(1)]
+def find_group_start(tokens: List[Token], end: int) -> int:
+    """Return the index of the bracket which opens the one at tokens[end]."""
+    depth = 0
+    for i in range(end, -1, -1):
+        if tokens[i].kind != TokenKind.PUNCT:
+            continue
+        if tokens[i].text in CLOSE_TO_OPEN:
+            depth += 1
+        elif tokens[i].text in OPEN_TO_CLOSE:
+            depth -= 1
+            if depth == 0:
+                return i
+    raise ParseError(f'unopened {tokens[end].text!r}')
 
-    assert not chunk.startswith('#define '), chunk
 
-    if re.match(r'(?:_Struct_size_bytes_\(.+?\)\s+)?typedef\s+(?:(?:DECLSPEC_ALIGN\(\d+\)|_Enum_is_bitflag_)\s+)?(struct|union|enum)\b', chunk):
-        last_index = chunk.rfind('}')
-        if last_index != -1:
-            assert '{' in chunk, chunk
-            idents = chunk[last_index + 1:]
-            assert idents.endswith(';'), chunk
-            idents = idents.removesuffix(';')
+def are_brackets_balanced(tokens: List[Token]) -> bool:
+    stack: List[str] = []
+    for token in tokens:
+        if token.kind != TokenKind.PUNCT:
+            continue
+        if token.text in OPEN_TO_CLOSE:
+            stack.append(token.text)
+        elif token.text in CLOSE_TO_OPEN:
+            if not stack or stack.pop() != CLOSE_TO_OPEN[token.text]:
+                return False
+    return not stack
 
-            ident_full = None
-            match = re.search(r'^typedef (?:(?:DECLSPEC_ALIGN\(\d+\)|_Enum_is_bitflag_) )?(struct|union|enum) .*?(\w+)\s*\{', chunk, flags=re.MULTILINE)
-            assert match, chunk
-            assert not match.group(2).startswith('DECLSPEC'), chunk
-            ident_full = match.group(1) + ' ' + match.group(2)
+
+def split_top_level(tokens: List[Token], separator: str) -> List[List[Token]]:
+    parts: List[List[Token]] = [[]]
+    depth = 0
+    for token in tokens:
+        if token.kind == TokenKind.PUNCT:
+            if token.text in OPEN_TO_CLOSE:
+                depth += 1
+            elif token.text in CLOSE_TO_OPEN:
+                depth -= 1
+            elif token.text == separator and depth == 0:
+                parts.append([])
+                continue
+        parts[-1].append(token)
+    return parts
+
+
+def is_aggregate_body(code: List[Token], brace: int) -> Optional[int]:
+    """If code[brace] opens a struct/union/enum body, return the index of the keyword."""
+    i = brace - 1
+
+    # A parenthesized group right before the body is a function's parameter
+    # list, unless it belongs to an attribute such as DECLSPEC_ALIGN(16).
+    if i >= 0 and code[i].text == ')':
+        start = find_group_start(code, i)
+        if start == 0 or not is_annotation(code[start - 1].text):
+            return None
+
+    while i >= 0:
+        token = code[i]
+        if token.kind == TokenKind.IDENT:
+            if token.text in AGGREGATE_KEYWORDS:
+                return i
+            i -= 1
+        elif token.text == ':':
+            i -= 1
+        elif token.text == ')':
+            i = find_group_start(code, i) - 1
         else:
-            # Forward declaration.
-            assert '{' not in chunk, chunk
-            match = re.fullmatch(r'typedef (struct|union|enum) (\w+)(.*);', chunk)
-            assert match, chunk
-            ident_full = match.group(1) + ' ' + match.group(2)
-            idents = match.group(3)
+            return None
 
-        idents = idents.split(',')
-        idents = [re.sub(r'^(\s*(FAR\s*)?\*)+', '', x).strip() for x in idents]
-        assert len(idents) > 0, chunk
-        assert all(re.fullmatch(r'\w+', x) for x in idents), idents
-        return idents + ([ident_full] if ident_full is not None else [])
+    return None
 
-    # Special cases.
-    if chunk == 'typedef _Return_type_success_(return >= 0) LONG NTSTATUS;':
-        return ['NTSTATUS']
-    if chunk == 'typedef _Return_type_success_(return >= 0) long NTSTATUS;':
-        return ['NTSTATUS']
-    if chunk == 'typedef NTSTATUS FN_DISPATCH(PVOID);':
-        return ['FN_DISPATCH']
 
-    # Example:
-    # DECLARE_HANDLE(BRUSHOBJ);
-    if match := re.match(r'DECLARE_HANDLE\((\w+)\);', chunk):
-        return [match.group(1)]
+class UnitKind(Enum):
+    DIRECTIVE = auto()
+    MARKER = auto()  # A // begin_xxx or // end_xxx comment.
+    LINKAGE = auto()  # Opening or closing of an extern "C" block.
+    STATEMENT = auto()
 
-    # Example:
-    # typedef _Function_class_(PROCESSOR_IDLE_HANDLER)
-    # NTSTATUS FASTCALL PROCESSOR_IDLE_HANDLER(...
-    if chunk.startswith('typedef') and (match := re.search(r'\s+_Function_class_\((\w+)\)', chunk)):
-        ident = match.group(1)
 
-        chunk = re.sub(r'^typedef\s+', ' ', chunk)
-        chunk = re.sub(r'\s+_Function_class_\(\w+\)\s+', ' ', chunk)
-        chunk = re.sub(r'\s+_IRQL_requires_\(\w+\)\s+', ' ', chunk)
-        chunk = re.sub(r'\s+_IRQL_requires_max_\(\w+\)\s+', ' ', chunk)
-        chunk = re.sub(r'\s+_IRQL_requires_same_\s+', ' ', chunk)
-        chunk = re.sub(r'\s+_Must_inspect_result_\s+', ' ', chunk)
-        chunk = re.sub(r'\s+\w+\*?\s+(NTAPI|APIENTRY|FASTCALL|STDAPIVCALLTYPE|FLTAPI)\s+', ' ', chunk)
-        chunk = re.sub(r'\s+NTKERNELAPI\s+\w+\*?\s+', ' ', chunk)
-        chunk = re.sub(r'^\s+\w+\*?\s+', ' ', chunk)
-        chunk = chunk.lstrip()
+@dataclass
+class Unit:
+    kind: UnitKind
+    tokens: List[Token]
+    first_line: int
+    last_line: int
+    # For a statement unit, the statements on its lines.
+    statements: List[List[Token]] = field(default_factory=list[List[Token]])
 
-        if match := re.match(r'(\w+)\(', chunk):
-            assert match.group(1) == ident, (match.group(1), ident)
-        else:
-            assert False, chunk
 
-        # Use routine ident for typedefs of functions loaded at runtime.
-        if match := re.match(r'typedef\s+//\s+routine:\s+(\w+)( \(.*\))?\n', chunk_unstripped):
-            ident = match.group(1)
-        else:
-            assert not re.match(r'typedef\s+//', chunk_unstripped), chunk_unstripped
+def group_units(tokens: List[Token], filename: str) -> List[Unit]:
+    """Group tokens into directives, begin/end markers and top-level statements."""
+    units: List[Unit] = []
+    statement: List[Token] = []
+    code: List[Token] = []  # The statement without comments and directives.
+    brackets: List[Token] = []
+    in_function_body = False
+    linkage_depth = 0
 
-        return [ident]
+    def close_statement():
+        nonlocal statement, code, in_function_body
+        # A lone ';' declares nothing.
+        if len(code) > 1 or code[0].text != ';':
+            units.append(Unit(UnitKind.STATEMENT, statement, code[0].line, statement[-1].end_line, [statement]))
+        statement = []
+        code = []
+        in_function_body = False
 
-    assert '_Function_class_' not in chunk, chunk
+    for token in tokens:
+        if not code:
+            if token.kind == TokenKind.COMMENT:
+                if token.col == 0 and re.match(r'// (begin|end)_', token.text):
+                    units.append(Unit(UnitKind.MARKER, [token], token.line, token.end_line))
+                continue
 
-    if chunk.startswith('typedef'):
-        # Example:
-        # typedef VOID (NTAPI *PACTIVATION_CONTEXT_NOTIFY_ROUTINE)(...
-        if match := re.search(r'\((?:NTAPI|__cdecl|FASTCALL|WINAPI|STDAPIVCALLTYPE)\s*(?:\*\s*)?(\w+)\)', chunk):
-            return [match.group(1)]
+            if token.kind == TokenKind.DIRECTIVE:
+                units.append(Unit(UnitKind.DIRECTIVE, [token], token.line, token.end_line))
+                continue
 
-    # Example:
-    # typedef PVOID SAM_HANDLE, *PSAM_HANDLE;
-    if match := re.fullmatch(r'typedef(?:\s+(?:const|CONST|signed|unsigned|\[public\]|_W64|_Null_terminated_))*\s+\w+(?: const| CONST| UNALIGNED)*\s*(.*?)(?:\[.*?\])?;', chunk):
-        idents = match.group(1).split(',')
-        idents = [x.lstrip('* ').rstrip() for x in idents]
-        assert len(idents) > 0, chunk
-        assert all(re.fullmatch(r'\w+', x) for x in idents), idents
-        return idents
+            if token.kind == TokenKind.IDENT and token.text in ('EXTERN_C_START', 'EXTERN_C_END'):
+                units.append(Unit(UnitKind.LINKAGE, [token], token.line, token.end_line))
+                continue
 
-    assert 'typedef' not in chunk, chunk
+            if token.kind == TokenKind.PUNCT and token.text == '}' and linkage_depth > 0:
+                linkage_depth -= 1
+                units.append(Unit(UnitKind.LINKAGE, [token], token.line, token.end_line))
+                continue
 
-    # Example:
-    # extern POBJECT_TYPE *IoDriverObjectType;
-    if match := re.fullmatch(r'extern\s+\w+\s*\*?\s*(\w+)\s*;', chunk):
-        return [match.group(1)]
+        is_pending_linkage = len(code) == 2 and code[0].text == 'extern' and code[1].kind == TokenKind.STRING
 
-    if match := re.search(r'(?:NTAPI|NTAPI_INLINE)\s+(\w+)\s*\(', chunk):
-        return [match.group(1)]
+        if token.kind == TokenKind.DIRECTIVE and not brackets and not is_pending_linkage:
+            raise ParseError(f'{filename}:{code[0].line + 1}: declaration is not terminated '
+                             f'before the directive at line {token.line + 1}')
 
-    assert 'NTAPI' not in chunk, chunk
+        statement.append(token)
+        if token.kind in (TokenKind.COMMENT, TokenKind.DIRECTIVE):
+            continue
+        code.append(token)
 
-    if chunk == 'EXTERN_C IMAGE_DOS_HEADER __ImageBase;':
-        return ['__ImageBase']
+        if token.kind != TokenKind.PUNCT:
+            continue
 
-    if match := re.match(r'(?:DEFINE_GUID|DEFINE_DEVPROPKEY)\(\s*(\w+),', chunk):
-        return [match.group(1)]
+        if token.text in OPEN_TO_CLOSE:
+            if token.text == '{' and not brackets:
+                if is_pending_linkage:
+                    # extern "C" { ... } is transparent.
+                    units.append(Unit(UnitKind.LINKAGE, statement, code[0].line, token.line))
+                    for t in statement:
+                        if t.kind == TokenKind.DIRECTIVE:
+                            units.append(Unit(UnitKind.DIRECTIVE, [t], t.line, t.end_line))
+                    linkage_depth += 1
+                    statement = []
+                    code = []
+                    continue
 
-    if match := re.match(r'EXTERN_C DECLSPEC_SELECTANY CONST GUID (\w+) =', chunk):
-        return [match.group(1)]
+                prev = code[-2] if len(code) > 1 else None
+                if is_aggregate_body(code, len(code) - 1) is None and not (prev and prev.text == '='):
+                    if not any(t.text == '(' for t in code):
+                        raise ParseError(f'{filename}:{token.line + 1}: unexpected "{{"')
+                    in_function_body = True
 
-    if match := re.fullmatch(r'NTSYSAPI \w+ (\w+);', chunk):
-        return [match.group(1)]
+            brackets.append(token)
+        elif token.text in CLOSE_TO_OPEN:
+            if not brackets or OPEN_TO_CLOSE[brackets[-1].text] != token.text:
+                raise ParseError(f'{filename}:{token.line + 1}: unexpected {token.text!r}')
+            brackets.pop()
+            if not brackets and in_function_body:
+                close_statement()
+        elif token.text == ';' and not brackets:
+            close_statement()
 
-    if match := re.fullmatch(r'(?:enum|struct) (\w+);', chunk):
-        return [match.group(1)]
+    if code:
+        raise ParseError(f'{filename}:{code[0].line + 1}: declaration is not terminated')
+    if linkage_depth:
+        raise ParseError(f'{filename}: extern "C" block is not terminated')
 
-    if match := re.match(r'(DEFINE_ENUM_FLAG_OPERATORS|C_ASSERT)\s*\(', chunk):
+    units.sort(key=lambda u: u.first_line)
+
+    # Chunks are made of whole lines, merge statements which share a line.
+    merged: List[Unit] = []
+    for unit in units:
+        prev = merged[-1] if merged else None
+        if (prev and prev.kind == UnitKind.STATEMENT and unit.kind == UnitKind.STATEMENT and
+                unit.first_line <= prev.last_line):
+            prev.tokens = prev.tokens + unit.tokens
+            prev.statements = prev.statements + unit.statements
+            prev.last_line = max(prev.last_line, unit.last_line)
+            continue
+        merged.append(unit)
+
+    return merged
+
+
+def declarator_name(tokens: List[Token]) -> str:
+    """Return the name declared by a declarator, which may be preceded by specifiers."""
+    tokens = split_top_level(tokens, '=')[0]
+
+    # Trailing annotations and C++ qualifiers, e.g. "Foo(...) _Releases_lock_(x)".
+    while tokens:
+        last = tokens[-1]
+        if last.text == ')':
+            start = find_group_start(tokens, len(tokens) - 1)
+            if start > 0 and (is_annotation(tokens[start - 1].text) or tokens[start - 1].text in ('noexcept', 'throw')):
+                tokens = tokens[:start - 1]
+                continue
+        elif last.kind == TokenKind.IDENT and (is_annotation(last.text) or last.text in CPP_FUNCTION_QUALIFIERS):
+            tokens = tokens[:-1]
+            continue
+        break
+
+    def strip_arrays(tokens: List[Token]) -> List[Token]:
+        while tokens and tokens[-1].text == ']':
+            tokens = tokens[:find_group_start(tokens, len(tokens) - 1)]
+        return tokens
+
+    tokens = strip_arrays(tokens)
+    if tokens and tokens[-1].text == ')':
+        # Function parameters.
+        tokens = strip_arrays(tokens[:find_group_start(tokens, len(tokens) - 1)])
+        if tokens and tokens[-1].text == ')':
+            # A parenthesized declarator, e.g. "(NTAPI *PFOO)".
+            start = find_group_start(tokens, len(tokens) - 1)
+            return declarator_name(tokens[start + 1:-1])
+
+    if not tokens or tokens[-1].kind != TokenKind.IDENT:
+        raise ParseError(f'no declarator name in: {" ".join(t.text for t in tokens)}')
+    return tokens[-1].text
+
+
+def get_statement_idents(statement: List[Token]) -> List[str]:
+    code = [t for t in statement if t.kind not in (TokenKind.COMMENT, TokenKind.DIRECTIVE)]
+    if code[-1].text == ';':
+        code = code[:-1]
+
+    # MACRO(Name, ...), e.g. DEFINE_GUID or DECLARE_HANDLE.
+    if (code[0].kind == TokenKind.IDENT and len(code) > 1 and code[1].text == '(' and
+            find_group_end(code, 1) == len(code) - 1):
+        if code[0].text in NON_DECLARING_MACROS:
+            return []
+        first_arg = split_top_level(code[2:-1], ',')[0]
+        if len(first_arg) != 1 or first_arg[0].kind != TokenKind.IDENT:
+            raise ParseError(f'unsupported macro statement {code[0].text}')
+        return [first_arg[0].text]
+
+    # struct X; or enum X;
+    if len(code) == 2 and code[0].text in AGGREGATE_KEYWORDS and code[1].kind == TokenKind.IDENT:
+        return [code[1].text]
+
+    is_typedef = any(t.text == 'typedef' for t in code)
+
+    brace = next((i for i, t in enumerate(code) if t.text == '{'), None)
+    if brace is not None and code[brace - 1].text != '=':
+        keyword = is_aggregate_body(code, brace)
+        if keyword is None:
+            # Function definition.
+            return [declarator_name(code[:brace])]
+
+        if not is_typedef:
+            raise ParseError(f'{code[keyword].text} definition without typedef')
+
+        # The tag directly precedes the body, anything before it is an attribute.
+        tag = None
+        i = keyword + 1
+        while i < brace and code[i].text != ':':
+            if code[i].text == '(':
+                i = find_group_end(code, i) + 1
+                continue
+            is_macro_call = i + 1 < brace and code[i + 1].text == '('
+            if code[i].kind == TokenKind.IDENT and not is_macro_call and not is_annotation(code[i].text):
+                tag = code[i].text
+            i += 1
+
+        body_end = find_group_end(code, brace)
+        names = [declarator_name(d) for d in split_top_level(code[body_end + 1:], ',')]
+        return names + ([f'{code[keyword].text} {tag}'] if tag else [])
+
+    names = [declarator_name(d) for d in split_top_level(code, ',')]
+
+    if is_typedef:
+        # typedef struct _X X, *PX;
+        i = next(i for i, t in enumerate(code) if t.text == 'typedef') + 1
+        if i + 1 < len(code) and code[i].text in AGGREGATE_KEYWORDS and code[i + 1].kind == TokenKind.IDENT:
+            names.append(f'{code[i].text} {code[i + 1].text}')
+
+        # Use the routine name for typedefs of functions loaded at runtime.
+        comment = next((t for t in statement if t.kind == TokenKind.COMMENT and t.line == code[0].line), None)
+        if comment and (match := re.fullmatch(r'//\s+routine:\s+(\w+)( \(.*\))?', comment.text)):
+            if len(names) != 1:
+                raise ParseError(f'routine comment for multiple names: {names}')
+            names = [match.group(1)]
+
+    return names
+
+
+def get_directive_idents(directive: Token) -> List[str]:
+    sub = directive.sub
+    if len(sub) < 2 or sub[0].text != 'define':
         return []
 
-    if match := re.match(r'\s*(\w+)\s*\(', chunk):
-        assert match.group(1) in [
-            '_Acquires_lock_',
-            '_At_',
-            '_Post_satisfies_',
-            '_Releases_lock_',
-            '_Success_',
-            '_When_',
-        ], chunk
+    name = sub[1].text
+    if name.startswith('PHNT_'):
+        return []
 
-    # Functions.
-    if ident := get_function_identifier(chunk):
-        return [ident]
+    # Defined without a value.
+    if len(sub) == 2:
+        return []
 
-    assert False, chunk
+    return [name]
 
 
-def split_header_to_chunks(path: Path, origin: ChunkOrigin = ChunkOrigin.PHNT) -> List[Chunk]:
+def read_header(path: Path) -> str:
+    """Read a header, normalized for parsing. Line numbers are preserved."""
     code = path.read_text()
     original_newline_count = code.count('\n')
-
-    # Temporary workaround for ntstrsafe.h.
-    if path.name == 'ntstrsafe.h':
-        str_from = R"""
-
-    _When_(_Old_(*ppszSrc) != NULL, _Unchanged_(*ppszSrc))
-_When_(_Old_(*ppszSrc) == NULL, _At_(*ppszSrc, _Post_z_))
-    NTSTRSAFEWORKERDDI
-    RtlStringExValidateSrcA(
-            _Inout_ _Deref_post_notnull_ STRSAFE_PCNZCH* ppszSrc,
-            _Inout_opt_
-            _Deref_out_range_(<, cchMax)
-            _Deref_out_range_(<=, _Old_(*pcchToRead)) size_t* pcchToRead,
-            _In_ const size_t cchMax,
-            _In_ DWORD dwFlags)
-{
-"""
-        str_to = re.sub(r'(^\n\n) +(_When_)', r'\1\2', str_from)
-        code = code.replace(str_from, str_to)
-
-        str_from = R"""
-
-    _When_(_Old_(*ppszSrc) != NULL, _Unchanged_(*ppszSrc))
-_When_(_Old_(*ppszSrc) == NULL, _At_(*ppszSrc, _Post_z_))
-    NTSTRSAFEWORKERDDI
-    RtlStringExValidateSrcW(
-            _Inout_ _Deref_post_notnull_ STRSAFE_PCNZWCH* ppszSrc,
-            _Inout_opt_
-            _Deref_out_range_(<, cchMax)
-            _Deref_out_range_(<=, _Old_(*pcchToRead)) size_t* pcchToRead,
-            _In_ const size_t cchMax,
-            _In_ DWORD dwFlags)
-{
-"""
-        str_to = re.sub(r'(^\n\n) +(_When_)', r'\1\2', str_from)
-        code = code.replace(str_from, str_to)
 
     # Tabs to spaces, only at the beginning of the line.
     code = re.sub(r'^\t+', lambda x: 4 * ' ' * len(x.group(0)), code, flags=re.MULTILINE)
 
-    # Make sure no tabs are left.
-    assert '\t' not in code
+    def blank(match: re.Match[str]) -> str:
+        return re.sub(r'[^\n]', '', match.group(0))
 
-    # Make sure no line starts with @, which is used as a marker.
-    assert not re.search(r'^\s*@', code, flags=re.MULTILINE)
+    # Remove the block comment at the top of the file.
+    code = re.sub(r'^/\*.*?\*/', blank, code, flags=re.DOTALL)
 
-    # Remove block comments at the top of the file.
-    code = re.sub(r'^/\*.*?\*/', lambda x: re.sub(r'[^\n]', '', x.group(0)), code, flags=re.DOTALL)
-
-    # Turn block comments into single-line comments with markers for easier parsing.
-    assert '//@' not in code  # Used as a marker.
+    # Remove the C++ helpers of RTL_CONSTANT_STRING.
     code = re.sub(
-        r'/\*.*?\*/ *$',
-        lambda x: '\n'.join([f'//@{line}' for line in x.group(0).split('\n')]),
+        r'^#ifdef __cplusplus\nextern "C\+\+"\n\{\ntemplate <size_t N> char _RTL_CONSTANT_STRING_type_check\b.*?^#endif\n',
+        blank,
         code,
         flags=re.DOTALL | re.MULTILINE,
     )
 
-    # Make sure no block comments are left. Identifier comments such as
-    # /*EXAMPLE*/ are allowed.
-    code_without_ident_comments = re.sub(r'/\*\w+\*/', '', code)
-    assert '/*' not in re.sub(r'//.*', '', code_without_ident_comments)
-    assert '*/' not in re.sub(r'//.*', '', code_without_ident_comments)
-
-    # Remove extern "C" declarations.
-    code = code.replace('\n#ifdef __cplusplus\nextern "C" {\n#endif\n', '\n\n\n\n')
-    code = code.replace('\n#ifdef __cplusplus\n}\n#endif\n', '\n\n\n\n')
-    code = code.replace('\nEXTERN_C_START\n', '\n\n')
-    code = code.replace('\nEXTERN_C_END\n', '\n\n')
-
-    # Remove leading spaces for PHNT_MODE defines.
-    code = re.sub(r'^[ \t]+(#define PHNT_MODE )', r'\1', code, flags=re.MULTILINE)
-
-    # Remove other stuff.
-    code = code.replace('\n// Options\n\n//#define PHNT_NO_INLINE_INIT_STRING\n', '\n\n\n\n')
-
-    code = code.replace(R"""#ifdef __cplusplus
-extern "C++"
-{
-template <size_t N> char _RTL_CONSTANT_STRING_type_check(const char  (&s)[N]);
-template <size_t N> char _RTL_CONSTANT_STRING_type_check(const WCHAR (&s)[N]);
-// __typeof would be desirable here instead of sizeof.
-template <size_t N> class _RTL_CONSTANT_STRING_remove_const_template_class;
-template <> class _RTL_CONSTANT_STRING_remove_const_template_class<sizeof(char)>  {public: typedef  char T; };
-template <> class _RTL_CONSTANT_STRING_remove_const_template_class<sizeof(WCHAR)> {public: typedef WCHAR T; };
-#define _RTL_CONSTANT_STRING_remove_const_macro(s) \
-    (const_cast<_RTL_CONSTANT_STRING_remove_const_template_class<sizeof((s)[0])>::T*>(s))
-}
-#else
-char _RTL_CONSTANT_STRING_type_check(const void *s);
-#define _RTL_CONSTANT_STRING_remove_const_macro(s) (s)
-#endif
-""", "\n" * 16)
-
-    # Add custom markers.
-    code = re.sub(r'^// (begin|end)_', r'@\g<0>', code, flags=re.MULTILINE)
-    code = re.sub(r'^#include <(pshpack\d+|poppack)\.h>$', r'@\g<0>', code, flags=re.MULTILINE)
-
-    # Make sure we didn't mess up the line count for line number tracking.
     assert code.count('\n') == original_newline_count
+    return code
 
-    code = code.splitlines(keepends=True)
-    code_lines_total = len(code)
 
-    chunks: List[Tuple[str, str, int]] = []
-    while True:
-        next_chunk = pop_next_chunk(code)
-        if next_chunk is None:
-            break
+class ScopeKind(Enum):
+    IF = auto()
+    MARKER = auto()
+    PACK = auto()
 
-        intro, body, lines_left = next_chunk
-        line_number = code_lines_total - lines_left + 1
 
-        chunks.append((intro, body, line_number))
+@dataclass
+class Scope:
+    kind: ScopeKind
+    line_number: int
+    text: str  # The first line of the code which opens the scope.
+
+
+def split_header_to_chunks(path: Path, origin: ChunkOrigin = ChunkOrigin.PHNT) -> List[Chunk]:
+    code = read_header(path)
+    units = group_units(tokenize(code, path.name), path.name)
+
+    lines = code.split('\n')
+    lines = [x + '\n' for x in lines[:-1]] + ([lines[-1]] if lines[-1] else [])
 
     result: List[Chunk] = []
-
     before: List[Tuple[str, str]] = []
     after: List[str] = []
-    for intro, body, line_number in chunks:
-        if body.startswith('#if'):
-            before.append((intro, body))
-            after.insert(0, '#endif\n')
+    scopes: List[Scope] = []
+
+    def open_scope(kind: ScopeKind, intro: str, body: str, end: str, line_number: int):
+        before.append((intro, body))
+        after.insert(0, end)
+        scopes.append(Scope(kind, line_number, body.strip().splitlines()[0]))
+
+    def check_scope(kind: ScopeKind, line_number: int, body: str):
+        if scopes and scopes[-1].kind == kind:
+            return
+        text = body.strip().splitlines()[0]
+        if not scopes:
+            raise ParseError(f'{path.name}:{line_number}: "{text}" has nothing to match')
+        raise ParseError(f'{path.name}:{line_number}: "{text}" does not match "{scopes[-1].text}" at line {scopes[-1].line_number}')
+
+    def close_scope(kind: ScopeKind, line_number: int, body: str):
+        check_scope(kind, line_number, body)
+        before.pop()
+        after.pop(0)
+        scopes.pop()
+
+    last_line = -1
+    for unit in units:
+        intro = ''
+        for line in lines[last_line + 1:unit.first_line]:
+            if intro == '' and line.strip() == '':
+                continue
+            intro += line
+
+        body = ''.join(lines[unit.first_line:unit.last_line + 1])
+        last_line = max(last_line, unit.last_line)
+        line_number = unit.first_line + 1
+
+        if unit.kind == UnitKind.LINKAGE:
             continue
 
-        if body.startswith('@// begin_'):
-            before.append((intro, body[1:]))
-            after.insert(0, re.sub(r'^@// begin_(\w+).*$', r'// end_\1', body))
+        if unit.kind == UnitKind.MARKER:
+            if body.startswith('// begin_'):
+                open_scope(ScopeKind.MARKER, intro, body, re.sub(r'^// begin_(\w+).*$', r'// end_\1', body), line_number)
+            else:
+                close_scope(ScopeKind.MARKER, line_number, body)
             continue
 
-        if body.startswith('@#include <pshpack'):
-            before.append((intro, body[1:]))
-            after.insert(0, '#include <poppack.h>\n')
-            continue
+        if unit.kind == UnitKind.DIRECTIVE:
+            directive = unit.tokens[0]
+            name = directive.sub[0].text if directive.sub else ''
 
-        if body.startswith('#endif'):
-            _, popped_before = before.pop()
-            popped_after = after.pop(0)
-            assert popped_before.startswith('#if'), popped_before
-            assert popped_after.startswith('#endif'), popped_after
-            continue
+            if name in ('if', 'ifdef', 'ifndef'):
+                open_scope(ScopeKind.IF, intro, body, '#endif\n', line_number)
+                continue
 
-        if body.startswith('@// end_'):
-            _, popped_before = before.pop()
-            popped_after = after.pop(0)
-            assert popped_before.startswith('// begin_'), popped_before
-            assert popped_after.startswith('// end_'), popped_after
-            continue
+            if name in ('else', 'elif'):
+                check_scope(ScopeKind.IF, line_number, body)
+                popped_intro, popped_body = before.pop()
+                before.append((popped_intro, popped_body + '// ...\n' + body))
+                continue
 
-        if body.startswith('@#include <poppack.h>'):
-            _, popped_before = before.pop()
-            popped_after = after.pop(0)
-            assert popped_before.startswith('#include <pshpack'), popped_before
-            assert popped_after.startswith('#include <poppack.h>'), popped_after
-            continue
+            if name == 'endif':
+                close_scope(ScopeKind.IF, line_number, body)
+                continue
 
-        if body.startswith('#else'):
-            popped_before_intro, popped_before = before.pop()
-            assert popped_before.startswith('#if'), popped_before
-            before.append((popped_before_intro, popped_before + '// ...\n' + body))
-            continue
+            if name == 'include':
+                include = ''.join(t.text for t in directive.sub[1:]).strip('<>"')
+                if re.fullmatch(r'pshpack\d+\.h', include):
+                    open_scope(ScopeKind.PACK, intro, body, '#include <poppack.h>\n', line_number)
+                    continue
+                if include == 'poppack.h':
+                    close_scope(ScopeKind.PACK, line_number, body)
+                    continue
 
-        if body.startswith('#elif '):
-            popped_before_intro, popped_before = before.pop()
-            assert popped_before.startswith('#if '), popped_before
-            before.append((intro, popped_before + '// ...\n' + body))
-            continue
+            idents = get_directive_idents(directive)
+        else:
+            try:
+                idents = [ident for statement in unit.statements for ident in get_statement_idents(statement)]
+            except ParseError as e:
+                raise ParseError(f'{path.name}:{line_number}: {e}\n{body}') from e
 
-        idents = get_chunk_identifiers(body)
         if len(idents) == 0:
             continue
 
-        def remove_markers(code: str):
-            return re.sub(r'//@', '', code)
-
-        code_url = f'{path.name}#L{line_number}'
-
         result.append(Chunk(
             origin=origin,
-            code_url=code_url,
+            code_url=f'{path.name}#L{line_number}',
             idents=idents,
-            before=[(remove_markers(x), remove_markers(y)) for x, y in before],
-            intro=remove_markers(intro),
-            body=remove_markers(body),
-            after=[remove_markers(x) for x in after],
+            before=list(before),
+            intro=intro,
+            body=body,
+            after=list(after),
         ))
 
-    assert len(before) == 0, before
-    assert len(after) == 0, after
+    if scopes:
+        raise ParseError(f'{path.name}:{scopes[-1].line_number}: "{scopes[-1].text}" is not closed')
 
     return result
+
+
+def lint_header(path: Path) -> List[str]:
+    """Return warnings about code which compiles but is likely a mistake."""
+    code = read_header(path)
+    lines = code.split('\n')
+    warnings: List[str] = []
+
+    for token in tokenize(code, path.name):
+        if token.kind != TokenKind.DIRECTIVE or not token.sub:
+            continue
+
+        location = f'{path.name}:{token.line + 1}'
+
+        if lines[token.end_line].rstrip().endswith('\\'):
+            warnings.append(f'{location}: line continuation at the end of the directive')
+
+        for prev, t in zip(token.sub, token.sub[1:]):
+            if prev.text == '#' and lines[prev.line][:prev.col].strip() == '' and t.text in (
+                    'define', 'undef', 'if', 'ifdef', 'ifndef', 'elif', 'else', 'endif', 'include', 'pragma'):
+                warnings.append(f'{location}: line continuation pulls the directive at line {prev.line + 1} into it')
+
+        if token.sub[0].text in ('define', 'if', 'elif') and not are_brackets_balanced(token.sub[1:]):
+            warnings.append(f'{location}: unbalanced brackets')
+
+    return warnings

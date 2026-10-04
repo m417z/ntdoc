@@ -7,8 +7,13 @@ from .chunk import (Chunk, ChunkOrigin, organize_idents_to_ids,
                     remove_redundant_forward_declaration_chunks)
 from .html_generator import organize_chunks_to_dir
 from .msdn import msdn_docs_to_chunks
-from .parser import split_header_to_chunks
+from .parser import lint_header, split_header_to_chunks
 from .validator import validate_description_files
+
+
+def lint_headers(phnt_include_path: Path, ntfill_path: Optional[Path] = None) -> List[str]:
+    paths = sorted(phnt_include_path.glob('*.h')) + ([ntfill_path] if ntfill_path else [])
+    return [warning for p in paths for warning in lint_header(p)]
 
 
 def generate_docs(phnt_include_path: Path, msdn_docs_path: Optional[Path], ids_pattern: Optional[str], ntfill_path: Optional[Path] = None):
