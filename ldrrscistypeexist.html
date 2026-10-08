@@ -45,27 +45,32 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The LdrRscIsTypeExist routine determines whether a resource of the specified type exists within a resource enumeration context.
+ * The LdrRscIsTypeExist routine checks a resource type against the type lists of a module&#x27;s MUI RC configuration,
+ * which tells the MUI loader whether to look for the type in the main module, the .mui module, or both.
+ * Called by LdrIsResItemExist and LdrpSearchResourceSection_U.
  *
- * \param RscContext A pointer to the resource enumeration context.
- * \param Type The resource type name to test for.
- * \param Reserved Reserved; must be NULL.
- * \param Flags On input specifies matching flags; on output receives result flags.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param RcConfig The <a href="mui_rc_config" title="typedef struct _MUI_RC_CONFIG&#10;{&#10;    ULONG Signature;          // Magic signature 0xFEEDFACE&#10;    ULONG Size;               // Total size of this structure&#10;    ULONG Version;            // Version (0x10000 = 1.0)&#10;    ULONG Flags1;             // Primary flags field (MUI_RC_CONFIG_FLAGS1_*)&#10;    ULONG Flags2;             // Secondary flags field (MUI_RC_CONFIG_FLAGS2_*)&#10;    ULONG ValidationField;    // Additional validation field (MUI_RC_CONFIG_VALIDATION_*)&#10;    ULONG Flags3;             // Tertiary flags field&#10;    ULONG Reserved[10];&#10;&#10;    // Data section offset/size pairs&#10;    ULONG Section1Offset;     // e.g. Culture name&#10;    ULONG Section1Size;&#10;    ULONG Section2Offset;     // e.g. Module name&#10;    ULONG Section2Size;&#10;    ULONG MainTypesOffset;    // Named types in the primary module: multi-string, size in bytes (Section 3)&#10;    ULONG MainTypesSize;&#10;    ULONG Section4Offset;     // Integer (MAKEINTRESOURCE) types in the primary module: ULONG array, size in bytes&#10;    ULONG Section4Size;&#10;...">MUI_RC_CONFIG</a> of the module (e.g. from <a href="ldrresgetrcconfig" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;LdrResGetRCConfig(&#10;    _In_ PVOID DllHandle,&#10;    _In_opt_ SIZE_T MappingSize,&#10;    _Out_opt_ PMUI_RC_CONFIG* Config,&#10;    _In_ ULONG Flags,&#10;    _In_ BOOLEAN UseCache&#10;    );">LdrResGetRCConfig</a>).
+ * \param Type The resource type: a name (compared case-insensitively with the MainTypes/MuiTypes multi-strings) or
+ * <a href="makeintresource" title="#define MAKEINTRESOURCE MAKEINTRESOURCEW">MAKEINTRESOURCE</a>(ID) (compared with the Section4/Section6 integer arrays).
+ * \param Flags Ignored (callers pass their LDR_RES_SEARCH_* flags).
+ * \param ResultFlags Receives, OR-ed into its current value, <a href="ldr_res_search_result_not_in_main" title="#define LDR_RES_SEARCH_RESULT_NOT_IN_MAIN 0x00040000u // Type is not listed in the config main type lists (MainTypes/Section4): skip the main module">LDR_RES_SEARCH_RESULT_NOT_IN_MAIN</a> (0x40000) if the type is
+ * not listed for the main module and <a href="ldr_res_search_result_not_in_mui" title="#define LDR_RES_SEARCH_RESULT_NOT_IN_MUI 0x00020000u // Type is not listed in the config MUI type lists (Section5/Section6): skip .mui modules">LDR_RES_SEARCH_RESULT_NOT_IN_MUI</a> (0x20000) if not listed for the MUI module.
+ * The caller must initialize it.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, or STATUS_INVALID_PARAMETER if RcConfig or ResultFlags is NULL.
  */
 // rev
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NTAPI
 LdrRscIsTypeExist(
-    _Inout_ PULONG RscContext,
-    _In_z_ PCWSTR Type,
-    _Reserved_ PVOID Reserved,
-    _Inout_ PULONG Flags
+    _In_ <a href="mui_rc_config" title="typedef struct _MUI_RC_CONFIG&#10;{&#10;    ULONG Signature;          // Magic signature 0xFEEDFACE&#10;    ULONG Size;               // Total size of this structure&#10;    ULONG Version;            // Version (0x10000 = 1.0)&#10;    ULONG Flags1;             // Primary flags field (MUI_RC_CONFIG_FLAGS1_*)&#10;    ULONG Flags2;             // Secondary flags field (MUI_RC_CONFIG_FLAGS2_*)&#10;    ULONG ValidationField;    // Additional validation field (MUI_RC_CONFIG_VALIDATION_*)&#10;    ULONG Flags3;             // Tertiary flags field&#10;    ULONG Reserved[10];&#10;&#10;    // Data section offset/size pairs&#10;    ULONG Section1Offset;     // e.g. Culture name&#10;    ULONG Section1Size;&#10;    ULONG Section2Offset;     // e.g. Module name&#10;    ULONG Section2Size;&#10;    ULONG MainTypesOffset;    // Named types in the primary module: multi-string, size in bytes (Section 3)&#10;    ULONG MainTypesSize;&#10;    ULONG Section4Offset;     // Integer (MAKEINTRESOURCE) types in the primary module: ULONG array, size in bytes&#10;    ULONG Section4Size;&#10;...">PMUI_RC_CONFIG</a> RcConfig,
+    _In_ PCWSTR Type,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags,
+    _Inout_ PULONG ResultFlags
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntrtl.h#L8211">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntrtl.h#L8218">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -48,30 +48,34 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The LdrResFallbackLangList routine gets the fallback language list for a given language ID.
+ * The LdrResFallbackLangList routine builds the ordered list of languages the MUI resource loader tries for a module:
+ * the requested language, its parent, the preferred UI languages, the module&#x27;s ultimate fallback language,
+ * then (with <a href="ldr_res_search_result_no_rc_config" title="#define LDR_RES_SEARCH_RESULT_NO_RC_CONFIG 0x00080000u // Module has no valid MUI RC config: search the main module only">LDR_RES_SEARCH_RESULT_NO_RC_CONFIG</a>) the thread locale, the user and system default locales and en-US (0x409).
+ * Used by LdrpResSearchResourceMappedFile before probing alternate (.mui) modules; not exported.
  *
- * \param Unused1 Unused parameter.
- * \param Unused2 Unused parameter.
- * \param LangId The target language ID.
- * \param Flags Flags for the operation.
- * \param FallbackList A pointer to a <a href="ldr_fallback_lang_list" title="typedef struct _LDR_FALLBACK_LANG_LIST&#10;{&#10;    USHORT Count;&#10;    LDR_FALLBACK_LANG_LIST_ENTRY Entries[64];&#10;    ULONG Flags;&#10;} LDR_FALLBACK_LANG_LIST, *PLDR_FALLBACK_LANG_LIST;">LDR_FALLBACK_LANG_LIST</a> structure to receive the fallback language list.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param DllHandle The module whose MUI RC config supplies the ultimate fallback language (may be NULL to skip that step).
+ * \param MappingSize The size of the DllHandle mapping, forwarded to RtlpResUltimateFallbackInfo.
+ * \param LangId The requested language ID (0 = neutral; no parent step).
+ * \param Flags LDR_RES_SEARCH_SKIP_MUI (0x4) stops after the requested language; <a href="ldr_res_search_result_no_rc_config" title="#define LDR_RES_SEARCH_RESULT_NO_RC_CONFIG 0x00080000u // Module has no valid MUI RC config: search the main module only">LDR_RES_SEARCH_RESULT_NO_RC_CONFIG</a> (0x80000)
+ * adds the thread/default locales; <a href="ldr_load_alt_resource_lic_filter" title="#define LDR_LOAD_ALT_RESOURCE_LIC_FILTER 0x00100000u // Internal-only; exclude LIC-restricted locale nodes from MUI language fallback (derived from MUI RC config via LdrIsResItemExist)">LDR_LOAD_ALT_RESOURCE_LIC_FILTER</a> (0x100000) drops LIC-restricted languages.
+ * \param FallbackList Receives the fallback list.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status (STATUS_INVALID_PARAMETER if FallbackList is NULL).
  */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NTAPI
 LdrResFallbackLangList(
-    _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Unused1,
-    _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Unused2,
+    _In_opt_ PVOID DllHandle,
+    _In_opt_ <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> MappingSize,
     _In_ LANGID LangId,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags,
-    _Out_ <a href="ldr_fallback_lang_list" title="typedef struct _LDR_FALLBACK_LANG_LIST&#10;{&#10;    USHORT Count;&#10;    LDR_FALLBACK_LANG_LIST_ENTRY Entries[64];&#10;    ULONG Flags;&#10;} LDR_FALLBACK_LANG_LIST, *PLDR_FALLBACK_LANG_LIST;">PLDR_FALLBACK_LANG_LIST</a> FallbackList
+    _Out_ <a href="ldr_fallback_lang_list" title="typedef struct _LDR_FALLBACK_LANG_LIST&#10;{&#10;    USHORT Count;                                   // +0x000 Number of valid Entries (max 64; building stops when full)&#10;    LDR_FALLBACK_LANG_LIST_ENTRY Entries[64];       // +0x004&#10;    BOOLEAN NoNeutralFallback;                      // +0x204 Set when a specific (non-neutral) language was requested or LDR_RES_SEARCH_SKIP_MUI was used;&#10;                                                    //        when FALSE and every entry misses, the directory search accepts any language (LDR_RES_SEARCH_MUI_RECURSIVE)&#10;} LDR_FALLBACK_LANG_LIST, *PLDR_FALLBACK_LANG_LIST;">PLDR_FALLBACK_LANG_LIST</a> FallbackList
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntldr.h#L1390">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntldr.h#L1412">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

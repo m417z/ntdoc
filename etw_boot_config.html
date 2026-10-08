@@ -45,6 +45,57 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTWMI_H
 
 </span><span class="ntdoc-code-intro language-cpp">//
+// ETW kernel (NT) global group mask - runtime state.
+//
+// nt!PerfGlobalGroupMask is the live, system-wide <a href="perfinfo_groupmask" title="typedef struct _PERFINFO_GROUPMASK&#10;{&#10;    ULONG Masks[PERF_NUM_MASKS];&#10;} PERFINFO_GROUPMASK, *PPERFINFO_GROUPMASK;">PERFINFO_GROUPMASK</a> that gates
+// every kernel &quot;system trace&quot; hook (process/thread/image/registry/disk/file/
+// network/ALPC/PMC/etc.). It is a <a href="perf_num_masks" title="#define PERF_NUM_MASKS 8">PERF_NUM_MASKS</a> (8) x <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> array, published in
+// two 16-byte halves by nt!EtwpUpdateGlobalGroupMasks:
+//     PerfGlobalGroupMask          -&gt; Masks[0..3]   (data VA ...FC6B40)
+//     (second half)                -&gt; Masks[4..7]   (data VA ...FC6B50)
+// Hot kernel paths read it directly as a fast &quot;is this group traced?&quot; gate,
+// e.g. via PERFINFO_IS_GROUP_ON below.
+//
+// Reconstructed from ntoskrnl (x64) disassembly; these are NON-EXPORTED kernel
+// globals/routines - declarations are documentation only (no NTSYSCALLAPI).
+//
+// extern <a href="perfinfo_groupmask" title="typedef struct _PERFINFO_GROUPMASK&#10;{&#10;    ULONG Masks[PERF_NUM_MASKS];&#10;} PERFINFO_GROUPMASK, *PPERFINFO_GROUPMASK;">PERFINFO_GROUPMASK</a> PerfGlobalGroupMask;         // 8 x <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>, mutex-guarded
+// extern <a href="long" title="typedef long LONG;">LONG</a>               KiCpuTracingFlags;           // bit0 mirrors PMC/CPU-trace group bit
+//
+// Supporting NT globals observed by the updater:
+//   EtwpGroupMaskMutex        <a href="kmutant" title="typedef struct _KMUTANT {&#10;  DISPATCHER_HEADER Header;&#10;  LIST_ENTRY        MutantListEntry;&#10;  struct _KTHREAD   *OwnerThread;&#10;  union {&#10;    UCHAR MutantFlags;&#10;    struct {&#10;      UCHAR Abandoned : 1;&#10;      UCHAR Spare1 : 7;&#10;    } DUMMYSTRUCTNAME;&#10;  } DUMMYUNIONNAME;&#10;  UCHAR             ApcDisable;&#10;} KMUTANT, *PKMUTANT, *PRKMUTANT, KMUTEX, *PKMUTEX, *PRKMUTEX;">KMUTANT</a>   - serializes all mask recomputation
+//   EtwpHostSiloState         mask blob - host-silo masks OR-ed into the global
+//   EtwpBootDeferredGroupMask mask blob - bits deferred until boot completes
+//   EtwpSiloAllowedGroupMask  mask blob - per-silo allow filter
+//   EtwpBootPhase             <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>     - 0 = early boot (skip silo/job walk)
+//
+// Recompute/enable/disable pipeline (all __fastcall, <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>/void):
+//   <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> EtwpUpdateGlobalGroupMasks(PETW_SILODRIVERSTATE SiloState,
+//                                       <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LoggerId, <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> GroupIndex);
+//     // Under EtwpGroupMaskMutex: OR this silo&#x27;s EtwpGroupMasks[10] (silo+0x11CC)
+//     // into SiloState-&gt;SiloGlobalGroupMask (silo+0x11AC), then into a working copy
+//     // fold in server-silo (PsGetServerSiloGlobals) and EtwpHostSiloState masks,
+//     // diff against PerfGlobalGroupMask to derive the
+//     // newly-enabled/newly-disabled bit sets, call EtwpEnable/DisableKernelTrace,
+//     // then publish the 32-byte result to PerfGlobalGroupMask and toggle
+//     // KiCpuTracingFlags bit0. Returns STATUS_WMI_ALREADY_ENABLED (0x80000025)
+//     // for an out-of-range/already-set (LoggerId, GroupIndex).
+//   <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> EtwpUpdateSelectedGroupMasks(...);   // per-logger entry that calls the above
+//   VOID     EtwpUpdateKernelGroupsWork(...);     // work-item wrapper
+//   <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> EtwpEnableKernelTrace(<a href="perfinfo_groupmask" title="typedef struct _PERFINFO_GROUPMASK&#10;{&#10;    ULONG Masks[PERF_NUM_MASKS];&#10;} PERFINFO_GROUPMASK, *PPERFINFO_GROUPMASK;">PERFINFO_GROUPMASK</a> *NewMask,
+//                                  <a href="perfinfo_groupmask" title="typedef struct _PERFINFO_GROUPMASK&#10;{&#10;    ULONG Masks[PERF_NUM_MASKS];&#10;} PERFINFO_GROUPMASK, *PPERFINFO_GROUPMASK;">PERFINFO_GROUPMASK</a> *EnabledDelta,
+//                                  PETW_SILODRIVERSTATE SiloState, <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LoggerId);
+//     // Installs per-hook callbacks for the bits turned ON (Cm/Io/Flt/Wdf/Alpc/
+//     // Network/DebugPrint/Profile/ObReference/FileInfo driver, MemInfo timer);
+//     // on failure rolls back and calls EtwpDisableKernelTrace.
+//   <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> EtwpDisableKernelTrace(<a href="perfinfo_groupmask" title="typedef struct _PERFINFO_GROUPMASK&#10;{&#10;    ULONG Masks[PERF_NUM_MASKS];&#10;} PERFINFO_GROUPMASK, *PPERFINFO_GROUPMASK;">PERFINFO_GROUPMASK</a> *NewMask,
+//                                   <a href="perfinfo_groupmask" title="typedef struct _PERFINFO_GROUPMASK&#10;{&#10;    ULONG Masks[PERF_NUM_MASKS];&#10;} PERFINFO_GROUPMASK, *PPERFINFO_GROUPMASK;">PERFINFO_GROUPMASK</a> *DisabledDelta,
+//                                   PETW_SILODRIVERSTATE SiloState, <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LoggerId);
+//     // Tears down callbacks for the bits turned OFF; unloads the FileInfo driver
+//     // once no session needs disk/file tracing.
+//
+
+//
 // ETW boot logger configuration.
 //
 </span><span class="ntdoc-code-body language-cpp">typedef struct _ETW_BOOT_CONFIG
@@ -55,7 +106,7 @@
 } ETW_BOOT_CONFIG, *PETW_BOOT_CONFIG;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntwmi.h#L5605">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntwmi.h#L6336">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

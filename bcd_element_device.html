@@ -43,46 +43,59 @@
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTBCD_H
+// Serialized device payloads can contain nested devices at unaligned offsets.
+#include &lt;pshpack1.h&gt;
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The BCD_ELEMENT_DEVICE structure contains information about a BCD device element.
+ * Serialized device-format element data passed to <a href="bcdsetelementdata" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;BcdSetElementData(&#10;    _In_ HANDLE BcdObjectHandle,&#10;    _In_ ULONG BcdElement, // BCD_ELEMENT_DATATYPE&#10;    _In_reads_bytes_opt_(BufferSize) PVOID Buffer,&#10;    _In_ ULONG BufferSize&#10;    );">BcdSetElementData</a> and returned
+ * by <a href="bcdgetelementdata" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;BcdGetElementData(&#10;    _In_ HANDLE BcdObjectHandle,&#10;    _In_ ULONG BcdElement, // BCD_ELEMENT_DATATYPE&#10;    _Out_writes_bytes_opt_(*BufferSize) PVOID Buffer,&#10;    _Inout_ PULONG BufferSize&#10;    );">BcdGetElementData</a>. Layout verified against bcdsrv.dll 10.0.26100.1.
+ * DeviceType selects the payload at byte offset 20. AdditionalOptions identifies
+ * a device-options object, or is <a href="guid_null" title="DEFINE_GUID(GUID_NULL, 0x00000000L, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);">GUID_NULL</a> when there is no such object.
+ *
+ * ParentOffset is a byte offset from the start of the containing device, not
+ * from the File/Locate member. It locates another BCD_ELEMENT_DEVICE inside the
+ * same buffer. Validate offsets and variable-length paths against DataSize before
+ * dereferencing them. ANYSIZE_ARRAY is a placeholder, not the payload capacity.
+ * A fixed boot/qualified-partition device occupies 60 bytes; partition/file/locate
+ * records use their actual variable payload length, not sizeof this structure.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _BCD_ELEMENT_DEVICE
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DeviceType;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DeviceType; // <a href="bcd_element_device_type" title="typedef enum _BCD_ELEMENT_DEVICE_TYPE&#10;{&#10;    BCD_ELEMENT_DEVICE_TYPE_NONE,&#10;    BCD_ELEMENT_DEVICE_TYPE_BOOT_DEVICE,&#10;    BCD_ELEMENT_DEVICE_TYPE_PARTITION,&#10;    BCD_ELEMENT_DEVICE_TYPE_FILE,&#10;    BCD_ELEMENT_DEVICE_TYPE_RAMDISK,&#10;    BCD_ELEMENT_DEVICE_TYPE_UNKNOWN,&#10;    BCD_ELEMENT_DEVICE_TYPE_QUALIFIED_PARTITION,&#10;    BCD_ELEMENT_DEVICE_TYPE_VMBUS,&#10;    BCD_ELEMENT_DEVICE_TYPE_LOCATE_DEVICE,&#10;    BCD_ELEMENT_DEVICE_TYPE_URI,&#10;    BCD_ELEMENT_DEVICE_TYPE_COMPOSITE&#10;} BCD_ELEMENT_DEVICE_TYPE;">BCD_ELEMENT_DEVICE_TYPE</a>
     GUID AdditionalOptions;
-    struct
+    union
     {
-        union
+        struct
         {
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ParentOffset;
-            WCHAR Path[ANYSIZE_ARRAY];
+            WCHAR Path[ANYSIZE_ARRAY]; // NUL-terminated; starts at device offset 24.
         } File;
-        union
+        struct
         {
-            WCHAR Path[ANYSIZE_ARRAY];
+            WCHAR Path[ANYSIZE_ARRAY]; // NUL-terminated; starts at device offset 20.
         } Partition;
-        union
+        struct
         {
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Type;
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Type; // <a href="bcd_element_device_locate_type" title="typedef enum _BCD_ELEMENT_DEVICE_LOCATE_TYPE&#10;{&#10;    BCD_ELEMENT_DEVICE_LOCATE_TYPE_ELEMENT = 0,&#10;    BCD_ELEMENT_DEVICE_LOCATE_TYPE_STRING = 1&#10;} BCD_ELEMENT_DEVICE_LOCATE_TYPE;">BCD_ELEMENT_DEVICE_LOCATE_TYPE</a>
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ParentOffset;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ElementType;
-            WCHAR Path[ANYSIZE_ARRAY];
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ElementType; // Packed <a href="bcd_element_datatype" title="typedef union _BCD_ELEMENT_DATATYPE&#10;{&#10;    ULONG PackedValue;&#10;    struct&#10;    {&#10;        ULONG SubType : 24;&#10;        BCD_ELEMENT_DATATYPE_FORMAT Format : 4;&#10;        BCD_ELEMENT_DATATYPE_CLASS Class : 4;&#10;    };&#10;} BCD_ELEMENT_DATATYPE, *PBCD_ELEMENT_DATATYPE;">BCD_ELEMENT_DATATYPE</a> for Type 0.
+            WCHAR Path[ANYSIZE_ARRAY]; // Type 1; starts at device offset 32.
         } Locate;
-        union
+        struct
         {
             GUID InterfaceInstance;
         } Vmbus;
-        union
+        struct
         {
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Data[ANYSIZE_ARRAY];
+            <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Data[ANYSIZE_ARRAY]; // Opaque bytes after the 20-byte prefix.
         } Unknown;
-        <a href="bcd_element_device_qualified_partition" title="typedef struct _BCD_ELEMENT_DEVICE_QUALIFIED_PARTITION&#10;{&#10;    ULONG PartitionStyle;&#10;    ULONG Reserved;&#10;    struct&#10;    {&#10;        union&#10;        {&#10;            ULONG DiskSignature;&#10;            ULONG64 PartitionOffset;&#10;        } Mbr;&#10;        union&#10;        {&#10;            GUID DiskSignature;&#10;            GUID PartitionSignature;&#10;        } Gpt;&#10;    };&#10;} BCD_ELEMENT_DEVICE_QUALIFIED_PARTITION, *PBCD_ELEMENT_DEVICE_QUALIFIED_PARTITION;">BCD_ELEMENT_DEVICE_QUALIFIED_PARTITION</a> QualifiedPartition;
+        <a href="bcd_element_device_qualified_partition" title="typedef struct _BCD_ELEMENT_DEVICE_QUALIFIED_PARTITION&#10;{&#10;    ULONG PartitionStyle;&#10;    ULONG Reserved; // Zero when writing.&#10;    union&#10;    {&#10;        struct&#10;        {&#10;            ULONG DiskSignature;&#10;            ULONG64 PartitionOffset; // Bytes from the start of the disk.&#10;        } Mbr;&#10;        struct&#10;        {&#10;            GUID DiskSignature;&#10;            GUID PartitionSignature;&#10;        } Gpt;&#10;    };&#10;} BCD_ELEMENT_DEVICE_QUALIFIED_PARTITION, *PBCD_ELEMENT_DEVICE_QUALIFIED_PARTITION;">BCD_ELEMENT_DEVICE_QUALIFIED_PARTITION</a> QualifiedPartition;
     };
 } BCD_ELEMENT_DEVICE, *PBCD_ELEMENT_DEVICE;
 </span><span class="ntdoc-code-footer language-cpp">
+#include &lt;poppack.h&gt;
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntbcd.h#L916">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntbcd.h#L998">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

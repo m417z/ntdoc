@@ -44,31 +44,38 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTMMAPI_H
 
-</span><span class="ntdoc-code-intro language-cpp">// private
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * The MEMORY_PARTITION_CONFIGURATION_INFORMATION structure supplies query selectors and receives memory usage statistics for a partition.
+ *
+ * Used with <a href="ntmanagepartition" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtManagePartition(&#10;    _In_ HANDLE TargetHandle,&#10;    _In_opt_ HANDLE SourceHandle,&#10;    _In_ PARTITION_INFORMATION_CLASS PartitionInformationClass,&#10;    _Inout_updates_bytes_(PartitionInformationLength) PVOID PartitionInformation,&#10;    _In_ ULONG PartitionInformationLength&#10;    );">NtManagePartition</a>(<a href="systemmemorypartitioninformation" title="#define SystemMemoryPartitionInformation 0x0">SystemMemoryPartitionInformation</a>). Initialize
+ * Flags, NumaNode, and Channel before calling. Counts and commitment limits
+ * are expressed in pages, not bytes; the verified x64 build uses 4096-byte
+ * base pages, including when reporting huge-page counts.
+ */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _MEMORY_PARTITION_CONFIGURATION_INFORMATION
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumaNode;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Channel;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfNumaNodes;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> ResidentAvailablePages;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> CommittedPages;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> CommitLimit;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> PeakCommitment;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> TotalNumberOfPages;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> AvailablePages;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> ZeroPages;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> FreePages;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> StandbyPages;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> StandbyPageCountByPriority[8]; // since REDSTONE2
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> RepurposedPagesByPriority[8];
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> MaximumCommitLimit;
-    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> Reserved; // DonatedPagesToPartitions
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PartitionId; // since REDSTONE3
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;                                        // Input query mode: 0 or 1 on x64.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumaNode;                                     // Input NUMA node index, or <a href="maxulong" title="#define MAXULONG 0xffffffff // winnt">MAXULONG</a> to aggregate all nodes.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Channel;                                      // Input channel selector; must be <a href="maxulong" title="#define MAXULONG 0xffffffff // winnt">MAXULONG</a> on the verified build.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfNumaNodes;                            // Output system node count for an all-node query; zero for a node-specific query on the verified build.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> ResidentAvailablePages;                      // Resident-available page accounting for the partition; zero for node-specific or huge-page queries.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> CommittedPages;                              // Current partition commit charge, in pages; zero for node-specific or huge-page queries.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> CommitLimit;                                 // Current partition commitment limit, in pages; zero for node-specific or huge-page queries.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> PeakCommitment;                              // Peak partition commitment, in pages; zero for node-specific or huge-page queries.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> TotalNumberOfPages;                          // Total physical pages reported for the selected query scope.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> AvailablePages;                              // Available pages, computed as ZeroPages + FreePages + StandbyPages on the verified build.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> ZeroPages;                                   // Pages reported on the zeroed list for the selected scope.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> FreePages;                                   // Pages reported on the free list for the selected scope.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> StandbyPages;                                // Pages reported on the standby lists; zero for the huge-page query.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> StandbyPageCountByPriority[8];               // Standby page counts for priorities 0 through 7. Since REDSTONE2; zero for node-specific or huge-page queries.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> RepurposedPagesByPriority[8];                // Repurposed page counts for priorities 0 through 7; zero for node-specific or huge-page queries.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> MaximumCommitLimit;                          // Maximum partition commitment limit, in pages; zero for node-specific or huge-page queries.
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> Reserved;                                    // Historical DonatedPagesToPartitions slot; returned as zero on x64.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PartitionId;                                  // Output identifier of the queried partition. Since REDSTONE3.
 } MEMORY_PARTITION_CONFIGURATION_INFORMATION, *PMEMORY_PARTITION_CONFIGURATION_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntmmapi.h#L1680">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntmmapi.h#L1747">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

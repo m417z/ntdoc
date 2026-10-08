@@ -47,6 +47,14 @@
 </span><span class="ntdoc-code-intro language-cpp">// combined <a href="file_full_ea_information" title="_Struct_size_bytes_(NextEntryOffset)&#10;typedef struct _FILE_FULL_EA_INFORMATION&#10;{&#10;    ULONG NextEntryOffset;&#10;    UCHAR Flags;&#10;    UCHAR EaNameLength;&#10;    USHORT EaValueLength;&#10;    _Field_size_bytes_(EaNameLength) CHAR EaName[1];&#10;    // ...&#10;    // UCHAR EaValue[1]&#10;} FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;">FILE_FULL_EA_INFORMATION</a> and <a href="flt_connect_context" title="typedef struct _FLT_CONNECT_CONTEXT&#10;{&#10;    PUNICODE_STRING PortName;&#10;    PUNICODE_STRING64 PortName64;&#10;    USHORT SizeOfContext;&#10;    UCHAR Padding[6]; // unused&#10;    _Field_size_bytes_(SizeOfContext) UCHAR Context[ANYSIZE_ARRAY];&#10;} FLT_CONNECT_CONTEXT, *PFLT_CONNECT_CONTEXT;">FLT_CONNECT_CONTEXT</a>
 /**
  * The FLT_PORT_FULL_EA structure is the full extended attribute buffer used to open a filter communication port.
+ *
+ * EaValue starts at byte 16 on both x86 and x64. EaValueLength excludes the
+ * EA header and name and equals <a href="flt_port_full_ea_value_size" title="#define FLT_PORT_FULL_EA_VALUE_SIZE \&#10;    RTL_SIZEOF_THROUGH_FIELD(FLT_CONNECT_CONTEXT, Padding)">FLT_PORT_FULL_EA_VALUE_SIZE</a> + SizeOfContext.
+ * Pass <a href="flt_port_full_ea_size" title="#define FLT_PORT_FULL_EA_SIZE \&#10;    (sizeof(FILE_FULL_EA_INFORMATION) + (sizeof(FLT_PORT_EA_NAME) - sizeof(ANSI_NULL)))">FLT_PORT_FULL_EA_SIZE</a> + EaValueLength as <a href="ntcreatefile" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">NtCreateFile</a>&#x27;s EaLength.
+ * Open with FILE_READ_DATA | FILE_WRITE_DATA | SYNCHRONIZE and <a href="file_open_if" title="#define FILE_OPEN_IF 0x00000003">FILE_OPEN_IF</a>;
+ * use <a href="file_synchronous_io_nonalert" title="#define FILE_SYNCHRONOUS_IO_NONALERT 0x00000020">FILE_SYNCHRONOUS_IO_NONALERT</a> only for a synchronous connection handle.
+ * The server port&#x27;s security descriptor controls access. Close the returned
+ * file handle with <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a> to release the connection.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _FLT_PORT_FULL_EA
 {
@@ -59,7 +67,7 @@
 } FLT_PORT_FULL_EA, *PFLT_PORT_FULL_EA;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntioapi.h#L4505">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntioapi.h#L4532">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -43,22 +43,28 @@
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTBCD_H
+// Serialized device payloads can contain nested devices at unaligned offsets.
+#include &lt;pshpack1.h&gt;
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The BCD_ELEMENT_DEVICE_QUALIFIED_PARTITION structure contains information about a qualified partition.
+ * Identifies a partition by disk identity and partition identity rather than by
+ * its current device path. PartitionStyle 0 selects MBR (disk signature plus
+ * partition byte offset); PartitionStyle 1 selects GPT (disk and partition GUIDs).
+ * The 40-byte payload follows the 20-byte <a href="bcd_element_device" title="typedef struct _BCD_ELEMENT_DEVICE&#10;{&#10;    ULONG DeviceType; // BCD_ELEMENT_DEVICE_TYPE&#10;    GUID AdditionalOptions;&#10;    union&#10;    {&#10;        struct&#10;        {&#10;            ULONG ParentOffset;&#10;            WCHAR Path[ANYSIZE_ARRAY]; // NUL-terminated; starts at device offset 24.&#10;        } File;&#10;        struct&#10;        {&#10;            WCHAR Path[ANYSIZE_ARRAY]; // NUL-terminated; starts at device offset 20.&#10;        } Partition;&#10;        struct&#10;        {&#10;            ULONG Type; // BCD_ELEMENT_DEVICE_LOCATE_TYPE&#10;            ULONG ParentOffset;&#10;            ULONG ElementType; // Packed BCD_ELEMENT_DATATYPE for Type 0.&#10;...">BCD_ELEMENT_DEVICE</a> prefix. MBR fields
+ * are consecutive, not alternatives; the MBR and GPT representations overlap.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _BCD_ELEMENT_DEVICE_QUALIFIED_PARTITION
 {
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PartitionStyle;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved;
-    struct
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved; // Zero when writing.
+    union
     {
-        union
+        struct
         {
             <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DiskSignature;
-            <a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a> PartitionOffset;
+            <a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a> PartitionOffset; // Bytes from the start of the disk.
         } Mbr;
-        union
+        struct
         {
             GUID DiskSignature;
             GUID PartitionSignature;
@@ -66,8 +72,9 @@
     };
 } BCD_ELEMENT_DEVICE_QUALIFIED_PARTITION, *PBCD_ELEMENT_DEVICE_QUALIFIED_PARTITION;
 </span><span class="ntdoc-code-footer language-cpp">
+#include &lt;poppack.h&gt;
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntbcd.h#L894">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntbcd.h#L966">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

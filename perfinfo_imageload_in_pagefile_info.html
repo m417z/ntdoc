@@ -47,6 +47,29 @@
 </span><span class="ntdoc-code-intro language-cpp">//
 // Image backed by pagefile event.
 //
+// Verification status (ntoskrnl): LEGACY / NOT EMITTED.
+//   - No WMI_LOG_TYPE_* / PERFINFO_LOG_TYPE_* hook constant maps to this record
+//     (every actively-emitted struct in this header has one; this one does not).
+//   - It is not a PAGE_FAULT sub-type (WMI_LOG_TYPE_PAGE_FAULT_* has no
+//     &quot;image in pagefile&quot; member).
+//   - PerfLogImageLoad emits the 56-byte <a href="wmi_imageload_information" title="typedef struct _WMI_IMAGELOAD_INFORMATION&#10;{&#10;    PVOID ImageBase;&#10;    SIZE_T ImageSize;&#10;    ULONG ProcessId;&#10;    ULONG ImageChecksum;&#10;    ULONG TimeDateStamp;&#10;    UCHAR SignatureLevel;&#10;    UCHAR SignatureType;&#10;    USHORT Reserved0;&#10;    PVOID DefaultBase;&#10;    ULONG Reserved1;&#10;    ULONG Reserved2;&#10;    ULONG Reserved3;&#10;    ULONG Reserved4;&#10;    WCHAR FileName[1];&#10;} WMI_IMAGELOAD_INFORMATION, *PWMI_IMAGELOAD_INFORMATION;">WMI_IMAGELOAD_INFORMATION</a>, not this.
+//   - The PDB type library carries no PERFINFO_IMAGELOAD_IN_PAGEFILE_INFO type,
+//     and no builder assembling a 16-byte record from a <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a> +
+//     DeviceObject-&gt;Characteristics was located anywhere in the image.
+//   Conclusion: this is a legacy MOF record (image mapped from the pagefile /
+//   removable media, of interest to the prefetcher) that is no longer produced
+//   by current kernels. Layout below is the canonical definition; field offsets
+//   are the unambiguous x64 C layout (sizeof == 0x10). Could NOT be
+//   binary-confirmed because the emitter has not been identified.
+//
+// Field semantics (reconstructed):
+//   FileObject            - backing <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a> for the image section.
+//   DeviceCharacteristics - <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a>-&gt;DeviceObject-&gt;Characteristics.
+//   FileCharacteristics   - section/control-area image characteristics.
+//   ActiveDataReference   - a data section also references the same file.
+//   DeviceEjectable       - DeviceCharacteristics &amp; <a href="file_removable_media" title="#define FILE_REMOVABLE_MEDIA 0x00000001">FILE_REMOVABLE_MEDIA</a> (0x1).
+//   WritableHandles       - control area has outstanding writable user refs.
+//
 
 </span><span class="ntdoc-code-body language-cpp">typedef struct _PERFINFO_IMAGELOAD_IN_PAGEFILE_INFO
 {
@@ -64,7 +87,7 @@
 } PERFINFO_IMAGELOAD_IN_PAGEFILE_INFO, *PPERFINFO_IMAGELOAD_IN_PAGEFILE_INFO;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntwmi.h#L4933">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntwmi.h#L5603">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

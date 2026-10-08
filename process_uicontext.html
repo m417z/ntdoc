@@ -44,16 +44,40 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTUSER_H
 
-</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">typedef enum _PROCESS_UICONTEXT
+</span><span class="ntdoc-code-intro language-cpp">//
+// System Parameters, Session &amp; Process User State
+//
+
+/**
+ * [KERNEL-VALIDATED against win32kbase.sys / win32kfull.sys, Win11 build]
+ * Public user32 enum: user32!<a href="getprocessuicontextinformation" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;BOOL&#10;NTAPI&#10;GetProcessUIContextInformation(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Out_ PPROCESS_UICONTEXT_INFORMATION UIContext&#10;    );">GetProcessUIContextInformation</a> -&gt;
+ * win32k syscall <a href="ntusergetprocessuicontextinformation" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;LOGICAL&#10;NTAPI&#10;NtUserGetProcessUIContextInformation(&#10;    _In_ HANDLE ProcessHandle,&#10;    _Out_ PPROCESS_UICONTEXT_INFORMATION UIContext&#10;    );">NtUserGetProcessUIContextInformation</a> (string @ win32kbase 0x140262030;
+ * referenced from the retail service-name tables). Fills <a href="process_uicontext_information" title="typedef struct _PROCESS_UICONTEXT_INFORMATION&#10;{&#10;    PROCESS_UICONTEXT ProcessUIContext;  // Immersive UI-context discriminator (PROCESS_UICONTEXT_*).&#10;    PROCESS_UI_FLAGS Flags;              // UI flags (PROCESS_UIF_*).&#10;} PROCESS_UICONTEXT_INFORMATION, *PPROCESS_UICONTEXT_INFORMATION;">PROCESS_UICONTEXT_INFORMATION</a>
+ * { PROCESS_UICONTEXT ProcessUIContext; <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> dwFlags; }.
+ *
+ * The UI-context / immersive-type discriminator is stored in the process flags QWORD at
+ * tagPROCESSINFO+0x330, bits 4-5 (mask 0x30). Setter: SetProcessType @ win32kbase
+ * 0x1401A11F0 writes (immersiveType &lt;&lt; 4) into ppi+0x330 (RMW mask 0xCF). Readers cross-
+ * confirm the numeric ordering:
+ *   (ppi+0x330 &amp; 0x30) == 0x00 -&gt; DESKTOP           [PARTIAL - implied 0, no dedicated reader]
+ *   (ppi+0x330 &amp; 0x30) == 0x10 -&gt; IMMERSIVE (app)   [CONFIRMED - IsImmersiveAppRestricted @0x1400D8720 tests ==0x10]
+ *   (ppi+0x330 &amp; 0x30) == 0x20 -&gt; IMMERSIVE_BROKER  [CONFIRMED - IsImmersiveBroker        @0x1400C0B00 tests ==0x20]
+ *   IMMERSIVE_BROWSER = 3       -&gt; UICONTEXT-only 4th value; not encoded in these 2 type
+ *                                  bits (SetProcessType&#x27;s _PROCESS_IMMERSIVE_TYPE callout
+ *                                  asserts type&gt;=3 invalid, handling only 0/1/2). [UNVERIFIED - value trivially sequential]
+ * NOTE: tagPROCESSINFO is a PDB forward-decl (no named bitfields) so bit-NAMES are not
+ * symbol-confirmed; the numeric enum values are behaviorally supported as above.
+ */
+</span><span class="ntdoc-code-body language-cpp">typedef enum _PROCESS_UICONTEXT
 {
-    PROCESS_UICONTEXT_DESKTOP,
-    PROCESS_UICONTEXT_IMMERSIVE,
-    PROCESS_UICONTEXT_IMMERSIVE_BROKER,
-    PROCESS_UICONTEXT_IMMERSIVE_BROWSER
+    PROCESS_UICONTEXT_DESKTOP,           // 0 [PARTIAL]   - (ppi+0x330 &amp; 0x30)==0x00
+    PROCESS_UICONTEXT_IMMERSIVE,         // 1 [CONFIRMED] - ==0x10 (IsImmersiveAppRestricted @0x1400D8720)
+    PROCESS_UICONTEXT_IMMERSIVE_BROKER,  // 2 [CONFIRMED] - ==0x20 (IsImmersiveBroker @0x1400C0B00)
+    PROCESS_UICONTEXT_IMMERSIVE_BROWSER  // 3 [UNVERIFIED] - public 4th value, not seen written to type bits
 } PROCESS_UICONTEXT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntuser.h#L405">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntuser.h#L24446">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

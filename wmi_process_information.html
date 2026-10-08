@@ -44,25 +44,39 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTWMI_H
 
-</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">typedef struct _WMI_PROCESS_INFORMATION
+</span><span class="ntdoc-code-intro language-cpp">//
+// Process event payload (<a href="event_trace_group_process" title="#define EVENT_TRACE_GROUP_PROCESS 0x0300 // ProcessGuid">EVENT_TRACE_GROUP_PROCESS</a>). The fixed part is 36
+// (0x24) bytes; a run of variable-length fields is appended after it. Layout
+// and EPROCESS field sources verified against nt!EtwpBuildProcessEvent
+// (ntoskrnl).
+//
+</span><span class="ntdoc-code-body language-cpp">typedef struct _WMI_PROCESS_INFORMATION
 {
-    <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> UniqueProcessKey;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessId;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ParentId;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SessionId;
-    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ExitStatus;
-    <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> DirectoryTableBase;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Sid;
-    // Variable length sid
-    // FileName (ansi string)
-    // CommandLine (unicode string)
-    // PackageFullName (unicode string)
-    // PRAID (unicode string)
+    <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> UniqueProcessKey;     // +0x00  EPROCESS pointer (the object itself)
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessId;                // +0x08  EPROCESS.UniqueProcessId (0x1D0)
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ParentId;                 // +0x0C  EPROCESS.InheritedFromUniqueProcessId (0x2D0)
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SessionId;                // +0x10  PsGetSessionIdEx(Process)
+    <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ExitStatus;            // +0x14  EPROCESS.ExitStatus (0x554)
+    <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> DirectoryTableBase;   // +0x18  KPROCESS.DirectoryTableBase (0x28) &amp; ~0xFFF
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;                    // +0x20  ETW_PROCESS_EVENT_FLAG_*
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Sid;                      // +0x24  start of the variable data (see below)
+    // Variable-length trailer, in this exact order:
+    //   Sid             - from the primary token&#x27;s <a href="token_user" title="typedef struct _TOKEN_USER&#10;{&#10;    SID_AND_ATTRIBUTES User;&#10;} TOKEN_USER, *PTOKEN_USER;">TOKEN_USER</a> (<a href="sequeryinformationtoken" title="NTSTATUS SeQueryInformationToken(&#10;  [in]  PACCESS_TOKEN           Token,&#10;  [in]  TOKEN_INFORMATION_CLASS TokenInformationClass,&#10;  [out] PVOID                   *TokenInformation&#10;);">SeQueryInformationToken</a>)
+    //   ImageFileName   - ANSI, NUL-terminated; EPROCESS.ImageFileName (0x338), or the
+    //                     leaf of the full NT path in SeAuditProcessCreationInfo (0x350)
+    //                     when the short name is exactly 14 characters
+    //   CommandLine     - UNICODE, NUL-terminated; only when process command-line tracing
+    //                     is enabled and this is a full (non-rundown) event
+    //   PackageFullName - UNICODE; from EtwpQueryTokenPackageInfo
+    //   ApplicationId   - UNICODE; from EtwpQueryTokenPackageInfo (Process_V4+)
+    //   ExitTime        - LARGE_INTEGER (8 bytes); EPROCESS.ExitTime (0x5C0), appended
+    //                     ONLY for the ZombieProcess event
+    //                     (type 0x327 == <a href="perfinfo_log_type_zombie_process" title="#define PERFINFO_LOG_TYPE_ZOMBIE_PROCESS (EVENT_TRACE_GROUP_PROCESS | 0x27) // WMI_PROCESS_INFORMATION">PERFINFO_LOG_TYPE_ZOMBIE_PROCESS</a>)
+    // (No standalone PRAID field is emitted.)
 } WMI_PROCESS_INFORMATION, *PWMI_PROCESS_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntwmi.h#L1956">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntwmi.h#L2218">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

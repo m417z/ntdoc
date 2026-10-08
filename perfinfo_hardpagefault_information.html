@@ -48,18 +48,30 @@
 // NOTE: Hard Fault event starts with InitialTime (LARGE_INTEGER)
 //       not shown in the structure.
 //
+// Verified against ntoskrnl. Emitted by PfHardFaultLog() -&gt;
+// EtwTraceSiloTimedEvent(silo, HookId, SubType, &amp;Record); the fixed MOF
+// descriptor length is 32 bytes (0x20). HookId = <a href="perfinfo_log_type_hardfault" title="#define PERFINFO_LOG_TYPE_HARDFAULT (EVENT_TRACE_GROUP_MEMORY | 0x20) // PERFINFO_HARDPAGEFAULT_INFORMATION">PERFINFO_LOG_TYPE_HARDFAULT</a>
+// (0x220) for a normal hard fault, or 626/627 for prefetcher hard-fault
+// completion sub-types. The record is populated in MiIssueHardFault():
+//   +0x00 ReadOffset     file read offset (InPage ReadOffset; &lt;&lt; <a href="page_shift" title="#define PAGE_SHIFT 0xC">PAGE_SHIFT</a> when page-relative)
+//   +0x08 VirtualAddress faulting virtual address
+//   +0x10 FileObject     backing <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a> (from control-area/subsection)
+//   +0x18 ThreadId       current thread&#x27;s unique thread id (ETHREAD Cid.UniqueThread)
+//   +0x1C ByteCount      bytes transferred by the in-page read
+// A trailing PerfCounter timestamp follows the record but is not part of it.
+//
 
 </span><span class="ntdoc-code-body language-cpp">typedef struct _PERFINFO_HARDPAGEFAULT_INFORMATION
 {
-    LARGE_INTEGER ReadOffset;
-    PVOID VirtualAddress;
-    PVOID FileObject;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ThreadId;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ByteCount;
+    LARGE_INTEGER ReadOffset;   // +0x00 file offset of the in-page read
+    PVOID VirtualAddress;       // +0x08 faulting VA
+    PVOID FileObject;           // +0x10 backing <a href="file_object" title="typedef struct _FILE_OBJECT {&#10;  CSHORT                                Type;&#10;  CSHORT                                Size;&#10;  PDEVICE_OBJECT                        DeviceObject;&#10;  PVPB                                  Vpb;&#10;  PVOID                                 FsContext;&#10;  PVOID                                 FsContext2;&#10;  PSECTION_OBJECT_POINTERS              SectionObjectPointer;&#10;  PVOID                                 PrivateCacheMap;&#10;  NTSTATUS                              FinalStatus;&#10;  struct _FILE_OBJECT                   *RelatedFileObject;&#10;  BOOLEAN                               LockOperation;&#10;  BOOLEAN                               DeletePending;&#10;  BOOLEAN                               ReadAccess;&#10;  BOOLEAN                               WriteAccess;&#10;  BOOLEAN                               DeleteAccess;&#10;  BOOLEAN                               SharedRead;&#10;  BOOLEAN                               SharedWrite;&#10;  BOOLEAN                               SharedDelete;&#10;  ULONG                                 Flags;&#10;...">FILE_OBJECT</a>
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ThreadId;             // +0x18 faulting thread id
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ByteCount;            // +0x1C bytes read
 } PERFINFO_HARDPAGEFAULT_INFORMATION, *PPERFINFO_HARDPAGEFAULT_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntwmi.h#L4720">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntwmi.h#L5367">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

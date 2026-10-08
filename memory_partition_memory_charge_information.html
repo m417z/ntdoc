@@ -44,16 +44,20 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTMMAPI_H
 
-</span><span class="ntdoc-code-intro language-cpp">// private
+</span><span class="ntdoc-code-intro language-cpp">// On x64 the one-entry structure is 48 bytes and Charges starts
+// at offset 8. <a href="ntmanagepartition" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtManagePartition(&#10;    _In_ HANDLE TargetHandle,&#10;    _In_opt_ HANDLE SourceHandle,&#10;    _In_ PARTITION_INFORMATION_CLASS PartitionInformationClass,&#10;    _Inout_updates_bytes_(PartitionInformationLength) PVOID PartitionInformation,&#10;    _In_ ULONG PartitionInformationLength&#10;    );">NtManagePartition</a> requires PartitionInformationLength == 48 even
+// when more records are allocated. The initial count check accepts 1..31, but
+// only distinct Types 0 and 1 pass validation (at most two valid entries).
+// Allocate storage for all NumberOfCharges entries; do not pass sizeof a byte array.
 </span><span class="ntdoc-code-body language-cpp">typedef struct _MEMORY_PARTITION_MEMORY_CHARGE_INFORMATION
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags; // <a href="memory_partition_memory_charge_query" title="#define MEMORY_PARTITION_MEMORY_CHARGE_QUERY 0x1">MEMORY_PARTITION_MEMORY_CHARGE_QUERY</a> or <a href="memory_partition_memory_charge_set" title="#define MEMORY_PARTITION_MEMORY_CHARGE_SET 0x2 // Requires SeLockMemoryPrivilege.">MEMORY_PARTITION_MEMORY_CHARGE_SET</a>.
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfCharges;
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Charges[ANYSIZE_ARRAY]; // Array of 40-byte charge records.
+    _Field_size_(NumberOfCharges) <a href="memory_partition_memory_charge_entry" title="typedef struct _MEMORY_PARTITION_MEMORY_CHARGE_ENTRY&#10;{&#10;    ULONG Type;&#10;    ULONG Reserved;&#10;    SIZE_T CurrentCharges;&#10;    SIZE_T ChargePeak;&#10;    SIZE_T MaximumAllowed;&#10;    SIZE_T ChargeFailures;&#10;} MEMORY_PARTITION_MEMORY_CHARGE_ENTRY, *PMEMORY_PARTITION_MEMORY_CHARGE_ENTRY;">MEMORY_PARTITION_MEMORY_CHARGE_ENTRY</a> Charges[ANYSIZE_ARRAY];
 } MEMORY_PARTITION_MEMORY_CHARGE_INFORMATION, *PMEMORY_PARTITION_MEMORY_CHARGE_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntmmapi.h#L1803">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntmmapi.h#L1957">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

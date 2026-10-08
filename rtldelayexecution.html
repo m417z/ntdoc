@@ -51,20 +51,91 @@
 /**
  * The RtlDelayExecution routine suspends the current thread for the specified interval.
  *
- * \param Alertable If `TRUE`, the delay can be interrupted by the delivery of an alert to the thread.
- * \param DelayInterval An optional pointer to the interval to wait, in 100-nanosecond units.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param Alertable If `TRUE`, the wait is alertable and may return early with STATUS_ALERTED or STATUS_USER_APC.
+ * \param DelayInterval A pointer to the interval to wait, in 100-nanosecond units.
+ * - A negative value specifies an interval relative to the current time.
+ * - A positive value specifies an absolute time.
+ * - A value of zero yields the remainder of the time slice to another ready thread.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status. STATUS_NO_YIELD_PERFORMED if DelayInterval is zero and no other thread was ready to run.
+ * \remarks When DelayInterval is zero and SMT delayed sleep is configured (Session Manager SmtDelayBaseYield/SmtFactorYield),
+ * repeated failed yields within SmtDelaySleepLoopWindowSize (after SmtDelaySpinCountThreshold calls) execute an increasing
+ * pause back-off, bounded by SmtDelayMaxYield, before the system call. State is tracked in <a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a>-&gt;SpinCallCount and
+ * <a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a>-&gt;LastSleepCounter; SpinCallCount is reset whenever the status is not STATUS_NO_YIELD_PERFORMED.
+ *
+ * At process start, LdrpInitializeSmtDelayedSleep reads five values from
+ * HKLM\\System\\CurrentControlSet\\Control\\Session Manager:
+ * - SmtDelaySleepLoopWindowSize: Only zero-length delays called within this many QPC ticks of the previous one count as a spin loop.
+ * - SmtDelaySpinCountThreshold: How many back-to-back failed yields before throttling starts.
+ * - SmtDelayBaseYield: Starting length of the pause.
+ * - SmtFactorYield: How much longer the pause gets with each further failed yield.
+ * - SmtDelayMaxYield: Upper limit on the pause.
+ *
+ * If both SmtDelayBaseYield and SmtFactorYield are 0 (absent), the feature is off and the function behaves like
+ * plain <a href="ntdelayexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDelayExecution(&#10;    _In_ BOOLEAN Alertable,&#10;    _In_ PLARGE_INTEGER DelayInterval&#10;    );">NtDelayExecution</a>. The pause length is converted to a number of pause instructions using
+ * <a href="kuser_shared_data" title="typedef struct _KUSER_SHARED_DATA&#10;{&#10;    //&#10;    // Current low 32-bit of tick count and tick count multiplier.&#10;    //&#10;    // N.B. The tick count is updated each time the clock ticks.&#10;    //&#10;&#10;    ULONG TickCountLowDeprecated;&#10;    ULONG TickCountMultiplier;&#10;&#10;    //&#10;    // Current 64-bit interrupt time in 100ns units.&#10;    //&#10;&#10;    volatile KSYSTEM_TIME InterruptTime;&#10;&#10;    //&#10;    // Current 64-bit system time in 100ns units.&#10;    //&#10;...">KUSER_SHARED_DATA</a>-&gt;CyclesPerYield.
+ *
+ * \remarks Timing impact of the SMT yield backoff introduced on Windows 11 (derived from the RtlDelayExecution disassembly).
+ *
+ * Not affected:
+ * - Any non-zero delay (Sleep(n) with n &gt; 0). The first test is *DelayInterval == 0;
+ * any other value goes straight to <a href="ntdelayexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDelayExecution(&#10;    _In_ BOOLEAN Alertable,&#10;    _In_ PLARGE_INTEGER DelayInterval&#10;    );">NtDelayExecution</a>, so timing a Sleep(n) against QPC/RDTSC is unchanged.
+ * - Direct <a href="ntdelayexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDelayExecution(&#10;    _In_ BOOLEAN Alertable,&#10;    _In_ PLARGE_INTEGER DelayInterval&#10;    );">NtDelayExecution</a> or <a href="ntyieldexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtYieldExecution(&#10;    VOID&#10;    );">NtYieldExecution</a> calls. They go straight to the kernel and never reach the backoff.
+ * - Systems where SmtDelayBaseYield and SmtFactorYield are both zero/absent (plain pass-through).
+ *
+ * Affected (when the feature is enabled and only for zero-interval calls (Sleep(0), SwitchToThread, and wrappers that pass a zero interval):
+ * - Code that times Sleep(0)/SwitchToThread in a tight loop. After SmtDelaySpinCountThreshold consecutive failed
+ * yields inside the window, each call gets a growing run of pause instructions, up to SmtDelayMaxYield. Per-call
+ * latency rises and then levels off. Since the backoff only builds while yields keep failing, it mostly shows
+ * on an idle core with nothing else ready to run.
+ *
+ - Anti-debug, sandbox or VM checks that measure Sleep(0)/SwitchToThread timing may see inflated or uneven
+ * numbers and misread them as a debugger or emulator. On SMT hardware the pause bursts also change how much the
+ * sibling core runs, which can skew cross-core contention measurements.
+ *
+ * - Benchmarks that use Sleep(0) as a cheap yield inside the measured loop pick up extra latency on an idle core.
+ *
+ * - Spin-then-yield locks (.NET SpinWait/Thread.Yield, game-engine spin locks, lock-free retry loops). When the
+ * holder runs on another core the yield keeps failing, so the backoff builds; on release the waiter may be
+ * partway through a pause run of up to SmtDelayMaxYield, adding acquire latency that older Windows did not have.
+ *
+ * - Polling loops (audio, input, network) that poll with Sleep(0) get extra, machine-dependent jitter. The delay
+ * depends on <a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a> state (SpinCallCount, LastSleepCounter) left by earlier calls on the same thread.
+ *
+ * - Virtual machines: hypervisor pause-loop exiting (PLE) treats long pause bursts as a spinning vCPU and may
+ * deschedule it, so a short yield could become a latency spike far longer than the intended pause. Whether this
+ * happens depends on the PLE window/gap settings and CyclesPerYield.
+ *
+ * - CPU accounting and profiling: the pause loop runs in user mode, so it counts as user CPU time and thread
+ * cycle time attributed to ntdll!RtlDelayExecution, where older Windows showed mostly system-call/kernel time.
+ * Per-thread context-switch and system-call counts drop, so heuristics that use &quot;many <a href="ntdelayexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDelayExecution(&#10;    _In_ BOOLEAN Alertable,&#10;    _In_ PLARGE_INTEGER DelayInterval&#10;    );">NtDelayExecution</a> calls&quot;
+ * as a busy-yield signal see different numbers. Thread CPU/cycle figures for processes stuck in yield loops
+ * will look higher on Windows 11 than on Windows 10 for the same behavior.
+ *
+ * - Priority starvation is unchanged: a zero-length delay still only yields to threads ready on the current
+ * processor, so a starved lower-priority lock holder is not helped, and each loop iteration now takes longer.
+ *
+ * - Inconsistent behavior: the settings are read once per process at ntdll initialization, so behavior differs
+ * across machines and only a process restart picks up a registry change. <a href="ntdelayexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDelayExecution(&#10;    _In_ BOOLEAN Alertable,&#10;    _In_ PLARGE_INTEGER DelayInterval&#10;    );">NtDelayExecution</a> bypasses the backoff
+ * while Sleep/SwitchToThread do not, so two seemingly equivalent code paths can also time differently.
+ *
+ * Benefit: on SMT hardware, a thread repeatedly failing to yield used to issue a stream of system calls that took
+ * execution resources from its sibling core. The pause runs give those resources back and likely use less power
+ * than looping through the kernel.
+ *
+ * For a zero-length yield with no throttling (e.g. in a timing tool), call <a href="ntdelayexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDelayExecution(&#10;    _In_ BOOLEAN Alertable,&#10;    _In_ PLARGE_INTEGER DelayInterval&#10;    );">NtDelayExecution</a> or
+ * <a href="ntyieldexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtYieldExecution(&#10;    VOID&#10;    );">NtYieldExecution</a> directly instead of calling Sleep or RtlDelayExecution.
+ * \see <a href="ntdelayexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDelayExecution(&#10;    _In_ BOOLEAN Alertable,&#10;    _In_ PLARGE_INTEGER DelayInterval&#10;    );">NtDelayExecution</a>
  */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NTAPI
 RtlDelayExecution(
     _In_ BOOLEAN Alertable,
-    _In_opt_ PLARGE_INTEGER DelayInterval
+    _In_ PLARGE_INTEGER DelayInterval
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntrtl.h#L17442">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntrtl.h#L17523">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -44,30 +44,37 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTMMAPI_H
 
-</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">typedef union _MEMORY_REGION_INFORMATION_TYPE
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * The MEMORY_REGION_INFORMATION_TYPE union decodes the region-type bitfield returned by <a href="memoryregioninformationex" title="#define MemoryRegionInformationEx 0x7">MemoryRegionInformationEx</a>.
+ *
+ * The union overlays the 32-bit RegionType member of <a href="memory_region_information" title="typedef struct _MEMORY_REGION_INFORMATION&#10;{&#10;    PVOID AllocationBase;                  // Base address of the allocation.&#10;    ULONG AllocationProtect;               // Page protection when the allocation was created (individual pages can be different from this value).&#10;    ULONG RegionType;                      // MemoryRegionInformation: legacy MEM_* values; MemoryRegionInformationEx: MEMORY_REGION_INFORMATION_TYPE bits.&#10;    SIZE_T RegionSize;                     // The combined size of pages in the region.&#10;    SIZE_T CommitSize;                     // The commit charge associated with the allocation.&#10;} MEMORY_REGION_INFORMATION, *PMEMORY_REGION_INFORMATION;">MEMORY_REGION_INFORMATION</a>
+ * and <a href="memory_region_information_ex" title="typedef struct _MEMORY_REGION_INFORMATION_EX&#10;{&#10;    PVOID AllocationBase;                  // Base address of the allocation.&#10;    ULONG AllocationProtect;               // Page protection when the allocation was created (individual pages can be different from this value).&#10;    ULONG RegionType;                      // MemoryRegionInformation: legacy MEM_* values; MemoryRegionInformationEx: MEMORY_REGION_INFORMATION_TYPE bits.&#10;    SIZE_T RegionSize;                     // The combined size of pages in the region.&#10;    SIZE_T CommitSize;                     // The commit charge associated with the allocation.&#10;    ULONG_PTR PartitionId;                 // 19H1&#10;    ULONG_PTR NodePreference;              // 20H1&#10;} MEMORY_REGION_INFORMATION_EX, *PMEMORY_REGION_INFORMATION_EX;">MEMORY_REGION_INFORMATION_EX</a> with individual allocation-type and page-size
+ * indicators. A set bit describes the corresponding property of the allocation.
+ */
+</span><span class="ntdoc-code-body language-cpp">typedef union _MEMORY_REGION_INFORMATION_TYPE
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RegionType;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RegionType;                           // Combined 32-bit region-type flags returned by class 7.
     struct
     {
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Private : 1;                 // Region is private to the process (not shared).
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedDataFile : 1;          // Region is a mapped view of a data file (read/write data mapping).
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedImage : 1;             // Region is a mapped view of an image file (executable/DLL mapping).
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedPageFile : 1;          // Region is a mapped view of a pagefile-backed section.
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedPhysical : 1;          // Region is a mapped view of the \Device\PhysicalMemory section.
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DirectMapped : 1;            // Region is a mapped view of a direct-mapped file.
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SoftwareEnclave : 1;         // Region is a mapped view of a software enclave. // since REDSTONE3
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PageSize64K : 1;             // Region uses 64 KB page size.
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PlaceholderReservation : 1;  // Region uses placeholder reservations. // since REDSTONE4
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedAwe : 1;               // Region uses Address Windowing Extensions (AWE). // 21H1
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedWriteWatch : 1;        // Region uses write-watch protection.
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PageSizeLarge : 1;           // Region uses large page size.
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PageSizeHuge : 1;            // Region uses huge page size.
-        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved : 19;
-    };
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Private : 1;                      // Bit 0: Private allocation belonging to the process.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedDataFile : 1;               // Bit 1: Mapped view of a data file.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedImage : 1;                  // Bit 2: Mapped view of an executable image.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedPageFile : 1;               // Bit 3: Mapped view of a pagefile-backed section.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedPhysical : 1;               // Bit 4: View of the physical-memory section.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DirectMapped : 1;                 // Bit 5: Mapped view of a direct-mapped file.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SoftwareEnclave : 1;              // Bit 6: Software-enclave allocation. Since REDSTONE3.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PageSize64K : 1;                  // Bit 7: Uses 65536-byte pages.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PlaceholderReservation : 1;       // Bit 8: Placeholder reservation. Since REDSTONE4.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedAwe : 1;                    // Bit 9: Address Windowing Extensions (AWE) allocation. Since 21H1.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MappedWriteWatch : 1;             // Bit 10: Allocation uses write-watch tracking.
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PageSizeLarge : 1;                // Bit 11: Uses large pages (2097152 bytes on the verified x64 build).
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PageSizeHuge : 1;                 // Bit 12: Uses huge pages (1073741824 bytes on the verified x64 build).
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved : 19;                    // Bits 13 through 31: Reserved; do not interpret.
+    } DUMMYSTRUCTNAME;
 } MEMORY_REGION_INFORMATION_TYPE, *PMEMORY_REGION_INFORMATION_TYPE;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/e518dac33b1501c558f3d843c3d371542293a682/phnt/include/ntmmapi.h#L221">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/841cbf0026795a7a940de2e4e59f75468200d571/phnt/include/ntmmapi.h#L233">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
