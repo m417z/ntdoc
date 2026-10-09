@@ -86,10 +86,35 @@ ZwSetTimerResolution(
 <div class="ntdoc-description-title">
 <h1>NtDoc</h1>
 </div>
-<div class="ntdoc-description">
-<div class="ntdoc-description-none">
-<p>No description available.</p>
-</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<p>Requests or releases a system timer resolution on behalf of the calling process. A finer resolution increases the precision of waits and timers at the cost of higher power consumption.</p>
+<h1>Parameters</h1>
+<ul>
+<li><code>DesiredTime</code> - the requested interval between timer ticks, in 100-nanosecond units. Values outside the range reported by <code><a href="ntquerytimerresolution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryTimerResolution(&#10;    _Out_ PULONG MaximumTime,&#10;    _Out_ PULONG MinimumTime,&#10;    _Out_ PULONG CurrentTime&#10;    );">NtQueryTimerResolution</a></code> are clamped to it. This parameter is ignored when <code>SetResolution</code> is <code>FALSE</code>.</li>
+<li><code>SetResolution</code> - whether to set (<code>TRUE</code>) or release (<code>FALSE</code>) the request of the calling process.</li>
+<li><code>ActualTime</code> - a pointer to a variable that receives the resulting timer resolution, in 100-nanosecond units. See the remarks for its limitations.</li>
+</ul>
+<h1>Notable return values</h1>
+<ul>
+<li><code>STATUS_TIMER_RESOLUTION_NOT_SET</code> - <code>SetResolution</code> is <code>FALSE</code>, but the calling process does not have an active request.</li>
+</ul>
+<h1>Remarks</h1>
+<p>Each process can have at most one active request. Calling the function with <code>SetResolution</code> set to <code>TRUE</code> replaces the previous request instead of adding another one, and a single call with <code>FALSE</code> releases it. The system releases the request automatically when the process exits.</p>
+<p>The system uses the finest resolution among all active requests from processes and drivers (see <code><a href="exsettimerresolution" title="ULONG ExSetTimerResolution(&#10;  [in] ULONG   DesiredTime,&#10;  [in] BOOLEAN SetResolution&#10;);">ExSetTimerResolution</a></code>). To check the resulting resolution, use the <code>CurrentTime</code> value from <code><a href="ntquerytimerresolution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryTimerResolution(&#10;    _Out_ PULONG MaximumTime,&#10;    _Out_ PULONG MinimumTime,&#10;    _Out_ PULONG CurrentTime&#10;    );">NtQueryTimerResolution</a></code>. On recent versions of Windows, the value returned in <code>ActualTime</code> can differ from it.</p>
+<p>Starting with Windows 10 version 2004, Windows does not guarantee a finer resolution for processes that did not request one. See the remarks for <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod"><code>timeBeginPeriod</code></a> for more details.</p>
+<p>Requests from processes with <code><a href="process_power_throttling_ignore_timer_resolution" title="#define PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION 0x4">PROCESS_POWER_THROTTLING_IGNORE_TIMER_RESOLUTION</a></code> enabled (see <code><a href="processpowerthrottlingstate" title="#define ProcessPowerThrottlingState 77">ProcessPowerThrottlingState</a></code>) succeed but do not affect the system timer resolution.</p>
+<h1>Related Win32 API</h1>
+<ul>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod"><code>timeBeginPeriod</code></a></li>
+<li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timeendperiod"><code>timeEndPeriod</code></a></li>
+</ul>
+<h1>See also</h1>
+<ul>
+<li><code><a href="ntquerytimerresolution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryTimerResolution(&#10;    _Out_ PULONG MaximumTime,&#10;    _Out_ PULONG MinimumTime,&#10;    _Out_ PULONG CurrentTime&#10;    );">NtQueryTimerResolution</a></code></li>
+<li><code><a href="exsettimerresolution" title="ULONG ExSetTimerResolution(&#10;  [in] ULONG   DesiredTime,&#10;  [in] BOOLEAN SetResolution&#10;);">ExSetTimerResolution</a></code></li>
+<li><code><a href="ntdelayexecution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDelayExecution(&#10;    _In_ BOOLEAN Alertable,&#10;    _In_ PLARGE_INTEGER DelayInterval&#10;    );">NtDelayExecution</a></code></li>
+<li><code><a href="processpowerthrottlingstate" title="#define ProcessPowerThrottlingState 77">ProcessPowerThrottlingState</a></code></li>
+</ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/ntsettimerresolution.md">Edit description on GitHub</a>
 </div>
@@ -97,7 +122,7 @@ ZwSetTimerResolution(
 <div class="ntdoc-description-title">
 <h1>NTinternals.net (undocumented.ntinternals.net)</h1>
 </div>
-<div class="ntdoc-description ntdoc-description-selected">
+<div class="ntdoc-description">
 <p>Function <code>NtSetTimerResolution</code> sets resolution of system <em>Timer</em> in calling process context.</p>
 <h3>DesiredResolution</h3>
 <p>Resolution to set. To receive minimum and maximum resolution values, call <code><a href="ntquerytimerresolution" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryTimerResolution(&#10;    _Out_ PULONG MaximumTime,&#10;    _Out_ PULONG MinimumTime,&#10;    _Out_ PULONG CurrentTime&#10;    );">NtQueryTimerResolution</a></code>.</p>
