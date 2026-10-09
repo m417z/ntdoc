@@ -2,11 +2,11 @@ Function `NtQueryTimerResolution` returns resolution of system *Timer* in contex
 
 ### MinimumResolution
 
-Means highest possible delay (in *100-ns* units) between timer events.
+Means lowest possible delay (in *100-ns* units) between timer events.
 
 ### MaximumResolution
 
-Means lowest possible delay (in *100-ns* units) between timer events.
+Means highest possible delay (in *100-ns* units) between timer events.
 
 ### CurrentResolution
 
