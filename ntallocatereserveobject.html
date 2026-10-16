@@ -49,12 +49,20 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Allocates a memory reserve object.
+ * Allocates a typed reserve that can back a user APC or a reusable completion packet.
+ * MemoryReserveIoCompletion is used with <a href="ntsetiocompletionex" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetIoCompletionEx(&#10;    _In_ HANDLE IoCompletionHandle,&#10;    _In_ HANDLE IoCompletionPacketHandle,&#10;    _In_opt_ PVOID KeyContext,&#10;    _In_opt_ PVOID ApcContext,&#10;    _In_ NTSTATUS IoStatus,&#10;    _In_ ULONG_PTR IoStatusInformation&#10;    );">NtSetIoCompletionEx</a>, not with the
+ * <a href="ntassociatewaitcompletionpacket" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAssociateWaitCompletionPacket(&#10;    _In_ HANDLE WaitCompletionPacketHandle,&#10;    _In_ HANDLE IoCompletionHandle,&#10;    _In_ HANDLE TargetObjectHandle,&#10;    _In_opt_ PVOID KeyContext,&#10;    _In_opt_ PVOID ApcContext,&#10;    _In_ NTSTATUS IoStatus,&#10;    _In_ ULONG_PTR IoStatusInformation,&#10;    _Out_opt_ PBOOLEAN AlreadySignaled&#10;    );">NtAssociateWaitCompletionPacket</a> family.
  *
- * \param MemoryReserveHandle Pointer to a variable that receives the memory reserve object handle.
- * \param ObjectAttributes Pointer to an object attributes structure.
- * \param Type The type of memory reserve.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[out] MemoryReserveHandle Receives a caller-owned handle; close with <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a>.
+ * On x64, the inserted handle requests access 0x000F0003.
+ * \param[in, optional] ObjectAttributes Optional name and object attributes. NULL
+ * creates an unnamed reserve; it is a supported input on native x64 and WoW64.
+ * \param[in] Type MemoryReserveUserApc (0) or MemoryReserveIoCompletion (1).
+ * Other selectors return STATUS_INVALID_PARAMETER.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> describing allocation, not an APC or completion&#x27;s eventual status.
+ * \remarks A completion reserve can be in use for only one outstanding packet.
+ * Removing that packet releases the in-use state for reuse. It is not a raw buffer
+ * returned to user mode, and the APC and completion reserve types are not interchangeable.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -62,13 +70,13 @@ NTSYSCALLAPI
 NTAPI
 NtAllocateReserveObject(
     _Out_ PHANDLE MemoryReserveHandle,
-    _In_ <a href="pcobject_attributes" title="typedef const OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;">PCOBJECT_ATTRIBUTES</a> ObjectAttributes,
-    _In_ <a href="memory_reserve_type" title="typedef enum _MEMORY_RESERVE_TYPE&#10;{&#10;    MemoryReserveUserApc,&#10;    MemoryReserveIoCompletion,&#10;    MemoryReserveTypeMax&#10;} MEMORY_RESERVE_TYPE;">MEMORY_RESERVE_TYPE</a> Type
+    _In_opt_ <a href="pcobject_attributes" title="typedef const OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;">PCOBJECT_ATTRIBUTES</a> ObjectAttributes,
+    _In_ <a href="memory_reserve_type" title="typedef enum _MEMORY_RESERVE_TYPE&#10;{&#10;    MemoryReserveUserApc, // 0: user APC reserve.&#10;    MemoryReserveIoCompletion, // 1: reusable packet reserve for NtSetIoCompletionEx, not a wait-completion packet.&#10;    MemoryReserveTypeMax&#10;} MEMORY_RESERVE_TYPE;">MEMORY_RESERVE_TYPE</a> Type
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpsapi.h#L4430">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpsapi.h#L4738">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -78,12 +86,12 @@ NTSYSCALLAPI
 NTAPI
 ZwAllocateReserveObject(
     _Out_ PHANDLE MemoryReserveHandle,
-    _In_ <a href="pcobject_attributes" title="typedef const OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;">PCOBJECT_ATTRIBUTES</a> ObjectAttributes,
-    _In_ <a href="memory_reserve_type" title="typedef enum _MEMORY_RESERVE_TYPE&#10;{&#10;    MemoryReserveUserApc,&#10;    MemoryReserveIoCompletion,&#10;    MemoryReserveTypeMax&#10;} MEMORY_RESERVE_TYPE;">MEMORY_RESERVE_TYPE</a> Type
+    _In_opt_ <a href="pcobject_attributes" title="typedef const OBJECT_ATTRIBUTES *PCOBJECT_ATTRIBUTES;">PCOBJECT_ATTRIBUTES</a> ObjectAttributes,
+    _In_ <a href="memory_reserve_type" title="typedef enum _MEMORY_RESERVE_TYPE&#10;{&#10;    MemoryReserveUserApc, // 0: user APC reserve.&#10;    MemoryReserveIoCompletion, // 1: reusable packet reserve for NtSetIoCompletionEx, not a wait-completion packet.&#10;    MemoryReserveTypeMax&#10;} MEMORY_RESERVE_TYPE;">MEMORY_RESERVE_TYPE</a> Type
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L328">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L328">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -49,16 +49,34 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtWaitForMultipleObjects routine waits until one or all of the specified objects are in the signaled state, an I/O completion routine or asynchronous procedure call (APC) is queued to the thread, or the time-out interval elapses.
+ * Waits for one or all of an array of waitable objects. Use WaitAny to identify
+ * the satisfied object, or WaitAll to acquire the complete set without partially
+ * consuming available signals while other objects are not ready.
  *
- * \param Count The number of object handles to wait for in the array pointed to by lpHandles. The maximum number of object handles is MAXIMUM_WAIT_OBJECTS. This parameter cannot be zero.
- * \param Handles An array of object handles. The array can contain handles of objects of different types. It may not contain multiple copies of the same handle.
- * \param WaitType If this parameter is WaitAll, the function returns when the state of all objects in the Handles array is set to signaled.
- * \param Alertable f this parameter is TRUE and the thread is in the waiting state, the function returns when the system queues an I/O completion routine or APC, and the thread runs the routine or function.
- * \param Timeout A pointer to an absolute or relative time over which the wait is to occur. Can be null. If a timeout is specified,
- * and the object has not attained a state of signaled when the timeout expires, then the wait is automatically satisfied.
- * If an explicit timeout value of zero is specified, then no wait occurs if the wait cannot be satisfied immediately.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param Count Number of handles, from 1 through MAXIMUM_WAIT_OBJECTS (64).
+ * \param Handles Array of Count pointer-sized handles, each requiring SYNCHRONIZE
+ * (0x00100000). WaitAll rejects duplicate underlying dispatcher objects, including
+ * distinct handle values obtained by duplicating a handle to the same object.
+ * \param WaitType WaitAll (0) or WaitAny (1). WaitAny selects the lowest array
+ * index among objects simultaneously eligible when the wait is evaluated.
+ * \param Alertable TRUE permits an alert or ordinary user APC to interrupt the wait.
+ * \param Timeout Optional 100-nanosecond deadline: NULL for no deadline, pointed-to
+ * zero for polling, negative for a relative interval, positive for absolute NT system time.
+ * \return WaitAny returns STATUS_WAIT_0 plus the selected zero-based index, or
+ * STATUS_ABANDONED_WAIT_0 (0x80) plus that index when acquiring an abandoned mutant.
+ * WaitAll returns <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> (0), or STATUS_ABANDONED (0x80) when the set is
+ * acquired and includes an abandoned mutant; the latter does not identify an index.
+ * STATUS_TIMEOUT (0x102), STATUS_USER_APC (0xC0) and STATUS_ALERTED (0x101) do not
+ * establish acquisition. Test the status category, not just <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>.
+ * \remarks On the native x64 and WoW64 paths, invalid Count returns
+ * STATUS_INVALID_PARAMETER_1, invalid WaitType returns STATUS_INVALID_PARAMETER_3,
+ * and WaitAll with duplicate objects returns STATUS_INVALID_PARAMETER_MIX.
+ * All handles are referenced and access-checked before entering the dispatcher wait;
+ * an inaccessible later handle fails even if an earlier object is already signaled.
+ * A WaitAll timeout does not consume signals or acquire an abandoned mutant from
+ * an incomplete set. A completion-port handle is rejected for WaitAll with
+ * STATUS_INVALID_HANDLE. Cross-VM and special object paths
+ * have additional restrictions; this is not a promise that any handle is waitable.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitformultipleobjectsex">https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitformultipleobjectsex</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -75,7 +93,7 @@ NtWaitForMultipleObjects(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntobapi.h#L381">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntobapi.h#L466">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -92,7 +110,7 @@ ZwWaitForMultipleObjects(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L5373">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L5374">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

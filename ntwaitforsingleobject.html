@@ -49,14 +49,24 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtWaitForSingleObject routine waits until the specified object is in the signaled state or the time-out interval elapses.
+ * Waits for a waitable object&#x27;s dispatcher condition, optionally with a deadline.
+ * A successful wait applies that object&#x27;s wait semantics: for example, it consumes
+ * a synchronization-event signal or semaphore count, or acquires mutant ownership.
  *
- * \param Handle The handle to the wait object.
- * \param Alertable The function returns when either the time-out period has elapsed or when the APC function is called.
- * \param Timeout A pointer to an absolute or relative time over which the wait is to occur. Can be null. If a timeout is specified,
- * and the object has not attained a state of signaled when the timeout expires, then the wait is automatically satisfied.
- * If an explicit timeout value of zero is specified, then no wait occurs if the wait cannot be satisfied immediately.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param Handle Waitable-object handle with SYNCHRONIZE access (0x00100000).
+ * \param Alertable TRUE permits interruption by an alert or ordinary user APC;
+ * the APC executes on the waiting thread, not on a new worker thread.
+ * \param Timeout Optional deadline in 100-nanosecond units. NULL means no deadline,
+ * a pointed-to zero polls, negative values are relative intervals, and positive
+ * values are absolute NT system times since January 1, 1601 (UTC).
+ * \return STATUS_WAIT_0 (0) for a satisfied ordinary wait, STATUS_ABANDONED (0x80)
+ * when acquiring an abandoned mutant, STATUS_USER_APC (0xC0) or STATUS_ALERTED
+ * (0x101) for interruption, STATUS_TIMEOUT (0x102) for expiration, or an error.
+ * \remarks Timeout ends the wait without satisfying the object&#x27;s condition.
+ * <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> is not sufficient to establish acquisition: timeout and interruption
+ * are nonnegative too. Abandoned-mutant acquisition does grant ownership; validate
+ * the protected state before using it and release the mutant when finished.
+ * An already-satisfied object can complete even with an expired deadline.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntwaitforsingleobject">https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntwaitforsingleobject</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -71,7 +81,7 @@ NtWaitForSingleObject(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntobapi.h#L358">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntobapi.h#L425">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -86,7 +96,7 @@ ZwWaitForSingleObject(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L5397">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L5398">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ntifs.h
 

@@ -46,25 +46,31 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_VM_PERF_CONTROL_SUPPORT_OUTPUT structure contains the output data returned by the vm perf control support operation.
+ * The POWER_INTERNAL_VM_PERF_CONTROL_SUPPORT_OUTPUT struct reports VM performance selection support and the current domain&#x27;s frequency limits.
+ * \remarks Selector 69 with output length&gt;=20 copies this 20-byte record: Supported at 0,
+ * reserved bytes1..3, and four MHz DWORDs at 4,8,12,16. A length from 1 through 19 copies only
+ * Supported and leaves remaining caller bytes unchanged. No-output requests return
+ * STATUS_INVALID_PARAMETER. Do not read frequency fields after a short-form call.
+ *
+ * The helper zero-initializes all 20 bytes under PpmPerfPolicyLock. If VM performance
+ * selection is unsupported it returns successful status with an all-zero result; otherwise
+ * it sets Supported and copies the current PRCB domain&#x27;s frequency fields. These are limits
+ * and granularity, not percentages or an instantaneous frequency sample. A thread may query
+ * a different domain after migration; no system-wide aggregation is performed.
+ * \sa <a href="power_internal_vm_perf_control_support_input" title="typedef struct _POWER_INTERNAL_VM_PERF_CONTROL_SUPPORT_INPUT&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INTERNAL_VM_PERF_CONTROL_SUPPORT_INPUT, *PPOWER_INTERNAL_VM_PERF_CONTROL_SUPPORT_INPUT;">POWER_INTERNAL_VM_PERF_CONTROL_SUPPORT_INPUT</a>
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_VM_PERF_CONTROL_SUPPORT_OUTPUT
 {
-    // If OutputBuffer only 1 byte, just this flag returned for &quot;VM perf-control supported&quot;.
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Supported;
-    // Reserved values (returned when OutputBuffer &gt; 1 bytes).
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Reserved0;
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Reserved1;
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Reserved2;
-    // Extended details (returned when OutputBuffer &gt;= 20 bytes).
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MinPerfPercent; // Minimum performance percentage (0..100)
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MaxPerfPercent; // Maximum performance percentage (0..100)
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> StepPerfPercent; // Step size for performance percentage (&gt;=1)
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Capabilities; // Bitmask of PPM_VMPCS_SUPPORTS_* flags
+    BOOLEAN Supported; // Only this byte is returned for output lengths 1..19.
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Reserved[3];
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HighestFrequencyMhz;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NominalFrequencyMhz;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LowestFrequencyMhz;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FrequencyStepMhz;
 } POWER_INTERNAL_VM_PERF_CONTROL_SUPPORT_OUTPUT, *PPOWER_INTERNAL_VM_PERF_CONTROL_SUPPORT_OUTPUT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L2112">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L3252">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

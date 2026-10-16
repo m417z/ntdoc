@@ -46,19 +46,23 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The ATOM_BASIC_INFORMATION structure contains basic information about an Atom.
+ * Basic atom snapshot. The fixed prefix is 6 bytes; sizeof is 8 because Name[1]
+ * includes a WCHAR. On the native x64 and WoW64 paths, successful queries append
+ * a NUL after the copied name. They can return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> after truncation,
+ * so NameLength is the copied byte count, not necessarily the complete name length.
+ * Reserve 518 bytes (6 + 255 WCHARs + terminator) for an untruncated maximum name.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _ATOM_BASIC_INFORMATION
 {
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> UsageCount;   // The number of times the atom is referenced.
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Flags;        // Flags associated with the atom. */
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> NameLength;   // Length, in bytes, of the atom&#x27;s name.
-    _Field_size_bytes_(NameLength) WCHAR Name[1]; // The atom&#x27;s name (not null-terminated).
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> UsageCount;   // Reference snapshot; integer atoms report 1. Not an ownership grant.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Flags;        // Bit 0x1: pinned; bit 0x2: global-entry lowbox access flag. Not <a href="ntaddatomex" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAddAtomEx(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom,&#10;    _In_ ULONG Flags&#10;    );">NtAddAtomEx</a> input flags in general.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> NameLength;   // Bytes copied into Name, excluding the trailing WCHAR NUL; may be truncated.
+    _Field_size_bytes_(NameLength) WCHAR Name[1]; // Variable-length name, followed by a NUL on successful query.
 } ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L11497">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L11946">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -91,7 +95,7 @@
 </ul>
 <h1>See also</h1>
 <ul>
-<li><code><a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation,&#10;    AtomTableInformation&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a></code></li>
+<li><code><a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation, // 0: ATOM_BASIC_INFORMATION, 6-byte prefix plus name and terminator.&#10;    AtomTableInformation // 1: ATOM_TABLE_INFORMATION; Atom input is ignored.&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a></code></li>
 <li><code><a href="ntaddatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAddAtom(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom&#10;    );">NtAddAtom</a></code></li>
 <li><code><a href="ntdeleteatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDeleteAtom(&#10;    _In_ RTL_ATOM Atom&#10;    );">NtDeleteAtom</a></code></li>
 <li><code><a href="ntqueryinformationatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationAtom(&#10;    _In_ RTL_ATOM Atom,&#10;    _In_ ATOM_INFORMATION_CLASS AtomInformationClass,&#10;    _Out_writes_bytes_(AtomInformationLength) PVOID AtomInformation,&#10;    _In_ ULONG AtomInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationAtom</a></code></li>

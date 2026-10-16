@@ -46,12 +46,22 @@
 #if (PHNT_VERSION &gt;= PHNT_WINDOWS_10_RS1)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Opens a registry transaction.
+ * Opens an existing named registry-only lightweight transaction. This is object- name lookup, not lookup of a
+ * registry key or a KTM unit-of-work GUID.
  *
- * \param RegistryTransactionHandle Pointer to a variable to receive the handle.
- * \param DesiredAccess Desired access mask.
- * \param ObjAttributes Pointer to object attributes.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param RegistryTransactionHandle Required output receiving a separately owned handle on success; close it
+ * with <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a>. Other open/duplicate handles keep the same transaction object alive. Initialize this output
+ * and check status.
+ * \param DesiredAccess Requested rights, including 0x4 for transacted key association, 0x8 for commit or 0x10
+ * for rollback as needed.
+ * \param ObjAttributes Initialized attributes identifying the named transaction in the Object Manager
+ * namespace. An unnamed transaction cannot be reopened by inventing a registry path or by passing its handle
+ * as a UOW identifier.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or an error such as STATUS_OBJECT_NAME_NOT_FOUND. After the last transaction handle
+ * closes, the rolled-back key is no longer available under its former name.
+ * \remarks Registry and KTM transactions are different object types. To open a KTM transaction by its GUID
+ * use <a href="ntopentransaction" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenTransaction(&#10;    _Out_ PHANDLE TransactionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ LPGUID Uow,&#10;    _In_opt_ HANDLE TmHandle&#10;    );">NtOpenTransaction</a> instead. Opening another handle does not clone the transaction or reset a completed
+ * transaction.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -65,7 +75,7 @@ NtOpenRegistryTransaction(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L1506">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L1970">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -80,7 +90,7 @@ ZwOpenRegistryTransaction(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L2954">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L2954">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

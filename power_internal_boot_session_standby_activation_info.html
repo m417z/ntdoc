@@ -46,18 +46,36 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_BOOT_SESSION_STANDBY_ACTIVATION_INFO structure describes power internal boot session standby activation info.
+ * The POWER_INTERNAL_BOOT_SESSION_STANDBY_ACTIVATION_INFO struct captures boot-session standby activation diagnostics in the complete returned buffer.
+ * \remarks Use infoclass 18 with an 8-byte <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a> and at
+ * least 0x400 output bytes. The kernel returns STATUS_NOT_SUPPORTED without
+ * AoAc and STATUS_NOT_IMPLEMENTED when its activation-information provider is absent.
+ * A previous 404-byte <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>/98-entry declaration did not match this 1024-byte result.
+ *
+ * The kernel passes provider destinations at offsets 0, 0x10, and 0x18, then writes
+ * an 8-byte PpmQueryPlatformStateResidency result at +8. That residency query can return
+ * 0xFFFFFFFFFFFFFFFF when unavailable. Provider-owned field widths, units, and client
+ * count are not established by the kernel-side callback invocation; preserve those bytes
+ * rather than treating them as a array of 98 or 125 durations. DripsTotalTime
+ * retains its descriptive name, not a promise of a particular unit.
+ * \sa <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a>
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_BOOT_SESSION_STANDBY_ACTIVATION_INFO
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> StandbyTotalTime;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DripsTotalTime;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ActivatorClientTotalActiveTime;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PerActivatorClientTotalActiveTime[98];
+    union
+    {
+        <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Buffer[0x400];
+        struct
+        {
+            <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> ProviderData0[8]; // provider destination at +0x00; layout not established
+            <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> DripsTotalTime; // PpmQueryPlatformStateResidency result, units provider-dependent
+            <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> ProviderData1[0x3F0]; // provider destinations at +0x10 and +0x18
+        };
+    };
 } POWER_INTERNAL_BOOT_SESSION_STANDBY_ACTIVATION_INFO, *PPOWER_INTERNAL_BOOT_SESSION_STANDBY_ACTIVATION_INFO;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L1495">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L1766">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

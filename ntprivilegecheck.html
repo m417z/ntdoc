@@ -48,10 +48,14 @@
  * The NtPrivilegeCheck routine determines whether a specified set of privileges are enabled in the access token of a client.
  *
  * \param ClientToken Handle to the access token of the client whose privileges are to be checked. The handle must have TOKEN_QUERY access.
- * \param RequiredPrivileges Pointer to a <a href="privilege_set" title="typedef struct _PRIVILEGE_SET {&#10;  ULONG               PrivilegeCount;&#10;  ULONG               Control;&#10;  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];&#10;} PRIVILEGE_SET, *PPRIVILEGE_SET;">PRIVILEGE_SET</a> structure that specifies the set of privileges to be checked. On input, this structure contains the privileges to check.
- * \param Result Pointer to a BOOLEAN variable that receives TRUE if all specified privileges are enabled, or FALSE otherwise.
+ * \param RequiredPrivileges Pointer to a <a href="privilege_set" title="typedef struct _PRIVILEGE_SET {&#10;  ULONG               PrivilegeCount;&#10;  ULONG               Control;&#10;  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];&#10;} PRIVILEGE_SET, *PPRIVILEGE_SET;">PRIVILEGE_SET</a> structure that specifies the set of privileges to be checked. The array is input/output: privileges found enabled are marked SE_PRIVILEGE_USED_FOR_ACCESS (0x80000000).
+ * \param Result Pointer to a BOOLEAN variable that receives the privilege decision. PRIVILEGE_SET_ALL_NECESSARY (1) requires all listed privileges; otherwise, at least one must be enabled.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-privilegecheck">https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-privilegecheck</a>
+ * \remarks Result is a BOOLEAN decision, separate from the <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> execution result. The privilege array is
+ * input/output and enabled matches can acquire SE_PRIVILEGE_USED_FOR_ACCESS (0x80000000). The native path
+ * requires 4-byte alignment and TOKEN_QUERY (0x8); an impersonation token below SecurityIdentification is
+ * rejected. It checks privileges already enabled, without enabling them.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -64,7 +68,7 @@ NtPrivilegeCheck(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntseapi.h#L957">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntseapi.h#L1172">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -79,7 +83,7 @@ ZwPrivilegeCheck(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L3143">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L3143">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ntifs.h
 

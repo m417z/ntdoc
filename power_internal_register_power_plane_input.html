@@ -46,18 +46,38 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_REGISTER_POWER_PLANE_INPUT structure contains the input parameters for the register power plane operation.
+ * The POWER_INTERNAL_REGISTER_POWER_PLANE_INPUT struct registers a kernel power plane, its device/component profiles, and power-draw callback.
+ * \remarks Selector 57 is kernel-only and requires Header.Version=0 and NULL/0 output.
+ * The AMD64 fixed prefix is24 bytes: opaque PmaxHandle at 8 and non-NULL callback at 16.
+ * InputBufferLength supplies the complete buffer size. Data at 24 contains the offset-based
+ * plane description; at least one 44-byte device and the 8-byte plane header are required
+ * (minimum 76 total bytes), plus all referenced strings/components/F-state profiles.
+ *
+ * Offsets in the data are bytes from the entire outer request, never native pointers or
+ * relative to Data. Strings must be NUL-terminated wholly within the input; the string helper
+ * rejects lengths above 32767  WCHARs. Do not rely on its partial bounds checking as a buffer
+ * validator. The header-only sizeof value is not a valid complete registration.
+ * The pointer-bearing prefix is native-width; the x86 declaration is source-compatible
+ * only and is not evidence of an x86 or WOW64 registration ABI.
+ *
+ * Registration is single-instance (existing plane: 0xC0000038); wrong Version yields
+ * STATUS_REVISION_MISMATCH, NULL callback: STATUS_INVALID_PARAMETER. It stores callback/client
+ * state, registers matching devices, and can publish power-draw notifications. No handle is
+ * returned. Callback lifetime/unregister semantics are not established by this path. Typed
+ * fields name ABI roles, not a public promise of a stable cross-version contract.
+ * \sa <a href="power_internal_power_plane_data" title="typedef struct _POWER_INTERNAL_POWER_PLANE_DATA&#10;{&#10;    ULONG PowerPlaneIdOffset;&#10;    ULONG DeviceCount;&#10;    POWER_INTERNAL_POWER_PLANE_DEVICE Devices[ANYSIZE_ARRAY];&#10;} POWER_INTERNAL_POWER_PLANE_DATA, *PPOWER_INTERNAL_POWER_PLANE_DATA;">POWER_INTERNAL_POWER_PLANE_DATA</a>
+ * \sa <a href="power_internal_power_plane_notify" title="typedef _Function_class_(POWER_INTERNAL_POWER_PLANE_NOTIFY)&#10;VOID NTAPI POWER_INTERNAL_POWER_PLANE_NOTIFY(&#10;    _In_opt_ PVOID PmaxHandle,&#10;    _In_ ULONG DevicePowerMw&#10;    );">POWER_INTERNAL_POWER_PLANE_NOTIFY</a>
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_REGISTER_POWER_PLANE_INPUT
 {
     <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a> Header;
-    <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> ClientHandle;
-    <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> DataSize;
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Data[ANYSIZE_ARRAY];
+    PVOID PmaxHandle; // opaque client value, passed to NotifyDevicePowerDraw
+    <a href="ppower_internal_power_plane_notify" title="typedef POWER_INTERNAL_POWER_PLANE_NOTIFY *PPOWER_INTERNAL_POWER_PLANE_NOTIFY;">PPOWER_INTERNAL_POWER_PLANE_NOTIFY</a> NotifyDevicePowerDraw;
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Data[ANYSIZE_ARRAY]; // AMD64 +24: <a href="power_internal_power_plane_data" title="typedef struct _POWER_INTERNAL_POWER_PLANE_DATA&#10;{&#10;    ULONG PowerPlaneIdOffset;&#10;    ULONG DeviceCount;&#10;    POWER_INTERNAL_POWER_PLANE_DEVICE Devices[ANYSIZE_ARRAY];&#10;} POWER_INTERNAL_POWER_PLANE_DATA, *PPOWER_INTERNAL_POWER_PLANE_DATA;">POWER_INTERNAL_POWER_PLANE_DATA</a> followed by referenced data
 } POWER_INTERNAL_REGISTER_POWER_PLANE_INPUT, *PPOWER_INTERNAL_REGISTER_POWER_PLANE_INPUT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L2515">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L4121">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

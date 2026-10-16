@@ -49,14 +49,32 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtSignalAndWaitForSingleObject routine signals one object and waits on another object as a single operation.
+ * Signals or releases one object, then waits on another in one native call.
+ * This is not a transaction or an atomic handoff guarantee to other threads:
+ * a wait timeout or APC/alert does not roll back a completed signal operation.
  *
- * \param SignalHandle A handle to the object to be signaled.
- * \param WaitHandle A handle to the object to wait on. The SYNCHRONIZE access right is required.
- * \param Alertable If this parameter is TRUE, the function returns when the system queues an I/O completion routine or APC function, and the thread calls the function.
- * \param Timeout The time-out interval. The function returns if the interval elapses, even if the object&#x27;s state is nonsignaled and no completion or APC objects are queued.
- * If zero, the function tests the object&#x27;s state, checks for queued completion routines or APCs, and returns immediately.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param SignalHandle Event with <a href="event_modify_state" title="#define EVENT_MODIFY_STATE 0x0002">EVENT_MODIFY_STATE</a> (0x2), semaphore with
+ * <a href="semaphore_modify_state" title="#define SEMAPHORE_MODIFY_STATE 0x0002">SEMAPHORE_MODIFY_STATE</a> (0x2), or a mutant owned by the calling thread. No specific
+ * granted access bit is required for the mutant&#x27;s release, but ownership is required.
+ * \param WaitHandle Waitable-object handle requiring SYNCHRONIZE (0x00100000).
+ * \param Alertable TRUE permits an alert or ordinary user APC to interrupt the wait.
+ * \param Timeout Optional 100-nanosecond deadline: NULL for no deadline, pointed-to
+ * zero for polling, negative for a relative interval, positive for absolute NT system time.
+ * \return On a completed signal, the subsequent wait&#x27;s status is returned. A signal
+ * failure such as STATUS_MUTANT_NOT_OWNED or STATUS_SEMAPHORE_LIMIT_EXCEEDED ends
+ * the call without waiting. Other signal-object types return STATUS_OBJECT_TYPE_MISMATCH.
+ * \remarks Both handles are referenced, and WaitHandle&#x27;s SYNCHRONIZE access is
+ * checked, before signaling on x64. An invalid or inaccessible wait
+ * handle therefore does not signal the first object. Event signaling sets the event;
+ * semaphore signaling increments by 1; mutant signaling releases one acquisition.
+ *
+ * IMPORTANT: STATUS_ABANDONED (0x80) is ambiguous in this combined call. If the
+ * signal object is an abandoned mutant not owned by the caller, its release returns
+ * 0x80 and the wait is never entered: no ownership of the wait object is acquired.
+ * Alternatively, after a successful signal, waiting on an abandoned mutant returns
+ * 0x80 and DOES acquire that wait mutant. Do not infer wait-object acquisition from
+ * 0x80 without distinguishing these paths. STATUS_TIMEOUT (0x102), STATUS_USER_APC
+ * (0xC0) and STATUS_ALERTED (0x101) also do not prove wait-object acquisition.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-signalobjectandwait">https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-signalobjectandwait</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -72,7 +90,7 @@ NtSignalAndWaitForSingleObject(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntobapi.h#L336">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntobapi.h#L393">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -88,7 +106,7 @@ ZwSignalAndWaitForSingleObject(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L5044">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L5045">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -45,17 +45,23 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTOBAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The OBJECT_BASIC_INFORMATION structure contains basic information about an object.
+ * The OBJECT_BASIC_INFORMATION structure contains basic information about an object and its queried handle.
+ * \remarks <a href="ntqueryobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryObject(&#10;    _In_opt_ HANDLE Handle,&#10;    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,&#10;    _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,&#10;    _In_ ULONG ObjectInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryObject</a>(<a href="objectbasicinformation" title="#define ObjectBasicInformation 0">ObjectBasicInformation</a>) requires exactly sizeof(OBJECT_BASIC_INFORMATION) (56 bytes).
+ * The handle need not grant a specific access mask. SecurityDescriptorSize is obtained only when the
+ * queried handle grants READ_CONTROL and the object has a security descriptor.
+ * An incorrect buffer length returns STATUS_INFO_LENGTH_MISMATCH without updating ReturnLength
+ * for native x64 calls; the WoW64 thunk instead writes 0.
+ * Do not use a zero-length call to discover this fixed size.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _OBJECT_BASIC_INFORMATION
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Attributes;               // The attributes of the object include whether the object is permanent, can be inherited, and other characteristics.
-    ACCESS_MASK GrantedAccess;      // Specifies a mask that represents the granted access when the object was created.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Attributes;               // Handle attributes combined with <a href="obj_permanent" title="#define OBJ_PERMANENT 0x00000010L">OBJ_PERMANENT</a> and <a href="obj_exclusive" title="#define OBJ_EXCLUSIVE 0x00000020L">OBJ_EXCLUSIVE</a> object attributes.
+    ACCESS_MASK GrantedAccess;      // Access rights granted to the queried handle.
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HandleCount;              // The number of handles that are currently open for the object.
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PointerCount;             // The number of references to the object from both handles and other references, such as those from the system.
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PagedPoolCharge;          // The amount of paged pool memory that the object is using.
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NonPagedPoolCharge;       // The amount of non-paged pool memory that the object is using.
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved[3];              // Reserved for future use.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved[3];              // Zero-filled reserved slots; do not interpret as usage counters.
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NameInfoSize;             // The size of the name information for the object.
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TypeInfoSize;             // The size of the type information for the object.
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SecurityDescriptorSize;   // The size of the security descriptor for the object.
@@ -63,7 +69,7 @@
 } OBJECT_BASIC_INFORMATION, *POBJECT_BASIC_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntobapi.h#L114">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntobapi.h#L120">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -147,7 +153,7 @@
 <h1>See also</h1>
 <ul>
 <li><code><a href="ntqueryobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryObject(&#10;    _In_opt_ HANDLE Handle,&#10;    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,&#10;    _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,&#10;    _In_ ULONG ObjectInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryObject</a></code></li>
-<li><code><a href="object_information_class" title="typedef enum _OBJECT_INFORMATION_CLASS&#10;{&#10;    ObjectBasicInformation,         // q: OBJECT_BASIC_INFORMATION&#10;    ObjectNameInformation,          // q: OBJECT_NAME_INFORMATION&#10;    ObjectTypeInformation,          // q: OBJECT_TYPE_INFORMATION&#10;    ObjectTypesInformation,         // q: OBJECT_TYPES_INFORMATION&#10;    ObjectHandleFlagInformation,    // qs: OBJECT_HANDLE_FLAG_INFORMATION&#10;    ObjectSessionInformation,       // s: void // change object session // (requires SeTcbPrivilege)&#10;    ObjectSessionObjectInformation, // s: void // change object session // (requires SeTcbPrivilege)&#10;    ObjectSetRefTraceInformation,   // qs: OBJECT_SET_REF_TRACE_INFORMATION // since 25H2&#10;    MaxObjectInfoClass&#10;} OBJECT_INFORMATION_CLASS;">OBJECT_INFORMATION_CLASS</a></code></li>
+<li><code><a href="object_information_class" title="typedef enum _OBJECT_INFORMATION_CLASS&#10;{&#10;    ObjectBasicInformation,         // q: OBJECT_BASIC_INFORMATION&#10;    ObjectNameInformation,          // q: OBJECT_NAME_INFORMATION&#10;    ObjectTypeInformation,          // q: OBJECT_TYPE_INFORMATION&#10;    ObjectTypesInformation,         // q: OBJECT_TYPES_INFORMATION&#10;    ObjectHandleFlagInformation,    // qs: OBJECT_HANDLE_FLAG_INFORMATION&#10;    ObjectSessionInformation,       // s: void; directory object; set current process session ID (requires SeTcbPrivilege)&#10;    ObjectSessionObjectInformation, // s: void; directory object; associate current session object (requires SeTcbPrivilege)&#10;    ObjectSetRefTraceInformation,   // newer-kernel class; support in NtQueryObject/NtSetInformationObject is implementation-dependent&#10;    MaxObjectInfoClass&#10;} OBJECT_INFORMATION_CLASS;">OBJECT_INFORMATION_CLASS</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/object_basic_information.md">Edit description on GitHub</a>

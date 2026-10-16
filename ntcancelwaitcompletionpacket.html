@@ -49,16 +49,20 @@
 #if (PHNT_VERSION &gt;= PHNT_WINDOWS_8)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtCancelWaitCompletionPacket routine cancels a previously associated wait
- * completion packet or removes a signaled packet from its queue.
+ * Attempts to cancel a wait-completion association or remove its queued notification.
  *
- * \param[in] WaitCompletionPacketHandle Handle to the wait completion packet object to cancel.
- * \param[in] RemoveSignaledPacket If TRUE and the packet is already signaled, remove
- *        the signaled packet from the target queue; if FALSE, cancellation will
- *        prevent future signaling but will not remove an already queued packet.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
- * \remarks After successful cancellation, the wait completion packet will no
- *          longer be delivered as a result of the previously associated target.
+ * \param[in] WaitCompletionPacketHandle Wait-packet handle with
+ * <a href="wait_completion_packet_set_state" title="#define WAIT_COMPLETION_PACKET_SET_STATE 0x0001">WAIT_COMPLETION_PACKET_SET_STATE</a> (0x1).
+ * \param[in] RemoveSignaledPacket TRUE also attempts to remove an already queued
+ * notification. FALSE cancels an unsatisfied wait but leaves a queued packet in place.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> when canceled; STATUS_PENDING (0x00000103) if the
+ * notification may still be pending and the packet cannot immediately be reused;
+ * STATUS_CANCELLED (0xC0000120) if already completed or never associated.
+ * \remarks STATUS_PENDING is nonnegative, so <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> does not prove cancellation
+ * completed or that no packet will be delivered. Coordinate with the completion
+ * consumer before reusing the wait packet. Even TRUE cannot retract a notification
+ * that another thread has already picked up. These are cancellation statuses, not
+ * the IoStatus payload supplied when the association was created.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/devnotes/ntcancelwaitcompletionpacket">https://learn.microsoft.com/en-us/windows/win32/devnotes/ntcancelwaitcompletionpacket</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -72,7 +76,7 @@ NtCancelWaitCompletionPacket(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntioapi.h#L3671">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntioapi.h#L3901">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -86,7 +90,7 @@ ZwCancelWaitCompletionPacket(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L780">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L780">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp"></span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NtCancelWaitCompletionPacket (
     _In_ HANDLE WaitCompletionPacketHandle,

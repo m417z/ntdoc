@@ -53,6 +53,9 @@
  * \param ActivationContext A pointer to the activation context to activate.
  * \param Cookie A pointer to a variable that receives a cookie used to deactivate the context.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \remarks Activation cookies belong to the target thread activation stack, not a process-global handle
+ * table. Pair activation/deactivation in the correct thread and stack order. Invalid or out-of-order cookies
+ * can raise exceptions.
  */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
@@ -60,12 +63,12 @@ NTAPI
 RtlActivateActivationContextEx(
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags,
     _In_ <a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">PTEB</a> Teb,
-    _In_ <a href="activation_context" title="typedef struct _ACTIVATION_CONTEXT&#10;{&#10;    LONG RefCount;&#10;    ULONG Flags;&#10;    PACTIVATION_CONTEXT_DATA ActivationContextData;&#10;    PACTIVATION_CONTEXT_NOTIFY_ROUTINE NotificationRoutine;&#10;    PVOID NotificationContext;&#10;    ULONG SentNotifications[8];&#10;    ULONG DisabledNotifications[8];&#10;    ASSEMBLY_STORAGE_MAP StorageMap;&#10;    PASSEMBLY_STORAGE_MAP_ENTRY InlineStorageMapEntries[32];&#10;} ACTIVATION_CONTEXT, *PACTIVATION_CONTEXT;">PACTIVATION_CONTEXT</a> ActivationContext,
+    _In_ <a href="activation_context" title="typedef struct _ACTIVATION_CONTEXT&#10;{&#10;    LONG RefCount;&#10;    ULONG Flags; // bit 0: zombified; bit 1: allocation is not freed by RtlpFreeActivationContext&#10;    LIST_ENTRY Links;&#10;    PACTIVATION_CONTEXT_DATA ActivationContextData;&#10;    PACTIVATION_CONTEXT_NOTIFY_ROUTINE NotificationRoutine;&#10;    PVOID NotificationContext;&#10;    ULONG SentNotifications[8]; // notification-type bitmap&#10;    ULONG DisabledNotifications[8]; // notification-type bitmap&#10;    ASSEMBLY_STORAGE_MAP StorageMap;&#10;    PASSEMBLY_STORAGE_MAP_ENTRY InlineStorageMapEntries[32];&#10;    ULONG StackTraceIndex;&#10;    PVOID StackTraces[4][4];&#10;} ACTIVATION_CONTEXT, *PACTIVATION_CONTEXT;">PACTIVATION_CONTEXT</a> ActivationContext,
     _Out_ PULONG_PTR Cookie
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntrtl.h#L7949">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntrtl.h#L8127">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

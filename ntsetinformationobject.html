@@ -49,13 +49,17 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtSetInformationObject routine changes various kinds of information about a object.
+ * The NtSetInformationObject routine changes various kinds of information about an object.
  *
  * \param Handle The handle of the object for which information is being changed.
  * \param ObjectInformationClass The type of information, supplied in the buffer pointed to by ObjectInformation, to set for the object.
- * \param ObjectInformation Pointer to a buffer that contains the information to set for the object.
- * \param ObjectInformationLength The size of the buffer pointed to by the ObjectInformation parameter, in bytes.
+ * \param ObjectInformation Pointer to the class-specific input. Ignored for <a href="objectsessioninformation" title="#define ObjectSessionInformation 5">ObjectSessionInformation</a> and <a href="objectsessionobjectinformation" title="#define ObjectSessionObjectInformation 6">ObjectSessionObjectInformation</a>.
+ * \param ObjectInformationLength The input size in bytes. Exactly 2 for <a href="objecthandleflaginformation" title="#define ObjectHandleFlagInformation 4">ObjectHandleFlagInformation</a>; ignored for the session classes.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \remarks <a href="objecthandleflaginformation" title="#define ObjectHandleFlagInformation 4">ObjectHandleFlagInformation</a> changes this handle, not the object or other handles.
+ * Nonzero BOOLEAN values request TRUE. Query again if the object type forbids inheritance:
+ * <a href="obsethandleattributes" title="NTKERNELAPI&#10;NTSTATUS&#10;NTAPI&#10;ObSetHandleAttributes(&#10;    _In_ HANDLE Handle,&#10;    _In_ POBJECT_HANDLE_FLAG_INFORMATION HandleFlags,&#10;    _In_ KPROCESSOR_MODE AccessMode&#10;    );">ObSetHandleAttributes</a> can return success without applying either requested flag.
+ * For the two session classes, pass NULL/0; neither buffer argument is consumed.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -63,14 +67,15 @@ NTSYSCALLAPI
 NTAPI
 NtSetInformationObject(
     _In_ HANDLE Handle,
-    _In_ <a href="object_information_class" title="typedef enum _OBJECT_INFORMATION_CLASS&#10;{&#10;    ObjectBasicInformation,         // q: OBJECT_BASIC_INFORMATION&#10;    ObjectNameInformation,          // q: OBJECT_NAME_INFORMATION&#10;    ObjectTypeInformation,          // q: OBJECT_TYPE_INFORMATION&#10;    ObjectTypesInformation,         // q: OBJECT_TYPES_INFORMATION&#10;    ObjectHandleFlagInformation,    // qs: OBJECT_HANDLE_FLAG_INFORMATION&#10;    ObjectSessionInformation,       // s: void // change object session // (requires SeTcbPrivilege)&#10;    ObjectSessionObjectInformation, // s: void // change object session // (requires SeTcbPrivilege)&#10;    ObjectSetRefTraceInformation,   // qs: OBJECT_SET_REF_TRACE_INFORMATION // since 25H2&#10;    MaxObjectInfoClass&#10;} OBJECT_INFORMATION_CLASS;">OBJECT_INFORMATION_CLASS</a> ObjectInformationClass,
-    _In_reads_bytes_(ObjectInformationLength) PVOID ObjectInformation,
+    _In_ <a href="object_information_class" title="typedef enum _OBJECT_INFORMATION_CLASS&#10;{&#10;    ObjectBasicInformation,         // q: OBJECT_BASIC_INFORMATION&#10;    ObjectNameInformation,          // q: OBJECT_NAME_INFORMATION&#10;    ObjectTypeInformation,          // q: OBJECT_TYPE_INFORMATION&#10;    ObjectTypesInformation,         // q: OBJECT_TYPES_INFORMATION&#10;    ObjectHandleFlagInformation,    // qs: OBJECT_HANDLE_FLAG_INFORMATION&#10;    ObjectSessionInformation,       // s: void; directory object; set current process session ID (requires SeTcbPrivilege)&#10;    ObjectSessionObjectInformation, // s: void; directory object; associate current session object (requires SeTcbPrivilege)&#10;    ObjectSetRefTraceInformation,   // newer-kernel class; support in NtQueryObject/NtSetInformationObject is implementation-dependent&#10;    MaxObjectInfoClass&#10;} OBJECT_INFORMATION_CLASS;">OBJECT_INFORMATION_CLASS</a> ObjectInformationClass,
+    _When_(ObjectInformationClass == <a href="objectsessioninformation" title="#define ObjectSessionInformation 5">ObjectSessionInformation</a> || ObjectInformationClass == <a href="objectsessionobjectinformation" title="#define ObjectSessionObjectInformation 6">ObjectSessionObjectInformation</a>, _In_opt_)
+    _When_(ObjectInformationClass != <a href="objectsessioninformation" title="#define ObjectSessionInformation 5">ObjectSessionInformation</a> &amp;&amp; ObjectInformationClass != <a href="objectsessionobjectinformation" title="#define ObjectSessionObjectInformation 6">ObjectSessionObjectInformation</a>, _In_reads_bytes_(ObjectInformationLength)) PVOID ObjectInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ObjectInformationLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntobapi.h#L250">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntobapi.h#L276">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -80,13 +85,14 @@ NTSYSCALLAPI
 NTAPI
 ZwSetInformationObject(
     _In_ HANDLE Handle,
-    _In_ <a href="object_information_class" title="typedef enum _OBJECT_INFORMATION_CLASS&#10;{&#10;    ObjectBasicInformation,         // q: OBJECT_BASIC_INFORMATION&#10;    ObjectNameInformation,          // q: OBJECT_NAME_INFORMATION&#10;    ObjectTypeInformation,          // q: OBJECT_TYPE_INFORMATION&#10;    ObjectTypesInformation,         // q: OBJECT_TYPES_INFORMATION&#10;    ObjectHandleFlagInformation,    // qs: OBJECT_HANDLE_FLAG_INFORMATION&#10;    ObjectSessionInformation,       // s: void // change object session // (requires SeTcbPrivilege)&#10;    ObjectSessionObjectInformation, // s: void // change object session // (requires SeTcbPrivilege)&#10;    ObjectSetRefTraceInformation,   // qs: OBJECT_SET_REF_TRACE_INFORMATION // since 25H2&#10;    MaxObjectInfoClass&#10;} OBJECT_INFORMATION_CLASS;">OBJECT_INFORMATION_CLASS</a> ObjectInformationClass,
-    _In_reads_bytes_(ObjectInformationLength) PVOID ObjectInformation,
+    _In_ <a href="object_information_class" title="typedef enum _OBJECT_INFORMATION_CLASS&#10;{&#10;    ObjectBasicInformation,         // q: OBJECT_BASIC_INFORMATION&#10;    ObjectNameInformation,          // q: OBJECT_NAME_INFORMATION&#10;    ObjectTypeInformation,          // q: OBJECT_TYPE_INFORMATION&#10;    ObjectTypesInformation,         // q: OBJECT_TYPES_INFORMATION&#10;    ObjectHandleFlagInformation,    // qs: OBJECT_HANDLE_FLAG_INFORMATION&#10;    ObjectSessionInformation,       // s: void; directory object; set current process session ID (requires SeTcbPrivilege)&#10;    ObjectSessionObjectInformation, // s: void; directory object; associate current session object (requires SeTcbPrivilege)&#10;    ObjectSetRefTraceInformation,   // newer-kernel class; support in NtQueryObject/NtSetInformationObject is implementation-dependent&#10;    MaxObjectInfoClass&#10;} OBJECT_INFORMATION_CLASS;">OBJECT_INFORMATION_CLASS</a> ObjectInformationClass,
+    _When_(ObjectInformationClass == <a href="objectsessioninformation" title="#define ObjectSessionInformation 5">ObjectSessionInformation</a> || ObjectInformationClass == <a href="objectsessionobjectinformation" title="#define ObjectSessionObjectInformation 6">ObjectSessionObjectInformation</a>, _In_opt_)
+    _When_(ObjectInformationClass != <a href="objectsessioninformation" title="#define ObjectSessionInformation 5">ObjectSessionInformation</a> &amp;&amp; ObjectInformationClass != <a href="objectsessionobjectinformation" title="#define ObjectSessionObjectInformation 6">ObjectSessionObjectInformation</a>, _In_reads_bytes_(ObjectInformationLength)) PVOID ObjectInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ObjectInformationLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4676">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4676">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -102,7 +108,7 @@ ZwSetInformationObject(
 <li><code>ObjectInformationLength</code> - the size of the provided buffer in bytes.</li>
 </ul>
 <h1>Information classes</h1>
-<p>For the list of supported information classes, see <code><a href="object_information_class" title="typedef enum _OBJECT_INFORMATION_CLASS&#10;{&#10;    ObjectBasicInformation,         // q: OBJECT_BASIC_INFORMATION&#10;    ObjectNameInformation,          // q: OBJECT_NAME_INFORMATION&#10;    ObjectTypeInformation,          // q: OBJECT_TYPE_INFORMATION&#10;    ObjectTypesInformation,         // q: OBJECT_TYPES_INFORMATION&#10;    ObjectHandleFlagInformation,    // qs: OBJECT_HANDLE_FLAG_INFORMATION&#10;    ObjectSessionInformation,       // s: void // change object session // (requires SeTcbPrivilege)&#10;    ObjectSessionObjectInformation, // s: void // change object session // (requires SeTcbPrivilege)&#10;    ObjectSetRefTraceInformation,   // qs: OBJECT_SET_REF_TRACE_INFORMATION // since 25H2&#10;    MaxObjectInfoClass&#10;} OBJECT_INFORMATION_CLASS;">OBJECT_INFORMATION_CLASS</a></code>.</p>
+<p>For the list of supported information classes, see <code><a href="object_information_class" title="typedef enum _OBJECT_INFORMATION_CLASS&#10;{&#10;    ObjectBasicInformation,         // q: OBJECT_BASIC_INFORMATION&#10;    ObjectNameInformation,          // q: OBJECT_NAME_INFORMATION&#10;    ObjectTypeInformation,          // q: OBJECT_TYPE_INFORMATION&#10;    ObjectTypesInformation,         // q: OBJECT_TYPES_INFORMATION&#10;    ObjectHandleFlagInformation,    // qs: OBJECT_HANDLE_FLAG_INFORMATION&#10;    ObjectSessionInformation,       // s: void; directory object; set current process session ID (requires SeTcbPrivilege)&#10;    ObjectSessionObjectInformation, // s: void; directory object; associate current session object (requires SeTcbPrivilege)&#10;    ObjectSetRefTraceInformation,   // newer-kernel class; support in NtQueryObject/NtSetInformationObject is implementation-dependent&#10;    MaxObjectInfoClass&#10;} OBJECT_INFORMATION_CLASS;">OBJECT_INFORMATION_CLASS</a></code>.</p>
 <h1>Related Win32 API</h1>
 <ul>
 <li><a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-sethandleinformation"><code>SetHandleInformation</code></a></li>

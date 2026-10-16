@@ -46,13 +46,29 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- *  The NtWaitForKeyedEvent routine waits for a keyed event to be released with the specified key value.
+ * The NtWaitForKeyedEvent routine pairs with one matching keyed-event release, blocking until a match or
+ * interruption. Use it as the wait half of a user-mode synchronization protocol, not to wait on a persistent
+ * signal state; a matching release may arrive before or after this call.
  *
- * \param KeyedEventHandle Optional handle to the keyed event object. If NULL, the default keyed event is used.
- * \param KeyValue The key value to wait for.
- * \param Alertable Specifies whether the call is alertable (can be interrupted by APCs).
- * \param Timeout Optional pointer to a timeout value (in 100-nanosecond intervals). If NULL, waits indefinitely.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param KeyedEventHandle Handle with <a href="keyedevent_wait" title="#define KEYEDEVENT_WAIT 0x0001">KEYEDEVENT_WAIT</a> (0x1), or NULL for the system&#x27;s
+ * default keyed event (ExpCritSecOutOfMemoryEvent).
+ * \param KeyValue Opaque pointer-sized matching key, not an object handle (including a
+ * registry key handle). An address may be used as the key, but the kernel does not
+ * dereference it or inspect the memory contents, unlike the Address parameter of
+ * WaitOnAddress.
+ * Its low bit must be zero; NULL is a valid zero key, not a wildcard. The matching
+ * release must use the same object and key and belong to the same process.
+ * \param Alertable Whether a blocking wait can be interrupted by an alert or user APC.
+ * \param Timeout Optional timeout in 100-nanosecond units: negative for a relative
+ * interval, positive for an absolute deadline, zero for polling, or NULL for no deadline.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> only when paired with a matching release; STATUS_TIMEOUT,
+ * STATUS_ALERTED or STATUS_USER_APC can end an unmatched blocking wait.
+ * On x64, an odd KeyValue returns STATUS_INVALID_PARAMETER_1
+ * (despite KeyValue being the second parameter), before handle validation.
+ * \remarks Test for <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, not just <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>, to distinguish a match
+ * from timeout or interruption. A successful wait consumes one matching release.
+ * If the match wins a timeout/APC race, the kernel completes the rendezvous and
+ * may return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> instead of the interrupt.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -60,14 +76,14 @@ NTSYSCALLAPI
 NTAPI
 NtWaitForKeyedEvent(
     _In_opt_ HANDLE KeyedEventHandle,
-    _In_ PVOID KeyValue,
+    _In_opt_ PVOID KeyValue,
     _In_ BOOLEAN Alertable,
     _In_opt_ PLARGE_INTEGER Timeout
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L1756">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L1983">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -77,13 +93,13 @@ NTSYSCALLAPI
 NTAPI
 ZwWaitForKeyedEvent(
     _In_opt_ HANDLE KeyedEventHandle,
-    _In_ PVOID KeyValue,
+    _In_opt_ PVOID KeyValue,
     _In_ BOOLEAN Alertable,
     _In_opt_ PLARGE_INTEGER Timeout
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L5362">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L5363">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -101,7 +117,7 @@ ZwWaitForKeyedEvent(
 <h1>NTinternals.net (undocumented.ntinternals.net)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<p>Function with similar functionality as <code><a href="ntreleasekeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReleaseKeyedEvent(&#10;    _In_opt_ HANDLE KeyedEventHandle,&#10;    _In_ PVOID KeyValue,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtReleaseKeyedEvent</a></code>. In my opinion it is not needed and exists only for future vision of <code>KeyedEvent</code> objects or just as a mistake.</p>
+<p>Function with similar functionality as <code><a href="ntreleasekeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReleaseKeyedEvent(&#10;    _In_opt_ HANDLE KeyedEventHandle,&#10;    _In_opt_ PVOID KeyValue,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtReleaseKeyedEvent</a></code>. In my opinion it is not needed and exists only for future vision of <code>KeyedEvent</code> objects or just as a mistake.</p>
 <h3>KeyedEventHandle</h3>
 <p><code>HANDLE</code> for previously opened <code>KeyedEvent</code> object.</p>
 <h3>Key</h3>
@@ -118,7 +134,7 @@ ZwWaitForKeyedEvent(
 <ul>
 <li><code><a href="ntcreatekeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateKeyedEvent(&#10;    _Out_ PHANDLE KeyedEventHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Reserved_ ULONG Flags&#10;    );">NtCreateKeyedEvent</a></code></li>
 <li><code><a href="ntopenkeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenKeyedEvent(&#10;    _Out_ PHANDLE KeyedEventHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes&#10;    );">NtOpenKeyedEvent</a></code></li>
-<li><code><a href="ntreleasekeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReleaseKeyedEvent(&#10;    _In_opt_ HANDLE KeyedEventHandle,&#10;    _In_ PVOID KeyValue,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtReleaseKeyedEvent</a></code></li>
+<li><code><a href="ntreleasekeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtReleaseKeyedEvent(&#10;    _In_opt_ HANDLE KeyedEventHandle,&#10;    _In_opt_ PVOID KeyValue,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtReleaseKeyedEvent</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntwaitforkeyedevent.md">Edit description on GitHub</a>

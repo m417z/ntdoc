@@ -45,11 +45,22 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTTMAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtCommitTransaction routine commits a transaction object.
+ * Initiates commit of a KTM transaction. This is distinct from the registry-only <a href="ntcommitregistrytransaction" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCommitRegistryTransaction(&#10;    _In_ HANDLE RegistryTransactionHandle,&#10;    _Reserved_ ULONG Flags&#10;    );">NtCommitRegistryTransaction</a>
+ * API and its reserved Flags parameter.
  *
- * \param TransactionHandle Handle to the transaction object.
- * \param Wait If TRUE, the call waits for the commit to complete.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param TransactionHandle KTM transaction handle with TRANSACTION_COMMIT (0x8). The native entry
+ * additionally requires SYNCHRONIZE (0x100000) when Wait is nonzero: the synchronous access mask is 0x100008.
+ * A commit-only handle can request asynchronous commit but is denied for synchronous commit.
+ * \param Wait TRUE waits for outcome completion; FALSE permits asynchronous completion. Empty transactions
+ * can complete immediately even with FALSE.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, STATUS_PENDING for an operation still in progress, or an error. STATUS_PENDING
+ * satisfies <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> but is not completed commit. Terminal paths return
+ * STATUS_TRANSACTION_ALREADY_COMMITTED after commit and STATUS_TRANSACTION_ALREADY_ABORTED after rollback.
+ * \remarks For asynchronous calls, wait/query outcome using appropriately authorized handles before treating
+ * changes as committed. Registry-only handles are rejected with STATUS_OBJECT_TYPE_MISMATCH. Close every
+ * handle independently; completion does not close it. Superior, coordinator, resource-manager, and recovery
+ * paths can return additional failures.
+ * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcommittransaction">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcommittransaction</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -61,7 +72,7 @@ NtCommitTransaction(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/nttmapi.h#L274">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/nttmapi.h#L381">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -75,7 +86,7 @@ ZwCommitTransaction(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L868">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L868">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

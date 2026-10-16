@@ -46,13 +46,29 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtReleaseKeyedEvent routine releases a thread that is waiting on a keyed event with the specified key value.
+ * The NtReleaseKeyedEvent routine pairs with one matching keyed-event wait, blocking if no matching waiter is
+ * present. Unlike <a href="ntsetevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetEvent(&#10;    _In_ HANDLE EventHandle,&#10;    _Out_opt_ PLONG PreviousState&#10;    );">NtSetEvent</a>, this is a rendezvous operation, not a persistent signal: a release that times
+ * out does not leave a wake credit for a later wait.
  *
- * \param KeyedEventHandle Optional handle to the keyed event object. If NULL, the default keyed event is used.
- * \param KeyValue The key value that identifies the waiting thread to release.
- * \param Alertable Specifies whether the call is alertable (can be interrupted by APCs).
- * \param Timeout Optional pointer to a timeout value (in 100-nanosecond intervals). If NULL, waits indefinitely.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param KeyedEventHandle Handle with <a href="keyedevent_wake" title="#define KEYEDEVENT_WAKE 0x0002">KEYEDEVENT_WAKE</a> (0x2), or NULL for the system&#x27;s
+ * default keyed event (ExpCritSecOutOfMemoryEvent).
+ * \param KeyValue Opaque pointer-sized matching key, not an object handle (including a
+ * registry key handle). An address may be used as the key, but the kernel does not
+ * dereference it or inspect the memory contents, unlike the Address parameter of
+ * WaitOnAddress.
+ * Its low bit must be zero; NULL is a valid zero key, not a wildcard. The matching
+ * wait must use the same object and key and belong to the same process.
+ * \param Alertable Whether a blocking release can be interrupted by an alert or user APC.
+ * \param Timeout Optional timeout in 100-nanosecond units: negative for a relative
+ * interval, positive for an absolute deadline, zero for polling, or NULL for no deadline.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> only when paired with a matching wait; STATUS_TIMEOUT,
+ * STATUS_ALERTED or STATUS_USER_APC can end an unmatched blocking release.
+ * On x64, an odd KeyValue returns STATUS_INVALID_PARAMETER_1
+ * (despite KeyValue being the second parameter), before handle validation.
+ * \remarks <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> alone does not establish a match: STATUS_TIMEOUT, STATUS_ALERTED
+ * and STATUS_USER_APC are nonnegative. A successful release pairs with one waiter,
+ * not all waiters for the key. If the match wins a timeout/APC race, the kernel
+ * completes the rendezvous and may return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> instead of the interrupt.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -60,14 +76,14 @@ NTSYSCALLAPI
 NTAPI
 NtReleaseKeyedEvent(
     _In_opt_ HANDLE KeyedEventHandle,
-    _In_ PVOID KeyValue,
+    _In_opt_ PVOID KeyValue,
     _In_ BOOLEAN Alertable,
     _In_opt_ PLARGE_INTEGER Timeout
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L1736">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L1947">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -77,13 +93,13 @@ NTSYSCALLAPI
 NTAPI
 ZwReleaseKeyedEvent(
     _In_opt_ HANDLE KeyedEventHandle,
-    _In_ PVOID KeyValue,
+    _In_opt_ PVOID KeyValue,
     _In_ BOOLEAN Alertable,
     _In_opt_ PLARGE_INTEGER Timeout
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4114">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4114">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -101,7 +117,7 @@ ZwReleaseKeyedEvent(
 <h1>NTinternals.net (undocumented.ntinternals.net)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<p>This function is used for signal <code>KeyedEvent</code> object with value specified as <code>Key</code> parameter. If there are no other thread (or threads) waiting for the same <code>KeyedEvent</code> with the same <code>Key</code> value, waiting is performed up to <code><a href="ntwaitforkeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForKeyedEvent(&#10;    _In_opt_ HANDLE KeyedEventHandle,&#10;    _In_ PVOID KeyValue,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtWaitForKeyedEvent</a></code> called by any other thread.</p>
+<p>This function is used for signal <code>KeyedEvent</code> object with value specified as <code>Key</code> parameter. If there are no other thread (or threads) waiting for the same <code>KeyedEvent</code> with the same <code>Key</code> value, waiting is performed up to <code><a href="ntwaitforkeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForKeyedEvent(&#10;    _In_opt_ HANDLE KeyedEventHandle,&#10;    _In_opt_ PVOID KeyValue,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtWaitForKeyedEvent</a></code> called by any other thread.</p>
 <h3>KeyedEventHandle</h3>
 <p><code>HANDLE</code> to <code>KeyedEvent</code> object.</p>
 <h3>Key</h3>
@@ -118,7 +134,7 @@ ZwReleaseKeyedEvent(
 <ul>
 <li><code><a href="ntcreatekeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateKeyedEvent(&#10;    _Out_ PHANDLE KeyedEventHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Reserved_ ULONG Flags&#10;    );">NtCreateKeyedEvent</a></code></li>
 <li><code><a href="ntopenkeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenKeyedEvent(&#10;    _Out_ PHANDLE KeyedEventHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes&#10;    );">NtOpenKeyedEvent</a></code></li>
-<li><code><a href="ntwaitforkeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForKeyedEvent(&#10;    _In_opt_ HANDLE KeyedEventHandle,&#10;    _In_ PVOID KeyValue,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtWaitForKeyedEvent</a></code></li>
+<li><code><a href="ntwaitforkeyedevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForKeyedEvent(&#10;    _In_opt_ HANDLE KeyedEventHandle,&#10;    _In_opt_ PVOID KeyValue,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtWaitForKeyedEvent</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntreleasekeyedevent.md">Edit description on GitHub</a>

@@ -53,8 +53,13 @@
  * \param StateChangeType The type of state change.
  * \param ExtendedInformation Optional extended information.
  * \param ExtendedInformationLength The length of the extended information.
- * \param Reserved Reserved for future use.
+ * \param Flags Suspension flags. Use zero for the basic contract; nonzero support is feature-dependent.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \remarks The state object must match ThreadHandle and grant access 0x1; ordinary transitions require
+ * <a href="thread_suspend_resume" title="#define THREAD_SUSPEND_RESUME 0x0002">THREAD_SUSPEND_RESUME</a> (0x2). Resume without a suspension tracked by this object returns
+ * STATUS_INVALID_PARAMETER. Flags is consumed, not reserved: the feature-gated suspend path accepts bit 0x1 and 
+ * parses 16-byte extended records, while other paths require zero. Use NULL/0/0 for the established basic contract; 
+ * feature availability and extended-record semantics require separate validation.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -64,14 +69,14 @@ NtChangeThreadState(
     _In_ HANDLE ThreadStateChangeHandle,
     _In_ HANDLE ThreadHandle,
     _In_ <a href="thread_state_change_type" title="typedef enum _THREAD_STATE_CHANGE_TYPE&#10;{&#10;    ThreadStateChangeSuspend,&#10;    ThreadStateChangeResume,&#10;    ThreadStateChangeMax,&#10;} THREAD_STATE_CHANGE_TYPE, *PTHREAD_STATE_CHANGE_TYPE;">THREAD_STATE_CHANGE_TYPE</a> StateChangeType,
-    _In_opt_ PVOID ExtendedInformation,
+    _In_opt_ <a href="thread_state_change_ext" title="typedef struct _THREAD_STATE_CHANGE_EXT&#10;{&#10;    ULONG Mask;&#10;    ULONG Reserved;&#10;    ULONGLONG Value;&#10;} THREAD_STATE_CHANGE_EXT, *PTHREAD_STATE_CHANGE_EXT;">PTHREAD_STATE_CHANGE_EXT</a> ExtendedInformation,
     _In_opt_ <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> ExtendedInformationLength,
-    _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpsapi.h#L2724">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpsapi.h#L2859">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -85,11 +90,11 @@ ZwChangeThreadState(
     _In_ <a href="thread_state_change_type" title="typedef enum _THREAD_STATE_CHANGE_TYPE&#10;{&#10;    ThreadStateChangeSuspend,&#10;    ThreadStateChangeResume,&#10;    ThreadStateChangeMax,&#10;} THREAD_STATE_CHANGE_TYPE, *PTHREAD_STATE_CHANGE_TYPE;">THREAD_STATE_CHANGE_TYPE</a> StateChangeType,
     _In_opt_ PVOID ExtendedInformation,
     _In_opt_ <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> ExtendedInformationLength,
-    _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L802">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L802">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

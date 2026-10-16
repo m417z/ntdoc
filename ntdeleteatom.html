@@ -46,14 +46,19 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtDeleteAtom routine decrements the reference count of an atom and
- * removes it from the system atom table when the count reaches zero.
+ * The NtDeleteAtom routine releases one caller-owned ordinary string-atom reference. The table entry is
+ * removed when its unpinned reference count reaches zero; identifiers may be reused.
  *
- * \param Atom The atom identifier to delete.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
- * \remarks If the atom is still referenced elsewhere, it is not removed until
- * its reference count reaches zero.
- * \see <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-deleteatom">https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-deleteatom</a>
+ * \param Atom A 16-bit atom identifier, not an object handle. Balance additions,
+ * not lookups, and do not delete references owned by unrelated code.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>. Integer atoms 1 through 0xBFFF return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> without
+ * removing a string entry. Zero or an invalid string identifier returns
+ * STATUS_INVALID_HANDLE. A pinned string entry returns
+ * informational STATUS_WAS_LOCKED (0x40000019) without being decremented or removed.
+ * \remarks <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> does not prove that an entry disappeared. Other references,
+ * pinning and lowbox accounting can retain it. The pin/saturation paths are distinct
+ * from the ordinary balanced-add/delete lifetime.
+ * \see <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globaldeleteatom">https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globaldeleteatom</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -65,7 +70,7 @@ NtDeleteAtom(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L11476">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L11921">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -78,7 +83,7 @@ ZwDeleteAtom(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L1729">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L1729">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -105,7 +110,7 @@ ZwDeleteAtom(
 </ul>
 <h1>See also</h1>
 <ul>
-<li><code><a href="atom_basic_information" title="typedef struct _ATOM_BASIC_INFORMATION&#10;{&#10;    USHORT UsageCount;   // The number of times the atom is referenced.&#10;    USHORT Flags;        // Flags associated with the atom. */&#10;    USHORT NameLength;   // Length, in bytes, of the atom&#x27;s name.&#10;    _Field_size_bytes_(NameLength) WCHAR Name[1]; // The atom&#x27;s name (not null-terminated).&#10;} ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;">ATOM_BASIC_INFORMATION</a></code></li>
+<li><code><a href="atom_basic_information" title="typedef struct _ATOM_BASIC_INFORMATION&#10;{&#10;    USHORT UsageCount;   // Reference snapshot; integer atoms report 1. Not an ownership grant.&#10;    USHORT Flags;        // Bit 0x1: pinned; bit 0x2: global-entry lowbox access flag. Not NtAddAtomEx input flags in general.&#10;    USHORT NameLength;   // Bytes copied into Name, excluding the trailing WCHAR NUL; may be truncated.&#10;    _Field_size_bytes_(NameLength) WCHAR Name[1]; // Variable-length name, followed by a NUL on successful query.&#10;} ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;">ATOM_BASIC_INFORMATION</a></code></li>
 <li><code><a href="ntaddatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAddAtom(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom&#10;    );">NtAddAtom</a></code></li>
 <li><code><a href="ntfindatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtFindAtom(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom&#10;    );">NtFindAtom</a></code></li>
 <li><code><a href="ntqueryinformationatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationAtom(&#10;    _In_ RTL_ATOM Atom,&#10;    _In_ ATOM_INFORMATION_CLASS AtomInformationClass,&#10;    _Out_writes_bytes_(AtomInformationLength) PVOID AtomInformation,&#10;    _In_ ULONG AtomInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationAtom</a></code></li>

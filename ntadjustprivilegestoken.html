@@ -45,17 +45,21 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTSEAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtAdjustPrivilegesToken routine enables or disables privileges in the specified access token.
+ * The NtAdjustPrivilegesToken routine enables, disables, or removes privileges in the specified access token.
  *
- * \param TokenHandle Handle to the token that contains the privileges to be modified. The handle must have TOKEN_ADJUST_PRIVILEGES access.
+ * \param TokenHandle Handle to the token that contains the privileges to be modified. The handle must have TOKEN_ADJUST_PRIVILEGES access and also TOKEN_QUERY when PreviousState is supplied.
  * \param DisableAllPrivileges Specifies whether the function disables all of the token&#x27;s privileges. If this value is TRUE, the function disables all privileges and ignores the NewState parameter.
  * If it is FALSE, the function modifies privileges based on the information pointed to by the NewState parameter.
  * \param NewState A pointer to a <a href="token_privileges" title="typedef struct _TOKEN_PRIVILEGES&#10;{&#10;    ULONG PrivilegeCount;&#10;    LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];&#10;} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES;">TOKEN_PRIVILEGES</a> structure that specifies an array of privileges and their attributes. If DisableAllPrivileges is TRUE, the function ignores this parameter.
  * \param BufferLength Specifies the size, in bytes, of the buffer pointed to by the PreviousState parameter. This parameter can be zero if the PreviousState parameter is NULL.
  * \param PreviousState A pointer to a buffer that the function fills with a <a href="token_privileges" title="typedef struct _TOKEN_PRIVILEGES&#10;{&#10;    ULONG PrivilegeCount;&#10;    LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];&#10;} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES;">TOKEN_PRIVILEGES</a> structure that contains the previous state of any privileges that the function modifies.
  * \param ReturnLength A pointer to a variable that receives the required size, in bytes, of the buffer pointed to by the PreviousState parameter. This parameter can be NULL if PreviousState is NULL.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> on complete adjustment; STATUS_NOT_ALL_ASSIGNED (0x00000106) can report partial adjustment even though <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> is true. STATUS_BUFFER_TOO_SMALL reports the required previous-state size without changing privileges.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-adjusttokenprivileges">https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-adjusttokenprivileges</a>
+ * \remarks Use TOKEN_ADJUST_PRIVILEGES (0x20), plus TOKEN_QUERY (0x8) when PreviousState is requested. ReturnLength is
+ * required when PreviousState is non-NULL. An unknown privilege can produce STATUS_NOT_ALL_ASSIGNED (0x106)
+ * even though <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> is true. This operation cannot add privileges that the token does not possess. An empty previous-state result clears the first declared <a href="luid_and_attributes" title="typedef struct _LUID_AND_ATTRIBUTES {&#10;  LUID  Luid;&#10;  ULONG Attributes;&#10;} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;">LUID_AND_ATTRIBUTES</a> slot as well
+ * as PrivilegeCount; retain storage for the declared <a href="token_privileges" title="typedef struct _TOKEN_PRIVILEGES&#10;{&#10;    ULONG PrivilegeCount;&#10;    LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];&#10;} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES;">TOKEN_PRIVILEGES</a> structure.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -71,7 +75,7 @@ NtAdjustPrivilegesToken(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntseapi.h#L772">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntseapi.h#L962">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -89,7 +93,7 @@ ZwAdjustPrivilegesToken(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L239">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L239">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

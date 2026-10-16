@@ -46,17 +46,22 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The ATOM_TABLE_INFORMATION structure contains information about all Atoms from the system atom table.
+ * Visible string-atom identifiers for AtomTableInformation. The array starts at
+ * byte 4 and each <a href="rtl_atom" title="typedef USHORT RTL_ATOM, *PRTL_ATOM;">RTL_ATOM</a> is 2 bytes. On insufficient capacity the query copies
+ * the prefix that fits and returns STATUS_INFO_LENGTH_MISMATCH; NumberOfAtoms
+ * still reports the total visible count, not how many entries were copied.
+ * On that failure read at most (buffer length - 4) / 2 entries, not NumberOfAtoms.
+ * The table can change between calls, so allocation from the count may need retry.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _ATOM_TABLE_INFORMATION
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfAtoms; // The number of atoms in the atom table.
-    _Field_size_(NumberOfAtoms) <a href="rtl_atom" title="typedef USHORT RTL_ATOM, *PRTL_ATOM;">RTL_ATOM</a> Atoms[1]; // Array of atom identifiers.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberOfAtoms; // Total visible string-atom count; can exceed the returned array capacity on failure.
+    _Field_size_(NumberOfAtoms) <a href="rtl_atom" title="typedef USHORT RTL_ATOM, *PRTL_ATOM;">RTL_ATOM</a> Atoms[1]; // Complete array only on success; no acquired atom references.
 } ATOM_TABLE_INFORMATION, *PATOM_TABLE_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L11508">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L11962">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -85,8 +90,8 @@
 </ul>
 <h1>See also</h1>
 <ul>
-<li><code><a href="atom_basic_information" title="typedef struct _ATOM_BASIC_INFORMATION&#10;{&#10;    USHORT UsageCount;   // The number of times the atom is referenced.&#10;    USHORT Flags;        // Flags associated with the atom. */&#10;    USHORT NameLength;   // Length, in bytes, of the atom&#x27;s name.&#10;    _Field_size_bytes_(NameLength) WCHAR Name[1]; // The atom&#x27;s name (not null-terminated).&#10;} ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;">ATOM_BASIC_INFORMATION</a></code></li>
-<li><code><a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation,&#10;    AtomTableInformation&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a></code></li>
+<li><code><a href="atom_basic_information" title="typedef struct _ATOM_BASIC_INFORMATION&#10;{&#10;    USHORT UsageCount;   // Reference snapshot; integer atoms report 1. Not an ownership grant.&#10;    USHORT Flags;        // Bit 0x1: pinned; bit 0x2: global-entry lowbox access flag. Not NtAddAtomEx input flags in general.&#10;    USHORT NameLength;   // Bytes copied into Name, excluding the trailing WCHAR NUL; may be truncated.&#10;    _Field_size_bytes_(NameLength) WCHAR Name[1]; // Variable-length name, followed by a NUL on successful query.&#10;} ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;">ATOM_BASIC_INFORMATION</a></code></li>
+<li><code><a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation, // 0: ATOM_BASIC_INFORMATION, 6-byte prefix plus name and terminator.&#10;    AtomTableInformation // 1: ATOM_TABLE_INFORMATION; Atom input is ignored.&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a></code></li>
 <li><code><a href="ntqueryinformationatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationAtom(&#10;    _In_ RTL_ATOM Atom,&#10;    _In_ ATOM_INFORMATION_CLASS AtomInformationClass,&#10;    _Out_writes_bytes_(AtomInformationLength) PVOID AtomInformation,&#10;    _In_ ULONG AtomInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationAtom</a></code></li>
 </ul>
 <div class="ntdoc-description-links">

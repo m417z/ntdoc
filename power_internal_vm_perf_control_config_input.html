@@ -46,22 +46,42 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_VM_PERF_CONTROL_CONFIG_INPUT structure contains the input parameters for the vm perf control config operation.
+ * The POWER_INTERNAL_VM_PERF_CONTROL_CONFIG_INPUT structure supplies the version 2 frequency bounds, desired
+ * frequency, activity window, and energy-performance preference for VM performance-configuration generation.
+ * \remarks This request returns how frequency bounds and autonomous-performance guidance are
+ * translated by the current domain provider. Check support first, initialize unspecified values according to the
+ * documented sentinel rules, and do not treat IgnorePolicyMaximum as permission to exceed hardware constraints.
+ * The query returns an encoding rather than a live frequency or proof that hardware state changed.
+ *
+ * Version 2 request used by PpmPerfGetVmCppcConfig. Versions above 2 are unsupported.
+ * EPP is scaled to min(100, Epp * 100 / 255) before the provider call.
+ * The activity-window unit/encoding is provider-dependent.
+ * Versions 0/1 use <a href="power_internal_vm_perf_control_config_input_v1" title="typedef struct _POWER_INTERNAL_VM_PERF_CONTROL_CONFIG_INPUT_V1&#10;{&#10;    POWER_INFORMATION_INTERNAL_HEADER Header; // Version 0 or 1; input length &gt;= 0x0C.&#10;    ULONG FrequencyMhz; // Zero requests zero configuration.&#10;} POWER_INTERNAL_VM_PERF_CONTROL_CONFIG_INPUT_V1, *PPOWER_INTERNAL_VM_PERF_CONTROL_CONFIG_INPUT_V1;">POWER_INTERNAL_VM_PERF_CONTROL_CONFIG_INPUT_V1</a>.
+ * \remarks Selector 70 requires input &gt;=32 bytes for Version 2 and output &gt;=8 bytes;
+ * Version &gt;2 returns STATUS_NOT_SUPPORTED. Both caller modes are accepted. Minimum/maximum
+ * 0 are normalized to 0xFFFFFFFF. If both are unspecified and desired frequency, activity
+ * window and EPP all equal 0xFFFFFFFF, the supported helper returns configuration zero.
+ *
+ * For ordinary EPP inputs 0..255, scaling is floor(EPP*100/255), capped at 100. The machine
+ * code multiplies in 32 bits: do not rely on saturation for arbitrary out-of-range <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>
+ * inputs that overflow that product. 0xFFFFFFFF selects policy EPP instead. IgnorePolicyMaximum
+ * skips a policy cap, not the domain hardware bound. No generic activity-window unit or
+ * provider encoding is established. This is a configuration-generation call, not a setter.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_VM_PERF_CONTROL_CONFIG_INPUT
 {
-    <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a> Header;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Parameter0;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Parameter1;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Parameter2;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Parameter3;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Parameter4;
-    BOOLEAN Parameter5;
+    <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a> Header; // Version 2; input length &gt;= 0x20.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MaximumFrequencyMhz; // 0 and 0xFFFFFFFF select policy defaults.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> MinimumFrequencyMhz; // 0 and 0xFFFFFFFF select policy defaults.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DesiredFrequencyMhz; // 0xFFFFFFFF is unspecified.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> AutonomousActivityWindow; // provider encoding, 0xFFFFFFFF uses policy.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EnergyPerformancePreference; // normally 0..255; 0xFFFFFFFF uses policy.
+    BOOLEAN IgnorePolicyMaximum; // does not bypass hardware constraints.
     <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Reserved[3];
 } POWER_INTERNAL_VM_PERF_CONTROL_CONFIG_INPUT, *PPOWER_INTERNAL_VM_PERF_CONTROL_CONFIG_INPUT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L2570">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L4352">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

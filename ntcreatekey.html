@@ -45,16 +45,42 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTREGAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Creates a new registry key routine or opens an existing one.
+ * Creates one registry key or opens it if it already exists. Use Disposition to
+ * distinguish those cases before initializing data or assuming ownership.
+ * This is not a recursive directory-creation routine for missing path components.
  *
- * \param[out] KeyHandle A pointer to a handle that receives the key handle.
- * \param[in] DesiredAccess The access mask that specifies the desired access rights.
- * \param[in] ObjectAttributes A pointer to an <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> structure that specifies the object attributes.
- * \param[in] TitleIndex Reserved.
- * \param[in, optional] Class A pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that specifies the class of the key.
- * \param[in] CreateOptions The options to use when creating the key.
- * \param[out, optional] Disposition A pointer to a variable that receives the disposition value.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[out] KeyHandle Required writable location receiving a caller-owned key
+ * handle on success. Close it with <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a>. Initialize it to NULL and check status;
+ * early failures need not initialize every output, and WoW64 copyback can differ.
+ * \param[in] DesiredAccess Access requested on the returned key. KEY_WOW64_32KEY
+ * (0x200) and KEY_WOW64_64KEY (0x100) select views, not granted key operation rights.
+ * Creation also requires appropriate access to the existing parent; requesting
+ * access on the child does not bypass parent or child security checks.
+ * \param[in] ObjectAttributes Initialized attributes containing a counted native
+ * path (normally beginning with \Registry) or a path relative to a key handle in
+ * RootDirectory. HKEY_* predefined aliases are not native RootDirectory handles.
+ * Request <a href="obj_case_insensitive" title="#define OBJ_CASE_INSENSITIVE 0x00000040L">OBJ_CASE_INSENSITIVE</a> when case-insensitive object lookup is intended.
+ * \param[in] TitleIndex Reserved; pass 0.
+ * \param[in, optional] Class Counted class string for a new key, or NULL. The
+ * user-mode path rejects odd byte lengths and requires 2-byte alignment
+ * for nonempty class data. Creating an already-existing key does not replace its
+ * class or values with the supplied creation metadata.
+ * \param[in] CreateOptions REG_OPTION_* creation options. <a href="reg_option_non_volatile" title="#define REG_OPTION_NON_VOLATILE (0x00000000L) // Key is preserved when system is rebooted.">REG_OPTION_NON_VOLATILE</a>
+ * is 0; <a href="reg_option_volatile" title="#define REG_OPTION_VOLATILE (0x00000001L) // Key is not preserved when system is rebooted">REG_OPTION_VOLATILE</a> is 0x1 and does not convert an existing key&#x27;s lifetime.
+ * Link and backup/restore options have separate semantics and security checks.
+ * \param[out, optional] Disposition Receives <a href="reg_created_new_key" title="#define REG_CREATED_NEW_KEY (0x00000001L) // New Registry Key created">REG_CREATED_NEW_KEY</a> (1) or
+ * <a href="reg_opened_existing_key" title="#define REG_OPENED_EXISTING_KEY (0x00000002L) // Existing Key opened">REG_OPENED_EXISTING_KEY</a> (2) on success. May be NULL. Do not consume a stale
+ * disposition after failure or delete an existing key as if this call created it.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> when a handle is returned, or an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> failure.
+ * Invalid creation-option bits return STATUS_INVALID_PARAMETER on the native
+ * path; missing parents are not silently created by ordinary native lookup.
+ * \remarks The native path captures Class before clearing KeyHandle:
+ * an invalid class can leave the output handle unchanged. Most later failures
+ * leave it NULL. WoW64 captures 32-bit descriptors, constructs a view-sensitive
+ * path and may set key-body tags; it is not just pointer-width conversion.
+ * Volatile keys still require explicit cleanup when used as temporary objects.
+ * Registry callbacks, layers, virtualization and backup privileges can alter
+ * ordinary behavior. Success is not a physical hive-flush guarantee.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatekey">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatekey</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -72,7 +98,7 @@ NtCreateKey(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L655">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L835">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -91,7 +117,7 @@ ZwCreateKey(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L1186">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L1186">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

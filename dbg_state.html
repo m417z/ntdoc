@@ -45,25 +45,27 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTDBG_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The DBG_STATE enumeration defines the state of a debug object.
+ * The DBG_STATE enumeration identifies the debug state change reported in <a href="dbgui_wait_state_change" title="typedef struct _DBGUI_WAIT_STATE_CHANGE&#10;{&#10;    DBG_STATE NewState;&#10;    CLIENT_ID AppClientId;&#10;    union&#10;    {&#10;        DBGKM_EXCEPTION Exception;              // DbgExceptionStateChange, DbgBreakpointStateChange, DbgSingleStepStateChange&#10;        DBGUI_CREATE_THREAD CreateThread;       // DbgCreateThreadStateChange&#10;        DBGUI_CREATE_PROCESS CreateProcessInfo; // DbgCreateProcessStateChange&#10;        DBGKM_EXIT_THREAD ExitThread;           // DbgExitThreadStateChange&#10;        DBGKM_EXIT_PROCESS ExitProcess;         // DbgExitProcessStateChange&#10;        DBGKM_LOAD_DLL LoadDll;                 // DbgLoadDllStateChange&#10;        DBGKM_UNLOAD_DLL UnloadDll;             // DbgUnloadDllStateChange&#10;    } StateInfo;&#10;} DBGUI_WAIT_STATE_CHANGE, *PDBGUI_WAIT_STATE_CHANGE;">DBGUI_WAIT_STATE_CHANGE</a>.
+ * \remarks NewState selects the active member of <a href="dbgui_wait_state_change" title="typedef struct _DBGUI_WAIT_STATE_CHANGE&#10;{&#10;    DBG_STATE NewState;&#10;    CLIENT_ID AppClientId;&#10;    union&#10;    {&#10;        DBGKM_EXCEPTION Exception;              // DbgExceptionStateChange, DbgBreakpointStateChange, DbgSingleStepStateChange&#10;        DBGUI_CREATE_THREAD CreateThread;       // DbgCreateThreadStateChange&#10;        DBGUI_CREATE_PROCESS CreateProcessInfo; // DbgCreateProcessStateChange&#10;        DBGKM_EXIT_THREAD ExitThread;           // DbgExitThreadStateChange&#10;        DBGKM_EXIT_PROCESS ExitProcess;         // DbgExitProcessStateChange&#10;        DBGKM_LOAD_DLL LoadDll;                 // DbgLoadDllStateChange&#10;        DBGKM_UNLOAD_DLL UnloadDll;             // DbgUnloadDllStateChange&#10;    } StateInfo;&#10;} DBGUI_WAIT_STATE_CHANGE, *PDBGUI_WAIT_STATE_CHANGE;">DBGUI_WAIT_STATE_CHANGE</a>.StateInfo.
+ * Exception, breakpoint, and single-step state changes all use StateInfo.Exception.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef enum _DBG_STATE
 {
-    DbgIdle,
-    DbgReplyPending,
-    DbgCreateThreadStateChange,
-    DbgCreateProcessStateChange,
-    DbgExitThreadStateChange,
-    DbgExitProcessStateChange,
-    DbgExceptionStateChange,
-    DbgBreakpointStateChange,
-    DbgSingleStepStateChange,
-    DbgLoadDllStateChange,
-    DbgUnloadDllStateChange
+    DbgIdle,                        // No debug events
+    DbgReplyPending,                // Reply-pending state
+    DbgCreateThreadStateChange,     // StateInfo.CreateThread
+    DbgCreateProcessStateChange,    // StateInfo.CreateProcessInfo
+    DbgExitThreadStateChange,       // StateInfo.ExitThread
+    DbgExitProcessStateChange,      // StateInfo.ExitProcess
+    DbgExceptionStateChange,        // StateInfo.Exception
+    DbgBreakpointStateChange,       // StateInfo.Exception; ExceptionCode == STATUS_BREAKPOINT
+    DbgSingleStepStateChange,       // StateInfo.Exception; ExceptionCode == STATUS_SINGLE_STEP
+    DbgLoadDllStateChange,          // StateInfo.LoadDll
+    DbgUnloadDllStateChange         // StateInfo.UnloadDll
 } DBG_STATE, *PDBG_STATE;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntdbg.h#L266">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntdbg.h#L277">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -81,7 +83,7 @@
 <h1>NTinternals.net (undocumented.ntinternals.net)</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<p><code>DBG_STATE</code> enumeration is used by <strong>Debug Objects</strong> as a member of <code><a href="dbgui_wait_state_change" title="typedef struct _DBGUI_WAIT_STATE_CHANGE&#10;{&#10;    DBG_STATE NewState;&#10;    CLIENT_ID AppClientId;&#10;    union&#10;    {&#10;        DBGKM_EXCEPTION Exception;&#10;        DBGUI_CREATE_THREAD CreateThread;&#10;        DBGUI_CREATE_PROCESS CreateProcessInfo;&#10;        DBGKM_EXIT_THREAD ExitThread;&#10;        DBGKM_EXIT_PROCESS ExitProcess;&#10;        DBGKM_LOAD_DLL LoadDll;&#10;        DBGKM_UNLOAD_DLL UnloadDll;&#10;    } StateInfo;&#10;} DBGUI_WAIT_STATE_CHANGE, *PDBGUI_WAIT_STATE_CHANGE;">DBGUI_WAIT_STATE_CHANGE</a></code> structure returned in successful call to <code><a href="ntwaitfordebugevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForDebugEvent(&#10;    _In_ HANDLE DebugObjectHandle,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout,&#10;    _Out_ PDBGUI_WAIT_STATE_CHANGE WaitStateChange&#10;    );">NtWaitForDebugEvent</a></code> function. It describes current state of <strong>Debug Object</strong>. Possible values are:</p>
+<p><code>DBG_STATE</code> enumeration is used by <strong>Debug Objects</strong> as a member of <code><a href="dbgui_wait_state_change" title="typedef struct _DBGUI_WAIT_STATE_CHANGE&#10;{&#10;    DBG_STATE NewState;&#10;    CLIENT_ID AppClientId;&#10;    union&#10;    {&#10;        DBGKM_EXCEPTION Exception;              // DbgExceptionStateChange, DbgBreakpointStateChange, DbgSingleStepStateChange&#10;        DBGUI_CREATE_THREAD CreateThread;       // DbgCreateThreadStateChange&#10;        DBGUI_CREATE_PROCESS CreateProcessInfo; // DbgCreateProcessStateChange&#10;        DBGKM_EXIT_THREAD ExitThread;           // DbgExitThreadStateChange&#10;        DBGKM_EXIT_PROCESS ExitProcess;         // DbgExitProcessStateChange&#10;        DBGKM_LOAD_DLL LoadDll;                 // DbgLoadDllStateChange&#10;        DBGKM_UNLOAD_DLL UnloadDll;             // DbgUnloadDllStateChange&#10;    } StateInfo;&#10;} DBGUI_WAIT_STATE_CHANGE, *PDBGUI_WAIT_STATE_CHANGE;">DBGUI_WAIT_STATE_CHANGE</a></code> structure returned in successful call to <code><a href="ntwaitfordebugevent" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForDebugEvent(&#10;    _In_ HANDLE DebugObjectHandle,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout,&#10;    _Out_ PDBGUI_WAIT_STATE_CHANGE WaitStateChange&#10;    );">NtWaitForDebugEvent</a></code> function. It describes current state of <strong>Debug Object</strong>. Possible values are:</p>
 <h3>DbgIdle</h3>
 <h3>DbgReplyPending</h3>
 <h3>DbgCreateThreadStateChange</h3>
@@ -100,7 +102,7 @@
 </ul>
 <h1>See also</h1>
 <ul>
-<li><code><a href="dbgui_wait_state_change" title="typedef struct _DBGUI_WAIT_STATE_CHANGE&#10;{&#10;    DBG_STATE NewState;&#10;    CLIENT_ID AppClientId;&#10;    union&#10;    {&#10;        DBGKM_EXCEPTION Exception;&#10;        DBGUI_CREATE_THREAD CreateThread;&#10;        DBGUI_CREATE_PROCESS CreateProcessInfo;&#10;        DBGKM_EXIT_THREAD ExitThread;&#10;        DBGKM_EXIT_PROCESS ExitProcess;&#10;        DBGKM_LOAD_DLL LoadDll;&#10;        DBGKM_UNLOAD_DLL UnloadDll;&#10;    } StateInfo;&#10;} DBGUI_WAIT_STATE_CHANGE, *PDBGUI_WAIT_STATE_CHANGE;">DBGUI_WAIT_STATE_CHANGE</a></code></li>
+<li><code><a href="dbgui_wait_state_change" title="typedef struct _DBGUI_WAIT_STATE_CHANGE&#10;{&#10;    DBG_STATE NewState;&#10;    CLIENT_ID AppClientId;&#10;    union&#10;    {&#10;        DBGKM_EXCEPTION Exception;              // DbgExceptionStateChange, DbgBreakpointStateChange, DbgSingleStepStateChange&#10;        DBGUI_CREATE_THREAD CreateThread;       // DbgCreateThreadStateChange&#10;        DBGUI_CREATE_PROCESS CreateProcessInfo; // DbgCreateProcessStateChange&#10;        DBGKM_EXIT_THREAD ExitThread;           // DbgExitThreadStateChange&#10;        DBGKM_EXIT_PROCESS ExitProcess;         // DbgExitProcessStateChange&#10;        DBGKM_LOAD_DLL LoadDll;                 // DbgLoadDllStateChange&#10;        DBGKM_UNLOAD_DLL UnloadDll;             // DbgUnloadDllStateChange&#10;    } StateInfo;&#10;} DBGUI_WAIT_STATE_CHANGE, *PDBGUI_WAIT_STATE_CHANGE;">DBGUI_WAIT_STATE_CHANGE</a></code></li>
 <li><code>NtWaitForDebugObject</code></li>
 </ul>
 <div class="ntdoc-description-links">

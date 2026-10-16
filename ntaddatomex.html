@@ -48,18 +48,24 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The NtAddAtomEx routine adds a Unicode string to the system atom table with
- * additional creation flags.
+ * The NtAddAtomEx routine adds or references an atom with an optional entry-visibility flag. The name capture
+ * and reference-ownership rules are those of <a href="ntaddatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAddAtom(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom&#10;    );">NtAddAtom</a>.
  *
- * \param AtomName A pointer to a Unicode string containing the atom name.
- * \param Length The length, in bytes, of the string pointed to by AtomName.
- * \param Atom An optional pointer that receives the resulting atom identifier.
- * \param Flags A set of flags that control atom creation behavior.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
- * \remarks <a href="atom_flag_global" title="#define ATOM_FLAG_GLOBAL 0x2">ATOM_FLAG_GLOBAL</a> may be used to create a global atom.
- * Only <a href="atom_flag_global" title="#define ATOM_FLAG_GLOBAL 0x2">ATOM_FLAG_GLOBAL</a> and <a href="atom_flag_none" title="#define ATOM_FLAG_NONE 0x0">ATOM_FLAG_NONE</a> are currently supported.
- * Any other flag value results in STATUS_INVALID_PARAMETER.
- * \see <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-addatomw">https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-addatomw</a>
+ * \param AtomName Readable UTF-16 name; the kernel terminates the user-mode copy.
+ * \param Length Bytes to capture, at most 510 (255 WCHARs). Use an even byte count;
+ * nonzero user input requires 2-byte alignment on x64 and WoW64.
+ * \param Atom Optional 16-bit output. NULL still performs the addition.
+ * \param Flags <a href="atom_flag_none" title="#define ATOM_FLAG_NONE 0x0">ATOM_FLAG_NONE</a> (0) or <a href="atom_flag_global" title="#define ATOM_FLAG_GLOBAL 0x2">ATOM_FLAG_GLOBAL</a> (0x2); other bits return
+ * STATUS_INVALID_PARAMETER. The flag is stored only when a new entry is allocated.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> describing the addition. A successful string add creates a
+ * reference that the caller must balance with <a href="ntdeleteatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDeleteAtom(&#10;    _In_ RTL_ATOM Atom&#10;    );">NtDeleteAtom</a>.
+ * \remarks Both flag values use the table obtained from the same session Win32
+ * callout. Bit 0x2 is an entry flag consulted by RtlpAllowsLowBoxAccess, not a switch
+ * to a separate machine-global table. Re-adding an existing name with different
+ * Flags increments its reference count but does not change its stored flag.
+ * Lowbox/AppContainer visibility and accounting are context-sensitive; do not
+ * infer cross-session visibility or access to every existing atom from this flag.
+ * \see <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globaladdatomexw">https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globaladdatomexw</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -75,7 +81,7 @@ NtAddAtomEx(
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L11433">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L11865">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -91,7 +97,7 @@ ZwAddAtomEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L197">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L197">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

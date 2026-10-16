@@ -47,7 +47,11 @@
 #if (PHNT_VERSION &gt;= PHNT_WINDOWS_10)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtGetCompleteWnfStateSubscription routine retrieves the complete WNF state subscription information.
+ * The NtGetCompleteWnfStateSubscription routine completes a previously delivered WNF notification and
+ * optionally retrieves the next one. To acknowledge a delivery, supply both old pointers, a nonzero old event
+ * mask, and an OldDescriptorStatus of <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or STATUS_RETRY (0xC000022D). A nonzero DescriptorSize
+ * must be at least 0x1030 (4144) and NewDeliveryDescriptor must be 8-byte aligned. A zero size skips
+ * retrieval.
  *
  * \param OldDescriptorStateName Optional pointer to the previous state name.
  * \param OldSubscriptionId Optional pointer to the previous subscription ID.
@@ -56,24 +60,28 @@
  * \param NewDeliveryDescriptor Pointer to a buffer that receives the new delivery descriptor.
  * \param DescriptorSize The size, in bytes, of the delivery descriptor buffer.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code indicating success or failure.
+ * \remarks Combines completion of an earlier delivery descriptor with retrieval of further thread
+ * notifications. The minimum nonzero DescriptorSize is 0x1030 bytes, not just the 48-byte header. A buffer is
+ * not an executable callback registration; respect returned StateDataOffset and StateDataSize when
+ * interpreting the inline payload. Full dispatcher/rundown behavior requires separate lifetime analysis.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NTAPI
 NtGetCompleteWnfStateSubscription(
-    _In_opt_ <a href="wnf_state_name" title="typedef struct _WNF_STATE_NAME&#10;{&#10;    union&#10;    {&#10;        ULONGLONG Value;&#10;        ULONG Data[2];&#10;        struct&#10;        {&#10;            ULONG64 Version : 4;&#10;            ULONG64 NameLifetime : 2;&#10;            ULONG64 DataScope : 4;&#10;            ULONG64 PermanentData : 1;&#10;            ULONG64 Unique : 53;&#10;        } DUMMYSTRUCTNAME;&#10;    } DUMMYUNIONNAME;&#10;} WNF_STATE_NAME, *PWNF_STATE_NAME;">PWNF_STATE_NAME</a> OldDescriptorStateName,
-    _In_opt_ <a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a> *OldSubscriptionId,
+    _In_opt_ <a href="pcwnf_state_name" title="typedef const WNF_STATE_NAME *PCWNF_STATE_NAME;">PCWNF_STATE_NAME</a> OldDescriptorStateName,
+    _In_opt_ const <a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a> *OldSubscriptionId,
     _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OldDescriptorEventMask,
-    _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OldDescriptorStatus,
-    _Out_writes_bytes_(DescriptorSize) <a href="wnf_delivery_descriptor" title="typedef struct _WNF_DELIVERY_DESCRIPTOR&#10;{&#10;    ULONGLONG SubscriptionId;&#10;    WNF_STATE_NAME StateName;&#10;    WNF_CHANGE_STAMP ChangeStamp;&#10;    ULONG StateDataSize;&#10;    ULONG EventMask;&#10;    WNF_TYPE_ID TypeId;&#10;    ULONG StateDataOffset;&#10;} WNF_DELIVERY_DESCRIPTOR, *PWNF_DELIVERY_DESCRIPTOR;">PWNF_DELIVERY_DESCRIPTOR</a> NewDeliveryDescriptor,
+    _In_opt_ <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> OldDescriptorStatus,
+    _Out_writes_bytes_opt_(DescriptorSize) <a href="wnf_delivery_descriptor" title="typedef struct _WNF_DELIVERY_DESCRIPTOR&#10;{&#10;    ULONGLONG SubscriptionId;&#10;    WNF_STATE_NAME StateName;&#10;    WNF_CHANGE_STAMP ChangeStamp;&#10;    ULONG StateDataSize;&#10;    ULONG EventMask;&#10;    WNF_TYPE_ID TypeId;&#10;    ULONG StateDataOffset;&#10;} WNF_DELIVERY_DESCRIPTOR, *PWNF_DELIVERY_DESCRIPTOR;">PWNF_DELIVERY_DESCRIPTOR</a> NewDeliveryDescriptor,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DescriptorSize
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L2056">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L2344">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -82,16 +90,16 @@ NTSYSCALLAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NTAPI
 ZwGetCompleteWnfStateSubscription(
-    _In_opt_ <a href="wnf_state_name" title="typedef struct _WNF_STATE_NAME&#10;{&#10;    union&#10;    {&#10;        ULONGLONG Value;&#10;        ULONG Data[2];&#10;        struct&#10;        {&#10;            ULONG64 Version : 4;&#10;            ULONG64 NameLifetime : 2;&#10;            ULONG64 DataScope : 4;&#10;            ULONG64 PermanentData : 1;&#10;            ULONG64 Unique : 53;&#10;        } DUMMYSTRUCTNAME;&#10;    } DUMMYUNIONNAME;&#10;} WNF_STATE_NAME, *PWNF_STATE_NAME;">PWNF_STATE_NAME</a> OldDescriptorStateName,
-    _In_opt_ <a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a> *OldSubscriptionId,
+    _In_opt_ <a href="pcwnf_state_name" title="typedef const WNF_STATE_NAME *PCWNF_STATE_NAME;">PCWNF_STATE_NAME</a> OldDescriptorStateName,
+    _In_opt_ const <a href="ulong64" title="typedef unsigned __int64 ULONG64;">ULONG64</a> *OldSubscriptionId,
     _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OldDescriptorEventMask,
-    _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OldDescriptorStatus,
-    _Out_writes_bytes_(DescriptorSize) <a href="wnf_delivery_descriptor" title="typedef struct _WNF_DELIVERY_DESCRIPTOR&#10;{&#10;    ULONGLONG SubscriptionId;&#10;    WNF_STATE_NAME StateName;&#10;    WNF_CHANGE_STAMP ChangeStamp;&#10;    ULONG StateDataSize;&#10;    ULONG EventMask;&#10;    WNF_TYPE_ID TypeId;&#10;    ULONG StateDataOffset;&#10;} WNF_DELIVERY_DESCRIPTOR, *PWNF_DELIVERY_DESCRIPTOR;">PWNF_DELIVERY_DESCRIPTOR</a> NewDeliveryDescriptor,
+    _In_opt_ <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> OldDescriptorStatus,
+    _Out_writes_bytes_opt_(DescriptorSize) <a href="wnf_delivery_descriptor" title="typedef struct _WNF_DELIVERY_DESCRIPTOR&#10;{&#10;    ULONGLONG SubscriptionId;&#10;    WNF_STATE_NAME StateName;&#10;    WNF_CHANGE_STAMP ChangeStamp;&#10;    ULONG StateDataSize;&#10;    ULONG EventMask;&#10;    WNF_TYPE_ID TypeId;&#10;    ULONG StateDataOffset;&#10;} WNF_DELIVERY_DESCRIPTOR, *PWNF_DELIVERY_DESCRIPTOR;">PWNF_DELIVERY_DESCRIPTOR</a> NewDeliveryDescriptor,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DescriptorSize
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L2175">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L2175">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

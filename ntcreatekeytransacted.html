@@ -45,17 +45,33 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTREGAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Creates a new registry key or opens an existing one, and it associates the key with a transaction.
+ * Creates a registry key or opens an existing one in an explicit transaction. Use it to group registry
+ * changes for a later commit or rollback; closing the returned key handle is not itself a commit.
+ * <a href="ntsetvaluekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetValueKey(&#10;    _In_ HANDLE KeyHandle,&#10;    _In_ PCUNICODE_STRING ValueName,&#10;    _In_opt_ ULONG TitleIndex,&#10;    _In_ ULONG Type,&#10;    _In_reads_bytes_opt_(DataSize) PVOID Data,&#10;    _In_ ULONG DataSize&#10;    );">NtSetValueKey</a>/<a href="ntdeletekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDeleteKey(&#10;    _In_ HANDLE KeyHandle&#10;    );">NtDeleteKey</a> operations through the transacted handle participate in its transaction.
  *
- * \param[out] KeyHandle A pointer to a handle that receives the key handle.
- * \param[in] DesiredAccess The access mask that specifies the desired access rights.
- * \param[in] ObjectAttributes A pointer to an <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> structure that specifies the object attributes.
- * \param[in] TitleIndex Reserved.
- * \param[in, optional] Class A pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that specifies the class of the key.
- * \param[in] CreateOptions The options to use when creating the key.
- * \param[in] TransactionHandle A handle to the transaction.
- * \param[out, optional] Disposition A pointer to a variable that receives the disposition value.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[out] KeyHandle Required output receiving a caller-owned handle on success. Close every successful
+ * key handle with <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a>, independently of the transaction&#x27;s outcome and transaction handle lifetime.
+ * \param[in] DesiredAccess Rights requested on the key, distinct from the rights on TransactionHandle.
+ * Creation still obeys parent and key security checks.
+ * \param[in] ObjectAttributes Initialized counted native/relative key name and attributes, as for
+ * <a href="ntcreatekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Reserved_ ULONG TitleIndex,&#10;    _In_opt_ PCUNICODE_STRING Class,&#10;    _In_ ULONG CreateOptions,&#10;    _Out_opt_ PULONG Disposition&#10;    );">NtCreateKey</a>. Intermediate missing parents are not created by the ordinary native path.
+ * \param[in] TitleIndex Reserved; pass 0.
+ * \param[in, optional] Class Optional counted class string for a newly created key; ignored as replacement
+ * metadata when an existing key is opened.
+ * \param[in] CreateOptions Creation options as for <a href="ntcreatekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Reserved_ ULONG TitleIndex,&#10;    _In_opt_ PCUNICODE_STRING Class,&#10;    _In_ ULONG CreateOptions,&#10;    _Out_opt_ PULONG Disposition&#10;    );">NtCreateKey</a>; options do not decide whether changes commit.
+ * <a href="reg_option_volatile" title="#define REG_OPTION_VOLATILE (0x00000001L) // Key is not preserved when system is rebooted">REG_OPTION_VOLATILE</a> (0x1) is supported by the ordinary KTM transaction path.
+ * \param[in] TransactionHandle Required active transaction handle. The entry requests access 0x4
+ * (TRANSACTION_ENLIST for a KTM transaction), first trying a registry-transaction object and then KTM on type
+ * mismatch. NULL is not a request for nontransactional creation; use <a href="ntcreatekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Reserved_ ULONG TitleIndex,&#10;    _In_opt_ PCUNICODE_STRING Class,&#10;    _In_ ULONG CreateOptions,&#10;    _Out_opt_ PULONG Disposition&#10;    );">NtCreateKey</a> for that.
+ * \param[out, optional] Disposition <a href="reg_created_new_key" title="#define REG_CREATED_NEW_KEY (0x00000001L) // New Registry Key created">REG_CREATED_NEW_KEY</a> (1) or <a href="reg_opened_existing_key" title="#define REG_OPENED_EXISTING_KEY (0x00000002L) // Existing Key opened">REG_OPENED_EXISTING_KEY</a> (2) on success; this
+ * is not a transaction-outcome result.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> for this create/open operation. A completed transaction cannot be reused for further key
+ * opens; commit/rollback errors need separate handling.
+ * \remarks Newly created keys are visible through matching transacted handles; ordinary opens do not see them
+ * until commit. Rollback removed them and restored staged changes to existing values/deletions. These
+ * observations are not a general concurrency or crash-recovery guarantee. Transaction validation precedes the
+ * native create helper, so early errors may preserve KeyHandle/Disposition. Initialize outputs and check
+ * status. WoW64 has its own NULL-transaction rejection and path/tag handling.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatekeytransacted">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwcreatekeytransacted</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -74,7 +90,7 @@ NtCreateKeyTransacted(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L683">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L879">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -94,7 +110,7 @@ ZwCreateKeyTransacted(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L1211">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L1211">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

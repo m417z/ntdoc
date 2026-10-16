@@ -51,15 +51,22 @@
 </span><span class="ntdoc-code-intro language-cpp">/**
  * The NtDuplicateObject routine creates a handle that is a duplicate of the specified source handle.
  *
- * \param SourceProcessHandle A handle to the source process for the handle being duplicated.
+ * \param SourceProcessHandle Source process handle with <a href="process_dup_handle" title="#define PROCESS_DUP_HANDLE 0x0040">PROCESS_DUP_HANDLE</a> access (0x40).
  * \param SourceHandle The handle to duplicate.
- * \param TargetProcessHandle A handle to the target process that is to receive the new handle. This parameter is optional and can be specified as NULL if the <a href="duplicate_close_source" title="#define DUPLICATE_CLOSE_SOURCE 0x00000001 // Close the source handle.">DUPLICATE_CLOSE_SOURCE</a> flag is set in Options.
- * \param TargetHandle A pointer to a HANDLE variable into which the routine writes the new duplicated handle. The duplicated handle is valid in the specified target process. This parameter is optional and can be specified as NULL if no duplicate handle is to be created.
+ * \param TargetProcessHandle Target process handle with <a href="process_dup_handle" title="#define PROCESS_DUP_HANDLE 0x0040">PROCESS_DUP_HANDLE</a> access (0x40).
+ * Specify NULL with <a href="duplicate_close_source" title="#define DUPLICATE_CLOSE_SOURCE 0x00000001 // Close the source handle.">DUPLICATE_CLOSE_SOURCE</a> for a close-only operation.
+ * \param TargetHandle Optional pointer receiving the new handle, which is valid in the target process.
+ * NULL suppresses only the returned value: if a target process is supplied, duplication
+ * still occurs and discarding the value can leak a handle in that process.
  * \param DesiredAccess An ACCESS_MASK value that specifies the desired access for the new handle.
  * \param HandleAttributes A <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> that specifies the desired attributes for the new handle.
  * \param Options A set of flags to control the behavior of the duplication operation.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwduplicateobject">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-zwduplicateobject</a>
+ * \remarks Use NULL TargetProcessHandle with <a href="duplicate_close_source" title="#define DUPLICATE_CLOSE_SOURCE 0x00000001 // Close the source handle.">DUPLICATE_CLOSE_SOURCE</a> to close without duplicating.
+ * Do not assume a failed duplication preserved the source when <a href="duplicate_close_source" title="#define DUPLICATE_CLOSE_SOURCE 0x00000001 // Close the source handle.">DUPLICATE_CLOSE_SOURCE</a> was
+ * requested: several failure paths close it. A returned duplicate is owned by the target
+ * process and must be closed there. Closing the original does not close the duplicate.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -77,7 +84,7 @@ NtDuplicateObject(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntobapi.h#L281">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntobapi.h#L315">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -96,7 +103,7 @@ ZwDuplicateObject(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L1866">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L1866">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ntifs.h
 
@@ -149,7 +156,7 @@ ZwDuplicateObject(
 <ul>
 <li><code><a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a></code></li>
 <li><code><a href="ntqueryobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryObject(&#10;    _In_opt_ HANDLE Handle,&#10;    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,&#10;    _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,&#10;    _In_ ULONG ObjectInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryObject</a></code></li>
-<li><code><a href="ntsetinformationobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationObject(&#10;    _In_ HANDLE Handle,&#10;    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,&#10;    _In_reads_bytes_(ObjectInformationLength) PVOID ObjectInformation,&#10;    _In_ ULONG ObjectInformationLength&#10;    );">NtSetInformationObject</a></code></li>
+<li><code><a href="ntsetinformationobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationObject(&#10;    _In_ HANDLE Handle,&#10;    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,&#10;    _When_(ObjectInformationClass == ObjectSessionInformation || ObjectInformationClass == ObjectSessionObjectInformation, _In_opt_)&#10;    _When_(ObjectInformationClass != ObjectSessionInformation &amp;&amp; ObjectInformationClass != ObjectSessionObjectInformation, _In_reads_bytes_(ObjectInformationLength)) PVOID ObjectInformation,&#10;    _In_ ULONG ObjectInformationLength&#10;    );">NtSetInformationObject</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/ntduplicateobject.md">Edit description on GitHub</a>

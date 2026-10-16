@@ -53,20 +53,24 @@
 /**
  * Calls a function within an enclave. NtCallEnclave can also be called within an enclave to call a function outside of the enclave.
  *
- * \param Routine The address of the function that you want to call.
- * \param Reserved Reserved for dispatch (RtlEnclaveCallDispatch)
+ * \param Routine The address of the function to call, or NULL for number-based internal dispatch.
+ * \param EnclaveNumber Opaque enclave number for internal dispatch, or zero for address-based selection.
  * \param Flags Additional flags for the call operation.
  * \param RoutineParamReturn The parameter than you want to pass to the function and return value of the function.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
  * \see <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/enclaveapi/nf-enclaveapi-callenclave">https://learn.microsoft.com/en-us/windows/win32/api/enclaveapi/nf-enclaveapi-callenclave</a>
+ * \remarks The PsCallEnclave path uses a nonzero EnclaveNumber for PspSelectVsmEnclaveByNumber,
+ * requiring Routine to be NULL in that mode. Zero selects the address-based path. The number is an opaque
+ * pointer-sized scalar, not a pointer to a descriptor. This is internal dispatch plumbing, not a public allocation
+ * handle or a documented way to manufacture enclave identities. The syscall has special trap-frame return handling.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NTAPI
 NtCallEnclave(
-    _In_ PENCLAVE_ROUTINE Routine,
-    _In_ PVOID Reserved,              // SelectVsmEnclaveByNumber &gt; 0 // reserved for dispatch (RtlEnclaveCallDispatch)
+    _In_opt_ PENCLAVE_ROUTINE Routine,
+    _In_ <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> EnclaveNumber,     // zero for address-based dispatch
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags,                 // ENCLAVE_CALL_FLAG_*
     _Inout_ PVOID* RoutineParamReturn // input routine parameter, output routine return value
     );
@@ -74,7 +78,7 @@ NtCallEnclave(
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntmmapi.h#L2400">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntmmapi.h#L2481">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -83,14 +87,14 @@ NTSYSCALLAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
 NTAPI
 ZwCallEnclave(
-    _In_ PENCLAVE_ROUTINE Routine,
-    _In_ PVOID Reserved,              // SelectVsmEnclaveByNumber &gt; 0 // reserved for dispatch (RtlEnclaveCallDispatch)
+    _In_opt_ PENCLAVE_ROUTINE Routine,
+    _In_ <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> EnclaveNumber,     // zero for address-based dispatch
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags,                 // ENCLAVE_CALL_FLAG_*
     _Inout_ PVOID* RoutineParamReturn // input routine parameter, output routine return value
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L722">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L722">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

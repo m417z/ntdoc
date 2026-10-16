@@ -46,17 +46,31 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_TTM_TERMINAL_EVENT structure describes power internal ttm terminal event.
+ * The POWER_INTERNAL_TTM_TERMINAL_EVENT struct carries one terminal/device notification consumed from a TTM event queue.
+ * \remarks Selector 4100 returns the complete 0x220-byte record. EventType at +0 selects the payload at +8;
+ * the intervening <a href="dword" title="typedef unsigned long DWORD;">DWORD</a> is zero in producers. Types 0/3 use Device, type 4 uses DeviceAssigned, type 5 uses
+ * DeviceDeparted, and type 2 uses DisplayStateChanged. Type 1 marks enumeration complete. Type 6 reports an
+ * updated display-required power request; its raw Payload is retained because its identifier/context
+ * semantics were not fully recovered. Do not decode every event as Device. Consume the result only on
+ * successful dequeue; it contains no owned handles.
+ * \sa <a href="power_internal_ttm_get_terminal_event_input" title="typedef struct _POWER_INTERNAL_TTM_GET_TERMINAL_EVENT_INPUT&#10;{&#10;    POWER_INFORMATION_INTERNAL_HEADER Header;&#10;    HANDLE EventQueueHandle;&#10;} POWER_INTERNAL_TTM_GET_TERMINAL_EVENT_INPUT, *PPOWER_INTERNAL_TTM_GET_TERMINAL_EVENT_INPUT;">POWER_INTERNAL_TTM_GET_TERMINAL_EVENT_INPUT</a>
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_TTM_TERMINAL_EVENT
 {
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> EventType;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved;
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Payload[0x218];
+    union
+    {
+        <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Payload[0x218]; // raw view; also retained for type 6 and unknown future types
+        <a href="power_internal_ttm_device_event_data" title="typedef struct _POWER_INTERNAL_TTM_DEVICE_EVENT_DATA&#10;{&#10;    ULONG DeviceId;&#10;    ULONG AssignedTerminalId;&#10;    ULONG Provider;&#10;    ULONG ProviderSpecificType;&#10;    WCHAR Identity[260];&#10;} POWER_INTERNAL_TTM_DEVICE_EVENT_DATA, *PPOWER_INTERNAL_TTM_DEVICE_EVENT_DATA;">POWER_INTERNAL_TTM_DEVICE_EVENT_DATA</a> Device;
+        <a href="power_internal_ttm_device_assigned_event_data" title="typedef struct _POWER_INTERNAL_TTM_DEVICE_ASSIGNED_EVENT_DATA&#10;{&#10;    ULONG DeviceId;&#10;    ULONG AssignedTerminalId;&#10;} POWER_INTERNAL_TTM_DEVICE_ASSIGNED_EVENT_DATA, *PPOWER_INTERNAL_TTM_DEVICE_ASSIGNED_EVENT_DATA;">POWER_INTERNAL_TTM_DEVICE_ASSIGNED_EVENT_DATA</a> DeviceAssigned;
+        <a href="power_internal_ttm_device_departed_event_data" title="typedef struct _POWER_INTERNAL_TTM_DEVICE_DEPARTED_EVENT_DATA&#10;{&#10;    ULONG DeviceId;&#10;} POWER_INTERNAL_TTM_DEVICE_DEPARTED_EVENT_DATA, *PPOWER_INTERNAL_TTM_DEVICE_DEPARTED_EVENT_DATA;">POWER_INTERNAL_TTM_DEVICE_DEPARTED_EVENT_DATA</a> DeviceDeparted;
+        <a href="power_internal_ttm_display_state_event_data" title="typedef struct _POWER_INTERNAL_TTM_DISPLAY_STATE_EVENT_DATA&#10;{&#10;    ULONG TerminalId;&#10;    ULONG DisplayState;&#10;    ULONG Reason;&#10;} POWER_INTERNAL_TTM_DISPLAY_STATE_EVENT_DATA, *PPOWER_INTERNAL_TTM_DISPLAY_STATE_EVENT_DATA;">POWER_INTERNAL_TTM_DISPLAY_STATE_EVENT_DATA</a> DisplayStateChanged;
+    };
 } POWER_INTERNAL_TTM_TERMINAL_EVENT, *PPOWER_INTERNAL_TTM_TERMINAL_EVENT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L1636">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L2166">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

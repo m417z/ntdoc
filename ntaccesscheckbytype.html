@@ -50,7 +50,7 @@
  * \param SecurityDescriptor Pointer to the <a href="pisecurity_descriptor" title="typedef struct _SECURITY_DESCRIPTOR {&#10;  UCHAR                       Revision;&#10;  UCHAR                       Sbz1;&#10;  SECURITY_DESCRIPTOR_CONTROL Control;&#10;  PSID                        Owner;&#10;  PSID                        Group;&#10;  PACL                        Sacl;&#10;  PACL                        Dacl;&#10;} SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;">SECURITY_DESCRIPTOR</a> structure against which access is checked.
  * \param PrincipalSelfSid Optional pointer to a <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> structure representing the principal self <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>, or NULL.
  * \param ClientToken Handle to the access token representing the client. The handle must have TOKEN_QUERY access.
- * \param DesiredAccess Access mask that specifies the access rights to check.
+ * \param DesiredAccess Object-specific access mask to check. Map GENERIC_READ/WRITE/EXECUTE/ALL first; unmapped generic bits return STATUS_GENERIC_NOT_MAPPED.
  * \param ObjectTypeList Pointer to an array of OBJECT_TYPE_LIST structures that specify the hierarchy of object types for the object being accessed.
  * \param ObjectTypeListLength The number of elements in the ObjectTypeList array.
  * \param GenericMapping Pointer to the <a href="generic_mapping" title="typedef struct _GENERIC_MAPPING {&#10;  ACCESS_MASK GenericRead;&#10;  ACCESS_MASK GenericWrite;&#10;  ACCESS_MASK GenericExecute;&#10;  ACCESS_MASK GenericAll;&#10;} GENERIC_MAPPING;">GENERIC_MAPPING</a> structure associated with the object for which access is being checked.
@@ -58,8 +58,12 @@
  * \param PrivilegeSetLength Pointer to a variable that specifies the size, in bytes, of the PrivilegeSet buffer. On input, this is the size of the buffer; on output, it receives the number of bytes required.
  * \param GrantedAccess Pointer to an access mask that receives the granted access rights.
  * \param AccessStatus Pointer to a variable that receives the results of the access check.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> code indicating success or failure.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> for execution of the check. A successful return does not itself grant access: inspect AccessStatus and GrantedAccess (or their result arrays).
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-accesscheckbytype">https://learn.microsoft.com/en-us/windows/win32/api/securitybaseapi/nf-securitybaseapi-accesscheckbytype</a>
+ * \remarks Uses SeAccessCheckByType in scalar-result mode. ObjectTypeList describes a GUID hierarchy for
+ * object-specific ACE evaluation, not a list of handles to open. Supply an impersonation token, map generic
+ * access bits, and inspect the separate AccessStatus decision. The scalar output is not a per-entry result
+ * array; privilege-set byte sizing is independent of ObjectTypeListLength.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -80,7 +84,7 @@ NtAccessCheckByType(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntseapi.h#L1055">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntseapi.h#L1283">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -103,7 +107,7 @@ ZwAccessCheckByType(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L52">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L52">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

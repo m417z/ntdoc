@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="POWER_INFORMATION_ENERGY_TRACKER_PROCESS_ENTRY - NtDoc, the native NT API online documentation">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>POWER_INFORMATION_ENERGY_TRACKER_PROCESS_ENTRY - NtDoc</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <link rel="manifest" href="icons/site.webmanifest">
+    <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="icons/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+    <noscript id="dark-mode-toggle-stylesheets">
+        <link rel="stylesheet" href="modules/water-2.1.1-light.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/water-2.1.1-dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github.ntdoc.min.css" media="(prefers-color-scheme: light)">
+        <link rel="stylesheet" href="modules/highlight.js/styles/github-dark-dimmed.ntdoc.min.css" media="(prefers-color-scheme: dark)">
+    </noscript>
+    <script src="dark-mode-toggle-stylesheets-loader.min.js"></script>
+    <link rel="stylesheet" href="modules/virtual-select/virtual-select.css">
+    <link rel="stylesheet" href="ntdoc.css">
+    <noscript>
+        <link rel="stylesheet" href="ntdoc-noscript.css">
+    </noscript>
+</head>
+<body>
+    <header data-id="POWER_INFORMATION_ENERGY_TRACKER_PROCESS_ENTRY">
+        <a href="."><img class="ntdoc-title-logo" src="logo.png" alt="logo"></a>
+        <h1 class="ntdoc-title">
+            POWER_INFORMATION_ENERGY_TRACKER_PROCESS_ENTRY - NtDoc
+        </h1>
+        <div class="ntdoc-subtitle">
+            Native API online documentation, based on the System Informer
+            (formerly Process Hacker) <a target="_blank"
+            href="https://github.com/winsiderss/systeminformer/tree/master/phnt">phnt
+            headers</a>
+        </div>
+        <div id="ntdoc-search-select"></div>
+    </header>
+    <div class="ntdoc-code-elements">
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTPOAPI_H
+
+</span><span class="ntdoc-code-intro language-cpp">// rev
+/**
+ * The POWER_INFORMATION_ENERGY_TRACKER_PROCESS_ENTRY structure describes an aggregate process record.
+ *
+ * All offsets are byte offsets from the start of the query output buffer, not from this entry. String counts
+ * are WCHAR counts, exclude a terminating null, and do not imply null termination. UserSidLength is a byte
+ * count. ProcessKey and ProcessId are zero unless <a href="power_information_energy_tracker_create_flags_mode_pid" title="#define POWER_INFORMATION_ENERGY_TRACKER_CREATE_FLAGS_MODE_PID ULONG_C(0x00000001) // enables per-process aggregation with process ID and sequence number.">POWER_INFORMATION_ENERGY_TRACKER_CREATE_FLAGS_MODE_PID</a> is
+ * enabled; ProcessKey is the process sequence number. The six trailing <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> values count nonempty
+ * energy-delta updates and contributing processes, not energy.
+ *
+ * StateFlags contains PROCESS_ENERGY_STATE_* bits captured in the aggregation key, masked by the low 16 bits
+ * of <a href="power_information_energy_tracker_create_input" title="typedef struct _POWER_INFORMATION_ENERGY_TRACKER_CREATE_INPUT&#10;{&#10;    ULONG MaxTrackedProcesses; // POWER_INFORMATION_ENERGY_TRACKER_PROCESS_MAX&#10;    ULONG Reserved;            // Low 16 bits: PROCESS_ENERGY_STATE_* aggregation mask.&#10;    ULONG Flags;               // POWER_INFORMATION_ENERGY_TRACKER_CREATE_FLAGS&#10;} POWER_INFORMATION_ENERGY_TRACKER_CREATE_INPUT, *PPOWER_INFORMATION_ENERGY_TRACKER_CREATE_INPUT;">POWER_INFORMATION_ENERGY_TRACKER_CREATE_INPUT</a>.Reserved. It is not a duration-history indicator or
+ * necessarily the process state at query completion. A zero creation mask produces zero StateFlags. Bits are
+ * 0x1 (foreground), 0x2 (desktop-visible), 0x4 (PSM foreground), and 0x8 (PSM background).
+ *
+ * ActivityFlags contains POWER_INFORMATION_ENERGY_TRACKER_ACTIVITY_* bits ORed during nonempty energy-delta
+ * aggregation: 0x1 for nonzero ForegroundDuration and 0x2 for nonzero DesktopVisibleDuration in a
+ * contributing input snapshot. The kernel tests accumulated Duration values (excluding IsInState), not
+ * calculated interval deltas. These flags therefore do not prove activity occurred in the current query
+ * interval.
+ * \remarks Snapshot reasons are internal discriminators passed as the fourth argument to
+ * PopEtEnergyTrackerUpdateAggregate, not output flags or energy units:
+ * - Reason 2 (explicit query): PopEtEnergyTrackerQuery enumerates processes through
+ * PopEtProcessEnumSnapshotCallback to capture their current energy values; increments QuerySnapshotCount.
+ * - Reason 3 (tracking-state change): PopEtEnergyContextProcessStateUpdate captures the process energy
+ * values and notifies the energy trackers; increments StateChangeSnapshotCount.
+ * - Reason 4 (process cleanup): PoEnergyContextCleanup captures the final state durations and notifies
+ * the energy trackers before cleaning up the process energy context; increments TerminatedProcessCount.
+ *
+ * A reason-specific counter increments only when the calculated energy delta is nonempty. Every such update
+ * also increments SnapshotCount. QuerySnapshotCount is therefore not simply the number of query API calls,
+ * and TerminatedProcessCount does not count every process termination.
+ *
+ * SectionOffset locates the aggregated energy deltas for the query interval, aligned to 8 bytes. SectionSize
+ * is 0x1B0 for <a href="process_extended_energy_values" title="typedef struct _PROCESS_EXTENDED_ENERGY_VALUES&#10;{&#10;    PROCESS_ENERGY_VALUES Base;&#10;    PROCESS_ENERGY_VALUES_EXTENSION Extension;&#10;} PROCESS_EXTENDED_ENERGY_VALUES, *PPROCESS_EXTENDED_ENERGY_VALUES;">PROCESS_EXTENDED_ENERGY_VALUES</a> (Flags high nibble 0), or 0x1B8 for
+ * <a href="process_extended_energy_values_v1" title="typedef struct _PROCESS_EXTENDED_ENERGY_VALUES_V1&#10;{&#10;    PROCESS_ENERGY_VALUES Base;&#10;    PROCESS_ENERGY_VALUES_EXTENSION Extension;&#10;    ULONG64 NpuWorkUnits;&#10;} PROCESS_EXTENDED_ENERGY_VALUES_V1, *PPROCESS_EXTENDED_ENERGY_VALUES_V1;">PROCESS_EXTENDED_ENERGY_VALUES_V1</a> (Flags high nibble 1), in the kernel.
+ */
+</span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INFORMATION_ENERGY_TRACKER_PROCESS_ENTRY
+{
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ProcessKey;                     // Process sequence number in per-process mode.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessId;                          // Process identifier in per-process mode; zero otherwise.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> StateFlags;                        // PROCESS_ENERGY_STATE_*; masked aggregation-key state.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Reserved0E;                        // Reserved.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FileNameOffset;                     // Process image path, or the fallback name.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ImageCheckSum;                      // PE OptionalHeader.CheckSum.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ImageTimeDateStamp;                 // PE FileHeader.TimeDateStamp.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> PackageFullNameOffset;              // Buffer-relative offset to the package full name.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ApplicationIdOffset;                // Buffer-relative offset to the application identifier (<a href="rtlquerypackageidentity" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlQueryPackageIdentity(&#10;    _In_ HANDLE TokenHandle,&#10;    _Out_writes_bytes_to_(*PackageSize, *PackageSize) PWSTR PackageFullName,&#10;    _Inout_ PSIZE_T PackageSize,&#10;    _Out_writes_bytes_to_opt_(*AppIdSize, *AppIdSize) PWSTR AppId,&#10;    _Inout_opt_ PSIZE_T AppIdSize,&#10;    _Out_opt_ PBOOLEAN Packaged&#10;    );">RtlQueryPackageIdentity</a>).
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SubProcessTagNameOffset;            // Buffer-relative offset to the subprocess tag name.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> UserSidOffset;                      // Buffer-relative offset to the token user <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FileVersionLow;                     // <a href="vs_fixedfileinfo" title="typedef struct _FIXEDFILEINFO&#10;{&#10;    DWORD   dwSignature;&#10;    DWORD   dwStrucVersion;&#10;    DWORD   dwFileVersionMS;&#10;    DWORD   dwFileVersionLS;&#10;    DWORD   dwProductVersionMS;&#10;    DWORD   dwProductVersionLS;&#10;    DWORD   dwFileFlagsMask;&#10;    DWORD   dwFileFlags;&#10;    DWORD   dwFileOS;&#10;    DWORD   dwFileType;&#10;    DWORD   dwFileSubtype;&#10;    DWORD   dwFileDateMS;&#10;    DWORD   dwFileDateLS;&#10;} VS_FIXEDFILEINFO, *PVS_FIXEDFILEINFO;">VS_FIXEDFILEINFO</a>.dwFileVersionLS.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FileVersionHigh;                    // <a href="vs_fixedfileinfo" title="typedef struct _FIXEDFILEINFO&#10;{&#10;    DWORD   dwSignature;&#10;    DWORD   dwStrucVersion;&#10;    DWORD   dwFileVersionMS;&#10;    DWORD   dwFileVersionLS;&#10;    DWORD   dwProductVersionMS;&#10;    DWORD   dwProductVersionLS;&#10;    DWORD   dwFileFlagsMask;&#10;    DWORD   dwFileFlags;&#10;    DWORD   dwFileOS;&#10;    DWORD   dwFileType;&#10;    DWORD   dwFileSubtype;&#10;    DWORD   dwFileDateMS;&#10;    DWORD   dwFileDateLS;&#10;} VS_FIXEDFILEINFO, *PVS_FIXEDFILEINFO;">VS_FIXEDFILEINFO</a>.dwFileVersionMS.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> FileNameCount;                     // Image path or fallback name length, in WCHARs, excluding a terminating null.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> PackageFullNameCount;              // Package full name length, in WCHARs, excluding a terminating null.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> ApplicationIdCount;                // Application identifier length, in WCHARs, excluding a terminating null.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SubProcessTagNameCount;            // Subprocess tag name length, in WCHARs, excluding a terminating null.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> UserSidLength;                     // Size of the binary user <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>, in bytes.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Reserved;                          // Reserved.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SectionOffset;                      // <a href="process_extended_energy_values" title="typedef struct _PROCESS_EXTENDED_ENERGY_VALUES&#10;{&#10;    PROCESS_ENERGY_VALUES Base;&#10;    PROCESS_ENERGY_VALUES_EXTENSION Extension;&#10;} PROCESS_EXTENDED_ENERGY_VALUES, *PPROCESS_EXTENDED_ENERGY_VALUES;">PROCESS_EXTENDED_ENERGY_VALUES</a> // <a href="process_extended_energy_values_v1" title="typedef struct _PROCESS_EXTENDED_ENERGY_VALUES_V1&#10;{&#10;    PROCESS_ENERGY_VALUES Base;&#10;    PROCESS_ENERGY_VALUES_EXTENSION Extension;&#10;    ULONG64 NpuWorkUnits;&#10;} PROCESS_EXTENDED_ENERGY_VALUES_V1, *PPROCESS_EXTENDED_ENERGY_VALUES_V1;">PROCESS_EXTENDED_ENERGY_VALUES_V1</a>
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SectionSize;                        // Size of the aggregated energy-delta section, in bytes.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ActiveTimeMs;                       // Accumulated unbiased elapsed time, capped to the query interval.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ActivityFlags;                      // POWER_INFORMATION_ENERGY_TRACKER_ACTIVITY_*; accumulated-duration indicators.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SnapshotCount;                      // All nonempty energy-delta updates.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> QuerySnapshotCount;                 // Updates during explicit queries (reason 2).
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> StateChangeSnapshotCount;           // Updates during energy-tracking state changes (reason 3).
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessCount;                       // Distinct processes contributing a nonempty delta in this query.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NewProcessCount;                    // Processes contributing their first nonempty delta to this tracker.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TerminatedProcessCount;             // Nonempty updates during process energy-context cleanup (reason 4).
+} POWER_INFORMATION_ENERGY_TRACKER_PROCESS_ENTRY, *PPOWER_INFORMATION_ENERGY_TRACKER_PROCESS_ENTRY;
+</span><span class="ntdoc-code-footer language-cpp">
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L5132">View code on GitHub</a></span></code></pre></div>
+</div>
+<div class="ntdoc-descriptions">
+<div class="ntdoc-description-title">
+<h1>NtDoc</h1>
+</div>
+<div class="ntdoc-description ntdoc-description-selected">
+<div class="ntdoc-description-none">
+<p>No description available.</p>
+</div>
+<div class="ntdoc-description-links">
+<a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/power_information_energy_tracker_process_entry.md">Edit description on GitHub</a>
+</div>
+</div>
+</div>
+
+    <!-- For sticky footer: https://stackoverflow.com/a/34146411 -->
+    <div class="spacer"></div>
+    <footer>
+        By <a href="https://m417z.com/" target="_blank" rel="noopener">m417z</a> &bull;
+        content by <a href="https://github.com/diversenok" target="_blank" rel="noopener">diversenok</a> &bull;
+        <a href="https://github.com/m417z/ntdoc" target="_blank" rel="noopener">GitHub repository</a> &bull;
+        <dark-mode-toggle permanent></dark-mode-toggle>
+    </footer>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-YWF4NP61SX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-YWF4NP61SX');
+    </script>
+    <script src="modules/jquery-3.7.0.min.js"></script>
+    <script src="modules/q-1.5.1.js"></script>
+    <script src="modules/virtual-select/virtual-select-jquery.min.js"></script>
+    <script src="modules/popper-2.11.8.min.js"></script>
+    <script src="modules/tippy-6.3.7.min.js"></script>
+    <script src="modules/anchor-5.0.0.min.js"></script>
+    <script src="modules/highlight.js/highlight.min.js"></script>
+    <script type="module" src="modules/dark-mode-toggle-0.14.6.min.mjs"></script>
+    <script src="ntdoc.js"></script>
+</body>
+</html>

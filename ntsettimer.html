@@ -46,16 +46,30 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtSetTimer routine sets a timer object to the signaled state after a specified interval.
+ * The NtSetTimer routine arms or replaces an ordinary timer&#x27;s due time and optional periodic/APC behavior.
+ * Rearming clears the previous signal and removes pending completion APCs; it does not signal threads waiting
+ * for the old deadline. An already-due deadline can signal the timer again immediately.
  *
- * \param TimerHandle A handle to the timer object.
- * \param DueTime A pointer to a LARGE_INTEGER that specifies the absolute or relative time at which the timer is to be set to the signaled state.
- * \param TimerApcRoutine An optional pointer to a function to be called when the timer is signaled.
- * \param TimerContext An optional pointer to a context to be passed to the APC routine.
- * \param ResumeTimer If TRUE, resumes the timer; otherwise, sets a new timer.
- * \param Period The period of the timer, in milliseconds. If zero, the timer is signaled once.
- * \param PreviousState A pointer to a variable that receives the previous state of the timer.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param TimerHandle Handle with <a href="timer_modify_state" title="#define TIMER_MODIFY_STATE 0x0002">TIMER_MODIFY_STATE</a> (0x2).
+ * \param DueTime Required pointer to a time in 100-nanosecond units. Negative values
+ * specify a relative interval; nonnegative values specify an absolute UTC deadline
+ * in FILETIME units. A deadline in the past expires immediately.
+ * \param TimerApcRoutine Optional completion APC delivered to the setting thread
+ * when it enters an alertable wait. See <a href="timer_apc_routine" title="typedef _Function_class_(TIMER_APC_ROUTINE)&#10;VOID NTAPI TIMER_APC_ROUTINE(&#10;    _In_opt_ PVOID TimerContext,&#10;    _In_ ULONG TimerLowValue,&#10;    _In_ LONG TimerHighValue&#10;    );">TIMER_APC_ROUTINE</a> for arguments and context.
+ * \param TimerContext Optional opaque value passed to TimerApcRoutine.
+ * \param ResumeTimer Requests that expiration wake the system from a suspended
+ * power state. This does not mean resume a paused timer. Support depends on the
+ * platform and wake policy; STATUS_TIMER_RESUME_IGNORED can accompany an armed timer.
+ * \param Period Milliseconds between periodic expirations, in the range 0 through
+ * 0x7FFFFFFF. Zero selects one-shot operation; negative values return
+ * STATUS_INVALID_PARAMETER_6.
+ * \param PreviousState Optional writable byte receiving the previous signal state,
+ * not an armed-state indicator or a count of pending expirations.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>. STATUS_TIMER_RESUME_IGNORED (0x40000025) is informational:
+ * the timer was set, but its wake request could not be honored.
+ * \remarks Ordinary timers created by <a href="ntcreatetimer" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateTimer(&#10;    _Out_ PHANDLE TimerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ TIMER_TYPE TimerType&#10;    );">NtCreateTimer</a> are described here. Timer2/IR
+ * compatibility paths have additional restrictions on callbacks, context and state
+ * output; do not assume those object types support the complete ordinary-timer contract.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -73,7 +87,7 @@ NtSetTimer(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L1234">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L1390">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -92,7 +106,7 @@ ZwSetTimer(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4940">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4941">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -46,19 +46,38 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_SET_WATCHDOG structure describes power internal set watchdog.
+ * The POWER_INTERNAL_SET_WATCHDOG struct defines the creates, updates, disarms, or deletes a kernel power-transition watchdog.
+ * \remarks Kernel-mode infoclass 21 takes at least 0x60 input bytes on AMD64. The opaque
+ * WatchdogHandle is a kernel allocation pointer, not an object-manager HANDLE. A NULL
+ * pointer requests creation and requires an output buffer; an existing pointer permits
+ * NULL/0 output. If output is requested provide at least 8 bytes and check the returned
+ * pointer even when <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> succeeds, since allocation failure can yield NULL.
+ *
+ * The 0x48-byte parameter block starts at +0x10. DeleteWatchdog at +0x58 deletes the
+ * watchdog and yields NULL; a zero timeout disarms it without deletion. Never use <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a>
+ * on this pointer. Expiration can invoke a kernel callback or bugcheck the machine; this
+ * is for kernel power-transition supervision, not an application timer. User mode is denied.
+ * The raw Parameters view is preserved; the typed overlay describes the AMD64 layout.
+ * \sa <a href="power_internal_watchdog_parameters" title="typedef struct _POWER_INTERNAL_WATCHDOG_PARAMETERS&#10;{&#10;    ULONG TimeoutMilliseconds;&#10;    ULONG Unknown04;&#10;    ULONG BugCheckCode;&#10;    ULONG Unknown0C;&#10;    ULONG_PTR BugCheckParameters[4];&#10;    BOOLEAN DereferenceParameter[4];&#10;    ULONG Unknown34;&#10;    PPOWER_INTERNAL_WATCHDOG_CALLBACK Callback;&#10;    PVOID Context;&#10;} POWER_INTERNAL_WATCHDOG_PARAMETERS, *PPOWER_INTERNAL_WATCHDOG_PARAMETERS;">POWER_INTERNAL_WATCHDOG_PARAMETERS</a>
+ * \sa <a href="power_internal_set_watchdog_output" title="typedef struct _POWER_INTERNAL_SET_WATCHDOG_OUTPUT&#10;{&#10;    PVOID WatchdogHandle;&#10;} POWER_INTERNAL_SET_WATCHDOG_OUTPUT, *PPOWER_INTERNAL_SET_WATCHDOG_OUTPUT;">POWER_INTERNAL_SET_WATCHDOG_OUTPUT</a>
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_SET_WATCHDOG
 {
     <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a> Header;
-    PVOID WatchdogHandle;
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Parameters[0x48];
+    PVOID WatchdogHandle; // opaque kernel allocation, NOT an object-manager handle
+    union
+    {
+        <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Parameters[0x48];
+#ifdef _WIN64
+        <a href="power_internal_watchdog_parameters" title="typedef struct _POWER_INTERNAL_WATCHDOG_PARAMETERS&#10;{&#10;    ULONG TimeoutMilliseconds;&#10;    ULONG Unknown04;&#10;    ULONG BugCheckCode;&#10;    ULONG Unknown0C;&#10;    ULONG_PTR BugCheckParameters[4];&#10;    BOOLEAN DereferenceParameter[4];&#10;    ULONG Unknown34;&#10;    PPOWER_INTERNAL_WATCHDOG_CALLBACK Callback;&#10;    PVOID Context;&#10;} POWER_INTERNAL_WATCHDOG_PARAMETERS, *PPOWER_INTERNAL_WATCHDOG_PARAMETERS;">POWER_INTERNAL_WATCHDOG_PARAMETERS</a> WatchdogParameters;
+#endif
+    };
     BOOLEAN DeleteWatchdog;
     <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Reserved[7];
 } POWER_INTERNAL_SET_WATCHDOG, *PPOWER_INTERNAL_SET_WATCHDOG;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L1520">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L1867">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

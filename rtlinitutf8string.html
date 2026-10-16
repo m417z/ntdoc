@@ -50,6 +50,7 @@
  *
  * \param DestinationString A pointer to the <a href="utf8_string" title="typedef STRING UTF8_STRING;">UTF8_STRING</a> structure to initialize.
  * \param SourceString An optional pointer to a null-terminated string used to initialize the counted string.
+ * \remarks Borrows the source buffer without allocating or copying. Length excludes the terminator. The native implementation saturates Length at 65534 bytes and MaximumLength at 65535 rather than wrapping; use the Ex variant to reject an overlong source.
  */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 VOID
@@ -61,7 +62,7 @@ RtlInitUTF8String(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntrtl.h#L3388">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntrtl.h#L3485">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 
@@ -98,7 +99,7 @@ RtlInitUTF8String(
 <p>The routine copies the <em>SourceString</em> pointer value to the <strong>Buffer</strong> member of the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows/win32/api/ntdef/ns-ntdef-string"><strong>UTF8_STRING</strong></a> structure pointed to by <em>DestinationString</em>. The <strong>Length</strong> member of this structure is set to the length, in bytes, of the source string, excluding the terminating null. The <strong>MaximumLength</strong> member of the structure is set to the length, in bytes, of the source string, including the terminating null. If <em>SourceString</em> is <strong>NULL</strong>, <strong>Length</strong> and <strong>MaximumLength</strong> are both set to zero.</p>
 <p><strong>RtlInitUTF8String</strong> does not alter the source string pointed to by <em>SourceString</em>.</p>
 <h2>See also</h2>
-<p><strong><a href="rtlinitansistring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitAnsiString(&#10;    _Out_ PANSI_STRING DestinationString,&#10;    _In_opt_z_ PCSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)strlen(SourceString)) + sizeof(ANSI_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PCHAR)SourceString;&#10;}">RtlInitAnsiString</a></strong></p>
+<p><strong><a href="rtlinitansistring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitAnsiString(&#10;    _Out_ PANSI_STRING DestinationString,&#10;    _In_opt_z_ PCSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;    {&#10;        SIZE_T stringLength = strlen(SourceString);&#10;&#10;        if (stringLength &gt; MAXUSHORT - sizeof(ANSI_NULL))&#10;            stringLength = MAXUSHORT - sizeof(ANSI_NULL);&#10;&#10;        DestinationString-&gt;Length = (USHORT)stringLength;&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length + sizeof(ANSI_NULL);&#10;    }&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;...">RtlInitAnsiString</a></strong></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

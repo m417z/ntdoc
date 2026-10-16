@@ -44,7 +44,12 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTWOW64_H
 
-</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">typedef struct _TEB32
+</span><span class="ntdoc-code-intro language-cpp">/**
+ * 32-bit <a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a> layout, including the extended scheduler and RCU fields (0x1038 bytes).
+ * WowTebOffset is a signed byte displacement from this guest <a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a> to the host <a href="teb" title="typedef struct _TEB&#10;{&#10;    //&#10;    // Thread Information Block (TIB) contains the thread&#x27;s stack, base and limit addresses, the current stack pointer, and the exception list.&#10;    //&#10;    NT_TIB NtTib;&#10;&#10;    //&#10;    // Reserved.&#10;    //&#10;    PVOID EnvironmentPointer;&#10;&#10;    //&#10;    // Client ID for this thread.&#10;    //&#10;    CLIENT_ID ClientId;&#10;&#10;    //&#10;    // A handle to an active Remote Procedure Call (RPC) if the thread is currently involved in an RPC operation.&#10;    //&#10;...">TEB</a>.
+ * Fields after EffectiveContainerId extend beyond the older 0x1000-byte layout.
+ */
+</span><span class="ntdoc-code-body language-cpp">typedef struct _TEB32
 {
     NT_TIB32 NtTib;
 
@@ -64,7 +69,14 @@
     LCID CurrentLocale;
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> FpSoftwareStatusRegister;
     <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) ReservedForDebuggerInstrumentation[16];
-    <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) SystemReserved1[36];
+    <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) SystemReserved1[21];
+    <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) HeapFlsData;
+    <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(<a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a>) RngState[4];
+    <a href="char" title="typedef char CHAR;">CHAR</a> PlaceholderCompatibilityMode;
+    BOOLEAN PlaceholderHydrationAlwaysExplicit;
+    <a href="char" title="typedef char CHAR;">CHAR</a> PlaceholderReserved[10];
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProxiedProcessId;
+    <a href="activation_context_stack32" title="typedef struct _ACTIVATION_CONTEXT_STACK32&#10;{&#10;    WOW64_POINTER(PRTL_ACTIVATION_CONTEXT_STACK_FRAME) ActiveFrame;&#10;    LIST_ENTRY32 FrameListCache;&#10;    ULONG Flags; // ACTIVATION_CONTEXT_STACK_FLAG_*&#10;    ULONG NextCookieSequenceNumber;&#10;    ULONG StackId;&#10;} ACTIVATION_CONTEXT_STACK32, *PACTIVATION_CONTEXT_STACK32;">ACTIVATION_CONTEXT_STACK32</a> ActivationStack;
     <a href="alpc_work_on_behalf_ticket" title="typedef struct _ALPC_WORK_ON_BEHALF_TICKET&#10;{&#10;    ULONG ThreadId;&#10;    ULONG ThreadCreationTimeLow;&#10;} ALPC_WORK_ON_BEHALF_TICKET, *PALPC_WORK_ON_BEHALF_TICKET;">ALPC_WORK_ON_BEHALF_TICKET</a> WorkingOnBehalfTicket;
     <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> ExceptionCode;
 
@@ -140,8 +152,15 @@
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> IsImpersonating;
     <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) NlsCache;
     <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) pShimData;
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> HeapVirtualAffinity;
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> LowFragHeapDataSlot;
+    union
+    {
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> HeapData;
+        struct
+        {
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> HeapVirtualAffinity; // legacy layout
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> LowFragHeapDataSlot;
+        };
+    };
     <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(HANDLE) CurrentTransactionHandle;
     <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(<a href="teb_active_frame" title="typedef struct _TEB_ACTIVE_FRAME&#10;{&#10;    ULONG Flags;&#10;    struct _TEB_ACTIVE_FRAME *Previous;&#10;    PTEB_ACTIVE_FRAME_CONTEXT Context;&#10;} TEB_ACTIVE_FRAME, *PTEB_ACTIVE_FRAME;">PTEB_ACTIVE_FRAME</a>) ActiveFrame;
     <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) FlsData;
@@ -175,7 +194,8 @@
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SessionAware : 1;
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> LoadOwner : 1;
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> LoaderWorker : 1;
-            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SpareSameTebBits : 2;
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SkipLoaderInit : 1;
+            <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> SkipFileAPIBrokering : 1;
         };
     };
 
@@ -188,10 +208,17 @@
     <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) ReservedForWdf;
     <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ReservedForCrt;
     GUID EffectiveContainerId;
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> LastSleepCounter; // WIN11
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SpinCallCount;
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ExtendedFeatureDisableMask;
+    <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) SchedulerSharedDataSlot; // 24H2
+    <a href="wow64_pointer" title="#define WOW64_POINTER(Type) ULONG">WOW64_POINTER</a>(PVOID) HeapWalkContext;
+    GROUP_AFFINITY32 PrimaryGroupAffinity;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Rcu[2];
 } TEB32, *PTEB32;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntwow64.h#L501">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntwow64.h#L538">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

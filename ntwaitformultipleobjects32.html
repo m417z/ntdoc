@@ -49,17 +49,27 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtWaitForMultipleObjects32 routine waits until one or all of the specified 32-bit handles are in the signaled state, an I/O completion routine or APC is queued to the thread, or the time-out interval elapses.
- * This is the WOW64 variant of <a href="ntwaitformultipleobjects" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForMultipleObjects(&#10;    _In_ ULONG Count,&#10;    _In_reads_(Count) HANDLE Handles[],&#10;    _In_ WAIT_TYPE WaitType,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtWaitForMultipleObjects</a> that accepts 32-bit handle values.
+ * Waits on an array of signed 32-bit handle values. The x64 kernel sign-extends
+ * each <a href="long" title="typedef long LONG;">LONG</a> into its native handle array and uses the same dispatcher path as
+ * <a href="ntwaitformultipleobjects" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForMultipleObjects(&#10;    _In_ ULONG Count,&#10;    _In_reads_(Count) HANDLE Handles[],&#10;    _In_ WAIT_TYPE WaitType,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtWaitForMultipleObjects</a>. The WoW64 <a href="ntwaitformultipleobjects" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForMultipleObjects(&#10;    _In_ ULONG Count,&#10;    _In_reads_(Count) HANDLE Handles[],&#10;    _In_ WAIT_TYPE WaitType,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtWaitForMultipleObjects</a> thunk calls this
+ * native entry; its name does not mean that the array contains 64-bit HANDLEs.
  *
- * \param Count The number of object handles to wait for in the array pointed to by Handles. The maximum number of object handles is MAXIMUM_WAIT_OBJECTS. This parameter cannot be zero.
- * \param Handles An array of 32-bit object handle values. The array can contain handles of objects of different types. It may not contain multiple copies of the same handle.
- * \param WaitType If this parameter is WaitAll, the function returns when the state of all objects in the Handles array is set to signaled.
- * \param Alertable If this parameter is TRUE and the thread is in the waiting state, the function returns when the system queues an I/O completion routine or APC, and the thread runs the routine or function.
- * \param Timeout A pointer to an absolute or relative time over which the wait is to occur. Can be null. If a timeout is specified,
- * and the object has not attained a state of signaled when the timeout expires, then the wait is automatically satisfied.
- * If an explicit timeout value of zero is specified, then no wait occurs if the wait cannot be satisfied immediately.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param Count Number of entries, from 1 through MAXIMUM_WAIT_OBJECTS (64).
+ * \param Handles Array of Count signed 32-bit handles, each with SYNCHRONIZE
+ * (0x00100000). On a 64-bit caller use <a href="long" title="typedef long LONG;">LONG</a> storage, not a cast of a HANDLE array.
+ * \param WaitType WaitAll (0) or WaitAny (1).
+ * \param Alertable TRUE permits an alert or ordinary user APC to interrupt the wait.
+ * \param Timeout Optional 100-nanosecond deadline: NULL for no deadline, pointed-to
+ * zero for polling, negative for a relative interval, positive for absolute NT system time.
+ * \return The same status categories as <a href="ntwaitformultipleobjects" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForMultipleObjects(&#10;    _In_ ULONG Count,&#10;    _In_reads_(Count) HANDLE Handles[],&#10;    _In_ WAIT_TYPE WaitType,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtWaitForMultipleObjects</a>: WaitAny returns
+ * the selected index added to STATUS_WAIT_0 or STATUS_ABANDONED_WAIT_0 (0x80);
+ * WaitAll returns 0 or STATUS_ABANDONED (0x80) without an index. Timeout (0x102)
+ * and APC/alert interruption (0xC0/0x101) are not evidence of acquisition.
+ * \remarks Invalid Count/WaitType return STATUS_INVALID_PARAMETER_1/_3 on x64. WaitAll rejects duplicate underlying objects
+ * with STATUS_INVALID_PARAMETER_MIX and does not partially consume signals on timeout.
+ * See <a href="ntwaitformultipleobjects" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtWaitForMultipleObjects(&#10;    _In_ ULONG Count,&#10;    _In_reads_(Count) HANDLE Handles[],&#10;    _In_ WAIT_TYPE WaitType,&#10;    _In_ BOOLEAN Alertable,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtWaitForMultipleObjects</a> for access checks and object restrictions. Native x64
+ * invocation and the WoW64 forwarding path were checked separately; do not assume
+ * every architecture exposes a separate user-mode export with this name.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -75,7 +85,7 @@ NtWaitForMultipleObjects32(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntobapi.h#L406">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntobapi.h#L501">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -92,7 +102,7 @@ ZwWaitForMultipleObjects32(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L5385">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L5386">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -45,16 +45,30 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTIOAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtRemoveIoCompletionEx routine removes multiple entries from an I/O completion port.
+ * Removes up to Count packets from an I/O completion port in one operation. It can return fewer packets than
+ * requested; Count is output capacity, not a requirement to wait until that many packets have arrived.
  *
- * \param[in] IoCompletionHandle Handle to the I/O completion port.
- * \param[out] IoCompletionInformation Pointer to an array of <a href="file_io_completion_information" title="typedef struct _FILE_IO_COMPLETION_INFORMATION&#10;{&#10;    PVOID KeyContext;&#10;    PVOID ApcContext;&#10;    IO_STATUS_BLOCK IoStatusBlock;&#10;} FILE_IO_COMPLETION_INFORMATION, *PFILE_IO_COMPLETION_INFORMATION;">FILE_IO_COMPLETION_INFORMATION</a> structures.
- * \param[in] Count The number of entries to remove.
- * \param[out] NumEntriesRemoved Pointer to a variable that receives the number of entries removed.
- * \param[in, optional] Timeout Optional pointer to a timeout value.
- * \param[in] Alertable Whether the wait is alertable.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
- * \remarks If Count &gt; 16, allocates temp kernel buffer (<a href="exallocatepool2" title="DECLSPEC_RESTRICT PVOID ExAllocatePool2(&#10;  POOL_FLAGS Flags,&#10;  SIZE_T     NumberOfBytes,&#10;  ULONG      Tag&#10;);">ExAllocatePool2</a>) and caps fallback behavior if allocation fails.
+ * \param[in] IoCompletionHandle Handle with <a href="io_completion_modify_state" title="#define IO_COMPLETION_MODIFY_STATE 0x0002">IO_COMPLETION_MODIFY_STATE</a> (0x2).
+ * \param[out] IoCompletionInformation Array of Count caller-owned records. Each
+ * <a href="file_io_completion_information" title="typedef struct _FILE_IO_COMPLETION_INFORMATION&#10;{&#10;    PVOID KeyContext;&#10;    PVOID ApcContext;&#10;    IO_STATUS_BLOCK IoStatusBlock;&#10;} FILE_IO_COMPLETION_INFORMATION, *PFILE_IO_COMPLETION_INFORMATION;">FILE_IO_COMPLETION_INFORMATION</a> is 32 bytes on x64 and 16 bytes on x86. Native x64 user output must be
+ * 8-byte aligned; WoW64 converts an aligned temporary native array to the x86 output, accepting an unaligned
+ * original x86 buffer.
+ * \param[in] Count Nonzero array capacity. The native x64 entry rejects values above 0x07FFFFFF with
+ * STATUS_INVALID_PARAMETER before probing the array.
+ * \param[out] NumEntriesRemoved Required <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> output for the number returned. Timeout or an alertable
+ * interruption writes 0; negative handle/access errors leave it unchanged. Only that many array entries are
+ * valid.
+ * \param[in, optional] Timeout In 100-nanosecond units: negative relative interval, nonnegative absolute
+ * deadline, zero to poll, or NULL for no deadline.
+ * \param[in] Alertable Whether a blocking dequeue can return for a user APC or alert.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> for removed packets, STATUS_TIMEOUT for no packet, STATUS_USER_APC or STATUS_ALERTED
+ * for interruption, or another <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>. Each returned IoStatusBlock.Status is the packet&#x27;s independent
+ * completion status.
+ * \remarks For native Count greater than 16, the kernel attempts to allocate 8 * Count bytes for packet
+ * pointers. If allocation fails it falls back to a 16-pointer stack buffer and limits that removal to 16
+ * entries. WoW64 additionally allocates a 32 * Count-byte native-record conversion buffer before the syscall;
+ * do not assume native allocation-failure behavior applies unchanged to WoW64. The unused output-array suffix
+ * remains untouched s.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiet-getqueuedcompletionstatusex">https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiet-getqueuedcompletionstatusex</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -71,7 +85,7 @@ NtRemoveIoCompletionEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntioapi.h#L3561">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntioapi.h#L3791">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -89,7 +103,7 @@ ZwRemoveIoCompletionEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4164">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4164">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

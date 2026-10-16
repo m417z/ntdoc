@@ -45,15 +45,50 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTREGAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Queries multiple values of a registry key.
+ * Retrieves selected values from one registry key into a shared data buffer.
+ * Use this to read a known group of settings without issuing one query per name;
+ * it does not enumerate subkeys or values and does not reserve them for later use.
  *
- * \param[in] KeyHandle A handle to the key to be queried.
- * \param[in, out] ValueEntries A pointer to an array of <a href="key_value_entry" title="typedef struct _KEY_VALUE_ENTRY&#10;{&#10;    PUNICODE_STRING ValueName;&#10;    ULONG DataLength;&#10;    ULONG DataOffset;&#10;    ULONG Type;&#10;} KEY_VALUE_ENTRY, *PKEY_VALUE_ENTRY;">KEY_VALUE_ENTRY</a> structures that specify the values to be queried.
- * \param[in] EntryCount The number of entries in the array.
- * \param[out] ValueBuffer A pointer to a buffer that receives the value data.
- * \param[in, out] BufferLength A pointer to a variable that specifies the size of the buffer and receives the size of the data returned.
- * \param[out, optional] RequiredBufferLength A pointer to a variable that receives the size of the buffer required to hold the data.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[in] KeyHandle A key handle with KEY_QUERY_VALUE access.
+ * \param[in, out] ValueEntries EntryCount <a href="key_value_entry" title="typedef struct _KEY_VALUE_ENTRY&#10;{&#10;    PUNICODE_STRING ValueName;&#10;    ULONG DataLength;&#10;    ULONG DataOffset;&#10;    ULONG Type;&#10;} KEY_VALUE_ENTRY, *PKEY_VALUE_ENTRY;">KEY_VALUE_ENTRY</a> records. Initialize each
+ * ValueName to a readable <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a>. Empty names select the default value;
+ * duplicate names produce separate data slots. The native path rejects
+ * odd name lengths and trims trailing WCHAR NULs in its captured copy, without
+ * changing the caller&#x27;s descriptor. Output fields are meaningful for a complete
+ * result only after success; ValueName pointers are preserved.
+ * \param[in] EntryCount Number of entries. The native user-mode entry
+ * rejects counts above 65536 with STATUS_INSUFFICIENT_RESOURCES. WoW64 allocates
+ * and converts the array before calling native code; this limit is not a promise
+ * of early validation or successful allocation in every calling environment.
+ * \param[out] ValueBuffer Receives value data at the returned byte offsets. Use
+ * 4-byte-aligned storage. NULL with an input BufferLength of 0 supports size
+ * discovery. Values are placed in request order at 4-byte-aligned offsets; string data is returned as stored, without an added NUL.
+ * \param[in, out] BufferLength Required pointer. On input, the available byte
+ * capacity; on successful nonempty queries, the packed span used, including
+ * alignment gaps. Preserve the original capacity for bounds checks. A short-buffer
+ * result is not a complete initialized array or an unrestricted copy length.
+ * \param[out, optional] RequiredBufferLength Receives the required packed byte
+ * span on success or STATUS_BUFFER_OVERFLOW; it is not an entry count. May be NULL.
+ * Do not use its value as a required size after unrelated failures.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> for a complete result, STATUS_BUFFER_OVERFLOW if not
+ * all requested data fits, or an error such as STATUS_OBJECT_NAME_NOT_FOUND when
+ * any requested name is missing. A missing later name can supersede overflow.
+ * \remarks In the ordinary path, overflow copies only complete values
+ * from a fitting prefix, then stops copying further entries while computing the
+ * required size. Uncopied entry output fields are zero, so retry the whole query
+ * rather than interpreting zero fields as valid empty values. A zero-capacity
+ * query of existing nonempty values returns STATUS_BUFFER_OVERFLOW, not
+ * STATUS_BUFFER_TOO_SMALL. Empty data can succeed with zero capacity.
+ *
+ * With EntryCount = 0, the native/WoW64 paths accept a NULL entry array,
+ * still check key access, return RequiredBufferLength = 0, and leave BufferLength
+ * unchanged. Do not interpret that unchanged capacity as bytes initialized.
+ * WoW64 converts 16-byte entries to native 24-byte entries and copies output
+ * fields back even on errors; it forwards ValueBuffer without realigning it.
+ * Native requires 4-byte entry-array alignment; WoW64&#x27;s conversion also accepts
+ * unaligned source entries. Prefer naturally aligned arrays.
+ * Registry callbacks, layered keys and virtualization can alter ordinary behavior.
+ * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerymultiplevaluekey">https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerymultiplevaluekey</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -69,7 +104,7 @@ NtQueryMultipleValueKey(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L933">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L1325">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -87,7 +122,7 @@ ZwQueryMultipleValueKey(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L3618">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L3618">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// winternl.h
 

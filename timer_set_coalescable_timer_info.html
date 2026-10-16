@@ -46,22 +46,26 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The TIMER_SET_COALESCABLE_TIMER_INFO structure specifies the parameters used to configure a coalescable timer.
+ * Input for <a href="ntsettimerex" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetTimerEx(&#10;    _In_ HANDLE TimerHandle,&#10;    _In_ TIMER_SET_INFORMATION_CLASS TimerSetInformationClass,&#10;    _In_reads_bytes_(TimerSetInformationLength) PVOID TimerSetInformation,&#10;    _In_ ULONG TimerSetInformationLength&#10;    );">NtSetTimerEx</a>(TimerSetCoalescableTimer). Coalescing permits expiration
+ * to be delayed so wakeups can be combined; it is not a timer-resolution request.
+ * The record is 48 bytes on x64 and 32 bytes on x86. The record itself is read-only
+ * to the syscall; PreviousState, when non-NULL, points to a separate writable byte.
+ * Use the native pointer-width layout, not the other architecture&#x27;s record.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO
 {
-    _In_ LARGE_INTEGER DueTime;
-    _In_opt_ <a href="ptimer_apc_routine" title="typedef TIMER_APC_ROUTINE* PTIMER_APC_ROUTINE;">PTIMER_APC_ROUTINE</a> TimerApcRoutine;
-    _In_opt_ PVOID TimerContext;
-    _In_opt_ <a href="counted_reason_context" title="typedef struct _COUNTED_REASON_CONTEXT&#10;{&#10;    ULONG Version;&#10;    ULONG Flags;&#10;    union&#10;    {&#10;        struct&#10;        {&#10;            UNICODE_STRING ResourceFileName;&#10;            USHORT ResourceReasonId;&#10;            ULONG StringCount;&#10;            _Field_size_(StringCount) PUNICODE_STRING ReasonStrings;&#10;        };&#10;        UNICODE_STRING SimpleString;&#10;    };&#10;} COUNTED_REASON_CONTEXT, *PCOUNTED_REASON_CONTEXT;">PCOUNTED_REASON_CONTEXT</a> WakeContext;
-    _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Period;
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TolerableDelay;
-    _Out_opt_ PBOOLEAN PreviousState;
+    _In_ LARGE_INTEGER DueTime;                     // 100-nanosecond units: negative relative interval; nonnegative absolute UTC deadline.
+    _In_opt_ <a href="ptimer_apc_routine" title="typedef TIMER_APC_ROUTINE* PTIMER_APC_ROUTINE;">PTIMER_APC_ROUTINE</a> TimerApcRoutine;    // APC to the setting thread; see <a href="timer_apc_routine" title="typedef _Function_class_(TIMER_APC_ROUTINE)&#10;VOID NTAPI TIMER_APC_ROUTINE(&#10;    _In_opt_ PVOID TimerContext,&#10;    _In_ ULONG TimerLowValue,&#10;    _In_ LONG TimerHighValue&#10;    );">TIMER_APC_ROUTINE</a>.
+    _In_opt_ PVOID TimerContext;                    // Opaque callback context; NULL is permitted.
+    _In_opt_ <a href="counted_reason_context" title="typedef struct _COUNTED_REASON_CONTEXT&#10;{&#10;    ULONG Version;&#10;    ULONG Flags;&#10;    union&#10;    {&#10;        struct&#10;        {&#10;            UNICODE_STRING ResourceFileName;&#10;            USHORT ResourceReasonId;&#10;            ULONG StringCount;&#10;            _Field_size_(StringCount) PUNICODE_STRING ReasonStrings;&#10;        };&#10;        UNICODE_STRING SimpleString;&#10;    };&#10;} COUNTED_REASON_CONTEXT, *PCOUNTED_REASON_CONTEXT;">PCOUNTED_REASON_CONTEXT</a> WakeContext;   // Optional reason for requesting system wake; captured by the kernel.
+    _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Period;                          // Milliseconds, 0 for one-shot; values above 0x7FFFFFFF return STATUS_INVALID_PARAMETER_3.
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TolerableDelay;                      // Milliseconds of permitted coalescing delay; 0 requests no additional tolerance.
+    _Out_opt_ PBOOLEAN PreviousState;               // Receives the previous signal state, not whether the timer was armed.
 } TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L1173">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L1304">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

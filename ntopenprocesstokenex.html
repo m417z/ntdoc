@@ -47,12 +47,16 @@
 </span><span class="ntdoc-code-intro language-cpp">/**
  * The NtOpenProcessTokenEx routine opens the access token associated with a process, and returns a handle that can be used to access that token.
  *
- * \param ProcessHandle Handle to the process whose access token is to be opened. The handle must have <a href="process_query_information" title="#define PROCESS_QUERY_INFORMATION 0x0400">PROCESS_QUERY_INFORMATION</a> access.
+ * \param ProcessHandle Handle to the process whose access token is to be opened. The handle must have <a href="process_query_limited_information" title="#define PROCESS_QUERY_LIMITED_INFORMATION 0x1000">PROCESS_QUERY_LIMITED_INFORMATION</a> access.
  * \param DesiredAccess ACCESS_MASK structure specifying the requested types of access to the access token.
- * \param HandleAttributes Attributes for the created handle. Only <a href="obj_kernel_handle" title="#define OBJ_KERNEL_HANDLE 0x00000200L">OBJ_KERNEL_HANDLE</a> is currently supported.
+ * \param HandleAttributes Object-handle attributes. The kernel masks these with 0x1df2 for user-mode callers and 0x11ff2 for kernel-mode callers; <a href="obj_inherit" title="#define OBJ_INHERIT 0x00000002">OBJ_INHERIT</a> is supported.
  * \param TokenHandle Pointer to a caller-allocated variable that receives a handle to the newly opened access token.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenprocesstokenex">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntopenprocesstokenex</a>
+ * \remarks The native implementation masks user HandleAttributes with 0x1DF2 before the token is opened. The process
+ * handle and requested token rights are checked separately. Native failures need not initialize TokenHandle,
+ * whereas the WoW64 thunk copies its zero-initialized temporary back after the native call. Consume the output
+ * only on success.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -66,7 +70,7 @@ NtOpenProcessTokenEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntseapi.h#L634">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntseapi.h#L799">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -82,7 +86,7 @@ ZwOpenProcessTokenEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L2943">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L2943">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ntifs.h
 

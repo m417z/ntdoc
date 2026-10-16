@@ -63,6 +63,10 @@
  * - Only <a href="ps_alert_thread_extended_parameter" title="typedef struct _PS_ALERT_THREAD_EXTENDED_PARAMETER&#10;{&#10;    /**&#10;     * Parameter type (8-bit)&#10;     */&#10;    ULONGLONG Type : 8;&#10;    /**&#10;     * Reserved bits; should be zero.&#10;     */&#10;    ULONGLONG Reserved : 56;&#10;    /**&#10;     * Payload value whose meaning depends on Type.&#10;     *&#10;     * For Type == PsAlertMultipleExtendedParameterAutoBoostContext, this is treated as an&#10;     * opaque &quot;AutoBoostContext&quot; token. It may be pointer-like and may use low-bit tagging.&#10;     */&#10;    union&#10;    {&#10;        ULONGLONG ULong64;&#10;        PVOID Pointer;&#10;...">PS_ALERT_THREAD_EXTENDED_PARAMETER</a>.Type == 0 is currently accepted.
  * - If multiple extended parameters are provided, the implementation consumes them in order and
  *   the *last* parameter&#x27;s payload is the one forwarded to the internal alert logic.
+ * \remarks The native entry captures pointer-sized thread IDs and verifies all referenced targets belong to the current
+ * process before issuing the batch alert. Up to 64 references fit in its local array; larger counts allocate
+ * temporary storage. WoW64 first widens its 4-byte IDs to 8-byte entries. Avoid unbounded counts:
+ * conversion/allocation can occur before native target validation.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -78,7 +82,7 @@ NtAlertMultipleThreadByThreadId(
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpsapi.h#L3091">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpsapi.h#L3287">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -94,7 +98,7 @@ ZwAlertMultipleThreadByThreadId(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L275">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L275">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

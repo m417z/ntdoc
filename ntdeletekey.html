@@ -45,10 +45,21 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTREGAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Deletes a registry key.
+ * Deletes an opened registry key, not merely a value and not a recursive subtree. Remove subkeys from the
+ * leaves upward before deleting their parent.
  *
- * \param[in] KeyHandle A handle to the key to be deleted.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[in] KeyHandle Handle with DELETE (0x10000) access on the ordinary path. The handle remains
+ * caller-owned and must still be closed with <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a>, even after a successful deletion. Other open handles to
+ * the same key must also close.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, STATUS_ACCESS_DENIED, STATUS_INVALID_HANDLE, STATUS_CANNOT_DELETE or another
+ * registry error. In the ordinary path, a key with a live subkey returns STATUS_CANNOT_DELETE; a leaf
+ * containing values can be deleted without first deleting those values individually.
+ * \remarks Successful ordinary deletion removes the key from name lookup. Existing handles do not become
+ * usable handles to a replacement key: subsequent basic queries on them return STATUS_KEY_DELETED, yet
+ * <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a> remains required. Do not assume every operation on a deleted key has the same result, or that
+ * success implies a synchronous physical hive flush. Through an active transacted handle, deletion is staged:
+ * rollback preserves the original key and value; commit removes them. Registry filters, virtualization,
+ * read-only keys or hives, and protected special keys can affect deletion.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwdeletekey">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwdeletekey</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -60,7 +71,7 @@ NtDeleteKey(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L789">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L1046">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -73,7 +84,7 @@ ZwDeleteKey(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L1761">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L1761">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

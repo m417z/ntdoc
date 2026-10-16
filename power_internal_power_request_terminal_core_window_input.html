@@ -46,19 +46,39 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_POWER_REQUEST_TERMINAL_CORE_WINDOW_INPUT structure contains the input parameters for the power request terminal core window operation.
+ * The POWER_INTERNAL_POWER_REQUEST_TERMINAL_CORE_WINDOW_INPUT struct attributes an existing process power-request handle to a terminal core-window value.
+ * \remarks User-mode infoclass 46 requires exactly 32 input bytes on AMD64 and NULL/0 output.
+ * PowerRequestHandle at +8 and ProcessId at +24 identify a matching request in the global
+ * request list. CoreWindowHandle at +16 becomes that request&#x27;s window attribute, with TTM
+ * notification when enabled. The kernel matches values; it does not interpret +8 as a process
+ * handle or +16 as a power-request object pointer. TraceLogging metadata corroborates the
+ * PowerRequestHandle, CoreWindowHandle, and ProcessId semantics.
+ *
+ * No handle is created, referenced by this lookup, or transferred to the caller; do not close
+ * a core-window value with <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a>. Missing matches are silent and the dispatcher still
+ * returns success. Version is not checked. Kernel mode returns STATUS_NOT_SUPPORTED.
+ * \sa <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a>
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_POWER_REQUEST_TERMINAL_CORE_WINDOW_INPUT
 {
     <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a> Header;
-    PVOID ProcessHandle;
-    PVOID PowerRequestPointer;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ReasonCode;
+    union
+    {
+        HANDLE PowerRequestHandle; // lookup key together with ProcessId
+    };
+    union
+    {
+        HANDLE CoreWindowHandle; // attributed window value, not a kernel power-request pointer
+    };
+    union
+    {
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ProcessId; // identifies the process owning PowerRequestHandle
+    };
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved;
 } POWER_INTERNAL_POWER_REQUEST_TERMINAL_CORE_WINDOW_INPUT, *PPOWER_INTERNAL_POWER_REQUEST_TERMINAL_CORE_WINDOW_INPUT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L1977">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L2973">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

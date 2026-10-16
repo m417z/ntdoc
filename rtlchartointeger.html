@@ -52,6 +52,7 @@
  * \param Value A pointer to a variable that receives the converted integer value.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlchartointeger">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlchartointeger</a>
+ * \remarks This is permissive numeric-prefix conversion, not strict whole-input validation: parsing stops at a non-digit, and <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> accumulation can wrap without an overflow error. Validate separately when the entire string or a bounded mathematical value is required.
  */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
@@ -63,7 +64,7 @@ RtlCharToInteger(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntrtl.h#L12578">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntrtl.h#L12984">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ntddk.h
 
@@ -110,7 +111,7 @@ RtlCharToInteger(
 <h2>Remarks</h2>
 <p><strong>RtlCharToInteger</strong> converts ANSI alphanumeric characters.</p>
 <h2>See also</h2>
-<p><a href="rtlinitstring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitString(&#10;    _Out_ PSTRING DestinationString,&#10;    _In_opt_z_ PCSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)strlen(SourceString)) + sizeof(ANSI_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PCHAR)SourceString;&#10;}">RtlInitString</a></p>
+<p><a href="rtlinitstring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitString(&#10;    _Out_ PSTRING DestinationString,&#10;    _In_opt_z_ PCSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;    {&#10;        SIZE_T stringLength = strlen(SourceString);&#10;&#10;        if (stringLength &gt; MAXUSHORT - sizeof(ANSI_NULL))&#10;            stringLength = MAXUSHORT - sizeof(ANSI_NULL);&#10;&#10;        DestinationString-&gt;Length = (USHORT)stringLength;&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length + sizeof(ANSI_NULL);&#10;    }&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;...">RtlInitString</a></p>
 <p><a href="rtlintegertounicodestring" title="NTSYSAPI&#10;NTSTATUS&#10;NTAPI&#10;RtlIntegerToUnicodeString(&#10;    _In_ ULONG Value,&#10;    _In_opt_ ULONG Base,&#10;    _Inout_ PUNICODE_STRING String&#10;    );">RtlIntegerToUnicodeString</a></p>
 <hr>
 <div class="ntdoc-description-links">

@@ -52,14 +52,16 @@
  * Queues an APC (Asynchronous Procedure Call) to a thread.
  *
  * \param ThreadHandle Handle to the thread to which the APC is to be queued.
- * \param ReserveHandle Optional handle to a reserve object. This can be <a href="queue_user_apc_special_user_apc" title="#define QUEUE_USER_APC_SPECIAL_USER_APC ((HANDLE)0x1)">QUEUE_USER_APC_SPECIAL_USER_APC</a> or a handle returned by <a href="ntallocatereserveobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateReserveObject(&#10;    _Out_ PHANDLE MemoryReserveHandle,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ MEMORY_RESERVE_TYPE Type&#10;    );">NtAllocateReserveObject</a>.
+ * \param ReserveHandle Optional handle to a reserve object. This can be <a href="queue_user_apc_special_user_apc" title="#define QUEUE_USER_APC_SPECIAL_USER_APC ((HANDLE)0x1)">QUEUE_USER_APC_SPECIAL_USER_APC</a> or a handle returned by <a href="ntallocatereserveobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateReserveObject(&#10;    _Out_ PHANDLE MemoryReserveHandle,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ MEMORY_RESERVE_TYPE Type&#10;    );">NtAllocateReserveObject</a>.
  * \param ApcRoutine A pointer to the <a href="rtldispatchapc" title="NTSYSAPI&#10;VOID&#10;NTAPI&#10;RtlDispatchAPC(&#10;    _In_ PAPCFUNC ApcRoutine,&#10;    _In_opt_ PVOID Parameter,&#10;    _In_opt_ HANDLE ActxContext&#10;    );">RtlDispatchAPC</a> function or custom APC routine to be executed.
  * \param ApcArgument1 Optional first argument to be passed to the APC routine.
  * \param ApcArgument2 Optional second argument to be passed to the APC routine.
  * \param ApcArgument3 Optional third argument to be passed to the APC routine.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
- * \remarks The APC will be executed in the context of the specified thread after the thread enters an alertable wait state or immediately
- * when <a href="queue_user_apc_special_user_apc" title="#define QUEUE_USER_APC_SPECIAL_USER_APC ((HANDLE)0x1)">QUEUE_USER_APC_SPECIAL_USER_APC</a> is used or <a href="nttestalert" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtTestAlert(&#10;    VOID&#10;    );">NtTestAlert</a>, <a href="ntalertthread" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAlertThread(&#10;    _In_ HANDLE ThreadHandle&#10;    );">NtAlertThread</a>, <a href="ntalertresumethread" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAlertResumeThread(&#10;    _In_ HANDLE ThreadHandle,&#10;    _Out_opt_ PULONG PreviousSuspendCount&#10;    );">NtAlertResumeThread</a> or <a href="ntalertthreadbythreadid" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAlertThreadByThreadId(&#10;    _In_ HANDLE ThreadId&#10;    );">NtAlertThreadByThreadId</a> are called.
+ * \remarks NULL ReserveHandle selects ordinary allocation; an APC memory reserve is distinct from an I/O-completion
+ * reserve. Native ReserveHandle value 1 selects special-user-APC handling, but the matching WoW64 thunk
+ * rejects that value with STATUS_INVALID_HANDLE. A normal reserve can be in use while its APC is queued; this
+ * is not a way to reuse arbitrary object handles.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -67,7 +69,7 @@ NTSYSCALLAPI
 NTAPI
 NtQueueApcThreadEx(
     _In_ HANDLE ThreadHandle,
-    _In_opt_ HANDLE ReserveHandle, // <a href="ntallocatereserveobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateReserveObject(&#10;    _Out_ PHANDLE MemoryReserveHandle,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ MEMORY_RESERVE_TYPE Type&#10;    );">NtAllocateReserveObject</a> // <a href="queue_user_apc_special_user_apc" title="#define QUEUE_USER_APC_SPECIAL_USER_APC ((HANDLE)0x1)">QUEUE_USER_APC_SPECIAL_USER_APC</a>
+    _In_opt_ HANDLE ReserveHandle, // <a href="ntallocatereserveobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateReserveObject(&#10;    _Out_ PHANDLE MemoryReserveHandle,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ MEMORY_RESERVE_TYPE Type&#10;    );">NtAllocateReserveObject</a> // <a href="queue_user_apc_special_user_apc" title="#define QUEUE_USER_APC_SPECIAL_USER_APC ((HANDLE)0x1)">QUEUE_USER_APC_SPECIAL_USER_APC</a>
     _In_ <a href="pps_apc_routine" title="typedef PS_APC_ROUTINE* PPS_APC_ROUTINE;">PPS_APC_ROUTINE</a> ApcRoutine, // <a href="rtldispatchapc" title="NTSYSAPI&#10;VOID&#10;NTAPI&#10;RtlDispatchAPC(&#10;    _In_ PAPCFUNC ApcRoutine,&#10;    _In_opt_ PVOID Parameter,&#10;    _In_opt_ HANDLE ActxContext&#10;    );">RtlDispatchAPC</a>
     _In_opt_ PVOID ApcArgument1,
     _In_opt_ PVOID ApcArgument2,
@@ -76,7 +78,7 @@ NtQueueApcThreadEx(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpsapi.h#L3275">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpsapi.h#L3489">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -86,7 +88,7 @@ NTSYSCALLAPI
 NTAPI
 ZwQueueApcThreadEx(
     _In_ HANDLE ThreadHandle,
-    _In_opt_ HANDLE ReserveHandle, // <a href="ntallocatereserveobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateReserveObject(&#10;    _Out_ PHANDLE MemoryReserveHandle,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ MEMORY_RESERVE_TYPE Type&#10;    );">NtAllocateReserveObject</a> // <a href="queue_user_apc_special_user_apc" title="#define QUEUE_USER_APC_SPECIAL_USER_APC ((HANDLE)0x1)">QUEUE_USER_APC_SPECIAL_USER_APC</a>
+    _In_opt_ HANDLE ReserveHandle, // <a href="ntallocatereserveobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateReserveObject(&#10;    _Out_ PHANDLE MemoryReserveHandle,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ MEMORY_RESERVE_TYPE Type&#10;    );">NtAllocateReserveObject</a> // <a href="queue_user_apc_special_user_apc" title="#define QUEUE_USER_APC_SPECIAL_USER_APC ((HANDLE)0x1)">QUEUE_USER_APC_SPECIAL_USER_APC</a>
     _In_ <a href="pps_apc_routine" title="typedef PS_APC_ROUTINE* PPS_APC_ROUTINE;">PPS_APC_ROUTINE</a> ApcRoutine, // <a href="rtldispatchapc" title="NTSYSAPI&#10;VOID&#10;NTAPI&#10;RtlDispatchAPC(&#10;    _In_ PAPCFUNC ApcRoutine,&#10;    _In_opt_ PVOID Parameter,&#10;    _In_opt_ HANDLE ActxContext&#10;    );">RtlDispatchAPC</a>
     _In_opt_ PVOID ApcArgument1,
     _In_opt_ PVOID ApcArgument2,
@@ -94,7 +96,7 @@ ZwQueueApcThreadEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L3932">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L3932">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -105,7 +107,7 @@ ZwQueueApcThreadEx(
 <h1>Parameters</h1>
 <ul>
 <li><code>ThreadHandle</code> - a handle the the thread granting the <code><a href="thread_set_context" title="#define THREAD_SET_CONTEXT 0x0010">THREAD_SET_CONTEXT</a></code> access.</li>
-<li><code>ReserveHandle</code> - an optional handle to the reserve object (see <code><a href="ntallocatereserveobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateReserveObject(&#10;    _Out_ PHANDLE MemoryReserveHandle,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ MEMORY_RESERVE_TYPE Type&#10;    );">NtAllocateReserveObject</a></code>) or a <code><a href="queue_user_apc_special_user_apc" title="#define QUEUE_USER_APC_SPECIAL_USER_APC ((HANDLE)0x1)">QUEUE_USER_APC_SPECIAL_USER_APC</a></code> constant.</li>
+<li><code>ReserveHandle</code> - an optional handle to the reserve object (see <code><a href="ntallocatereserveobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAllocateReserveObject(&#10;    _Out_ PHANDLE MemoryReserveHandle,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ MEMORY_RESERVE_TYPE Type&#10;    );">NtAllocateReserveObject</a></code>) or a <code><a href="queue_user_apc_special_user_apc" title="#define QUEUE_USER_APC_SPECIAL_USER_APC ((HANDLE)0x1)">QUEUE_USER_APC_SPECIAL_USER_APC</a></code> constant.</li>
 <li><code>ApcRoutine</code> - the address of the function to invoke.</li>
 <li><code>ApcArgument1</code> - the first argument to pass to the APC routine.</li>
 <li><code>ApcArgument2</code> - the second argument to pass to the APC routine.</li>

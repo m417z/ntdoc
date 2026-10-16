@@ -45,14 +45,28 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTREGAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Opens an existing registry key in a transaction with extended options.
+ * Opens an existing registry key in an explicit transaction with open options. Use it for transactional
+ * access when OPEN_LINK, BACKUP_RESTORE or DONT_VIRTUALIZE behavior is specifically needed; it does not
+ * create missing keys.
  *
- * \param[out] KeyHandle A pointer to a handle that receives the key handle.
- * \param[in] DesiredAccess The access mask that specifies the desired access rights.
- * \param[in] ObjectAttributes A pointer to an <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> structure that specifies the object attributes.
- * \param[in] OpenOptions The options to use when opening the key.
- * \param[in] TransactionHandle A handle to the transaction.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[out] KeyHandle Required output. A successful handle belongs to the caller and must be closed with
+ * <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a> independently of transaction outcome.
+ * \param[in] DesiredAccess Requested rights on the key and optional view selector.
+ * \param[in] ObjectAttributes Initialized counted native/relative key path; security information does not
+ * replace the existing key&#x27;s security descriptor.
+ * \param[in] OpenOptions Same entry mask 0x1C as <a href="ntopenkeyex" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenKeyEx(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ ULONG OpenOptions&#10;    );">NtOpenKeyEx</a>: BACKUP_RESTORE (0x4), OPEN_LINK (0x8),
+ * DONT_VIRTUALIZE (0x10), or 0. Other bits return STATUS_INVALID_PARAMETER_4 after a valid transaction is
+ * referenced. Special options remain subject to their own restrictions.
+ * \param[in] TransactionHandle Required active transaction with access 0x4; for KTM this is
+ * TRANSACTION_ENLIST. The entry also recognizes native registry-transaction objects before trying KTM on
+ * object-type mismatch.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>. Invalid/wrong-type/insufficient-access transaction handles fail before the native open
+ * helper; do not expect a universal output reset.
+ * \remarks OpenOptions = 0 matches <a href="ntopenkeytransacted" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenKeyTransacted(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ HANDLE TransactionHandle&#10;    );">NtOpenKeyTransacted</a>. Explicitly commit or roll back the transaction;
+ * closing a key does not commit. KTM transactions support volatile-key creation, queries, and deletion.
+ * <a href="ntrenamekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtRenameKey(&#10;    _In_ HANDLE KeyHandle,&#10;    _In_ PCUNICODE_STRING NewName&#10;    );">NtRenameKey</a> returns STATUS_NOT_IMPLEMENTED for an active transacted key handle. WoW64 converts descriptors
+ * and performs path/tag handling, not just a direct width-adjusted syscall. Filters/layers and
+ * recovery/concurrency paths differ.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopenkeytransactedex">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopenkeytransactedex</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -68,7 +82,7 @@ NtOpenKeyTransactedEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L770">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L1016">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -85,7 +99,7 @@ ZwOpenKeyTransactedEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L2860">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L2860">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

@@ -46,14 +46,30 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtQueryInformationAtom routine retrieves information about a specified atom in the system atom table.
+ * The NtQueryInformationAtom routine retrieves an atom&#x27;s name/reference snapshot or a list of visible string
+ * atoms. The layouts contain no pointers and are shared by native x64 and WoW64 callers.
  *
- * \param Atom The atom identifier for which information is being queried.
- * \param AtomInformationClass Specifies the type of information to retrieve. This is an <a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation,&#10;    AtomTableInformation&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a> value.
- * \param AtomInformation A pointer to a buffer that receives the requested information.
- * \param AtomInformationLength The size, in bytes, of the AtomInformation buffer.
- * \param ReturnLength Optional pointer to a variable that receives the number of bytes written to the AtomInformation buffer.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param Atom Identifier for AtomBasicInformation (0); ignored for AtomTableInformation (1).
+ * \param AtomInformationClass Basic information (0) or table enumeration (1).
+ * \param AtomInformation Writable, 4-byte-aligned user buffer on x64 and its WoW64 path. 
+ * See the selected structure for partial-result semantics.
+ * \param AtomInformationLength Bytes available. Basic information requires at least
+ * the 6-byte prefix; table information requires at least the 4-byte count prefix.
+ * A shorter buffer returns STATUS_INFO_LENGTH_MISMATCH without updating ReturnLength.
+ * \param ReturnLength Optional <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>. For successful basic queries receives
+ * 8 + NameLength (6-byte prefix, copied name, 2-byte terminator), not necessarily
+ * the size required for the full name. On basic-query failure after the minimum
+ * length check it receives 6. For table enumeration it receives 4 on insufficient
+ * capacity, or 4 + 2 * NumberOfAtoms on success; it is not a universal sizing oracle.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>. Basic queries can succeed with a truncated name. A buffer with
+ * no room for at least one WCHAR plus its terminator returns STATUS_BUFFER_TOO_SMALL
+ * for a nonempty name. Table queries can return a partial array with
+ * STATUS_INFO_LENGTH_MISMATCH and the total count in NumberOfAtoms.
+ * \remarks Allocate enough for the maximum name when a complete string is needed:
+ * 6 + 510 + 2 = 518 bytes. NULL/zero-length discovery does not report that size.
+ * An unsupported class returns STATUS_INVALID_INFO_CLASS; native x64 writes
+ * ReturnLength = 0, whereas the WoW64 thunk rejects it before the kernel
+ * and leaves ReturnLength unchanged. Buffer probing can fail before class validation.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -61,7 +77,7 @@ NTSYSCALLAPI
 NTAPI
 NtQueryInformationAtom(
     _In_ <a href="rtl_atom" title="typedef USHORT RTL_ATOM, *PRTL_ATOM;">RTL_ATOM</a> Atom,
-    _In_ <a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation,&#10;    AtomTableInformation&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a> AtomInformationClass,
+    _In_ <a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation, // 0: ATOM_BASIC_INFORMATION, 6-byte prefix plus name and terminator.&#10;    AtomTableInformation // 1: ATOM_TABLE_INFORMATION; Atom input is ignored.&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a> AtomInformationClass,
     _Out_writes_bytes_(AtomInformationLength) PVOID AtomInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> AtomInformationLength,
     _Out_opt_ PULONG ReturnLength
@@ -69,7 +85,7 @@ NtQueryInformationAtom(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L11524">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L11994">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -79,14 +95,14 @@ NTSYSCALLAPI
 NTAPI
 ZwQueryInformationAtom(
     _In_ <a href="rtl_atom" title="typedef USHORT RTL_ATOM, *PRTL_ATOM;">RTL_ATOM</a> Atom,
-    _In_ <a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation,&#10;    AtomTableInformation&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a> AtomInformationClass,
+    _In_ <a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation, // 0: ATOM_BASIC_INFORMATION, 6-byte prefix plus name and terminator.&#10;    AtomTableInformation // 1: ATOM_TABLE_INFORMATION; Atom input is ignored.&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a> AtomInformationClass,
     _Out_writes_bytes_(AtomInformationLength) PVOID AtomInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> AtomInformationLength,
     _Out_opt_ PULONG ReturnLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L3388">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L3388">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -108,7 +124,7 @@ ZwQueryInformationAtom(
 <h3>Atom</h3>
 <p>Atom to query. If <code>AtomInformationClass</code> parameter is <code>AtomTableInformation</code>, <code>Atom</code> parameter is not used.</p>
 <h3>AtomInformationClass</h3>
-<p>See <code><a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation,&#10;    AtomTableInformation&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a></code> enumeration type for details.</p>
+<p>See <code><a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation, // 0: ATOM_BASIC_INFORMATION, 6-byte prefix plus name and terminator.&#10;    AtomTableInformation // 1: ATOM_TABLE_INFORMATION; Atom input is ignored.&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a></code> enumeration type for details.</p>
 <h3>AtomInformation</h3>
 <p>Result of call - pointer to user's allocated buffer for data.</p>
 <h3>AtomInformationLength</h3>
@@ -121,8 +137,8 @@ ZwQueryInformationAtom(
 </ul>
 <h1>See also</h1>
 <ul>
-<li><code><a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation,&#10;    AtomTableInformation&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a></code></li>
-<li><code><a href="atom_table_information" title="typedef struct _ATOM_TABLE_INFORMATION&#10;{&#10;    ULONG NumberOfAtoms; // The number of atoms in the atom table.&#10;    _Field_size_(NumberOfAtoms) RTL_ATOM Atoms[1]; // Array of atom identifiers.&#10;} ATOM_TABLE_INFORMATION, *PATOM_TABLE_INFORMATION;">ATOM_TABLE_INFORMATION</a></code></li>
+<li><code><a href="atom_information_class" title="typedef enum _ATOM_INFORMATION_CLASS&#10;{&#10;    AtomBasicInformation, // 0: ATOM_BASIC_INFORMATION, 6-byte prefix plus name and terminator.&#10;    AtomTableInformation // 1: ATOM_TABLE_INFORMATION; Atom input is ignored.&#10;} ATOM_INFORMATION_CLASS;">ATOM_INFORMATION_CLASS</a></code></li>
+<li><code><a href="atom_table_information" title="typedef struct _ATOM_TABLE_INFORMATION&#10;{&#10;    ULONG NumberOfAtoms; // Total visible string-atom count; can exceed the returned array capacity on failure.&#10;    _Field_size_(NumberOfAtoms) RTL_ATOM Atoms[1]; // Complete array only on success; no acquired atom references.&#10;} ATOM_TABLE_INFORMATION, *PATOM_TABLE_INFORMATION;">ATOM_TABLE_INFORMATION</a></code></li>
 <li><code><a href="ntaddatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAddAtom(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom&#10;    );">NtAddAtom</a></code></li>
 <li><code><a href="ntfindatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtFindAtom(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom&#10;    );">NtFindAtom</a></code></li>
 </ul>

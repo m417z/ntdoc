@@ -51,11 +51,16 @@
  *
  * \param StateName Pointer to the <a href="wnf_state_name" title="typedef struct _WNF_STATE_NAME&#10;{&#10;    union&#10;    {&#10;        ULONGLONG Value;&#10;        ULONG Data[2];&#10;        struct&#10;        {&#10;            ULONG64 Version : 4;&#10;            ULONG64 NameLifetime : 2;&#10;            ULONG64 DataScope : 4;&#10;            ULONG64 PermanentData : 1;&#10;            ULONG64 Unique : 53;&#10;        } DUMMYSTRUCTNAME;&#10;    } DUMMYUNIONNAME;&#10;} WNF_STATE_NAME, *PWNF_STATE_NAME;">WNF_STATE_NAME</a> to query.
  * \param TypeId Optional pointer to a <a href="wnf_type_id" title="typedef struct _WNF_TYPE_ID&#10;{&#10;    GUID TypeId;&#10;} WNF_TYPE_ID, *PWNF_TYPE_ID;">WNF_TYPE_ID</a> structure specifying the type of the state data.
- * \param ExplicitScope Optional pointer to a security identifier (<a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>) for explicit scope.
+ * \param ExplicitScope Optional scope selector: a session-ID pointer, <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> pointer, or process HANDLE
+ * value, according to the state name&#x27;s <a href="wnf_data_scope" title="typedef enum _WNF_DATA_SCOPE&#10;{&#10;    WnfDataScopeSystem,&#10;    WnfDataScopeSession,&#10;    WnfDataScopeUser,&#10;    WnfDataScopeProcess,&#10;    WnfDataScopeMachine, // REDSTONE3&#10;    WnfDataScopePhysicalMachine, // WIN11&#10;} WNF_DATA_SCOPE;">WNF_DATA_SCOPE</a>. NULL selects the implicit scope.
  * \param ChangeStamp Pointer to a variable that receives the change stamp.
  * \param Buffer Pointer to a buffer that receives the state data.
- * \param BufferLength On input, the size of the buffer in bytes; on output, the number of bytes written.
+ * \param BufferLength On input, the capacity in bytes; on output, the current payload size, including
+ * the required capacity when the buffer is too small.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \remarks For an existing payload, a short output buffer returns STATUS_BUFFER_TOO_SMALL and
+ * reports the required byte length and current change stamp without copying a partial payload. Thus BufferLength
+ * is not always the number of bytes written. A size/query retry can race another publisher; recheck the final status.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -64,7 +69,7 @@ NTAPI
 NtQueryWnfStateData(
     _In_ <a href="pcwnf_state_name" title="typedef const WNF_STATE_NAME *PCWNF_STATE_NAME;">PCWNF_STATE_NAME</a> StateName,
     _In_opt_ <a href="pcwnf_type_id" title="typedef const WNF_TYPE_ID *PCWNF_TYPE_ID;">PCWNF_TYPE_ID</a> TypeId,
-    _In_opt_ <a href="pcsid" title="typedef const SID* PCSID;">PCSID</a> ExplicitScope,
+    _In_opt_ <a href="pcvoid" title="typedef CONST VOID *PCVOID;">PCVOID</a> ExplicitScope,
     _Out_ <a href="wnf_change_stamp" title="typedef ULONG WNF_CHANGE_STAMP, *PWNF_CHANGE_STAMP;">PWNF_CHANGE_STAMP</a> ChangeStamp,
     _Out_writes_bytes_opt_(*BufferLength) PVOID Buffer,
     _Inout_ PULONG BufferLength
@@ -73,7 +78,7 @@ NtQueryWnfStateData(
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L1972">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L2240">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -84,14 +89,14 @@ NTAPI
 ZwQueryWnfStateData(
     _In_ <a href="pcwnf_state_name" title="typedef const WNF_STATE_NAME *PCWNF_STATE_NAME;">PCWNF_STATE_NAME</a> StateName,
     _In_opt_ <a href="pcwnf_type_id" title="typedef const WNF_TYPE_ID *PCWNF_TYPE_ID;">PCWNF_TYPE_ID</a> TypeId,
-    _In_opt_ <a href="pcsid" title="typedef const SID* PCSID;">PCSID</a> ExplicitScope,
+    _In_opt_ <a href="pcvoid" title="typedef CONST VOID *PCVOID;">PCVOID</a> ExplicitScope,
     _Out_ <a href="wnf_change_stamp" title="typedef ULONG WNF_CHANGE_STAMP, *PWNF_CHANGE_STAMP;">PWNF_CHANGE_STAMP</a> ChangeStamp,
     _Out_writes_bytes_opt_(*BufferLength) PVOID Buffer,
     _Inout_ PULONG BufferLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L3895">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L3895">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

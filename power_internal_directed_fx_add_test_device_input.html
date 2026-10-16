@@ -46,18 +46,35 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_DIRECTED_FX_ADD_TEST_DEVICE_INPUT structure contains the input parameters for the directed fx add test device operation.
+ * The POWER_INTERNAL_DIRECTED_FX_ADD_TEST_DEVICE_INPUT struct adds a counted device-instance path to the directed-power test-device list.
+ * \remarks Selector 53 accepts a user-mode administrator and requires directed-DRIPS
+ * state bit 0 to be enabled; otherwise STATUS_NOT_SUPPORTED. This adds an AVL-list entry,
+ * not a new hardware device or a caller-owned device handle. Version and the <a href="dword" title="typedef unsigned long DWORD;">DWORD</a> at +8
+ * are not consumed here; Reserved/Flags is not an established flag mask. Initialize both
+ * to zero for this unversioned path and use NULL/0 output; supplied output is ignored.
+ *
+ * DeviceNameLength at +12 is a WCHAR count, not bytes. Input must cover 16+2*count bytes;
+ * checked arithmetic rejects overflows or a truncated name. A supplied trailing NUL is
+ * removed from the stored comparison length; if absent, the helper appends one internally.
+ * Lookup is case-insensitive. Duplicates return 0xC0000718; no additional reference is acquired.
+ * Use the same normalized path when removing. An accepted count does not guarantee memory
+ * allocation. The sizing helper returns 64-bit arithmetic; check before narrowing to <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>.
+ * \sa <a href="power_internal_directed_fx_remove_test_device_input" title="typedef struct _POWER_INTERNAL_DIRECTED_FX_REMOVE_TEST_DEVICE_INPUT&#10;{&#10;    POWER_INFORMATION_INTERNAL_HEADER Header;&#10;    ULONG DeviceNameLength;&#10;    WCHAR DeviceName[ANYSIZE_ARRAY];&#10;} POWER_INTERNAL_DIRECTED_FX_REMOVE_TEST_DEVICE_INPUT, *PPOWER_INTERNAL_DIRECTED_FX_REMOVE_TEST_DEVICE_INPUT;">POWER_INTERNAL_DIRECTED_FX_REMOVE_TEST_DEVICE_INPUT</a>
+ * \sa <a href="power_internal_directed_fx_add_test_device_input_size" title="#define POWER_INTERNAL_DIRECTED_FX_ADD_TEST_DEVICE_INPUT_SIZE(NameLength) \&#10;    ((ULONGLONG)FIELD_OFFSET(POWER_INTERNAL_DIRECTED_FX_ADD_TEST_DEVICE_INPUT, DeviceName) + (ULONGLONG)(NameLength) * sizeof(WCHAR))">POWER_INTERNAL_DIRECTED_FX_ADD_TEST_DEVICE_INPUT_SIZE</a>
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_DIRECTED_FX_ADD_TEST_DEVICE_INPUT
 {
     <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a> Header;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Flags;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DeviceNameLength;
-    WCHAR DeviceName[ANYSIZE_ARRAY];
+    union
+    {
+        <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved; // not consumed by this handler; initialize to zero
+    };
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> DeviceNameLength; // WCHAR count, not bytes
+    WCHAR DeviceName[ANYSIZE_ARRAY]; // counted device-instance path
 } POWER_INTERNAL_DIRECTED_FX_ADD_TEST_DEVICE_INPUT, *PPOWER_INTERNAL_DIRECTED_FX_ADD_TEST_DEVICE_INPUT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L2472">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L3917">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

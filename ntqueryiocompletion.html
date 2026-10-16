@@ -45,14 +45,18 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTIOAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtQueryIoCompletion routine queries information about an I/O completion port.
+ * Retrieves a snapshot of the number of packets queued on an I/O completion port. Querying does not remove a
+ * packet; the result is not a reservation for a later dequeue.
  *
- * \param[in] IoCompletionHandle Handle to the I/O completion port.
- * \param[in] IoCompletionInformationClass The type of information to query.
- * \param[out] IoCompletionInformation Pointer to a buffer that receives the information.
- * \param[in] IoCompletionInformationLength The size of the buffer.
- * \param[out, optional] ReturnLength Pointer to a variable that receives the number of bytes returned.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[in] IoCompletionHandle Handle with <a href="io_completion_query_state" title="#define IO_COMPLETION_QUERY_STATE 0x0001">IO_COMPLETION_QUERY_STATE</a> (0x1).
+ * \param[in] IoCompletionInformationClass IoCompletionBasicInformation (0).
+ * \param[out] IoCompletionInformation Writable <a href="io_completion_basic_information" title="typedef struct _IO_COMPLETION_BASIC_INFORMATION&#10;{&#10;    LONG Depth; // Number of packets currently queued; can change immediately after querying.&#10;} IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;">IO_COMPLETION_BASIC_INFORMATION</a>. User-mode output must be
+ * 4-byte aligned on native x64 and WoW64.
+ * \param[in] IoCompletionInformationLength Exactly 4 bytes.
+ * \param[out, optional] ReturnLength Receives 4 on success; invalid class, size, alignment and access checks
+ * leave it unchanged.
+ * \return STATUS_INVALID_INFO_CLASS for unsupported classes, STATUS_INFO_LENGTH_MISMATCH for incorrect size,
+ * or the query&#x27;s <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>. A NULL/zero-size call is not a supported size-discovery protocol.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -60,14 +64,14 @@ NTSYSCALLAPI
 NTAPI
 NtQueryIoCompletion(
     _In_ HANDLE IoCompletionHandle,
-    _In_ <a href="io_completion_information_class" title="typedef enum _IO_COMPLETION_INFORMATION_CLASS&#10;{&#10;    IoCompletionBasicInformation&#10;} IO_COMPLETION_INFORMATION_CLASS;">IO_COMPLETION_INFORMATION_CLASS</a> IoCompletionInformationClass,
+    _In_ <a href="io_completion_information_class" title="typedef enum _IO_COMPLETION_INFORMATION_CLASS&#10;{&#10;    IoCompletionBasicInformation // q: IO_COMPLETION_BASIC_INFORMATION&#10;} IO_COMPLETION_INFORMATION_CLASS;">IO_COMPLETION_INFORMATION_CLASS</a> IoCompletionInformationClass,
     _Out_writes_bytes_(IoCompletionInformationLength) PVOID IoCompletionInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> IoCompletionInformationLength,
     _Out_opt_ PULONG ReturnLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntioapi.h#L3455">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntioapi.h#L3645">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -77,14 +81,14 @@ NTSYSCALLAPI
 NTAPI
 ZwQueryIoCompletion(
     _In_ HANDLE IoCompletionHandle,
-    _In_ <a href="io_completion_information_class" title="typedef enum _IO_COMPLETION_INFORMATION_CLASS&#10;{&#10;    IoCompletionBasicInformation&#10;} IO_COMPLETION_INFORMATION_CLASS;">IO_COMPLETION_INFORMATION_CLASS</a> IoCompletionInformationClass,
+    _In_ <a href="io_completion_information_class" title="typedef enum _IO_COMPLETION_INFORMATION_CLASS&#10;{&#10;    IoCompletionBasicInformation // q: IO_COMPLETION_BASIC_INFORMATION&#10;} IO_COMPLETION_INFORMATION_CLASS;">IO_COMPLETION_INFORMATION_CLASS</a> IoCompletionInformationClass,
     _Out_writes_bytes_(IoCompletionInformationLength) PVOID IoCompletionInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> IoCompletionInformationLength,
     _Out_opt_ PULONG ReturnLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L3573">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L3573">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -106,7 +110,7 @@ ZwQueryIoCompletion(
 <h3>IoCompletionHandle</h3>
 <p><code>HANDLE</code> to IO Completion Object opened with <code><a href="io_completion_query_state" title="#define IO_COMPLETION_QUERY_STATE 0x0001">IO_COMPLETION_QUERY_STATE</a></code> access.</p>
 <h3>InformationClass</h3>
-<p>See <code><a href="io_completion_information_class" title="typedef enum _IO_COMPLETION_INFORMATION_CLASS&#10;{&#10;    IoCompletionBasicInformation&#10;} IO_COMPLETION_INFORMATION_CLASS;">IO_COMPLETION_INFORMATION_CLASS</a></code> for possible values.</p>
+<p>See <code><a href="io_completion_information_class" title="typedef enum _IO_COMPLETION_INFORMATION_CLASS&#10;{&#10;    IoCompletionBasicInformation // q: IO_COMPLETION_BASIC_INFORMATION&#10;} IO_COMPLETION_INFORMATION_CLASS;">IO_COMPLETION_INFORMATION_CLASS</a></code> for possible values.</p>
 <h3>IoCompletionInformation</h3>
 <p>User's allocated buffer for result data.</p>
 <h3>InformationBufferLength</h3>
@@ -119,7 +123,7 @@ ZwQueryIoCompletion(
 </ul>
 <h1>See also</h1>
 <ul>
-<li><code><a href="io_completion_information_class" title="typedef enum _IO_COMPLETION_INFORMATION_CLASS&#10;{&#10;    IoCompletionBasicInformation&#10;} IO_COMPLETION_INFORMATION_CLASS;">IO_COMPLETION_INFORMATION_CLASS</a></code></li>
+<li><code><a href="io_completion_information_class" title="typedef enum _IO_COMPLETION_INFORMATION_CLASS&#10;{&#10;    IoCompletionBasicInformation // q: IO_COMPLETION_BASIC_INFORMATION&#10;} IO_COMPLETION_INFORMATION_CLASS;">IO_COMPLETION_INFORMATION_CLASS</a></code></li>
 <li><code><a href="ntcreateiocompletion" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateIoCompletion(&#10;    _Out_ PHANDLE IoCompletionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ ULONG NumberOfConcurrentThreads&#10;    );">NtCreateIoCompletion</a></code></li>
 <li><code><a href="ntopeniocompletion" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenIoCompletion(&#10;    _Out_ PHANDLE IoCompletionHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes&#10;    );">NtOpenIoCompletion</a></code></li>
 <li><code><a href="ntremoveiocompletion" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtRemoveIoCompletion(&#10;    _In_ HANDLE IoCompletionHandle,&#10;    _Out_ PVOID *KeyContext,&#10;    _Out_ PVOID *ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER Timeout&#10;    );">NtRemoveIoCompletion</a></code></li>

@@ -55,6 +55,10 @@
  * \param Asynchronous Indicates whether the request is asynchronous.
  * \param AsynchronousContext Optional asynchronous context value.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \remarks Retrieves participant protocol notifications, not generic completion
+ * records. Use a bounded timeout and inspect status before reading TransactionNotification or TransactionKey.
+ * Completing an owned rollback notification requires the corresponding <a href="ntrollbackcomplete" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtRollbackComplete(&#10;    _In_ HANDLE EnlistmentHandle,&#10;    _In_opt_ PLARGE_INTEGER TmVirtualClock&#10;    );">NtRollbackComplete</a> acknowledgement;
+ * dequeuing the notification alone does not complete that participant&#x27;s protocol.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -71,7 +75,7 @@ NtGetNotificationResourceManager(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/nttmapi.h#L641">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/nttmapi.h#L783">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -90,7 +94,7 @@ ZwGetNotificationResourceManager(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L2269">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L2269">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 
@@ -135,7 +139,7 @@ ZwGetNotificationResourceManager(
 <p>The <strong>ZwGetNotificationResourceManager</strong> routine retrieves the next <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/transaction-notifications">transaction notification</a> from a specified resource manager's notification queue.</p>
 <h2>Parameters</h2>
 <h3><code>ResourceManagerHandle</code> [in]</h3>
-<p>A handle to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/resource-manager-objects">resource manager object</a> that was obtained by a previous call to <a href="ntcreateresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID RmGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ ULONG CreateOptions,&#10;    _In_opt_ PCUNICODE_STRING Description&#10;    );">ZwCreateResourceManager</a> or <a href="ntopenresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_opt_ LPGUID ResourceManagerGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenResourceManager</a>. The handle must have RESOURCEMANAGER_GET_NOTIFICATION access to the object.</p>
+<p>A handle to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/resource-manager-objects">resource manager object</a> that was obtained by a previous call to <a href="ntcreateresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID RmGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ ULONG CreateOptions,&#10;    _In_opt_ PCUNICODE_STRING Description&#10;    );">ZwCreateResourceManager</a> or <a href="ntopenresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID ResourceManagerGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenResourceManager</a>. The handle must have RESOURCEMANAGER_GET_NOTIFICATION access to the object.</p>
 <h3><code>TransactionNotification</code> [out]</h3>
 <p>A pointer to a caller-allocated buffer that receives information about the retrieved notification. The buffer must be large enough to contain a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff564813(v=vs.85)">TRANSACTION_NOTIFICATION</a> structure plus additional notification-specific arguments.</p>
 <h3><code>NotificationLength</code> [in]</h3>
@@ -197,7 +201,7 @@ ZwGetNotificationResourceManager(
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
 <p><a href="ntcreateenlistment" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateEnlistment(&#10;    _Out_ PHANDLE EnlistmentHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE ResourceManagerHandle,&#10;    _In_ HANDLE TransactionHandle,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ ULONG CreateOptions,&#10;    _In_ NOTIFICATION_MASK NotificationMask,&#10;    _In_opt_ PVOID EnlistmentKey&#10;    );">ZwCreateEnlistment</a></p>
 <p><a href="ntcreateresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID RmGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ ULONG CreateOptions,&#10;    _In_opt_ PCUNICODE_STRING Description&#10;    );">ZwCreateResourceManager</a></p>
-<p><a href="ntopenresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_opt_ LPGUID ResourceManagerGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenResourceManager</a></p>
+<p><a href="ntopenresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID ResourceManagerGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenResourceManager</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>
@@ -215,7 +219,7 @@ ZwGetNotificationResourceManager(
 <p>The <strong>ZwGetNotificationResourceManager</strong> routine retrieves the next <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/transaction-notifications">transaction notification</a> from a specified resource manager's notification queue.</p>
 <h2>Parameters</h2>
 <h3><code>ResourceManagerHandle</code> [in]</h3>
-<p>A handle to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/resource-manager-objects">resource manager object</a> that was obtained by a previous call to <a href="ntcreateresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID RmGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ ULONG CreateOptions,&#10;    _In_opt_ PCUNICODE_STRING Description&#10;    );">ZwCreateResourceManager</a> or <a href="ntopenresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_opt_ LPGUID ResourceManagerGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenResourceManager</a>. The handle must have RESOURCEMANAGER_GET_NOTIFICATION access to the object.</p>
+<p>A handle to a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/resource-manager-objects">resource manager object</a> that was obtained by a previous call to <a href="ntcreateresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID RmGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ ULONG CreateOptions,&#10;    _In_opt_ PCUNICODE_STRING Description&#10;    );">ZwCreateResourceManager</a> or <a href="ntopenresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID ResourceManagerGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenResourceManager</a>. The handle must have RESOURCEMANAGER_GET_NOTIFICATION access to the object.</p>
 <h3><code>TransactionNotification</code> [out]</h3>
 <p>A pointer to a caller-allocated buffer that receives information about the retrieved notification. The buffer must be large enough to contain a <a rel="noopener" target="_blank" href="https://learn.microsoft.com/previous-versions/windows/hardware/drivers/ff564813(v=vs.85)">TRANSACTION_NOTIFICATION</a> structure plus additional notification-specific arguments.</p>
 <h3><code>NotificationLength</code> [in]</h3>
@@ -277,7 +281,7 @@ ZwGetNotificationResourceManager(
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
 <p><a href="ntcreateenlistment" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateEnlistment(&#10;    _Out_ PHANDLE EnlistmentHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE ResourceManagerHandle,&#10;    _In_ HANDLE TransactionHandle,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ ULONG CreateOptions,&#10;    _In_ NOTIFICATION_MASK NotificationMask,&#10;    _In_opt_ PVOID EnlistmentKey&#10;    );">ZwCreateEnlistment</a></p>
 <p><a href="ntcreateresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID RmGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ ULONG CreateOptions,&#10;    _In_opt_ PCUNICODE_STRING Description&#10;    );">ZwCreateResourceManager</a></p>
-<p><a href="ntopenresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_opt_ LPGUID ResourceManagerGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenResourceManager</a></p>
+<p><a href="ntopenresourcemanager" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenResourceManager(&#10;    _Out_ PHANDLE ResourceManagerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ HANDLE TmHandle,&#10;    _In_ LPGUID ResourceManagerGuid,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenResourceManager</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

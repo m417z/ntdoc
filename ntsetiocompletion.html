@@ -45,14 +45,20 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTIOAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtSetIoCompletion routine queues an I/O completion packet to an I/O completion port.
+ * Posts a caller-defined packet to an I/O completion port, without issuing file I/O.
+ * Useful for notifying workers through the same queue used for I/O completions.
  *
- * \param[in] IoCompletionHandle Handle to the I/O completion port.
- * \param[in, optional] KeyContext The value specified when the port was associated with a file handle.
- * \param[in, optional] ApcContext The value specified when the I/O operation was issued.
- * \param[in] IoStatus The completion status for the I/O operation.
- * \param[in] IoStatusInformation The number of bytes transferred or other information.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[in] IoCompletionHandle Handle with <a href="io_completion_modify_state" title="#define IO_COMPLETION_MODIFY_STATE 0x0002">IO_COMPLETION_MODIFY_STATE</a> (0x2).
+ * \param[in, optional] KeyContext Opaque pointer-sized value returned to the consumer.
+ * \param[in, optional] ApcContext Opaque pointer-sized value returned to the consumer;
+ * it is not an APC routine and this call does not dispatch a user callback.
+ * \param[in] IoStatus Status value stored in the packet, independent of this call&#x27;s status.
+ * \param[in] IoStatusInformation Pointer-sized packet information, often a byte count.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> describing posting, not the supplied IoStatus. A negative
+ * IoStatus can be posted successfully and later dequeued with <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>.
+ * \remarks Context values may be NULL and are not dereferenced or copied as buffers.
+ * The call does not require prior file association. Use <a href="ntsetiocompletionex" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetIoCompletionEx(&#10;    _In_ HANDLE IoCompletionHandle,&#10;    _In_ HANDLE IoCompletionPacketHandle,&#10;    _In_opt_ PVOID KeyContext,&#10;    _In_opt_ PVOID ApcContext,&#10;    _In_ NTSTATUS IoStatus,&#10;    _In_ ULONG_PTR IoStatusInformation&#10;    );">NtSetIoCompletionEx</a> with a
+ * separately allocated memory reserve when a reusable packet allocation is needed.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiet-postqueuedcompletionstatus">https://learn.microsoft.com/en-us/windows/win32/api/ioapiset/nf-ioapiet-postqueuedcompletionstatus</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -68,7 +74,7 @@ NtSetIoCompletion(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntioapi.h#L3478">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntioapi.h#L3674">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -85,7 +91,7 @@ ZwSetIoCompletion(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4797">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4798">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

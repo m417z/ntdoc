@@ -46,10 +46,13 @@
 
 </span><span class="ntdoc-code-intro language-cpp">/**
  * Requests notification when a registry key or any of its subkeys changes.
+ * \remarks <a href="reg_notify_thread_agnostic" title="#define REG_NOTIFY_THREAD_AGNOSTIC (0x10000000L) // Not associated with a calling thread, can only be used">REG_NOTIFY_THREAD_AGNOSTIC</a> (0x10000000) requires a user-mode asynchronous event-based
+ * request: Asynchronous must be TRUE, Event non-NULL, and ApcRoutine NULL. The valid filter mask is
+ * 0x1000000f. Count greater than 1, a same-hive subordinate key, or an invalid filter returns STATUS_INVALID_PARAMETER.
  *
  * \param MasterKeyHandle A handle to an open key. The handle must be opened with the KEY_NOTIFY access right.
- * \param Count The number of subkeys under the key specified by the MasterKeyHandle parameter.
- * \param SubordinateObjects Pointer to an array of <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> structures, one for each subkey. This array can contain one <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> structure.
+ * \param Count Number of entries in SubordinateObjects, 0 or 1. Kernel-mode asynchronous requests require 0.
+ * \param SubordinateObjects Optional attributes for one additional key, which must be in a different hive from MasterKeyHandle.
  * \param Event A handle to an event created by the caller. If Event is not NULL, the caller waits until the operation succeeds, at which time the event is signaled.
  * \param ApcRoutine A pointer to an asynchronous procedure call (APC) function supplied by the caller. If ApcRoutine is not NULL, the specified APC function executes after the operation completes.
  * \param ApcContext A pointer to a context supplied by the caller for its APC function. This value is passed to the APC function when it is executed. The Asynchronous parameter must be TRUE. If ApcContext is specified, the Event parameter must be NULL.
@@ -60,6 +63,10 @@
  * \param BufferSize Reserved for system use. This parameter must be zero.
  * \param Asynchronous Whether the operation is asynchronous.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \remarks The native entry supports at most 1 subordinate key in addition to
+ * the master. Count zero is the single-master form used by <a href="ntnotifychangekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtNotifyChangeKey(&#10;    _In_ HANDLE KeyHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG CompletionFilter,&#10;    _In_ BOOLEAN WatchTree,&#10;    _Out_writes_bytes_opt_(BufferSize) PVOID Buffer,&#10;    _In_ ULONG BufferSize,&#10;    _In_ BOOLEAN Asynchronous&#10;    );">NtNotifyChangeKey</a>. Asynchronous completion uses
+ * the supplied event/APC and live I/O status storage; a NULL/zero-buffer last-set watch completes with
+ * STATUS_NOTIFY_ENUM_DIR (0x10C), requiring the caller to query the changed state.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -81,7 +88,7 @@ NtNotifyChangeMultipleKeys(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L1316">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L1755">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -105,7 +112,7 @@ ZwNotifyChangeMultipleKeys(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L2699">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L2699">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// winternl.h
 

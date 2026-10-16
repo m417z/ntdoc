@@ -46,13 +46,26 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtSetTimerEx routine sets extended information for a timer object.
+ * The NtSetTimerEx routine arms an ordinary timer with coalescing tolerance and an optional wake-reason
+ * context. Its rearming, signal-state and APC semantics are the same as <a href="ntsettimer" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetTimer(&#10;    _In_ HANDLE TimerHandle,&#10;    _In_ PLARGE_INTEGER DueTime,&#10;    _In_opt_ PTIMER_APC_ROUTINE TimerApcRoutine,&#10;    _In_opt_ PVOID TimerContext,&#10;    _In_ BOOLEAN ResumeTimer,&#10;    _In_opt_ LONG Period,&#10;    _Out_opt_ PBOOLEAN PreviousState&#10;    );">NtSetTimer</a>.
  *
- * \param TimerHandle A handle to the timer object.
- * \param TimerSetInformationClass The class of information to set.
- * \param TimerSetInformation A pointer to a buffer that contains the information to set.
- * \param TimerSetInformationLength The size of the buffer, in bytes.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param TimerHandle Handle with <a href="timer_modify_state" title="#define TIMER_MODIFY_STATE 0x0002">TIMER_MODIFY_STATE</a> (0x2).
+ * \param TimerSetInformationClass TimerSetCoalescableTimer (0). Other classes return
+ * STATUS_INVALID_INFO_CLASS.
+ * \param TimerSetInformation Required readable <a href="timer_set_coalescable_timer_info" title="typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO&#10;{&#10;    _In_ LARGE_INTEGER DueTime;                     // 100-nanosecond units: negative relative interval; nonnegative absolute UTC deadline.&#10;    _In_opt_ PTIMER_APC_ROUTINE TimerApcRoutine;    // APC to the setting thread; see TIMER_APC_ROUTINE.&#10;    _In_opt_ PVOID TimerContext;                    // Opaque callback context; NULL is permitted.&#10;    _In_opt_ PCOUNTED_REASON_CONTEXT WakeContext;   // Optional reason for requesting system wake; captured by the kernel.&#10;    _In_opt_ ULONG Period;                          // Milliseconds, 0 for one-shot; values above 0x7FFFFFFF return STATUS_INVALID_PARAMETER_3.&#10;    _In_ ULONG TolerableDelay;                      // Milliseconds of permitted coalescing delay; 0 requests no additional tolerance.&#10;    _Out_opt_ PBOOLEAN PreviousState;               // Receives the previous signal state, not whether the timer was armed.&#10;} TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;">TIMER_SET_COALESCABLE_TIMER_INFO</a>
+ * record. The record itself is not modified, even if supplied from read-only memory.
+ * Its optional PreviousState member points to a separately writable BOOLEAN output.
+ * \param TimerSetInformationLength Use sizeof(<a href="timer_set_coalescable_timer_info" title="typedef struct _TIMER_SET_COALESCABLE_TIMER_INFO&#10;{&#10;    _In_ LARGE_INTEGER DueTime;                     // 100-nanosecond units: negative relative interval; nonnegative absolute UTC deadline.&#10;    _In_opt_ PTIMER_APC_ROUTINE TimerApcRoutine;    // APC to the setting thread; see TIMER_APC_ROUTINE.&#10;    _In_opt_ PVOID TimerContext;                    // Opaque callback context; NULL is permitted.&#10;    _In_opt_ PCOUNTED_REASON_CONTEXT WakeContext;   // Optional reason for requesting system wake; captured by the kernel.&#10;    _In_opt_ ULONG Period;                          // Milliseconds, 0 for one-shot; values above 0x7FFFFFFF return STATUS_INVALID_PARAMETER_3.&#10;    _In_ ULONG TolerableDelay;                      // Milliseconds of permitted coalescing delay; 0 requests no additional tolerance.&#10;    _Out_opt_ PBOOLEAN PreviousState;               // Receives the previous signal state, not whether the timer was armed.&#10;} TIMER_SET_COALESCABLE_TIMER_INFO, *PTIMER_SET_COALESCABLE_TIMER_INFO;">TIMER_SET_COALESCABLE_TIMER_INFO</a>):
+ * exactly 48 bytes on native x64, 32 bytes on x86. The WoW64
+ * thunk accepts lengths of at least 32 bytes, converts that prefix, and ignores the
+ * excess; the native x64 entry rejects any length other than 48 bytes.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>. A Period above 0x7FFFFFFF returns STATUS_INVALID_PARAMETER_3;
+ * invalid sizing returns STATUS_INFO_LENGTH_MISMATCH. STATUS_TIMER_RESUME_IGNORED
+ * (0x40000025) can indicate that the timer was armed without honoring a wake request.
+ * \remarks Native user-mode input must be 4-byte aligned. The
+ * WoW64 thunk copies an unaligned x86 record into an aligned native local,
+ * so the original x86 buffer does not receive the same alignment check. Supply a
+ * naturally aligned record for portability. Timer2/IR objects have additional restrictions.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -60,14 +73,14 @@ NTSYSCALLAPI
 NTAPI
 NtSetTimerEx(
     _In_ HANDLE TimerHandle,
-    _In_ <a href="timer_set_information_class" title="typedef enum _TIMER_SET_INFORMATION_CLASS&#10;{&#10;    TimerSetCoalescableTimer, // TIMER_SET_COALESCABLE_TIMER_INFO&#10;    MaxTimerInfoClass&#10;} TIMER_SET_INFORMATION_CLASS;">TIMER_SET_INFORMATION_CLASS</a> TimerSetInformationClass,
-    _Inout_updates_bytes_opt_(TimerSetInformationLength) PVOID TimerSetInformation,
+    _In_ <a href="timer_set_information_class" title="typedef enum _TIMER_SET_INFORMATION_CLASS&#10;{&#10;    TimerSetCoalescableTimer, // s: TIMER_SET_COALESCABLE_TIMER_INFO&#10;    MaxTimerInfoClass&#10;} TIMER_SET_INFORMATION_CLASS;">TIMER_SET_INFORMATION_CLASS</a> TimerSetInformationClass,
+    _In_reads_bytes_(TimerSetInformationLength) PVOID TimerSetInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TimerSetInformationLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L1257">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L1426">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -77,13 +90,13 @@ NTSYSCALLAPI
 NTAPI
 ZwSetTimerEx(
     _In_ HANDLE TimerHandle,
-    _In_ <a href="timer_set_information_class" title="typedef enum _TIMER_SET_INFORMATION_CLASS&#10;{&#10;    TimerSetCoalescableTimer, // TIMER_SET_COALESCABLE_TIMER_INFO&#10;    MaxTimerInfoClass&#10;} TIMER_SET_INFORMATION_CLASS;">TIMER_SET_INFORMATION_CLASS</a> TimerSetInformationClass,
-    _Inout_updates_bytes_opt_(TimerSetInformationLength) PVOID TimerSetInformation,
+    _In_ <a href="timer_set_information_class" title="typedef enum _TIMER_SET_INFORMATION_CLASS&#10;{&#10;    TimerSetCoalescableTimer, // s: TIMER_SET_COALESCABLE_TIMER_INFO&#10;    MaxTimerInfoClass&#10;} TIMER_SET_INFORMATION_CLASS;">TIMER_SET_INFORMATION_CLASS</a> TimerSetInformationClass,
+    _In_reads_bytes_(TimerSetInformationLength) PVOID TimerSetInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TimerSetInformationLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4965">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4966">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

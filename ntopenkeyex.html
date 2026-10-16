@@ -45,13 +45,27 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTREGAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Opens an existing registry key with extended options.
+ * Opens an existing key with explicit open options; it does not create a missing key. OpenOptions = 0 is
+ * equivalent to <a href="ntopenkey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">NtOpenKey</a> on the native path.
  *
- * \param[out] KeyHandle A pointer to a handle that receives the key handle.
- * \param[in] DesiredAccess The access mask that specifies the desired access rights.
- * \param[in] ObjectAttributes A pointer to an <a href="object_attributes" title="typedef struct _OBJECT_ATTRIBUTES&#10;{&#10;    ULONG Length;&#10;    HANDLE RootDirectory;&#10;    PCUNICODE_STRING ObjectName;&#10;    ULONG Attributes;&#10;    PSECURITY_DESCRIPTOR SecurityDescriptor;&#10;    PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;&#10;} OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;">OBJECT_ATTRIBUTES</a> structure that specifies the object attributes.
- * \param[in] OpenOptions The options to use when opening the key.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[out] KeyHandle Required caller-owned output; close successful handles with <a href="ntclose" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtClose(&#10;    _In_ _Post_ptr_invalid_ HANDLE Handle&#10;    );">NtClose</a>. Initialize it to
+ * NULL before calling and consume it only on success.
+ * \param[in] DesiredAccess Requested key rights and optional WOW64 view selector, not a creation-option mask.
+ * Existing key security still controls granted access.
+ * \param[in] ObjectAttributes Initialized counted native or relative key path. The native user-mode path
+ * requires 4-byte alignment of this structure and 2-byte alignment of a nonempty name buffer. Prefer natural
+ * alignment. Security information here does not replace the existing key&#x27;s security.
+ * \param[in] OpenOptions 0 or supported REG_OPTION_* open flags. The entry admits only bits 0x4
+ * (BACKUP_RESTORE), 0x8 (OPEN_LINK) and 0x10 (DONT_VIRTUALIZE), mask 0x1C. VOLATILE (0x1) and CREATE_LINK
+ * (0x2) are creation flags, not valid open options. Backup/restore requires its special privilege checks;
+ * admission by the bit mask does not guarantee success.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or failure. Invalid option bits return STATUS_INVALID_PARAMETER_4 before the native
+ * helper clears KeyHandle.
+ * \remarks Consequently native invalid-option failures can preserve the handle output, while the WoW64
+ * wrapper copies back its NULL temporary result. Missing-name failures with valid inputs leave NULL on
+ * ordinary paths. Do not generalize one failure&#x27;s output behavior to all earlier capture errors. WoW64 path
+ * construction/tag updates and registry filters/layers/virtualization can affect lookup; view selection is
+ * not established solely by structure width.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopenkeyex">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwopenkeyex</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -66,7 +80,7 @@ NtOpenKeyEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L748">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L980">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -82,7 +96,7 @@ ZwOpenKeyEx(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L2838">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L2838">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

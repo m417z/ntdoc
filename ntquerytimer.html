@@ -46,14 +46,23 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtQueryTimer routine retrieves information about a timer object.
+ * The NtQueryTimer routine retrieves a snapshot of an ordinary timer&#x27;s signal state and remaining time.
+ * Querying neither consumes the signal nor arms or cancels the timer.
  *
- * \param TimerHandle A handle to the timer object.
- * \param TimerInformationClass The class of information to retrieve.
- * \param TimerInformation A pointer to a buffer that receives the requested information.
- * \param TimerInformationLength The size of the buffer, in bytes.
- * \param ReturnLength A pointer to a variable that receives the size of the data returned.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param TimerHandle Handle with <a href="timer_query_state" title="#define TIMER_QUERY_STATE 0x0001">TIMER_QUERY_STATE</a> (0x1).
+ * \param TimerInformationClass TimerBasicInformation (0), the supported class.
+ * \param TimerInformation Writable <a href="timer_basic_information" title="typedef struct _TIMER_BASIC_INFORMATION&#10;{&#10;    LARGE_INTEGER RemainingTime; // Signed 100-nanosecond difference; positive for a future queued due time, not clamped to zero when inactive.&#10;    BOOLEAN TimerState; // Current signal state, not whether the timer is armed or periodic.&#10;} TIMER_BASIC_INFORMATION, *PTIMER_BASIC_INFORMATION;">TIMER_BASIC_INFORMATION</a>, 4-byte aligned for
+ * user-mode callers on native x64 and WoW64.
+ * \param TimerInformationLength Exactly 16 bytes on x64 and x86/WoW64.
+ * \param ReturnLength Optional <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> receiving 16 on success. Invalid class/size
+ * checks leave it unchanged; NULL/zero-size discovery is
+ * not a supported sizing protocol.
+ * \return STATUS_INVALID_INFO_CLASS for an unsupported class,
+ * STATUS_INFO_LENGTH_MISMATCH for an incorrect size, or the query&#x27;s <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>.
+ * \remarks Only 9 member bytes are written; 7 trailing padding bytes are untouched.
+ * RemainingTime is a signed 100-nanosecond difference, not clamped to zero when
+ * inactive. The state and due time are sampled separately and can change concurrently;
+ * this information is diagnostic, not a substitute for waiting on the timer.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -61,7 +70,7 @@ NTSYSCALLAPI
 NTAPI
 NtQueryTimer(
     _In_ HANDLE TimerHandle,
-    _In_ <a href="timer_information_class" title="typedef enum _TIMER_INFORMATION_CLASS&#10;{&#10;    TimerBasicInformation // TIMER_BASIC_INFORMATION&#10;} TIMER_INFORMATION_CLASS;">TIMER_INFORMATION_CLASS</a> TimerInformationClass,
+    _In_ <a href="timer_information_class" title="typedef enum _TIMER_INFORMATION_CLASS&#10;{&#10;    TimerBasicInformation // q: TIMER_BASIC_INFORMATION&#10;} TIMER_INFORMATION_CLASS;">TIMER_INFORMATION_CLASS</a> TimerInformationClass,
     _Out_writes_bytes_(TimerInformationLength) PVOID TimerInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TimerInformationLength,
     _Out_opt_ PULONG ReturnLength
@@ -69,7 +78,7 @@ NtQueryTimer(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L1294">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L1479">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -79,14 +88,14 @@ NTSYSCALLAPI
 NTAPI
 ZwQueryTimer(
     _In_ HANDLE TimerHandle,
-    _In_ <a href="timer_information_class" title="typedef enum _TIMER_INFORMATION_CLASS&#10;{&#10;    TimerBasicInformation // TIMER_BASIC_INFORMATION&#10;} TIMER_INFORMATION_CLASS;">TIMER_INFORMATION_CLASS</a> TimerInformationClass,
+    _In_ <a href="timer_information_class" title="typedef enum _TIMER_INFORMATION_CLASS&#10;{&#10;    TimerBasicInformation // q: TIMER_BASIC_INFORMATION&#10;} TIMER_INFORMATION_CLASS;">TIMER_INFORMATION_CLASS</a> TimerInformationClass,
     _Out_writes_bytes_(TimerInformationLength) PVOID TimerInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> TimerInformationLength,
     _Out_opt_ PULONG ReturnLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L3835">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L3835">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -107,7 +116,7 @@ ZwQueryTimer(
 <h3>TimerHandle</h3>
 <p><code>HANDLE</code> to Timer Object opened with <code><a href="timer_query_state" title="#define TIMER_QUERY_STATE 0x0001">TIMER_QUERY_STATE</a></code> access.</p>
 <h3>TimerInformationClass</h3>
-<p>Information class. See <code><a href="timer_information_class" title="typedef enum _TIMER_INFORMATION_CLASS&#10;{&#10;    TimerBasicInformation // TIMER_BASIC_INFORMATION&#10;} TIMER_INFORMATION_CLASS;">TIMER_INFORMATION_CLASS</a></code> for details.</p>
+<p>Information class. See <code><a href="timer_information_class" title="typedef enum _TIMER_INFORMATION_CLASS&#10;{&#10;    TimerBasicInformation // q: TIMER_BASIC_INFORMATION&#10;} TIMER_INFORMATION_CLASS;">TIMER_INFORMATION_CLASS</a></code> for details.</p>
 <h3>TimerInformation</h3>
 <p>User's allocated buffer for result data.</p>
 <h3>TimerInformationLength</h3>
@@ -122,7 +131,7 @@ ZwQueryTimer(
 <ul>
 <li><code><a href="ntcreatetimer" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateTimer(&#10;    _Out_ PHANDLE TimerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ TIMER_TYPE TimerType&#10;    );">NtCreateTimer</a></code></li>
 <li><code><a href="ntopentimer" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenTimer(&#10;    _Out_ PHANDLE TimerHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes&#10;    );">NtOpenTimer</a></code></li>
-<li><code><a href="timer_information_class" title="typedef enum _TIMER_INFORMATION_CLASS&#10;{&#10;    TimerBasicInformation // TIMER_BASIC_INFORMATION&#10;} TIMER_INFORMATION_CLASS;">TIMER_INFORMATION_CLASS</a></code></li>
+<li><code><a href="timer_information_class" title="typedef enum _TIMER_INFORMATION_CLASS&#10;{&#10;    TimerBasicInformation // q: TIMER_BASIC_INFORMATION&#10;} TIMER_INFORMATION_CLASS;">TIMER_INFORMATION_CLASS</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/undocumented.ntinternals.net/ntquerytimer.md">Edit description on GitHub</a>

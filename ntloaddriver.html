@@ -50,6 +50,11 @@
  * \param[in] DriverServiceName A pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that specifies the name of the driver service to load.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwloaddriver">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwloaddriver</a>
+ * \remarks DriverServiceName is a counted native registry-key path under
+ * \Registry\Machine\System\CurrentControlSet\Services, not the driver&#x27;s image filename. The user-mode helper
+ * requires SeLoadDriverPrivilege before loading. This changes kernel system state; opening an ordinary file or
+ * an arbitrary service key is not equivalent. A successful status need not prove that an image was loaded in
+ * every environment (for example, safe-mode policy can suppress loading).
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -60,7 +65,7 @@ NtLoadDriver(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntioapi.h#L3347">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntioapi.h#L3517">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -73,7 +78,7 @@ ZwLoadDriver(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L2410">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L2410">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 
@@ -112,7 +117,7 @@ ZwLoadDriver(
 <p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
 <h2>See also</h2>
 <p><a href="fltloadfilter" title="NTSTATUS FLTAPI FltLoadFilter(&#10;  [in] PCUNICODE_STRING FilterName&#10;);">FltLoadFilter</a></p>
-<p><a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;        DestinationString-&gt;MaximumLength = (DestinationString-&gt;Length = (USHORT)(wcslen(SourceString) * sizeof(WCHAR))) + sizeof(UNICODE_NULL);&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;&#10;    DestinationString-&gt;Buffer = (PWCH)SourceString;&#10;}">RtlInitUnicodeString</a></p>
+<p><a href="rtlinitunicodestring" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitUnicodeString(&#10;    _Out_ PUNICODE_STRING DestinationString,&#10;    _In_opt_z_ PCWSTR SourceString&#10;    )&#10;{&#10;    if (SourceString)&#10;    {&#10;        SIZE_T stringLength = wcslen(SourceString);&#10;&#10;        if (stringLength &gt; UNICODE_STRING_MAX_CHARS - 1)&#10;            stringLength = UNICODE_STRING_MAX_CHARS - 1;&#10;&#10;        DestinationString-&gt;Length = (USHORT)(stringLength * sizeof(WCHAR));&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length + sizeof(UNICODE_NULL);&#10;    }&#10;    else&#10;        DestinationString-&gt;MaximumLength = DestinationString-&gt;Length = 0;&#10;...">RtlInitUnicodeString</a></p>
 <p><strong><a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a></strong></p>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
 <p><a href="ntunloaddriver" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtUnloadDriver(&#10;    _In_ PCUNICODE_STRING DriverServiceName&#10;    );">ZwUnloadDriver</a></p>

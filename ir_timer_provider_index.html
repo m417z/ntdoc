@@ -46,38 +46,44 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 #if (PHNT_VERSION &gt;= PHNT_WINDOWS_8)
 
-</span><span class="ntdoc-code-intro language-cpp">// ExCheckValidIRTimerId
+</span><span class="ntdoc-code-intro language-cpp">// rev: ExpIRTimerDescs, ExpCheckIRTimerAccess and ExCheckValidIRTimerId
 /**
- * The IR_TIMER_PROVIDER_INDEX enumeration identifies the interrupt-routing timer provider.
+ * Identifies the provider encoded in the low word of an IR timer identifier.
+ * The high word selects a timer within that provider. ExCheckValidIRTimerId
+ * requires that selector to be less than the ID count shown below.
+ * Provider zero is not a usable provider for <a href="ntcreateirtimer" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateIRTimer(&#10;    _Out_ PHANDLE TimerHandle,&#10;    _In_ PULONG TimerId,&#10;    _In_ ACCESS_MASK DesiredAccess&#10;    );">NtCreateIRTimer</a>/<a href="ntcreatetimer2" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateTimer2(&#10;    _Out_ PHANDLE TimerHandle,&#10;    _In_opt_ PULONG TimerId,&#10;    _Reserved_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ ULONG Attributes,&#10;    _In_ ACCESS_MASK DesiredAccess&#10;    );">NtCreateTimer2</a>.
+ * User-mode creation also checks the provider service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>, or the wake-timer
+ * security descriptor when the provider has no service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef enum _IR_TIMER_PROVIDER_INDEX
 {
-    IR_TIMER_PROVIDER_TESTIDENTIFIER, // Token(Service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>)
-    IR_TIMER_PROVIDER_BROKERINFRASTRUCTURE, // Token(Service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>)
-    IR_TIMER_PROVIDER_TIMEBROKERSVC, // Token(Service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>)
-    IR_TIMER_PROVIDER_LFSVC,
-    IR_TIMER_PROVIDER_WINLOGON,
-    IR_TIMER_PROVIDER_POWER,
-    IR_TIMER_PROVIDER_SENSORSERVICE,
-    IR_TIMER_PROVIDER_NTOSPO,
-    IR_TIMER_PROVIDER_ACPI,
-    IR_TIMER_PROVIDER_BUTTON,
-    IR_TIMER_PROVIDER_MSGPIOCLX,
-    IR_TIMER_PROVIDER_BUTTONCONVERTER,
-    IR_TIMER_PROVIDER_MSGPIOWIN32,
-    IR_TIMER_PROVIDER_KNETPWRDEPBROKER,
-    IR_TIMER_PROVIDER_CMBATT,
-    IR_TIMER_PROVIDER_BTHPORT,
-    IR_TIMER_PROVIDER_AUDIOSRV, // TOKEN(SERVICE <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>)
-    IR_TIMER_PROVIDER_ARTESTIDENTIFIER, // TOKEN(SERVICE <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>)
-    IR_TIMER_PROVIDER_BATTC,
-    IR_TIMER_PROVIDER_MAXINDEX
+    IR_TIMER_PROVIDER_UNKNOWN = 0,           // Not a valid creation provider.
+    IR_TIMER_PROVIDER_TESTIDENTIFIER = 1,    // 1 ID; wake-timer access check.
+    IR_TIMER_PROVIDER_BROKERINFRASTRUCTURE = 2, // 1 ID; service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>.
+    IR_TIMER_PROVIDER_TIMEBROKERSVC = 3,     // 1 ID; service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>.
+    IR_TIMER_PROVIDER_LFSVC = 4,             // 11 IDs; service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>.
+    IR_TIMER_PROVIDER_WINLOGON = 5,          // 1 ID.
+    IR_TIMER_PROVIDER_POWER = 6,             // 2 IDs; service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>.
+    IR_TIMER_PROVIDER_SENSORSERVICE = 7,     // 1 ID; service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>.
+    IR_TIMER_PROVIDER_NTOSPO = 8,            // 7 IDs.
+    IR_TIMER_PROVIDER_ACPI = 9,              // 1 ID.
+    IR_TIMER_PROVIDER_BUTTON = 10,           // 1 ID.
+    IR_TIMER_PROVIDER_MSGPIOCLX = 11,        // 2 IDs.
+    IR_TIMER_PROVIDER_BUTTONCONVERTER = 12,  // 1 ID.
+    IR_TIMER_PROVIDER_MSGPIOWIN32 = 13,      // 2 IDs.
+    IR_TIMER_PROVIDER_KNETPWRDEPBROKER = 14,  // 2 IDs.
+    IR_TIMER_PROVIDER_CMBATT = 15,           // 1 ID.
+    IR_TIMER_PROVIDER_BTHPORT = 16,          // 2 IDs.
+    IR_TIMER_PROVIDER_AUDIOSRV = 17,         // 1 ID; service <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>.
+    IR_TIMER_PROVIDER_ARTESTIDENTIFIER = 18, // 1 ID; wake-timer access check.
+    IR_TIMER_PROVIDER_BATTC = 19,            // 1 ID.
+    IR_TIMER_PROVIDER_MAXINDEX = 20
 } IR_TIMER_PROVIDER_INDEX;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L1312">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L1502">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -45,14 +45,38 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTTMAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtQueryInformationTransaction routine queries information about a transaction object.
+ * Queries KTM identity, outcome, properties or enlistment metadata. It is not a query interface for
+ * registry-only lightweight transaction objects.
  *
- * \param TransactionHandle Handle to the transaction object.
- * \param TransactionInformationClass The type of transaction information to query.
- * \param TransactionInformation Caller-allocated buffer that receives the requested information.
- * \param TransactionInformationLength The size of the buffer pointed to by TransactionInformation, in bytes.
- * \param ReturnLength Optional pointer to a variable that receives the number of bytes returned or required.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param TransactionHandle KTM handle with TRANSACTION_QUERY_INFORMATION (0x1).
+ * \param TransactionInformationClass Selector. Native tm.sys accepts 0 (basic), 1 (properties), 2
+ * (enlistments), 3 (superior enlistment) and 5 (private DTC data); 4 (bind) is not a query class there. WoW64
+ * dispatches only 0, 1 and 4, so its forwarded class 4 is rejected by native code and native classes 2/3/5
+ * are unavailable through that thunk. Do not remove SDK selectors based on this.
+ * \param TransactionInformation Caller-owned output. Use naturally aligned storage; the native public records
+ * are probed at 4-byte alignment.
+ * \param TransactionInformationLength Capacity in bytes. Basic requires exactly 24 bytes, not merely at least
+ * 24. Superior information requires exactly 32. Properties requires at least 32; its description begins at
+ * offset 24, and the complete size is max(32, 24 + DescriptionLength). Enlistments requires at least 36 bytes
+ * even for zero entries; each returned pair occupies 32 bytes after the 4-byte count. Private DTC data has a
+ * separate opaque byte-buffer contract.
+ * \param ReturnLength Optional returned/required size, only meaningful for the actual completed path. Native
+ * too-small properties/enlistments below the fixed minimum return 0 here, not a usable allocation size. Early
+ * length/access/class failures can leave it unchanged. WoW64 properties has separate early checks.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, STATUS_INFO_LENGTH_MISMATCH for exact-size failures, STATUS_BUFFER_TOO_SMALL below
+ * native variable-record minima, STATUS_BUFFER_OVERFLOW for native partial variable records, or another
+ * status.
+ * \remarks Basic State was 1 for active, committed and rolled-back transactions Use Outcome (1 undetermined,
+ * 2 committed, 3 aborted), not State alone, to determine completion in these paths. Properties
+ * DescriptionLength is bytes, not WCHARs, and remains full on overflow. No general NUL-termination or
+ * padding-content guarantee should be inferred.
+ *
+ * WoW64 properties rejects NULL output or capacity below 32 with STATUS_INFO_LENGTH_MISMATCH before native
+ * query, and copies fields/description back only on <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a>: overflow can update ReturnLength without
+ * returning the native partial record. Its temporary buffer permits unaligned properties output, but basic
+ * output is forwarded and still requires native alignment. Private DTC selectors are deprecated internal
+ * interfaces. Query only complete, capacity-bounded returned fields.
+ * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwqueryinformationtransaction">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwqueryinformationtransaction</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -67,7 +91,7 @@ NtQueryInformationTransaction(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/nttmapi.h#L235">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/nttmapi.h#L313">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -84,7 +108,7 @@ ZwQueryInformationTransaction(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L3520">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L3520">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

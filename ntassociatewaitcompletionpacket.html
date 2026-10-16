@@ -49,33 +49,29 @@
 #if (PHNT_VERSION &gt;= PHNT_WINDOWS_8)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtAssociateWaitCompletionPacket routine associates a wait completion packet
- * with an I/O completion port or other target object so that a completion packet
- * will be queued when the target object becomes signaled or an I/O completes.
+ * Arranges one completion-port notification when a waitable target is satisfied.
+ * If the target is already signaled, a packet is queued during association.
+ * After the packet is removed, call this function again to establish another wait.
  *
- * This routine links the specified wait completion packet with the target
- * completion object so the packet will carry the supplied context and status
- * information when it is delivered.
- *
- * \param[in] WaitCompletionPacketHandle Handle to the wait completion packet object.
- * \param[in] IoCompletionHandle Handle to an I/O completion port (or compatible object)
- *        with which the wait completion packet should be associated.
- * \param[in] TargetObjectHandle Handle to the object to watch for completion or
- *        signalling (for example, a waitable kernel object).
- * \param[in] KeyContext Optional pointer to caller-specified context that will be
- *        stored in the completion packet and returned to the consumer.
- * \param[in] ApcContext Optional pointer to caller-specified APC/context value that
- *        will be stored in the completion packet and returned to the consumer.
- * \param[in] IoStatus The <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> value to be placed in the completion packet.
- * \param[in] IoStatusInformation Additional information ( <a href="ulong_ptr" title="typedef [public] unsigned __int3264 ULONG_PTR;">ULONG_PTR</a> ) to be placed
- *        in the completion packet (commonly used for number of bytes transferred).
- * \param[out] AlreadySignaled Optional pointer to a BOOLEAN that, on return, is set
- *        to TRUE if the packet was already signaled at the time of association;
- *        otherwise FALSE. May be NULL.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
- * \remarks Use this routine to arrange for notification of a target object&#x27;s
- *          completion by queuing a wait completion packet containing the
- *          supplied context and status.
+ * \param[in] WaitCompletionPacketHandle Idle wait-packet handle with
+ * <a href="wait_completion_packet_set_state" title="#define WAIT_COMPLETION_PACKET_SET_STATE 0x0001">WAIT_COMPLETION_PACKET_SET_STATE</a> (0x1). An already-associated packet returns
+ * STATUS_INVALID_PARAMETER_1 including while queued for removal.
+ * \param[in] IoCompletionHandle I/O completion port with <a href="io_completion_modify_state" title="#define IO_COMPLETION_MODIFY_STATE 0x0002">IO_COMPLETION_MODIFY_STATE</a> (0x2).
+ * \param[in] TargetObjectHandle Supported waitable target with SYNCHRONIZE (0x00100000).
+ * Mutants and queue objects are rejected with STATUS_INVALID_PARAMETER_3; an arbitrary handle is not necessarily a supported wait target.
+ * \param[in, optional] KeyContext Opaque pointer-sized key to store in the notification.
+ * \param[in, optional] ApcContext Opaque pointer-sized context, not a callback address.
+ * \param[in] IoStatus Status value to store in the notification, not association status.
+ * \param[in] IoStatusInformation Pointer-sized information value to store in the packet.
+ * \param[out, optional] AlreadySignaled Receives TRUE if the target object, not the
+ * wait-packet object, was already signaled when the association was established.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> describing association. A TRUE AlreadySignaled does not mean
+ * that the packet has already been removed; consume it from the completion port.
+ * \remarks Satisfying the wait consumes a synchronization event&#x27;s signal or one
+ * semaphore count; it does not clear a notification event. The association is
+ * one-shot, not a persistent subscription. The kernel retains references to the
+ * packet, target and port while the association is outstanding. Synchronize reuse
+ * with dequeue or completed cancellation, not simply an <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> cancellation status.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/devnotes/ntassociatewaitcompletionpacket">https://learn.microsoft.com/en-us/windows/win32/devnotes/ntassociatewaitcompletionpacket</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
@@ -95,7 +91,7 @@ NtAssociateWaitCompletionPacket(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntioapi.h#L3643">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntioapi.h#L3869">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -115,7 +111,7 @@ ZwAssociateWaitCompletionPacket(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L697">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L697">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp"></span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp"><a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NtAssociateWaitCompletionPacket (
     _In_ HANDLE WaitCompletionPacketHandle,

@@ -46,16 +46,46 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_ACPI_INTERFACE_REGISTER_INPUT structure contains the input parameters for the acpi interface register operation.
+ * The POWER_INTERNAL_ACPI_INTERFACE_REGISTER_INPUT struct registers the kernel platform request interface used for power-management communication.
+ * \remarks This is a kernel-component interface-registration payload, not an application
+ * power setting or a request to create a user-mode handle. Select PowerInternalAcpiInterfaceRegister,
+ * set Header.Version to <a href="power_internal_acpi_interface_register_version" title="#define POWER_INTERNAL_ACPI_INTERFACE_REGISTER_VERSION 1">POWER_INTERNAL_ACPI_INTERFACE_REGISTER_VERSION</a> (1), provide at least
+ * 0x20 input bytes, and provide a 0x10-byte <a href="power_internal_acpi_interface_register_output" title="typedef struct _POWER_INTERNAL_ACPI_INTERFACE_REGISTER_OUTPUT&#10;{&#10;    PPOWER_INTERNAL_PLATFORM_REQUEST_HANDLER RequestHandler;&#10;    PVOID Context;&#10;} POWER_INTERNAL_ACPI_INTERFACE_REGISTER_OUTPUT, *PPOWER_INTERNAL_ACPI_INTERFACE_REGISTER_OUTPUT;">POWER_INTERNAL_ACPI_INTERFACE_REGISTER_OUTPUT</a>.
+ * The dispatcher denies user-mode callers with STATUS_ACCESS_DENIED.
+ *
+ * RequestHandler receives a request-block pointer; Context is forwarded in platform requests.
+ * RequestHandler and ReferenceObject must be non-NULL. The kernel references ReferenceObject;
+ * it is a kernel object pointer, not an object-manager handle. Its subtype is not established.
+ * Registration is single-instance: a duplicate returns STATUS_UNSUCCESSFUL, while an unsupported
+ * version returns STATUS_REVISION_MISMATCH. Do not infer an unregister or lifetime contract
+ * from this registration path alone.
+ *
+ * The AMD64 typed overlay places the callback at +0x08, context at +0x10, and referenced
+ * object at +0x18. Data retains the original 24-byte raw payload view. Request-block payloads
+ * remain opaque; do not interpret them without an operation-specific layout.
+ *
+ * \sa <a href="power_internal_acpi_interface_register_output" title="typedef struct _POWER_INTERNAL_ACPI_INTERFACE_REGISTER_OUTPUT&#10;{&#10;    PPOWER_INTERNAL_PLATFORM_REQUEST_HANDLER RequestHandler;&#10;    PVOID Context;&#10;} POWER_INTERNAL_ACPI_INTERFACE_REGISTER_OUTPUT, *PPOWER_INTERNAL_ACPI_INTERFACE_REGISTER_OUTPUT;">POWER_INTERNAL_ACPI_INTERFACE_REGISTER_OUTPUT</a>
+ * \sa <a href="power_internal_platform_request_handler" title="typedef _Function_class_(POWER_INTERNAL_PLATFORM_REQUEST_HANDLER)&#10;NTSTATUS NTAPI POWER_INTERNAL_PLATFORM_REQUEST_HANDLER(&#10;    _Inout_ PVOID Request&#10;    );">POWER_INTERNAL_PLATFORM_REQUEST_HANDLER</a>
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_ACPI_INTERFACE_REGISTER_INPUT
 {
     <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a> Header;
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Data[24];
+    union
+    {
+        <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Data[24];
+#ifdef _WIN64
+        struct
+        {
+            <a href="ppower_internal_platform_request_handler" title="typedef POWER_INTERNAL_PLATFORM_REQUEST_HANDLER *PPOWER_INTERNAL_PLATFORM_REQUEST_HANDLER;">PPOWER_INTERNAL_PLATFORM_REQUEST_HANDLER</a> RequestHandler;
+            PVOID Context; // forwarded in platform requests
+            PVOID ReferenceObject; // referenced with tag &#x27;MXFP&#x27;
+        };
+#endif
+    };
 } POWER_INTERNAL_ACPI_INTERFACE_REGISTER_INPUT, *PPOWER_INTERNAL_ACPI_INTERFACE_REGISTER_INPUT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L1425">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L1573">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

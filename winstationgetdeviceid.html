@@ -46,13 +46,10 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * Retrieves the device identifier associated with a session.
- *
- * \param ServerHandle A handle to an RD Session Host server, or <a href="winstation_current_server" title="#define WINSTATION_CURRENT_SERVER ((HANDLE)NULL)">WINSTATION_CURRENT_SERVER</a> for the local server.
- * \param SessionId The identifier of the session.
- * \param Buffer A pointer that receives the device-identifier string buffer.
- * \param BufferLength The size of the device-identifier buffer, in bytes.
- * \return BOOLEAN Nonzero if the function succeeds, or zero otherwise. To get extended error information, call GetLastError.
+ * Queries device-ID data into caller storage, not a returned pointer. Both architectures forward Buffer
+ * directly to RpcQuerySessionData selector 4 and 2 * BufferLength as a 32-bit byte count. BufferLength counts
+ * 2-byte storage units, not bytes or <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a>; keep it &lt;= <a href="ulong_max" title="#define ULONG_MAX 0xffffffffUL">ULONG_MAX</a> / 2 to avoid multiplication wrapping.
+ * Encoding, termination and service-side maximum are unverified, so output remains opaque.
  */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 BOOLEAN
@@ -60,12 +57,12 @@ NTAPI
 WinStationGetDeviceId(
     _In_opt_ HANDLE ServerHandle,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> SessionId,
-    _Out_ PCHAR* Buffer, // <a href="char" title="typedef char CHAR;">CHAR</a> DeviceId[MAX_PATH + 1];
-    _In_ <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> BufferLength
+    _Out_writes_bytes_(2 * BufferLength) PVOID Buffer,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> BufferLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/winsta.h#L2082">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/winsta.h#L2075">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

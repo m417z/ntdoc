@@ -45,13 +45,31 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTREGAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Sets information for a registry key.
+ * Changes metadata of an opened registry key: timestamp, internal flags or key- body tags. It does not
+ * create/replace a named value; use <a href="ntsetvaluekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetValueKey(&#10;    _In_ HANDLE KeyHandle,&#10;    _In_ PCUNICODE_STRING ValueName,&#10;    _In_opt_ ULONG TitleIndex,&#10;    _In_ ULONG Type,&#10;    _In_reads_bytes_opt_(DataSize) PVOID Data,&#10;    _In_ ULONG DataSize&#10;    );">NtSetValueKey</a> for that.
  *
- * \param[in] KeyHandle A handle to the key to be modified.
- * \param[in] KeySetInformationClass The type of information to be set.
- * \param[in] KeySetInformation A pointer to a buffer that contains the key information.
- * \param[in] KeySetInformationLength The size of the buffer.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[in] KeyHandle Ordinarily requires KEY_SET_VALUE (0x2) for classes 0 through 4.
+ * KeySetHandleTagsInformation accepts a valid zero-access key handle; querying those tags through that handle
+ * is still denied.
+ * \param[in] KeySetInformationClass A <a href="key_set_information_class" title="typedef enum _KEY_SET_INFORMATION_CLASS&#10;{&#10;    KeyWriteTimeInformation, // s: KEY_WRITE_TIME_INFORMATION&#10;    KeyWow64FlagsInformation, // s: KEY_WOW64_FLAGS_INFORMATION&#10;    KeyControlFlagsInformation, // s: KEY_CONTROL_FLAGS_INFORMATION&#10;    KeySetVirtualizationInformation, // s: KEY_SET_VIRTUALIZATION_INFORMATION&#10;    KeySetDebugInformation, // s: KEY_SET_DEBUG_INFORMATION&#10;    KeySetHandleTagsInformation, // s: KEY_HANDLE_TAGS_INFORMATION&#10;    KeySetLayerInformation, // s: KEY_SET_LAYER_INFORMATION; rejected by NtSetInformationKey on build 26100&#10;    MaxKeySetInfoClass&#10;} KEY_SET_INFORMATION_CLASS;">KEY_SET_INFORMATION_CLASS</a> selector. The native/WoW64 paths support 0
+ * through 5, returning STATUS_INVALID_INFO_CLASS for unsupported selectors, including class 6.
+ * \param[in] KeySetInformation Readable caller-owned input, captured before the ordinary handle access check.
+ * The caller&#x27;s bytes are not modified or retained. NULL is not valid for a supported exact-sized request. The
+ * x64/WoW64 paths accept unaligned readable input, including the 8-byte time; naturally aligned structures
+ * remain preferable for portable callers.
+ * \param[in] KeySetInformationLength Exact byte count: 8 for class 0 and 4 for classes 1 through 5. Extra
+ * capacity is not accepted as a larger valid record.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, STATUS_INFO_LENGTH_MISMATCH for an incorrect size, STATUS_INVALID_INFO_CLASS for an
+ * unsupported selector, or another failure. Class 1 returns STATUS_INVALID_PARAMETER when UserFlags contains
+ * bits above 0x0F; other flag classes have different masking/transition rules.
+ * \remarks Selector and exact-length checks precede input capture and normal handle validation. A bad input
+ * pointer can therefore fail before access is checked; do not infer permissions from error precedence. WoW64
+ * forwards supported input pointers/lengths directly, with no record conversion or realignment. Input is
+ * logically read-only even for unaligned data. Ordinary classes 1 through 4 also refresh last-write time;
+ * class 5 does not. Tag changes are shared by duplicated handles, not independently stored in each
+ * handle-table entry. Registry filters, read-only keys/hives, transactions and access-denied virtualization
+ * fallback paths can change ordinary behavior. A successful update is not a durability/flush guarantee.
+ * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntsetinformationkey">https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntsetinformationkey</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -59,13 +77,13 @@ NTSYSCALLAPI
 NTAPI
 NtSetInformationKey(
     _In_ HANDLE KeyHandle,
-    _In_ <a href="key_set_information_class" title="typedef enum _KEY_SET_INFORMATION_CLASS&#10;{&#10;    KeyWriteTimeInformation, // KEY_WRITE_TIME_INFORMATION&#10;    KeyWow64FlagsInformation, // KEY_WOW64_FLAGS_INFORMATION&#10;    KeyControlFlagsInformation, // KEY_CONTROL_FLAGS_INFORMATION&#10;    KeySetVirtualizationInformation, // KEY_SET_VIRTUALIZATION_INFORMATION&#10;    KeySetDebugInformation, // KEY_SET_DEBUG_INFORMATION&#10;    KeySetHandleTagsInformation, // KEY_HANDLE_TAGS_INFORMATION&#10;    KeySetLayerInformation, // KEY_SET_LAYER_INFORMATION&#10;    MaxKeySetInfoClass&#10;} KEY_SET_INFORMATION_CLASS;">KEY_SET_INFORMATION_CLASS</a> KeySetInformationClass,
+    _In_ <a href="key_set_information_class" title="typedef enum _KEY_SET_INFORMATION_CLASS&#10;{&#10;    KeyWriteTimeInformation, // s: KEY_WRITE_TIME_INFORMATION&#10;    KeyWow64FlagsInformation, // s: KEY_WOW64_FLAGS_INFORMATION&#10;    KeyControlFlagsInformation, // s: KEY_CONTROL_FLAGS_INFORMATION&#10;    KeySetVirtualizationInformation, // s: KEY_SET_VIRTUALIZATION_INFORMATION&#10;    KeySetDebugInformation, // s: KEY_SET_DEBUG_INFORMATION&#10;    KeySetHandleTagsInformation, // s: KEY_HANDLE_TAGS_INFORMATION&#10;    KeySetLayerInformation, // s: KEY_SET_LAYER_INFORMATION; rejected by NtSetInformationKey on build 26100&#10;    MaxKeySetInfoClass&#10;} KEY_SET_INFORMATION_CLASS;">KEY_SET_INFORMATION_CLASS</a> KeySetInformationClass,
     _In_reads_bytes_(KeySetInformationLength) PVOID KeySetInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> KeySetInformationLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L863">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L1184">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -75,19 +93,19 @@ NTSYSCALLAPI
 NTAPI
 ZwSetInformationKey(
     _In_ HANDLE KeyHandle,
-    _In_ <a href="key_set_information_class" title="typedef enum _KEY_SET_INFORMATION_CLASS&#10;{&#10;    KeyWriteTimeInformation, // KEY_WRITE_TIME_INFORMATION&#10;    KeyWow64FlagsInformation, // KEY_WOW64_FLAGS_INFORMATION&#10;    KeyControlFlagsInformation, // KEY_CONTROL_FLAGS_INFORMATION&#10;    KeySetVirtualizationInformation, // KEY_SET_VIRTUALIZATION_INFORMATION&#10;    KeySetDebugInformation, // KEY_SET_DEBUG_INFORMATION&#10;    KeySetHandleTagsInformation, // KEY_HANDLE_TAGS_INFORMATION&#10;    KeySetLayerInformation, // KEY_SET_LAYER_INFORMATION&#10;    MaxKeySetInfoClass&#10;} KEY_SET_INFORMATION_CLASS;">KEY_SET_INFORMATION_CLASS</a> KeySetInformationClass,
+    _In_ <a href="key_set_information_class" title="typedef enum _KEY_SET_INFORMATION_CLASS&#10;{&#10;    KeyWriteTimeInformation, // s: KEY_WRITE_TIME_INFORMATION&#10;    KeyWow64FlagsInformation, // s: KEY_WOW64_FLAGS_INFORMATION&#10;    KeyControlFlagsInformation, // s: KEY_CONTROL_FLAGS_INFORMATION&#10;    KeySetVirtualizationInformation, // s: KEY_SET_VIRTUALIZATION_INFORMATION&#10;    KeySetDebugInformation, // s: KEY_SET_DEBUG_INFORMATION&#10;    KeySetHandleTagsInformation, // s: KEY_HANDLE_TAGS_INFORMATION&#10;    KeySetLayerInformation, // s: KEY_SET_LAYER_INFORMATION; rejected by NtSetInformationKey on build 26100&#10;    MaxKeySetInfoClass&#10;} KEY_SET_INFORMATION_CLASS;">KEY_SET_INFORMATION_CLASS</a> KeySetInformationClass,
     _In_reads_bytes_(KeySetInformationLength) PVOID KeySetInformation,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> KeySetInformationLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4665">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4665">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// winternl.h
 
 </span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">__kernel_entry <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> NtSetInformationKey(
   [in] HANDLE                    KeyHandle,
-  [in] <a href="key_set_information_class" title="typedef enum _KEY_SET_INFORMATION_CLASS&#10;{&#10;    KeyWriteTimeInformation, // KEY_WRITE_TIME_INFORMATION&#10;    KeyWow64FlagsInformation, // KEY_WOW64_FLAGS_INFORMATION&#10;    KeyControlFlagsInformation, // KEY_CONTROL_FLAGS_INFORMATION&#10;    KeySetVirtualizationInformation, // KEY_SET_VIRTUALIZATION_INFORMATION&#10;    KeySetDebugInformation, // KEY_SET_DEBUG_INFORMATION&#10;    KeySetHandleTagsInformation, // KEY_HANDLE_TAGS_INFORMATION&#10;    KeySetLayerInformation, // KEY_SET_LAYER_INFORMATION&#10;    MaxKeySetInfoClass&#10;} KEY_SET_INFORMATION_CLASS;">KEY_SET_INFORMATION_CLASS</a> KeySetInformationClass,
+  [in] <a href="key_set_information_class" title="typedef enum _KEY_SET_INFORMATION_CLASS&#10;{&#10;    KeyWriteTimeInformation, // s: KEY_WRITE_TIME_INFORMATION&#10;    KeyWow64FlagsInformation, // s: KEY_WOW64_FLAGS_INFORMATION&#10;    KeyControlFlagsInformation, // s: KEY_CONTROL_FLAGS_INFORMATION&#10;    KeySetVirtualizationInformation, // s: KEY_SET_VIRTUALIZATION_INFORMATION&#10;    KeySetDebugInformation, // s: KEY_SET_DEBUG_INFORMATION&#10;    KeySetHandleTagsInformation, // s: KEY_HANDLE_TAGS_INFORMATION&#10;    KeySetLayerInformation, // s: KEY_SET_LAYER_INFORMATION; rejected by NtSetInformationKey on build 26100&#10;    MaxKeySetInfoClass&#10;} KEY_SET_INFORMATION_CLASS;">KEY_SET_INFORMATION_CLASS</a> KeySetInformationClass,
   [in] PVOID                     KeySetInformation,
   [in] <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>                     KeySetInformationLength
 );</span><span class="ntdoc-code-footer language-cpp"></span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://learn.microsoft.com/windows/win32/api/winternl/nf-winternl-ntsetinformationkey">View the official Win32 API reference</a></span></code></pre></div>
@@ -153,9 +171,9 @@ Ntdll.dll.</p>
 <p>This function is <a rel="noopener" target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntsetinformationkey">documented in Windows SDK</a>.</p>
 <hr />
 <h3>InformationClass</h3>
-<p>See <code>&lt;ntddk.h&gt;</code> for possible values. Currently only <code><a href="key_write_time_information" title="typedef struct _KEY_WRITE_TIME_INFORMATION&#10;{&#10;    LARGE_INTEGER LastWriteTime; // Number of 100-nanosecond intervals since this key or any of its values changed.&#10;} KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;">KEY_WRITE_TIME_INFORMATION</a></code> is supported.</p>
+<p>See <code>&lt;ntddk.h&gt;</code> for possible values. Currently only <code><a href="key_write_time_information" title="typedef struct _KEY_WRITE_TIME_INFORMATION&#10;{&#10;    LARGE_INTEGER LastWriteTime; // Absolute last-write time, in 100-nanosecond intervals since January 1, 1601 (UTC).&#10;} KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;">KEY_WRITE_TIME_INFORMATION</a></code> is supported.</p>
 <h3>KeyInformationData</h3>
-<p>See <code>&lt;ntddk.h&gt;</code> for detailed structure <code><a href="key_write_time_information" title="typedef struct _KEY_WRITE_TIME_INFORMATION&#10;{&#10;    LARGE_INTEGER LastWriteTime; // Number of 100-nanosecond intervals since this key or any of its values changed.&#10;} KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;">KEY_WRITE_TIME_INFORMATION</a></code>.</p>
+<p>See <code>&lt;ntddk.h&gt;</code> for detailed structure <code><a href="key_write_time_information" title="typedef struct _KEY_WRITE_TIME_INFORMATION&#10;{&#10;    LARGE_INTEGER LastWriteTime; // Absolute last-write time, in 100-nanosecond intervals since January 1, 1601 (UTC).&#10;} KEY_WRITE_TIME_INFORMATION, *PKEY_WRITE_TIME_INFORMATION;">KEY_WRITE_TIME_INFORMATION</a></code>.</p>
 <h1>See also</h1>
 <ul>
 <li><code><a href="ntcreatekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Reserved_ ULONG TitleIndex,&#10;    _In_opt_ PCUNICODE_STRING Class,&#10;    _In_ ULONG CreateOptions,&#10;    _Out_opt_ PULONG Disposition&#10;    );">NtCreateKey</a></code></li>

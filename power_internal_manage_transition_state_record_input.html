@@ -46,22 +46,48 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_MANAGE_TRANSITION_STATE_RECORD_INPUT structure contains the input parameters for the manage transition state record operation.
+ * The POWER_INTERNAL_MANAGE_TRANSITION_STATE_RECORD_INPUT struct pushes or pops a diagnostic record attributing a blocked power-state transition.
+ * \remarks Selector 88 requires at least 56 input bytes on AMD64, correcting the former
+ * 48-byte layout. Action at 8 is 0 (push) or 1 (pop). Process/thread values are at 16/24,
+ * the opaque ReasonValue QWORD at 32, CallbackType <a href="dword" title="typedef unsigned long DWORD;">DWORD</a> at 40 and CallbackContext at 48.
+ * The old Reason member remains the low 32-bit view; callback members now have correct offsets.
+ * Header.Version is ignored. Use NULL/0 output; supplied output is ignored rather than filled.
+ *
+ * User mode requires LocalSystem. When both IDs are nonzero, the helper resolves them with
+ * <a href="pslookupprocessbyprocessid" title="NTSTATUS PsLookupProcessByProcessId(&#10;  [in]  HANDLE    ProcessId,&#10;  [out] PEPROCESS *Process&#10;);">PsLookupProcessByProcessId</a>/<a href="pslookupthreadbythreadid" title="NTSTATUS PsLookupThreadByThreadId(&#10;  [in]  HANDLE   ThreadId,&#10;  [out] PETHREAD *Thread&#10;);">PsLookupThreadByThreadId</a>; otherwise it uses the current process
+ * and thread. They are identifiers, not open handles. Kernel mode supplies actual process/
+ * thread object pointers. A push references both objects; pop dereferences the global top.
+ * The active transition-state gate accepts internal values 1/2; otherwise status 0xC00002D3.
+ *
+ * Only kernel CallbackType 1/2 with non-NULL CallbackContext enables associated callback data;
+ * other cases and user mode omit it. Callable signatures are not established, so the value
+ * remains opaque. Action 1 does not look up a supplied identity: it pops the shared stack.
+ * Do not issue unmatched pops or use this as an arbitrary object-lifetime API. Pointer-bearing
+ * x86 declarations are source compatibility only, not an x86/WOW64 syscall ABI.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_MANAGE_TRANSITION_STATE_RECORD_INPUT
 {
     <a href="power_information_internal_header" title="typedef struct _POWER_INFORMATION_INTERNAL_HEADER&#10;{&#10;    POWER_INFORMATION_LEVEL_INTERNAL InternalType;&#10;    ULONG Version;&#10;} POWER_INFORMATION_INTERNAL_HEADER, *PPOWER_INFORMATION_INTERNAL_HEADER;">POWER_INFORMATION_INTERNAL_HEADER</a> Header;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Action;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Action; // 0 pushes a record; 1 pops the global top record
     <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved0;
-    HANDLE ProcessId;
-    HANDLE ThreadId;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reason;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CallbackType;
-    PVOID CallbackContext;
+    union
+    {
+        HANDLE ProcessId; // user mode: identifier, not an open handle
+        PVOID ProcessObject; // kernel mode: referenced process object supplied by caller
+    };
+    union
+    {
+        HANDLE ThreadId; // user mode: identifier, not an open handle
+        PVOID ThreadObject; // kernel mode: thread object supplied by caller
+    };
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> ReasonValue; // on AMD64: copied as one opaque QWORD
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> CallbackType; // on AMD64: 1/2 with non-NULL callback data, kernel mode only
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved1;
+    PVOID CallbackContext; // on AMD64: opaque callback-associated data; signature unresolved
 } POWER_INTERNAL_MANAGE_TRANSITION_STATE_RECORD_INPUT, *PPOWER_INTERNAL_MANAGE_TRANSITION_STATE_RECORD_INPUT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L2702">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L4737">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

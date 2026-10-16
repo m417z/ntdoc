@@ -54,6 +54,10 @@
  * \param Handle The handle being closed.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwclose">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwclose</a>
+ * \remarks Handle is invalidated only on successful closure. A protected handle is not closed.
+ * Invalid handles can raise a user exception under a debugger or handle-exception policy;
+ * callers must not use double-close behavior as a validity test. Pseudo-handle behavior is
+ * build-specific and does not release the pseudo-handle&#x27;s underlying process or thread.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -65,7 +69,7 @@ NtClose(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntobapi.h#L467">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntobapi.h#L579">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -78,7 +82,7 @@ ZwClose(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L823">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L823">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// ntifs.h
 
@@ -125,7 +129,7 @@ ZwClose(
 <li><code><a href="ntmaketemporaryobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtMakeTemporaryObject(&#10;    _In_ HANDLE Handle&#10;    );">NtMakeTemporaryObject</a></code></li>
 <li><code><a href="ntduplicateobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDuplicateObject(&#10;    _In_ HANDLE SourceProcessHandle,&#10;    _In_ HANDLE SourceHandle,&#10;    _In_opt_ HANDLE TargetProcessHandle,&#10;    _Out_opt_ PHANDLE TargetHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ ULONG HandleAttributes,&#10;    _In_ ULONG Options&#10;    );">NtDuplicateObject</a></code></li>
 <li><code><a href="ntqueryobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryObject(&#10;    _In_opt_ HANDLE Handle,&#10;    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,&#10;    _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,&#10;    _In_ ULONG ObjectInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryObject</a></code></li>
-<li><code><a href="ntsetinformationobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationObject(&#10;    _In_ HANDLE Handle,&#10;    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,&#10;    _In_reads_bytes_(ObjectInformationLength) PVOID ObjectInformation,&#10;    _In_ ULONG ObjectInformationLength&#10;    );">NtSetInformationObject</a></code></li>
+<li><code><a href="ntsetinformationobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationObject(&#10;    _In_ HANDLE Handle,&#10;    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,&#10;    _When_(ObjectInformationClass == ObjectSessionInformation || ObjectInformationClass == ObjectSessionObjectInformation, _In_opt_)&#10;    _When_(ObjectInformationClass != ObjectSessionInformation &amp;&amp; ObjectInformationClass != ObjectSessionObjectInformation, _In_reads_bytes_(ObjectInformationLength)) PVOID ObjectInformation,&#10;    _In_ ULONG ObjectInformationLength&#10;    );">NtSetInformationObject</a></code></li>
 </ul>
 <div class="ntdoc-description-links">
 <a target="_blank" href="https://github.com/m417z/ntdoc/blob/main/descriptions/ntclose.md">Edit description on GitHub</a>
@@ -171,7 +175,7 @@ ZwClose(
 <p>If the call to this function occurs in user mode, you should use the name &quot;<strong>NtClose</strong>&quot; instead of &quot;<strong>ZwClose</strong>&quot;.</p>
 <p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
 <h2>See also</h2>
-<p><strong><a href="ntcreatedirectoryobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateDirectoryObject(&#10;    _Out_ PHANDLE DirectoryHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwCreateDirectoryObject</a></strong></p>
+<p><strong><a href="ntcreatedirectoryobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateDirectoryObject(&#10;    _Out_ PHANDLE DirectoryHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwCreateDirectoryObject</a></strong></p>
 <p><strong><a href="ntcreatefile" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></strong></p>
 <p><strong><a href="ntcreatekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Reserved_ ULONG TitleIndex,&#10;    _In_opt_ PCUNICODE_STRING Class,&#10;    _In_ ULONG CreateOptions,&#10;    _Out_opt_ PULONG Disposition&#10;    );">ZwCreateKey</a></strong></p>
 <p><strong><a href="ntopenkey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenKey</a></strong></p>
@@ -205,7 +209,7 @@ ZwClose(
 <p>For calls from kernel-mode drivers, the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a Windows Native System Services routine can behave differently in the way that they handle and interpret input parameters. For more information about the relationship between the <strong>Nt<em>Xxx</em></strong> and <strong>Zw<em>Xxx</em></strong> versions of a routine, see <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a>.</p>
 <h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/using-nt-and-zw-versions-of-the-native-system-services-routines">Using Nt and Zw Versions of the Native System Services Routines</a></p>
-<p><a href="ntcreatedirectoryobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateDirectoryObject(&#10;    _Out_ PHANDLE DirectoryHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwCreateDirectoryObject</a></p>
+<p><a href="ntcreatedirectoryobject" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateDirectoryObject(&#10;    _Out_ PHANDLE DirectoryHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwCreateDirectoryObject</a></p>
 <p><a href="ntcreatefile" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateFile(&#10;    _Out_ PHANDLE FileHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_opt_ PLARGE_INTEGER AllocationSize,&#10;    _In_ ULONG FileAttributes,&#10;    _In_ ULONG ShareAccess,&#10;    _In_ ULONG CreateDisposition,&#10;    _In_ ULONG CreateOptions,&#10;    _In_reads_bytes_opt_(EaLength) PVOID EaBuffer,&#10;    _In_ ULONG EaLength&#10;    );">ZwCreateFile</a></p>
 <p><a href="ntcreatekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes,&#10;    _Reserved_ ULONG TitleIndex,&#10;    _In_opt_ PCUNICODE_STRING Class,&#10;    _In_ ULONG CreateOptions,&#10;    _Out_opt_ PULONG Disposition&#10;    );">ZwCreateKey</a></p>
 <p><a href="ntopenkey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenKey(&#10;    _Out_ PHANDLE KeyHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ POBJECT_ATTRIBUTES ObjectAttributes&#10;    );">ZwOpenKey</a></p>

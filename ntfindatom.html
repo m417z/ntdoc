@@ -46,14 +46,22 @@
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtFindAtom routine retrieves the atom identifier associated with a
- * Unicode string in the system atom table.
+ * The NtFindAtom routine looks up a name in the atom table selected by the session Win32 callout. Use
+ * <a href="ntaddatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAddAtom(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom&#10;    );">NtAddAtom</a> when a new ordinary string reference is required, not merely lookup.
  *
- * \param AtomName A pointer to a Unicode string containing the atom name.
- * \param Length The length, in bytes, of the string pointed to by AtomName.
- * \param Atom An optional pointer that receives the atom identifier if found.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
- * \see <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-findatomw">https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-findatomw</a>
+ * \param AtomName Readable UTF-16 name. The user-mode copy is terminated after capture; matching is
+ * case-insensitive and an embedded NUL ends the effective name.
+ * \param Length Bytes to capture, at most 510 (255 WCHARs). Use an even count and 2-byte-aligned source. The
+ * kernel discards an odd trailing byte.
+ * \param Atom Optional 16-bit output; NULL performs a lookup without returning the ID.
+ * \return STATUS_OBJECT_NAME_NOT_FOUND if absent, STATUS_OBJECT_NAME_INVALID for an empty captured name, or
+ * the lookup&#x27;s <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>. On the native x64 path and WoW64, failure paths leave a supplied output identifier
+ * unchanged.
+ * \remarks For ordinary non-AppContainer callers, lookup does not add a reference: do not delete an atom
+ * merely because lookup found it. Lowbox lookup can establish internal bookkeeping references; that
+ * implementation detail is not a caller-owned <a href="ntaddatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAddAtom(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom&#10;    );">NtAddAtom</a> reference. Integer strings in the range L&quot;#1&quot; through
+ * L&quot;#49151&quot; resolve without a prior string-table insertion.
+ * \see <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globalfindatomw">https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globalfindatomw</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -67,7 +75,7 @@ NtFindAtom(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L11456">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L11896">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -82,7 +90,7 @@ ZwFindAtom(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L2022">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L2022">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
@@ -111,8 +119,8 @@ ZwFindAtom(
 </ul>
 <h1>See also</h1>
 <ul>
-<li><code><a href="atom_basic_information" title="typedef struct _ATOM_BASIC_INFORMATION&#10;{&#10;    USHORT UsageCount;   // The number of times the atom is referenced.&#10;    USHORT Flags;        // Flags associated with the atom. */&#10;    USHORT NameLength;   // Length, in bytes, of the atom&#x27;s name.&#10;    _Field_size_bytes_(NameLength) WCHAR Name[1]; // The atom&#x27;s name (not null-terminated).&#10;} ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;">ATOM_BASIC_INFORMATION</a></code></li>
-<li><code><a href="atom_table_information" title="typedef struct _ATOM_TABLE_INFORMATION&#10;{&#10;    ULONG NumberOfAtoms; // The number of atoms in the atom table.&#10;    _Field_size_(NumberOfAtoms) RTL_ATOM Atoms[1]; // Array of atom identifiers.&#10;} ATOM_TABLE_INFORMATION, *PATOM_TABLE_INFORMATION;">ATOM_TABLE_INFORMATION</a></code></li>
+<li><code><a href="atom_basic_information" title="typedef struct _ATOM_BASIC_INFORMATION&#10;{&#10;    USHORT UsageCount;   // Reference snapshot; integer atoms report 1. Not an ownership grant.&#10;    USHORT Flags;        // Bit 0x1: pinned; bit 0x2: global-entry lowbox access flag. Not NtAddAtomEx input flags in general.&#10;    USHORT NameLength;   // Bytes copied into Name, excluding the trailing WCHAR NUL; may be truncated.&#10;    _Field_size_bytes_(NameLength) WCHAR Name[1]; // Variable-length name, followed by a NUL on successful query.&#10;} ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;">ATOM_BASIC_INFORMATION</a></code></li>
+<li><code><a href="atom_table_information" title="typedef struct _ATOM_TABLE_INFORMATION&#10;{&#10;    ULONG NumberOfAtoms; // Total visible string-atom count; can exceed the returned array capacity on failure.&#10;    _Field_size_(NumberOfAtoms) RTL_ATOM Atoms[1]; // Complete array only on success; no acquired atom references.&#10;} ATOM_TABLE_INFORMATION, *PATOM_TABLE_INFORMATION;">ATOM_TABLE_INFORMATION</a></code></li>
 <li><code><a href="ntaddatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtAddAtom(&#10;    _In_reads_bytes_opt_(Length) PCWSTR AtomName,&#10;    _In_ ULONG Length,&#10;    _Out_opt_ PRTL_ATOM Atom&#10;    );">NtAddAtom</a></code></li>
 <li><code><a href="ntdeleteatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDeleteAtom(&#10;    _In_ RTL_ATOM Atom&#10;    );">NtDeleteAtom</a></code></li>
 <li><code><a href="ntqueryinformationatom" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationAtom(&#10;    _In_ RTL_ATOM Atom,&#10;    _In_ ATOM_INFORMATION_CLASS AtomInformationClass,&#10;    _Out_writes_bytes_(AtomInformationLength) PVOID AtomInformation,&#10;    _In_ ULONG AtomInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationAtom</a></code></li>

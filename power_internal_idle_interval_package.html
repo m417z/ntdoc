@@ -46,29 +46,28 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_IDLE_INTERVAL_PACKAGE structure contains a histogram of idle intervals,
- * each entry representing the total time spent in a given duration bucket.
- * The 37 buckets are logarithmically spaced to capture idle durations from ms up to seconds.
- * Approximate bucket ranges:
- * - Indices [0-2] = Very long idle (10-50 seconds)
- * - Indices [3-5] = Long idle (2-10 seconds)
- * - Indices [6-10] = Medium idle (100 ms-1 second)
- * - Indices [11-15] = Short idle (10-100 ms)
- * - Indices [16-36] = Very short idle (&lt;10 ms, down to microseconds)
+ * The POWER_INTERNAL_IDLE_INTERVAL_PACKAGE structure contains the total idle duration accumulated in each
+ * idle-interval-length bucket for a node or class bank.
+ * \remarks Use the histogram to distinguish short idle opportunities from time accumulated in longer idle
+ * intervals when investigating power-saving opportunities. Compare matched snapshots to study a monitoring
+ * interval, subject to unchanged counter lifetime and topology. The buckets sum duration, so they cannot directly
+ * report the number of wakeups or idle transitions.
+ *
+ * Histogram of accumulated idle duration, not a count of idle intervals.
+ * Buckets are ordered from shortest to longest. Equality moves to the next bucket.
+ * The 36 exclusive upper bounds are in <a href="ppm_idle_interval_upper_bounds_100ns" title="#define PPM_IDLE_INTERVAL_UPPER_BOUNDS_100NS { \&#10;    10000ULL, 20000ULL, 30000ULL, 40000ULL, 50000ULL, 60000ULL, 70000ULL, 80000ULL, 90000ULL, 100000ULL, \&#10;    110000ULL, 120000ULL, 130000ULL, 140000ULL, 150000ULL, 160000ULL, 170000ULL, 180000ULL, 190000ULL, 200000ULL, \&#10;    320000ULL, 640000ULL, 1280000ULL, 2560000ULL, 5120000ULL, 10000000ULL, 20000000ULL, 40000000ULL, \&#10;    80000000ULL, 160000000ULL, 320000000ULL, 600000000ULL, 1200000000ULL, 2400000000ULL, 4800000000ULL, 9600000000ULL \&#10;}">PPM_IDLE_INTERVAL_UPPER_BOUNDS_100NS</a>;
+ * bucket 36 covers durations &gt;= 9600000000 100-ns units (960 seconds).
+ * \remarks Selector 74 copies 37 QWORDs (296 bytes), converting each from accounting
+ * time to 100-ns units. No count/version header precedes the array. Unlike infoclass 76,
+ * these are interval-length buckets, not bins indexed by active-processor count.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_IDLE_INTERVAL_PACKAGE
 {
-    /**
-     * Idle interval histogram buckets.
-     * Each entry is a <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> value in 100-nanosecond units.
-     * There are 37 buckets, covering idle durations from microseconds
-     * up to tens of seconds.
-     */
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> IdleIntervals[37];
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> IdleIntervals[<a href="ppm_idle_interval_bucket_count" title="#define PPM_IDLE_INTERVAL_BUCKET_COUNT 37">PPM_IDLE_INTERVAL_BUCKET_COUNT</a>]; // Summed idle duration in 100-ns units.
 } POWER_INTERNAL_IDLE_INTERVAL_PACKAGE, *PPOWER_INTERNAL_IDLE_INTERVAL_PACKAGE;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L2183">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L3416">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

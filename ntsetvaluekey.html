@@ -45,15 +45,33 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTREGAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * Sets the value of a registry key.
+ * Creates or replaces one value entry under a registry key, including its type
+ * and data. This does not create or rename the containing key.
  *
- * \param[in] KeyHandle A handle to the key to be modified.
- * \param[in] ValueName A pointer to a <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a> structure that specifies the name of the value to be set.
- * \param[in, optional] TitleIndex Reserved.
- * \param[in] Type The type of the value.
- * \param[in] Data A pointer to a buffer that contains the value data.
- * \param[in] DataSize The size of the buffer.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param[in] KeyHandle Key handle with KEY_SET_VALUE (0x2) in the ordinary path.
+ * Registry virtualization, layered keys and filter callbacks can affect the operation.
+ * \param[in] ValueName Required readable counted <a href="unicode_string" title="typedef struct _UNICODE_STRING&#10;{&#10;    USHORT Length;&#10;    USHORT MaximumLength;&#10;    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;&#10;} UNICODE_STRING, *PUNICODE_STRING;">UNICODE_STRING</a>. Use an empty
+ * descriptor (Length = 0, Buffer may be NULL) for the default value, not a NULL
+ * descriptor pointer. Names are case-insensitive. On x64, the name
+ * length must be even and at most 32766 bytes (16383 WCHARs); a nonempty user-mode
+ * name buffer must be 2-byte aligned. Captured trailing WCHAR NULs are trimmed,
+ * whereas embedded NULs are part of the counted name.
+ * \param[in, optional] TitleIndex Reserved; pass 0. The native path
+ * exposes it to registry callbacks but does not pass it to the core value writer.
+ * Basic/full/partial query records in the ordinary path return TitleIndex = 0.
+ * \param[in] Type REG_* data type. The caller is responsible for the type&#x27;s format.
+ * \param[in, optional] Data Readable DataSize bytes; NULL is valid when DataSize = 0.
+ * The native operation copies the counted bytes, not a string inferred from Type.
+ * \param[in] DataSize Byte count, including any required string terminators.
+ * The native entry rejects values above 0x7FFFF000; this is an entry
+ * validation bound, not a guarantee that a value that large can be allocated/stored.
+ * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> describing the update. Odd or oversized name lengths return
+ * STATUS_INVALID_PARAMETER in the ordinary path.
+ * \remarks A zero-length data value still exists; use <a href="ntdeletevaluekey" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDeleteValueKey(&#10;    _In_ HANDLE KeyHandle,&#10;    _In_ PCUNICODE_STRING ValueName&#10;    );">NtDeleteValueKey</a> to remove it.
+ * A <a href="reg_sz" title="#define REG_SZ ( 1ul ) // Unicode nul terminated string">REG_SZ</a> input without its NUL can be stored as supplied, so do not assume the
+ * kernel repairs malformed strings. The WoW64 <a href="reg_sz" title="#define REG_SZ ( 1ul ) // Unicode nul terminated string">REG_SZ</a>/<a href="reg_expand_sz" title="#define REG_EXPAND_SZ ( 2ul ) // Unicode nul terminated string (with environment variable references)">REG_EXPAND_SZ</a> path can rewrite
+ * recognized paths according to key tags; byte-for-byte passthrough is not universal.
+ * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwsetvaluekey">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwsetvaluekey</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -69,7 +87,7 @@ NtSetValueKey(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntregapi.h#L909">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntregapi.h#L1266">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -87,7 +105,7 @@ ZwSetValueKey(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4994">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4995">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

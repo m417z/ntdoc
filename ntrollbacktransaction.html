@@ -45,11 +45,20 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTTMAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtRollbackTransaction routine rolls back a transaction object.
+ * Initiates rollback of a KTM transaction, not a registry-only lightweight one.
  *
- * \param TransactionHandle Handle to the transaction object.
- * \param Wait If TRUE, the call waits for the rollback to complete.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param TransactionHandle KTM handle with TRANSACTION_ROLLBACK (0x10). The native entry additionally
+ * requires SYNCHRONIZE (0x100000) for nonzero Wait, giving synchronous access mask 0x100010. A rollback-only
+ * handle succeeds for asynchronous rollback but is denied with Wait = TRUE.
+ * \param Wait TRUE waits for completion; FALSE permits asynchronous rollback.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a>, STATUS_PENDING when completion remains outstanding, or an <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> failure.
+ * Repeated rollback of an already aborted empty KTM transaction succeeds; rollback after commit returns
+ * STATUS_TRANSACTION_ALREADY_COMMITTED. Registry-only repeated rollback differs.
+ * \remarks STATUS_PENDING is not completed rollback even though <a href="nt_success" title="#define NT_SUCCESS(Status) (((NTSTATUS)(Status)) &gt;= 0)">NT_SUCCESS</a> is true. Query/wait for the
+ * outcome when needed. Deadline expiration and last- transaction-handle close can also initiate rollback, but
+ * closing an individual participating key handle does not complete the transaction. The caller still owns and
+ * must close any transaction handles retained after explicit rollback.
+ * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwrollbacktransaction">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwrollbacktransaction</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -61,7 +70,7 @@ NtRollbackTransaction(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/nttmapi.h#L290">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/nttmapi.h#L406">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -75,7 +84,7 @@ ZwRollbackTransaction(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4373">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4373">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

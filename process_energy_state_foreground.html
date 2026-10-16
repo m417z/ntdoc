@@ -45,51 +45,14 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTPSAPI_H
 #if (PHNT_MODE != PHNT_MODE_KERNEL)
 
-</span><span class="ntdoc-code-intro language-cpp">//
-// <a href="process_energy_tracking_state" title="typedef struct _PROCESS_ENERGY_TRACKING_STATE&#10;{&#10;    ULONG StateUpdateMask;&#10;    ULONG StateDesiredValue;&#10;    ULONG StateSequence;&#10;    ULONG UpdateTag : 1;&#10;    WCHAR Tag[64];&#10;} PROCESS_ENERGY_TRACKING_STATE, *PPROCESS_ENERGY_TRACKING_STATE;">PROCESS_ENERGY_TRACKING_STATE</a> flags.
-//
-// ProcessEnergyTrackingState can be used to query the current energy-tracking
-// state.
-//
-// - <a href="ntqueryinformationprocess" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationProcess</a>(ProcessEnergyTrackingState) gives you the current
-//   tracked state flags.
-// - <a href="ntqueryinformationprocess" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationProcess</a>(ProcessEnergyValues) gives you the actual
-//   accumulated durations/counters.
-// - When you call <a href="ntqueryinformationprocess" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationProcess</a>(ProcessEnergyTrackingState), the
-//   returned state field is not limited to 0x10.
-// - The kernel may report a state word containing 0x4, 0x8, and 0x10.
-//
-// Disassembly of ntoskrnl!PoSetProcessEnergyTrackingState shows that only
-// <a href="process_energy_state_psm_foreground" title="#define PROCESS_ENERGY_STATE_PSM_FOREGROUND 0x00000010UL">PROCESS_ENERGY_STATE_PSM_FOREGROUND</a> is accepted in StateUpdateMask /
-// StateDesiredValue for <a href="ntsetinformationprocess" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength&#10;    );">NtSetInformationProcess</a>(ProcessEnergyTrackingState).
-// The API only lets you toggle one bit, <a href="process_energy_state_psm_foreground" title="#define PROCESS_ENERGY_STATE_PSM_FOREGROUND 0x00000010UL">PROCESS_ENERGY_STATE_PSM_FOREGROUND</a>.
-// Changes how the process contributes to energy duration buckets.
-//
-// So these defines describe the bits that can appear in the queried state:
-//
-// - 0x4: process is in the foreground state.
-// - 0x8: process is desktop-visible.
-// - 0x10: process is in PSM foreground.
-//
-// Important distinction:
-//
-// - <a href="ntsetinformationprocess" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSetInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength&#10;    );">NtSetInformationProcess</a>(ProcessEnergyTrackingState) only accepts 0x10.
-// - <a href="ntqueryinformationprocess" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtQueryInformationProcess(&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_ PROCESSINFOCLASS ProcessInformationClass,&#10;    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,&#10;    _In_ ULONG ProcessInformationLength,&#10;    _Out_opt_ PULONG ReturnLength&#10;    );">NtQueryInformationProcess</a>(ProcessEnergyTrackingState) may return
-//   0x4 | 0x8 | 0x10 combinations.
-//
-// The kernel also returns 0x4 and 0x8 in the queried state word. Those two
-// bits are correlated with the three base duration buckets in
-// <a href="process_energy_values" title="typedef struct _PROCESS_ENERGY_VALUES&#10;{&#10;    /**&#10;     * CPU cycles accumulated per QoS bucket and cycle type.&#10;     * First index: QoS bucket (PROCESS_ENERGY_VALUES_QOS_INDEX).&#10;     * Second index: cycle type — user [0] or kernel [1] (PROCESS_ENERGY_VALUES_CYCLE_TYPE_INDEX).&#10;     */&#10;    ULONGLONG Cycles[ProcessEnergyValuesQoSMax][ProcessEnergyValuesCycleTypeMax];&#10;    /**&#10;     * Energy consumed by disk I/O, in arbitrary energy units.&#10;     */&#10;    ULONGLONG DiskEnergy;&#10;    /**&#10;     * Tail energy attributed to network activity.&#10;     */&#10;    ULONGLONG NetworkTailEnergy;&#10;    /**&#10;     * Tail energy attributed to Mobile Broadband (MBB) activity.&#10;     */&#10;    ULONGLONG MBBTailEnergy;&#10;...">PROCESS_ENERGY_VALUES</a>:
-// foreground, desktop visible, and PSM foreground.
-//
-// The 0x4 and 0x8 names below are therefore best-effort and grounded in
-// disassembly plus structure correlation, not public symbol names.
-//
-</span><span class="ntdoc-code-body language-cpp">#define PROCESS_ENERGY_STATE_FOREGROUND        0x00000004UL
+</span><span class="ntdoc-code-intro language-cpp">// rev
+// <a href="process_energy_tracking_state" title="typedef struct _PROCESS_ENERGY_TRACKING_STATE&#10;{&#10;    ULONG StateUpdateMask;&#10;    ULONG StateDesiredValue;&#10;    ULONG StateSequence;&#10;    ULONG UpdateTag : 1;&#10;    WCHAR Tag[64];&#10;} PROCESS_ENERGY_TRACKING_STATE, *PPROCESS_ENERGY_TRACKING_STATE;">PROCESS_ENERGY_TRACKING_STATE</a> flags; also used by energy-tracker process-entry StateFlags.
+// Names for bits 0x1 through 0x8 follow the duration fields updated by the kernel.
+</span><span class="ntdoc-code-body language-cpp">#define PROCESS_ENERGY_STATE_FOREGROUND         0x00000001UL
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpsapi.h#L1692">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpsapi.h#L1664">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

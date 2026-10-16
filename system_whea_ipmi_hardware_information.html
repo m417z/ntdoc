@@ -44,23 +44,32 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTEXAPI_H
 
-</span><span class="ntdoc-code-intro language-cpp">// rev
+</span><span class="ntdoc-code-intro language-cpp">// rev: WheaQuerySystemInformation, IpmiHwpParseSpmiTable, IpmiLibpParseDeviceInfo
 /**
- * The SYSTEM_WHEA_IPMI_HARDWARE_INFORMATION_WIN10 structure contains system WHEA IPMI hardware information.
+ * Describes the IPMI controller used by WHEA, not an IPMI SEL event record.
+ * The x64 SystemWheaIpmiHardwareInformation (216) query requires
+ * exactly 32 output bytes. WheaQuerySystemInformation copies the first
+ * 32 bytes of WheaIpmiContext after checking that the context is initialized.
+ * Use this information to identify the firmware-described IPMI interface.
+ * The mapped register VA, MMIO mapping length and initialization flag belong
+ * to the larger private context and are NOT part of this query result.
+ * Field names below are descriptive reconstructions from the parser/consumer.
  */
-</span><span class="ntdoc-code-body language-cpp">typedef struct _SYSTEM_WHEA_IPMI_HARDWARE_INFORMATION_WIN10
+</span><span class="ntdoc-code-body language-cpp">typedef struct _SYSTEM_WHEA_IPMI_HARDWARE_INFORMATION
 {
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> RecordId;     // IPMI SEL (System Event Log) record identifier
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> EventType;        // IPMI event/reading type code
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> SensorType;       // IPMI sensor type (e.g. temperature, voltage, processor)
-    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> GeneratorId;     // ID of the entity that logged the event
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> EvmRevision;      // Event Message format revision
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> RecordType;       // SEL record type (e.g. system event vs OEM)
-    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Data[4];          // Event-specific data bytes
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> IpmiSpecVersion; // packed major/minor nibbles; 0x15 = 1.5, 0x20 = 2.0.
+    <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> Reserved02; // alignment padding; no field access found.
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> InterfaceType; // firmware interface code; the KCS handler requires 1.
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> RegisterSpacing; // SPMI maps 1/2/3/4 to 1/2/4/8; SMBIOS maps 0/1/2 to 1/4/16.
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Reserved09[7]; // alignment padding; no field access found.
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> BaseAddress; // physical MMIO or I/O-port base, not a mapped virtual address.
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> AddressSpaceType; // zero selects MMIO; nonzero selects port I/O in the KCS consumer.
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> BmcSlaveAddress; // SPMI default 0x20, or SMBIOS type-38 byte 6 &amp; 0xFE; SEL request destination.
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> Reserved1A[6]; // tail padding; no field access found.
 } SYSTEM_WHEA_IPMI_HARDWARE_INFORMATION, *PSYSTEM_WHEA_IPMI_HARDWARE_INFORMATION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L8417">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L8762">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

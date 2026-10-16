@@ -45,13 +45,31 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTTMAPI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NtSetInformationTransaction routine sets information for a transaction object.
+ * Updates KTM transaction properties. Use TransactionPropertiesInformation to change its
+ * description/deadline; do not use the Outcome field to commit/abort.
  *
- * \param TransactionHandle Handle to the transaction object.
- * \param TransactionInformationClass The type of transaction information to set.
- * \param TransactionInformation Pointer to the input buffer containing the information to set.
- * \param TransactionInformationLength The size of the input buffer, in bytes.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \param TransactionHandle KTM handle with TRANSACTION_SET_INFORMATION (0x2).
+ * \param TransactionInformationClass Public property selector 1. The native implementation additionally
+ * accepts private/deprecated bind (4) and DTC opaque data (5), not basic (0), enlistments (2) or superior
+ * (3).
+ * \param TransactionInformation Readable caller-owned input copied before normal handle access validation.
+ * Native properties/bind input requires 4-byte alignment; the WoW64 properties helper copies to aligned
+ * temporary storage and accepts unaligned source input. Prefer natural alignment and do not rely on copyback.
+ * \param TransactionInformationLength Properties needs at least 32 bytes and enough space for
+ * DescriptionLength bytes beginning at offset 24. Description may be at most 128 bytes. Bind needs exactly 8
+ * native bytes (one manager handle); WoW64 accepts at least 4 source bytes and widens the handle. Private DTC
+ * data accepts 1 through 1024 native bytes; these private operations are not general application interfaces.
+ * \return <a href="status_success" title="#define STATUS_SUCCESS ((NTSTATUS)0x00000000L)">STATUS_SUCCESS</a> or failure. Properties shorter than 32 returns STATUS_INFO_LENGTH_MISMATCH. A
+ * declared description beyond the supplied input returns STATUS_INVALID_PARAMETER natively but
+ * STATUS_INFO_LENGTH_MISMATCH from the WoW64 precheck; description length above 128 is rejected by native
+ * code.
+ * \remarks Properties is not a wholesale replacement of every field. Outcome is ignored by the setter.
+ * DescriptionLength = 0 clears description, but Timeout = 0 preserves an existing timeout rather than
+ * disabling it. Nonzero isolation fields overwrite existing fields on the internal path; public callers
+ * should keep reserved isolation fields 0. The helper can update the description before a later timer
+ * operation fails, so do not assume universal all-or-nothing mutation on failure. Use the explicit outcome
+ * APIs.
+ * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwsetinformationtransaction">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwsetinformationtransaction</a>
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -65,7 +83,7 @@ NtSetInformationTransaction(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/nttmapi.h#L256">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/nttmapi.h#L352">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -81,7 +99,7 @@ ZwSetInformationTransaction(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L4742">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L4743">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 

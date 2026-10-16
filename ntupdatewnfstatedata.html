@@ -53,10 +53,15 @@
  * \param Buffer Pointer to the data buffer to write.
  * \param Length Length, in bytes, of the data buffer.
  * \param TypeId Optional pointer to a <a href="wnf_type_id" title="typedef struct _WNF_TYPE_ID&#10;{&#10;    GUID TypeId;&#10;} WNF_TYPE_ID, *PWNF_TYPE_ID;">WNF_TYPE_ID</a> structure specifying the type of the state data.
- * \param ExplicitScope Optional pointer to a security identifier (<a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a>) for explicit scope.
+ * \param ExplicitScope Optional scope selector: a session-ID pointer, <a href="pisid" title="typedef struct _SID {&#10;  UCHAR                    Revision;&#10;  UCHAR                    SubAuthorityCount;&#10;  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;&#10;#if ...&#10;  ULONG                    *SubAuthority[];&#10;#else&#10;  ULONG                    SubAuthority[ANYSIZE_ARRAY];&#10;#endif&#10;} SID, *PISID;">SID</a> pointer, or process HANDLE
+ * value, according to the state name&#x27;s <a href="wnf_data_scope" title="typedef enum _WNF_DATA_SCOPE&#10;{&#10;    WnfDataScopeSystem,&#10;    WnfDataScopeSession,&#10;    WnfDataScopeUser,&#10;    WnfDataScopeProcess,&#10;    WnfDataScopeMachine, // REDSTONE3&#10;    WnfDataScopePhysicalMachine, // WIN11&#10;} WNF_DATA_SCOPE;">WNF_DATA_SCOPE</a>. NULL selects the implicit scope.
  * \param MatchingChangeStamp The change stamp to match for update.
  * \param CheckStamp If TRUE, the change stamp is checked before updating.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \remarks For conditional updates, CheckStamp enables comparison against MatchingChangeStamp.
+ * The state-data helper returns STATUS_UNSUCCESSFUL for a mismatch without publishing a new value.
+ * Successful updates advance the change stamp; retry logic should re-query and re-evaluate the intended change,
+ * not blindly overwrite after a mismatch. Length remains bounded by the name&#x27;s MaximumStateSize.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -67,7 +72,7 @@ NtUpdateWnfStateData(
     _In_reads_bytes_opt_(Length) const VOID* Buffer,
     _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Length,
     _In_opt_ <a href="pcwnf_type_id" title="typedef const WNF_TYPE_ID *PCWNF_TYPE_ID;">PCWNF_TYPE_ID</a> TypeId,
-    _In_opt_ <a href="pcsid" title="typedef const SID* PCSID;">PCSID</a> ExplicitScope,
+    _In_opt_ <a href="pcvoid" title="typedef CONST VOID *PCVOID;">PCVOID</a> ExplicitScope,
     _In_ <a href="wnf_change_stamp" title="typedef ULONG WNF_CHANGE_STAMP, *PWNF_CHANGE_STAMP;">WNF_CHANGE_STAMP</a> MatchingChangeStamp,
     _In_ <a href="logical" title="typedef ULONG LOGICAL;">LOGICAL</a> CheckStamp
     );
@@ -75,7 +80,7 @@ NtUpdateWnfStateData(
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntexapi.h#L1931">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntexapi.h#L2190">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -88,13 +93,13 @@ ZwUpdateWnfStateData(
     _In_reads_bytes_opt_(Length) const VOID* Buffer,
     _In_opt_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Length,
     _In_opt_ <a href="pcwnf_type_id" title="typedef const WNF_TYPE_ID *PCWNF_TYPE_ID;">PCWNF_TYPE_ID</a> TypeId,
-    _In_opt_ <a href="pcsid" title="typedef const SID* PCSID;">PCSID</a> ExplicitScope,
+    _In_opt_ <a href="pcvoid" title="typedef CONST VOID *PCVOID;">PCVOID</a> ExplicitScope,
     _In_ <a href="wnf_change_stamp" title="typedef ULONG WNF_CHANGE_STAMP, *PWNF_CHANGE_STAMP;">WNF_CHANGE_STAMP</a> MatchingChangeStamp,
     _In_ <a href="logical" title="typedef ULONG LOGICAL;">LOGICAL</a> CheckStamp
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L5319">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L5320">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

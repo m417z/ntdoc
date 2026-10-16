@@ -54,6 +54,10 @@
  * \param ThreadHandle A handle to the thread.
  * \param Reserved Reserved for future use.
  * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
+ * \remarks Creates an owned state-change object bound to one thread; it does not suspend the thread on creation. The
+ * thread handle requires <a href="thread_set_information" title="#define THREAD_SET_INFORMATION 0x0020">THREAD_SET_INFORMATION</a> (0x20) here, distinct from <a href="thread_suspend_resume" title="#define THREAD_SUSPEND_RESUME 0x0002">THREAD_SUSPEND_RESUME</a> (0x2)
+ * required for transitions. Reserved must be 0. Destruction resumes outstanding suspensions tracked by this
+ * object, not unrelated ordinary suspend counts.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -69,7 +73,7 @@ NtCreateThreadStateChange(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpsapi.h#L2694">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpsapi.h#L2809">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTZWAPI_H
 
@@ -86,14 +90,14 @@ ZwCreateThreadStateChange(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntzwapi.h#L1521">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntzwapi.h#L1521">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
 <h1>NtDoc</h1>
 </div>
 <div class="ntdoc-description ntdoc-description-selected">
-<p>Creates a new thread state object. This object offers a more resilient alternative to suspending threads, tying the duration of the operation to the lifetime of the state object. To change the state of the thread state object, use <code><a href="ntchangethreadstate" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtChangeThreadState(&#10;    _In_ HANDLE ThreadStateChangeHandle,&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ THREAD_STATE_CHANGE_TYPE StateChangeType,&#10;    _In_opt_ PVOID ExtendedInformation,&#10;    _In_opt_ SIZE_T ExtendedInformationLength,&#10;    _In_opt_ ULONG Reserved&#10;    );">NtChangeThreadState</a></code>.</p>
+<p>Creates a new thread state object. This object offers a more resilient alternative to suspending threads, tying the duration of the operation to the lifetime of the state object. To change the state of the thread state object, use <code><a href="ntchangethreadstate" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtChangeThreadState(&#10;    _In_ HANDLE ThreadStateChangeHandle,&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ THREAD_STATE_CHANGE_TYPE StateChangeType,&#10;    _In_opt_ PTHREAD_STATE_CHANGE_EXT ExtendedInformation,&#10;    _In_opt_ SIZE_T ExtendedInformationLength,&#10;    _In_ ULONG Flags&#10;    );">NtChangeThreadState</a></code>.</p>
 <h1>Parameters</h1>
 <ul>
 <li><code>ThreadStateChangeHandle</code> - a pointer to a variable that receives a handle to the new thread state object.</li>
@@ -110,7 +114,7 @@ ZwCreateThreadStateChange(
 <p>This function was introduced in Windows 11.</p>
 <h1>See also</h1>
 <ul>
-<li><code><a href="ntchangethreadstate" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtChangeThreadState(&#10;    _In_ HANDLE ThreadStateChangeHandle,&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ THREAD_STATE_CHANGE_TYPE StateChangeType,&#10;    _In_opt_ PVOID ExtendedInformation,&#10;    _In_opt_ SIZE_T ExtendedInformationLength,&#10;    _In_opt_ ULONG Reserved&#10;    );">NtChangeThreadState</a></code></li>
+<li><code><a href="ntchangethreadstate" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtChangeThreadState(&#10;    _In_ HANDLE ThreadStateChangeHandle,&#10;    _In_ HANDLE ThreadHandle,&#10;    _In_ THREAD_STATE_CHANGE_TYPE StateChangeType,&#10;    _In_opt_ PTHREAD_STATE_CHANGE_EXT ExtendedInformation,&#10;    _In_opt_ SIZE_T ExtendedInformationLength,&#10;    _In_ ULONG Flags&#10;    );">NtChangeThreadState</a></code></li>
 <li><code><a href="ntopenthread" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtOpenThread(&#10;    _Out_ PHANDLE ThreadHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_opt_ PCLIENT_ID ClientId&#10;    );">NtOpenThread</a></code></li>
 <li><code><a href="ntsuspendthread" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtSuspendThread(&#10;    _In_ HANDLE ThreadHandle,&#10;    _Out_opt_ PULONG PreviousSuspendCount&#10;    );">NtSuspendThread</a></code></li>
 <li><code><a href="ntcreateprocessstatechange" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtCreateProcessStateChange(&#10;    _Out_ PHANDLE ProcessStateChangeHandle,&#10;    _In_ ACCESS_MASK DesiredAccess,&#10;    _In_opt_ PCOBJECT_ATTRIBUTES ObjectAttributes,&#10;    _In_ HANDLE ProcessHandle,&#10;    _In_opt_ _Reserved_ ULONG Reserved&#10;    );">NtCreateProcessStateChange</a></code></li>

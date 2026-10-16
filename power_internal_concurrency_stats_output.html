@@ -46,27 +46,32 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The POWER_INTERNAL_CONCURRENCY_STATS_OUTPUT structure is the variable-length wire format
- * returned by the internal concurrency-statistics queries.
+ * The POWER_INTERNAL_CONCURRENCY_STATS_OUTPUT structure provides the legacy generic view of accumulated node or
+ * class concurrency histograms.
+ * \remarks Use the infoclass-specific structures for new code so that processor counts and QPC-tick arrays are not
+ * mistaken for idle-interval time buckets. These histograms can show how accounted time is distributed across
+ * active-processor counts. Convert QPC ticks with the appropriate counter frequency before comparing them with
+ * 100-ns-based statistics.
  *
- * For PowerInternalCpuNodeConcurrencyStats:
- * - Count[0] is the bucket count.
- * - Count[1] is reserved.
- * - Data contains Count[0] + 1 <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> values.
- *
- * For PowerInternalClassConcurrencyStats:
- * - Count[0] and Count[1] are the per-class bucket counts.
- * - Data contains the class 0 <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> sequence followed by the class 1 sequence.
- * - Each present class contributes Count[n] + 1 <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> values.
+ * Legacy generic view of node/class concurrency output.
+ * Node output is 8 + 8 * (Count[0] + 1) bytes. Class output concatenates one
+ * Count[n] + 1 QWORD histogram for each present class, at most two classes.
+ * Missing classes contribute no payload; a zero count alone cannot prove presence.
+ * Class allocation is 8 + 8 * (nodeProcessorCount + max(nodeClassCount, 2)).
+ * Counters are copied without conversion or a forced new sample.
+ * \remarks Selectors 76/77 require the shared exact 12-byte node input. Do not size
+ * class output solely from the two returned counts: allocation can contain zero trailing
+ * capacity and a missing class consumes no histogram. Prefer the dedicated node/class types.
+ * No interval-bin conversion, refresh, counter reset or topology list is supplied.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _POWER_INTERNAL_CONCURRENCY_STATS_OUTPUT
 {
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Count[2];
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Data[ANYSIZE_ARRAY];
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Count[2]; // Processor counts (not bucket counts); Count[1] reserved for node query.
+    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Data[ANYSIZE_ARRAY]; // Raw QPC ticks, not 100-ns units.
 } POWER_INTERNAL_CONCURRENCY_STATS_OUTPUT, *PPOWER_INTERNAL_CONCURRENCY_STATS_OUTPUT;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/0bd994f431db165a2828d115fa206499fff41373/phnt/include/ntpoapi.h#L2607">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/8df4ab6551ea331d6c3f0c9b0b11fcb21e82f850/phnt/include/ntpoapi.h#L4404">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
