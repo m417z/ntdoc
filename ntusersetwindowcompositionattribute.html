@@ -46,11 +46,31 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The NtUserSetWindowCompositionAttribute routine sets Desktop Window Manager (DWM) composition attributes for a window.
+ * The NtUserSetWindowCompositionAttribute routine sets Desktop Window Manager (DWM) composition
+ * attributes for a window.
+ *
+ * win32kfull: 0x140214030 (win32u syscall 0x1592) copies a 24-byte descriptor from argument 2.
+ * The descriptor contains the attribute (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> at +0), input buffer pointer (+8),
+ * and buffer size (<a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> at +16) on x64. AttributeData is the descriptor, not the payload.
+ * The payload buffer is probed for read and the per-attribute minimum number of bytes is copied.
+ *
+ * The attribute must be in the range 1 to 37 and the buffer size must be at least the minimum for
+ * the attribute, otherwise the call fails with STATUS_INVALID_PARAMETER or STATUS_BUFFER_TOO_SMALL.
+ * Minimum sizes are 4 bytes except: 16 (5, 8, 19, 31), 20 (12), 8 (22, 28, 37) and 0 (32).
+ * Attributes 1, 5, 8, 12, 14, 18, 21 and 34 are not settable (STATUS_INVALID_PARAMETER).
+ * Attribute 28 takes { <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Part (0-2); <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Color } and attribute 37 takes four <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> margins,
+ * each below 0x8000, that are either all zero (clear) or all non-zero.
+ * The window must be a top-level window (STATUS_INVALID_HANDLE otherwise), except for attributes 17, 20 and 36
+ * which also accept layered child windows. Attributes 17, 23 and 37 return STATUS_ACCESS_DENIED
+ * when the caller does not own the window.
+ *
+ * Returns a Boolean success value, not <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>. On failure the status is converted with
+ * <a href="rtlntstatustodoserror" title="_When_(Status &lt; 0, _Out_range_(&gt;, 0))&#10;_When_(Status &gt;= 0, _Out_range_(==, 0))&#10;NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlNtStatusToDosError(&#10;    _In_ NTSTATUS Status&#10;    );">RtlNtStatusToDosError</a> and stored as the last error.
  *
  * \param WindowHandle A handle to the window to configure.
- * \param AttributeData A pointer to a WINDOWCOMPOSITIONATTRIBDATA structure containing the attribute to set.
- * \return <a href="logical" title="typedef ULONG LOGICAL;">LOGICAL</a> Non-zero on success, zero otherwise.
+ * \param AttributeData A pointer to a <a href="windowcompositionattributedata" title="typedef struct _WINDOWCOMPOSITIONATTRIBUTEDATA&#10;{&#10;    WINDOWCOMPOSITIONATTRIB Attribute;  // The attribute to query or set.&#10;    PVOID Data;                         // The input (set) or output (get) buffer.&#10;    SIZE_T Length;                      // The size of the buffer in bytes (must be at least the attribute minimum).&#10;} WINDOWCOMPOSITIONATTRIBUTEDATA, *PWINDOWCOMPOSITIONATTRIBUTEDATA;">WINDOWCOMPOSITIONATTRIBUTEDATA</a> descriptor describing the attribute
+ * and its input buffer.
+ * \returns <a href="logical" title="typedef ULONG LOGICAL;">LOGICAL</a> Non-zero on success, zero otherwise.
  */
 </span><span class="ntdoc-code-body language-cpp">_Kernel_entry_
 NTSYSCALLAPI
@@ -58,11 +78,11 @@ NTSYSCALLAPI
 NTAPI
 NtUserSetWindowCompositionAttribute(
     _In_ HWND WindowHandle,
-    _In_ PVOID AttributeData
+    _In_ <a href="windowcompositionattributedata" title="typedef struct _WINDOWCOMPOSITIONATTRIBUTEDATA&#10;{&#10;    WINDOWCOMPOSITIONATTRIB Attribute;  // The attribute to query or set.&#10;    PVOID Data;                         // The input (set) or output (get) buffer.&#10;    SIZE_T Length;                      // The size of the buffer in bytes (must be at least the attribute minimum).&#10;} WINDOWCOMPOSITIONATTRIBUTEDATA, *PWINDOWCOMPOSITIONATTRIBUTEDATA;">PWINDOWCOMPOSITIONATTRIBUTEDATA</a> AttributeData
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/5117140b607e0f0c1935b29d33d505bd0e182ce6/phnt/include/ntuser.h#L16368">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/723a678e4d86afe3a52cc11f1ffbb4d2ad32cce1/phnt/include/ntuser.h#L17728">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

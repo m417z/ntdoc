@@ -46,21 +46,28 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The RIMDeviceIoControl routine issues a device I/O control request to a raw input device.
+ * The RIMDeviceIoControl routine has the following behavior:
+ * USER32 directly forwards the 9-argument <a href="ntrimdeviceiocontrol" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtRIMDeviceIoControl(&#10;    _In_ HANDLE InputManagerHandle,&#10;    _In_ HANDLE DeviceHandle,&#10;    _In_ ULONG IoControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Inout_updates_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength,&#10;    _Out_opt_ PULONG ReturnLength,&#10;    _In_ ULONG Param9&#10;    );">NtRIMDeviceIoControl</a> contract (x86 ret 36), not the wider
+ * kernel-
+ * helper contract with <a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    } DUMMYUNIONNAME;&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">IO_STATUS_BLOCK</a> and asynchronous arguments. Both input and output buffers
+ * are captured
+ * before dispatch; successful native copyback uses the full OutputBufferLength, with an optional
+ * 4-byte
+ * ReturnLength write. ControlParameter is the ninth <a href="dword" title="typedef unsigned long DWORD;">DWORD</a>; detailed selector/driver semantics
+ * remain
+ * unverified.
  *
- * \param InputManagerHandle Handle to the Raw Input Manager object.
- * \param DeviceHandle Handle to the target raw input device.
- * \param IoControlCode The I/O control code for the operation.
- * \param InputBuffer Pointer to the input buffer.
- * \param InputBufferLength Size of the input buffer in bytes.
- * \param OutputBuffer Pointer to the output buffer.
- * \param OutputBufferLength Size of the output buffer in bytes.
- * \param ReturnLength Receives the number of bytes returned in the output buffer.
- * \param IoStatusBlock Optional pointer to a block that receives the final I/O status.
- * \param Asynchronous TRUE to dispatch the request via <a href="ntdeviceiocontrolfile" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtDeviceIoControlFile(&#10;    _In_ HANDLE FileHandle,&#10;    _In_opt_ HANDLE Event,&#10;    _In_opt_ PIO_APC_ROUTINE ApcRoutine,&#10;    _In_opt_ PVOID ApcContext,&#10;    _Out_ PIO_STATUS_BLOCK IoStatusBlock,&#10;    _In_ ULONG IoControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Out_writes_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength&#10;    );">NtDeviceIoControlFile</a>; FALSE to issue it synchronously.
- * \param Synchronous TRUE to build the request as a synchronous (fsync) control.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
- * \remarks Forwards to the <a href="ntrimdeviceiocontrol" title="_Kernel_entry_&#10;NTSYSCALLAPI&#10;NTSTATUS&#10;NTAPI&#10;NtRIMDeviceIoControl(&#10;    _In_ HANDLE InputManagerHandle,&#10;    _In_ HANDLE DeviceHandle,&#10;    _In_ ULONG IoControlCode,&#10;    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,&#10;    _In_ ULONG InputBufferLength,&#10;    _Inout_updates_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,&#10;    _In_ ULONG OutputBufferLength,&#10;    _Out_opt_ PULONG ReturnLength,&#10;    _In_ ULONG Param9&#10;    );">NtRIMDeviceIoControl</a> system call. Argument roles determined from win32kbase.sys.
+ * \param InputManagerHandle The input manager handle argument.
+ * \param DeviceHandle The device handle argument.
+ * \param IoControlCode The io control code argument.
+ * \param InputBuffer The input buffer argument.
+ * \param InputBufferLength The input buffer length argument.
+ * \param OutputBuffer Supplies and receives the output buffer.
+ * \param OutputBufferLength The output buffer length argument.
+ * \param ReturnLength Receives the return length.
+ * \param ControlParameter The control parameter argument.
+ *
+ * \returns Status code returned by the operation.
  */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
@@ -69,18 +76,16 @@ RIMDeviceIoControl(
     _In_ HANDLE InputManagerHandle,
     _In_ HANDLE DeviceHandle,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> IoControlCode,
-    _In_reads_bytes_(InputBufferLength) PVOID InputBuffer,
+    _In_reads_bytes_opt_(InputBufferLength) PVOID InputBuffer,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> InputBufferLength,
-    _Out_writes_bytes_(OutputBufferLength) PVOID OutputBuffer,
+    _Inout_updates_bytes_opt_(OutputBufferLength) PVOID OutputBuffer,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> OutputBufferLength,
-    _Out_ PULONG ReturnLength,
-    _Inout_opt_ <a href="io_status_block" title="typedef struct _IO_STATUS_BLOCK&#10;{&#10;    union&#10;    {&#10;        NTSTATUS Status;&#10;        PVOID Pointer;&#10;    } DUMMYUNIONNAME;&#10;    ULONG_PTR Information;&#10;} IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;">PIO_STATUS_BLOCK</a> IoStatusBlock,
-    _In_ BOOLEAN Asynchronous,
-    _In_ BOOLEAN Synchronous
+    _Out_opt_ PULONG ReturnLength,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ControlParameter
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/5117140b607e0f0c1935b29d33d505bd0e182ce6/phnt/include/ntuser.h#L12632">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/723a678e4d86afe3a52cc11f1ffbb4d2ad32cce1/phnt/include/ntuser.h#L13571">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

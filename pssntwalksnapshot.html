@@ -51,15 +51,19 @@
 
 </span><span class="ntdoc-code-intro language-cpp">// rev
 /**
- * The PssNtWalkSnapshot routine walks a process snapshot, retrieving information about threads, modules, or memory allocations.
+ * The PssNtWalkSnapshot routine walks native snapshot records using a caller-owned two-word marker, not a Win32
+ * HPSSWALK handle. Zero-initialize the marker and release its view with <a href="pssntfreewalkmarker" title="NTSYSAPI&#10;VOID&#10;NTAPI&#10;PssNtFreeWalkMarker(&#10;    _Inout_ PPSSNT_WALK_MARKER WalkMarker&#10;    );">PssNtFreeWalkMarker</a>. Position is an index
+ * for auxiliary pages and a byte offset for variable-length streams. NULL Buffer requests availability without
+ * advancing a record; the marker can still acquire a mapping, and STATUS_MORE_ENTRIES indicates an available record. Exact
+ * output sizes for classes 0/1/2/3 are 80/80/72/144 bytes on x64 and 48/52/48/112 bytes on x86 in the
+ * inspected build. Reuse a marker only with its original snapshot and class. Returned pointers can refer into
+ * the marker mapping.
  *
- * \param SnapshotHandle A handle to the process snapshot.
- * \param InformationClass The information class identifying the type of data to walk (PSS_WALK_INFORMATION_CLASS).
- * \param WalkMarkerHandle A handle to the walk marker tracking position within the snapshot.
- * \param Buffer A pointer to the buffer receiving the snapshot record.
- * \param BufferLength The size, in bytes, of the buffer pointed to by Buffer.
- * \return <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a> Successful or errant status.
- * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows/win32/api/processsnapshot/nf-processsnapshot-psswalksnapshot">https://learn.microsoft.com/en-us/windows/win32/api/processsnapshot/nf-processsnapshot-psswalksnapshot</a>
+ * \param SnapshotHandle Handle to the snapshot to walk.
+ * \param InformationClass Type of records to walk.
+ * \param WalkMarker Caller-owned walk state, initialized to zero before the first call.
+ * \param Buffer Receives a record, or NULL to check availability without advancing.
+ * \param BufferLength Size of Buffer in bytes.
  */
 </span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 <a href="ntstatus" title="typedef _Return_type_success_(return &gt;= 0) long NTSTATUS;">NTSTATUS</a>
@@ -67,15 +71,15 @@ NTAPI
 PssNtWalkSnapshot(
     _In_ HANDLE SnapshotHandle,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> InformationClass,
-    _In_ HANDLE WalkMarkerHandle,
-    _Out_writes_bytes_(BufferLength) PVOID Buffer,
+    _Inout_ <a href="pssnt_walk_marker" title="typedef struct _PSSNT_WALK_MARKER&#10;{&#10;    PVOID MappedBase;&#10;    ULONG_PTR Position;&#10;} PSSNT_WALK_MARKER, *PPSSNT_WALK_MARKER;">PPSSNT_WALK_MARKER</a> WalkMarker,
+    _Out_writes_bytes_opt_(BufferLength) PVOID Buffer,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> BufferLength
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/5117140b607e0f0c1935b29d33d505bd0e182ce6/phnt/include/ntpsapi.h#L4914">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/723a678e4d86afe3a52cc11f1ffbb4d2ad32cce1/phnt/include/ntpsapi.h#L4932">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">
