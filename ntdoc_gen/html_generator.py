@@ -206,6 +206,7 @@ def validate_chunks_amount(id: str, chunks: List[Chunk]):
         ('int_ptr_c', ChunkOrigin.PHNT): 4,
         ('long_ptr_c', ChunkOrigin.PHNT): 4,
         ('mofresourceinfo', ChunkOrigin.PHNT): 4,
+        ('ntwaitforworkviaworkerfactory', ChunkOrigin.PHNT): 4,
         ('phalf_ptr_c', ChunkOrigin.PHNT): 4,
         ('ptrdiff_t_c', ChunkOrigin.PHNT): 4,
         ('puhalf_ptr_c', ChunkOrigin.PHNT): 4,
