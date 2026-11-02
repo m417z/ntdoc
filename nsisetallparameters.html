@@ -49,16 +49,16 @@
  * row. This is how iphlpapi implements <a href="createipforwardentry2" title="NETIOAPI_API CreateIpForwardEntry2(&#10;  _In_ const MIB_IPFORWARD_ROW2 *Row&#10;);">CreateIpForwardEntry2</a>/<a href="deleteipforwardentry2" title="NETIOAPI_API DeleteIpForwardEntry2(&#10;  _In_ const MIB_IPFORWARD_ROW2 *Row&#10;);">DeleteIpForwardEntry2</a>, CreateIpNetEntry/DeleteIpNetEntry,
  * AddIPAddress/DeleteIPAddress, <a href="setipinterfaceentry" title="NETIOAPI_API SetIpInterfaceEntry(&#10;  _Inout_ PMIB_IPINTERFACE_ROW Row&#10;);">SetIpInterfaceEntry</a>, FlushIpNetTable and SetTcpEntry (closing a TCP connection).
  *
- * \param Store The NSI store to update (NsiPersistent, NsiActive or NsiBoth).
- * \param Action The set action (<a href="nsi_set_action" title="typedef enum _NSI_SET_ACTION&#10;{&#10;    NsiSetDefault = 0,&#10;    NsiSetCreateOnly = 1,&#10;    NsiSetCreateOrSet = 2,&#10;    NsiSetDelete = 3,&#10;    NsiSetReset = 4,&#10;    NsiSetClear = 5,&#10;    NsiSetCreateOrSetWithReference = 6,&#10;    NsiSetDeleteWithReference = 7,&#10;} NSI_SET_ACTION;">NSI_SET_ACTION</a>): NsiSetDefault to update an existing instance, NsiSetCreateOnly,
+ * \param[in] Store The NSI store to update (NsiPersistent, NsiActive or NsiBoth).
+ * \param[in] Action The set action (<a href="nsi_set_action" title="typedef enum _NSI_SET_ACTION&#10;{&#10;    NsiSetDefault = 0,                      // Update the parameters of an existing object.&#10;    NsiSetCreateOnly = 1,                   // Create an object without updating an existing object.&#10;    NsiSetCreateOrSet = 2,                  // Create an object or update its parameters if it already exists.&#10;    NsiSetDelete = 3,                       // Delete the object identified by the key.&#10;    NsiSetReset = 4,                        // Restore the stored parameters to their defaults.&#10;    NsiSetClear = 5,                        // Clear the stored parameters.&#10;    NsiSetCreateOrSetWithReference = 6,     // Create or update an object and retain a reference to it.&#10;    NsiSetDeleteWithReference = 7,          // Release a reference to the object, deleting it when no references remain.&#10;} NSI_SET_ACTION;">NSI_SET_ACTION</a>): NsiSetDefault to update an existing instance, NsiSetCreateOnly,
  *        NsiSetCreateOrSet, NsiSetDelete, NsiSetReset (flush), NsiSetClear, or the reference-counted
  *        NsiSetCreateOrSetWithReference/NsiSetDeleteWithReference (used by EnableRouter/UnenableRouter).
- * \param ModuleId A pointer to the NPI module identifier.
- * \param ObjectId The identifier of the NSI object.
- * \param Key Optional pointer to the key identifying the object instance (e.g. The interface <a href="luid" title="typedef struct _LUID {&#10;  DWORD LowPart;&#10;  LONG  HighPart;&#10;} LUID, *PLUID;">LUID</a>, or <a href="luid" title="typedef struct _LUID {&#10;  DWORD LowPart;&#10;  LONG  HighPart;&#10;} LUID, *PLUID;">LUID</a> + address).
- * \param KeySize The size of the key in bytes.
- * \param Rw Optional read-write row to write. Usually NULL for NsiSetDelete and NsiSetReset.
- * \param RwSize The size of Rw in bytes.
+ * \param[in] ModuleId A pointer to the NPI module identifier.
+ * \param[in] ObjectId The identifier of the NSI object.
+ * \param[in] Key Optional pointer to the key identifying the object instance (e.g. The interface <a href="luid" title="typedef struct _LUID {&#10;  DWORD LowPart;&#10;  LONG  HighPart;&#10;} LUID, *PLUID;">LUID</a>, or <a href="luid" title="typedef struct _LUID {&#10;  DWORD LowPart;&#10;  LONG  HighPart;&#10;} LUID, *PLUID;">LUID</a> + address).
+ * \param[in] KeySize The size of the key in bytes.
+ * \param[in] ReadWriteBuffer Optional read-write row to write. Usually NULL for NsiSetDelete and NsiSetReset.
+ * \param[in] ReadWriteBufferSize The size of ReadWriteBuffer in bytes.
  * \return A Win32 error code. ERROR_SUCCESS on success.
  * \remarks Uses IOCTL 0x120013 with a 0x48-byte request. For example,
  *          InternalSetIpInterfaceEntry: NsiSetAllParameters(NsiActive, NsiSetDefault, ModuleId, 7, &amp;Luid, 8, &amp;RwRow, 240).
@@ -67,18 +67,18 @@
 <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>
 NTAPI
 NsiSetAllParameters(
-    _In_ <a href="nsi_store" title="typedef enum _NSI_STORE&#10;{&#10;    NsiPersistent,&#10;    NsiActive,&#10;    NsiBoth,&#10;    NsiCurrent,&#10;    NsiBootFirmwareTable&#10;} NSI_STORE;">NSI_STORE</a> Store,
-    _In_ <a href="nsi_set_action" title="typedef enum _NSI_SET_ACTION&#10;{&#10;    NsiSetDefault = 0,&#10;    NsiSetCreateOnly = 1,&#10;    NsiSetCreateOrSet = 2,&#10;    NsiSetDelete = 3,&#10;    NsiSetReset = 4,&#10;    NsiSetClear = 5,&#10;    NsiSetCreateOrSetWithReference = 6,&#10;    NsiSetDeleteWithReference = 7,&#10;} NSI_SET_ACTION;">NSI_SET_ACTION</a> Action,
+    _In_ <a href="nsi_store" title="typedef enum _NSI_STORE&#10;{&#10;    NsiPersistent,              // Registry-backed configuration reapplied at boot.&#10;    NsiActive,                  // Active configuration used by the running system.&#10;    NsiBoth,                    // Apply changes to both the active and persistent stores.&#10;    NsiCurrent,                 // Active values merged with persistent defaults.&#10;    NsiBootFirmwareTable        // Configuration supplied by firmware for network boot.&#10;} NSI_STORE;">NSI_STORE</a> Store,
+    _In_ <a href="nsi_set_action" title="typedef enum _NSI_SET_ACTION&#10;{&#10;    NsiSetDefault = 0,                      // Update the parameters of an existing object.&#10;    NsiSetCreateOnly = 1,                   // Create an object without updating an existing object.&#10;    NsiSetCreateOrSet = 2,                  // Create an object or update its parameters if it already exists.&#10;    NsiSetDelete = 3,                       // Delete the object identified by the key.&#10;    NsiSetReset = 4,                        // Restore the stored parameters to their defaults.&#10;    NsiSetClear = 5,                        // Clear the stored parameters.&#10;    NsiSetCreateOrSetWithReference = 6,     // Create or update an object and retain a reference to it.&#10;    NsiSetDeleteWithReference = 7,          // Release a reference to the object, deleting it when no references remain.&#10;} NSI_SET_ACTION;">NSI_SET_ACTION</a> Action,
     _In_ <a href="npi_moduleid" title="typedef struct _NPI_MODULEID&#10;{&#10;    USHORT Length;&#10;    NPI_MODULEID_TYPE Type;&#10;    union&#10;    {&#10;        GUID Guid;&#10;        LUID IfLuid;&#10;    };&#10;} NPI_MODULEID, *PNPI_MODULEID;">PNPI_MODULEID</a> ModuleId,
     _In_ <a href="nsi_object_id" title="typedef ULONG NSI_OBJECT_ID, *PNSI_OBJECT_ID;">NSI_OBJECT_ID</a> ObjectId,
     _In_reads_bytes_opt_(KeySize) PVOID Key,
     _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> KeySize,
-    _In_reads_bytes_opt_(RwSize) PVOID Rw,
-    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RwSize
+    _In_reads_bytes_opt_(ReadWriteBufferSize) PVOID ReadWriteBuffer,
+    _In_ <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ReadWriteBufferSize
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/a7d46637ced3668dae4a3e83f336714afc24e728/phnt/include/ntnsi.h#L3288">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntnsi.h#L6133">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -43,17 +43,82 @@
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
-
-</span><span class="ntdoc-code-intro language-cpp">/**
+/**
  * The RtlSetBits routine sets all bits in a given range of a given bitmap variable.
  *
- * \param BitMapHeader A pointer to the <a href="rtl_bitmap" title="typedef struct _RTL_BITMAP&#10;{&#10;    ULONG SizeOfBitMap;&#10;    PULONG Buffer;&#10;} RTL_BITMAP, *PRTL_BITMAP;">RTL_BITMAP</a> structure that describes the bitmap. This structure must have been initialized by the <a href="rtlinitializebitmap" title="FORCEINLINE&#10;VOID&#10;RtlInitializeBitMap(&#10;    _Out_ PRTL_BITMAP BitMapHeader,&#10;    _In_ PULONG BitMapBuffer,&#10;    _In_ ULONG SizeOfBitMap&#10;    )&#10;{&#10;    BitMapHeader-&gt;SizeOfBitMap = SizeOfBitMap;&#10;    BitMapHeader-&gt;Buffer = BitMapBuffer;&#10;}">RtlInitializeBitMap</a> routine.
+ * \param BitMapHeader A pointer to the <a href="rtl_bitmap" title="typedef struct _RTL_BITMAP&#10;{&#10;    ULONG SizeOfBitMap;&#10;    PULONG Buffer;&#10;} RTL_BITMAP, *PRTL_BITMAP;">RTL_BITMAP</a> structure that describes the bitmap. This structure must have been initialized by the <a href="rtlinitializebitmap" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitializeBitMap(&#10;    _Out_ PRTL_BITMAP BitMapHeader,&#10;    _In_ PULONG BitMapBuffer,&#10;    _In_ ULONG SizeOfBitMap&#10;    )&#10;{&#10;    BitMapHeader-&gt;SizeOfBitMap = SizeOfBitMap;&#10;    BitMapHeader-&gt;Buffer = BitMapBuffer;&#10;}">RtlInitializeBitMap</a> routine.
  * \param StartingIndex Specifies the start of the bit range to be set. This is a zero-based value indicating the position of the first bit in the range.
  * \param NumberToSet Specifies how many bits to set.
  * \remarks RtlSetBits simply returns control if the input NumberToSet is zero. StartingIndex plus NumberToSet must be less than or equal to BitMapHeader-&gt;SizeOfBitMap.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlsetbits">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlsetbits</a>
  */
-</span><span class="ntdoc-code-body language-cpp">NTSYSAPI
+#ifndef PHNT_NO_INLINE_RTL_BITMAP
+
+</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">FORCEINLINE
+VOID
+NTAPI_INLINE
+RtlSetBits(
+    _In_ <a href="rtl_bitmap" title="typedef struct _RTL_BITMAP&#10;{&#10;    ULONG SizeOfBitMap;&#10;    PULONG Buffer;&#10;} RTL_BITMAP, *PRTL_BITMAP;">PRTL_BITMAP</a> BitMapHeader,
+    _In_range_(0, BitMapHeader-&gt;SizeOfBitMap - NumberToSet) <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> StartingIndex,
+    _In_range_(0, BitMapHeader-&gt;SizeOfBitMap - StartingIndex) <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> NumberToSet
+    )
+{
+    PUCHAR buffer;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> offset;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> count;
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> mask;
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> bytes;
+
+    if (NumberToSet == 0)
+        return;
+
+    buffer = (PUCHAR)BitMapHeader-&gt;Buffer + (<a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a>)(StartingIndex &gt;&gt; 3);
+    offset = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)(StartingIndex &amp; 7);
+
+    if (offset != 0)
+    {
+        count = 8 - offset;
+        if (NumberToSet &lt; count)
+            count = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)NumberToSet;
+        mask = (<a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>)(((1u &lt;&lt; count) - 1) &lt;&lt; offset);
+        *buffer++ |= mask;
+        NumberToSet -= count;
+    }
+
+    bytes = (<a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a>)(NumberToSet &gt;&gt; 3);
+    if (bytes != 0)
+    {
+        memset(buffer, 0xff, bytes);
+        buffer += bytes;
+    }
+
+    count = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)(NumberToSet &amp; 7);
+    if (count != 0)
+    {
+        mask = (<a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>)((1u &lt;&lt; count) - 1);
+        *buffer |= mask;
+    }
+}
+</span><span class="ntdoc-code-footer language-cpp">
+#endif
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntrtl.h#L14197">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
+/**
+ * The RtlSetBits routine sets all bits in a given range of a given bitmap variable.
+ *
+ * \param BitMapHeader A pointer to the <a href="rtl_bitmap" title="typedef struct _RTL_BITMAP&#10;{&#10;    ULONG SizeOfBitMap;&#10;    PULONG Buffer;&#10;} RTL_BITMAP, *PRTL_BITMAP;">RTL_BITMAP</a> structure that describes the bitmap. This structure must have been initialized by the <a href="rtlinitializebitmap" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitializeBitMap(&#10;    _Out_ PRTL_BITMAP BitMapHeader,&#10;    _In_ PULONG BitMapBuffer,&#10;    _In_ ULONG SizeOfBitMap&#10;    )&#10;{&#10;    BitMapHeader-&gt;SizeOfBitMap = SizeOfBitMap;&#10;    BitMapHeader-&gt;Buffer = BitMapBuffer;&#10;}">RtlInitializeBitMap</a> routine.
+ * \param StartingIndex Specifies the start of the bit range to be set. This is a zero-based value indicating the position of the first bit in the range.
+ * \param NumberToSet Specifies how many bits to set.
+ * \remarks RtlSetBits simply returns control if the input NumberToSet is zero. StartingIndex plus NumberToSet must be less than or equal to BitMapHeader-&gt;SizeOfBitMap.
+ * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlsetbits">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlsetbits</a>
+ */
+#ifndef PHNT_NO_INLINE_RTL_BITMAP
+// ...
+#else
+
+</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 VOID
 NTAPI
 RtlSetBits(
@@ -63,7 +128,8 @@ RtlSetBits(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/a7d46637ced3668dae4a3e83f336714afc24e728/phnt/include/ntrtl.h#L14172">View code on GitHub</a></span></code></pre></div>
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntrtl.h#L14243">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 
@@ -92,7 +158,7 @@ RtlSetBits(
 <p>The <strong>RtlSetBits</strong> routine sets all bits in a given range of a given bitmap variable.</p>
 <h2>Parameters</h2>
 <h3><code>BitMapHeader</code> [in]</h3>
-<p>A pointer to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess#rtl_bitmap">RTL_BITMAP</a> structure that describes the bitmap. This structure must have been initialized by the <a href="rtlinitializebitmap" title="FORCEINLINE&#10;VOID&#10;RtlInitializeBitMap(&#10;    _Out_ PRTL_BITMAP BitMapHeader,&#10;    _In_ PULONG BitMapBuffer,&#10;    _In_ ULONG SizeOfBitMap&#10;    )&#10;{&#10;    BitMapHeader-&gt;SizeOfBitMap = SizeOfBitMap;&#10;    BitMapHeader-&gt;Buffer = BitMapBuffer;&#10;}">RtlInitializeBitMap</a> routine.</p>
+<p>A pointer to the <a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess#rtl_bitmap">RTL_BITMAP</a> structure that describes the bitmap. This structure must have been initialized by the <a href="rtlinitializebitmap" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitializeBitMap(&#10;    _Out_ PRTL_BITMAP BitMapHeader,&#10;    _In_ PULONG BitMapBuffer,&#10;    _In_ ULONG SizeOfBitMap&#10;    )&#10;{&#10;    BitMapHeader-&gt;SizeOfBitMap = SizeOfBitMap;&#10;    BitMapHeader-&gt;Buffer = BitMapBuffer;&#10;}">RtlInitializeBitMap</a> routine.</p>
 <h3><code>StartingIndex</code> [in]</h3>
 <p>Specifies the start of the bit range to be set. This is a zero-based value indicating the position of the first bit in the range.</p>
 <h3><code>NumberToSet</code> [in]</h3>
@@ -105,15 +171,15 @@ RtlSetBits(
 <h2>See also</h2>
 <p><a rel="noopener" target="_blank" href="https://learn.microsoft.com/windows-hardware/drivers/kernel/eprocess#rtl_bitmap">RTL_BITMAP</a></p>
 <p><a href="rtlarebitsclear" title="_Check_return_&#10;NTSYSAPI&#10;BOOLEAN&#10;NTAPI&#10;RtlAreBitsClear(&#10;    _In_ PRTL_BITMAP BitMapHeader,&#10;    _In_ ULONG StartingIndex,&#10;    _In_ ULONG Length&#10;    );">RtlAreBitsClear</a></p>
-<p><a href="rtlfindclearbitsandset" title="_Success_(return != -1)&#10;NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlFindClearBitsAndSet(&#10;    _In_ PRTL_BITMAP BitMapHeader,&#10;    _In_ ULONG NumberToFind,&#10;    _In_ ULONG HintIndex&#10;    );">RtlFindClearBitsAndSet</a></p>
+<p><a href="rtlfindclearbitsandset" title="_Success_(return != -1)&#10;FORCEINLINE&#10;ULONG&#10;NTAPI_INLINE&#10;RtlFindClearBitsAndSet(&#10;    _In_ PRTL_BITMAP BitMapHeader,&#10;    _In_ ULONG NumberToFind,&#10;    _In_ ULONG HintIndex&#10;    )&#10;{&#10;    ULONG index;&#10;&#10;    index = RtlFindClearBits(BitMapHeader, NumberToFind, HintIndex);&#10;    if (index != MAXULONG)&#10;        RtlSetBits(BitMapHeader, index, NumberToFind);&#10;&#10;    return index;&#10;}">RtlFindClearBitsAndSet</a></p>
 <p><a href="rtlfindclearruns" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlFindClearRuns(&#10;    _In_ PRTL_BITMAP BitMapHeader,&#10;    _Out_writes_to_(SizeOfRunArray, return) PRTL_BITMAP_RUN RunArray,&#10;    _In_range_(&gt;, 0) ULONG SizeOfRunArray,&#10;    _In_ BOOLEAN LocateLongestRuns&#10;    );">RtlFindClearRuns</a></p>
 <p><a href="rtlfindfirstrunclear" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlFindFirstRunClear(&#10;    _In_ PRTL_BITMAP BitMapHeader,&#10;    _Out_ PULONG StartingIndex&#10;    );">RtlFindFirstRunClear</a></p>
 <p><a href="rtlfindlastbackwardrunclear" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlFindLastBackwardRunClear(&#10;    _In_ PRTL_BITMAP BitMapHeader,&#10;    _In_ ULONG FromIndex,&#10;    _Out_ PULONG StartingRunIndex&#10;    );">RtlFindLastBackwardRunClear</a></p>
 <p><a href="rtlfindlongestrunclear" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlFindLongestRunClear(&#10;    _In_ PRTL_BITMAP BitMapHeader,&#10;    _Out_ PULONG StartingIndex&#10;    );">RtlFindLongestRunClear</a></p>
 <p><a href="rtlfindnextforwardrunclear" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlFindNextForwardRunClear(&#10;    _In_ PRTL_BITMAP BitMapHeader,&#10;    _In_ ULONG FromIndex,&#10;    _Out_ PULONG StartingRunIndex&#10;    );">RtlFindNextForwardRunClear</a></p>
-<p><a href="rtlinitializebitmap" title="FORCEINLINE&#10;VOID&#10;RtlInitializeBitMap(&#10;    _Out_ PRTL_BITMAP BitMapHeader,&#10;    _In_ PULONG BitMapBuffer,&#10;    _In_ ULONG SizeOfBitMap&#10;    )&#10;{&#10;    BitMapHeader-&gt;SizeOfBitMap = SizeOfBitMap;&#10;    BitMapHeader-&gt;Buffer = BitMapBuffer;&#10;}">RtlInitializeBitMap</a></p>
+<p><a href="rtlinitializebitmap" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlInitializeBitMap(&#10;    _Out_ PRTL_BITMAP BitMapHeader,&#10;    _In_ PULONG BitMapBuffer,&#10;    _In_ ULONG SizeOfBitMap&#10;    )&#10;{&#10;    BitMapHeader-&gt;SizeOfBitMap = SizeOfBitMap;&#10;    BitMapHeader-&gt;Buffer = BitMapBuffer;&#10;}">RtlInitializeBitMap</a></p>
 <p><a href="rtlnumberofclearbits" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;RtlNumberOfClearBits(&#10;    _In_ PRTL_BITMAP BitMapHeader&#10;    );">RtlNumberOfClearBits</a></p>
-<p><a href="rtlsetallbits" title="NTSYSAPI&#10;VOID&#10;NTAPI&#10;RtlSetAllBits(&#10;    _In_ PRTL_BITMAP BitMapHeader&#10;    );">RtlSetAllBits</a></p>
+<p><a href="rtlsetallbits" title="FORCEINLINE&#10;VOID&#10;NTAPI_INLINE&#10;RtlSetAllBits(&#10;    _In_ PRTL_BITMAP BitMapHeader&#10;    )&#10;{&#10;    // Include padding in the final ULONG, also for RTL_BITMAP_EX.&#10;    SIZE_T size = (SIZE_T)((BitMapHeader-&gt;SizeOfBitMap &gt;&gt; 5) +&#10;        ((BitMapHeader-&gt;SizeOfBitMap &amp; 31) != 0)) * sizeof(ULONG);&#10;&#10;    if (size != 0)&#10;        memset(BitMapHeader-&gt;Buffer, 0xff, size);&#10;}">RtlSetAllBits</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>

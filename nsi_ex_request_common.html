@@ -46,27 +46,34 @@
 
 </span><span class="ntdoc-code-intro language-cpp">/**
  * The NSI_EX_REQUEST_COMMON structure is the header shared by the *Ex request blocks that nsi.dll passes to netio.sys
- * (<a href="nsigetparameterex" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiGetParameterEx(&#10;    _Inout_ PNSI_GET_PARAMETER_EX_REQUEST GetParameterRequest&#10;    );">NsiGetParameterEx</a>, <a href="nsigetallparametersex" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiGetAllParametersEx(&#10;    _Inout_ PNSI_GET_ALL_PARAMETERS_EX_REQUEST GetAllParametersRequest&#10;    );">NsiGetAllParametersEx</a>, <a href="nsisetparameterex" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiSetParameterEx(&#10;    _Inout_ PNSI_SET_PARAMETER_EX_REQUEST SetParameterRequest&#10;    );">NsiSetParameterEx</a>, <a href="nsisetallparametersex" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiSetAllParametersEx(&#10;    _Inout_ PNSI_SET_ALL_PARAMETERS_EX_REQUEST SetAllParametersRequest&#10;    );">NsiSetAllParametersEx</a>). It selects the module, object and
+ * (<a href="nsigetparameterex" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiGetParameterEx(&#10;    _Inout_ PNSI_GET_PARAMETER_EX_REQUEST Request&#10;    );">NsiGetParameterEx</a>, <a href="nsigetallparametersex" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiGetAllParametersEx(&#10;    _Inout_ PNSI_GET_ALL_PARAMETERS_EX_REQUEST Request&#10;    );">NsiGetAllParametersEx</a>, <a href="nsisetparameterex" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiSetParameterEx(&#10;    _Inout_ PNSI_SET_PARAMETER_EX_REQUEST Request&#10;    );">NsiSetParameterEx</a>, <a href="nsisetallparametersex" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiSetAllParametersEx(&#10;    _Inout_ PNSI_SET_ALL_PARAMETERS_EX_REQUEST Request&#10;    );">NsiSetAllParametersEx</a>). It selects the module, object and
  * store, and the get or set action.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _NSI_EX_REQUEST_COMMON
 {
-    <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> MustBeZero;           // netio.sys fails the request with STATUS_NOT_IMPLEMENTED unless 0 (winnsi.dll: ERROR_CALL_NOT_IMPLEMENTED)
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ModuleHandle;             // module handle (see <a href="nsirequestchangenotification" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiRequestChangeNotification(&#10;    _In_ ULONG ModuleHandle,&#10;    _In_ PNPI_MODULEID ModuleId,&#10;    _In_ ULONG ObjectIndex,&#10;    _In_opt_ LPOVERLAPPED OverLapped,&#10;    _Out_ PHANDLE NotificationHandle&#10;    );">NsiRequestChangeNotification</a>); 0 = look the module up by ModuleId
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved0C;               // alignment padding; nothing reads or writes it
-    <a href="npi_moduleid" title="typedef struct _NPI_MODULEID&#10;{&#10;    USHORT Length;&#10;    NPI_MODULEID_TYPE Type;&#10;    union&#10;    {&#10;        GUID Guid;&#10;        LUID IfLuid;&#10;    };&#10;} NPI_MODULEID, *PNPI_MODULEID;">PNPI_MODULEID</a> ModuleId;
-    <a href="nsi_object_id" title="typedef ULONG NSI_OBJECT_ID, *PNSI_OBJECT_ID;">NSI_OBJECT_ID</a> ObjectId;
-    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved1C;               // alignment padding; nothing reads or writes it
-    <a href="nsi_store" title="typedef enum _NSI_STORE&#10;{&#10;    NsiPersistent,&#10;    NsiActive,&#10;    NsiBoth,&#10;    NsiCurrent,&#10;    NsiBootFirmwareTable&#10;} NSI_STORE;">NSI_STORE</a> Store;
-    union                           // 0x24
+    union
     {
-        <a href="nsi_get_action" title="typedef enum _NSI_GET_ACTION&#10;{&#10;    NsiGetExact = 0,    // The instance identified by the key (used by NsiGetParameter/NsiGetAllParameters).&#10;    NsiGetFirst = 1,    // Start at the first instance (NsiAllocateAndGetTable and IP Helper always pass this).&#10;    NsiGetNext = 2      // Continue with the instance that follows the key in the first KeyTable entry.&#10;} NSI_GET_ACTION;">NSI_GET_ACTION</a> GetAction;   // get/enumerate requests
-        <a href="nsi_set_action" title="typedef enum _NSI_SET_ACTION&#10;{&#10;    NsiSetDefault = 0,&#10;    NsiSetCreateOnly = 1,&#10;    NsiSetCreateOrSet = 2,&#10;    NsiSetDelete = 3,&#10;    NsiSetReset = 4,&#10;    NsiSetClear = 5,&#10;    NsiSetCreateOrSetWithReference = 6,&#10;    NsiSetDeleteWithReference = 7,&#10;} NSI_SET_ACTION;">NSI_SET_ACTION</a> SetAction;   // set requests
-    };
+        <a href="nsi_request_header" title="typedef struct _NSI_REQUEST_HEADER&#10;{&#10;    ULONGLONG MustBeZero;           // Must be zero.&#10;    ULONG ModuleHandle;             // 0 selects the module by ModuleId.&#10;    ULONG Reserved0C;&#10;    PNPI_MODULEID ModuleId;&#10;    NSI_OBJECT_ID ObjectId;&#10;    ULONG Reserved1C;&#10;} NSI_REQUEST_HEADER, *PNSI_REQUEST_HEADER;">NSI_REQUEST_HEADER</a> RequestHeader;
+        struct
+        {
+            <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> MustBeZero;           // netio.sys fails the request with STATUS_NOT_IMPLEMENTED unless 0 (winnsi.dll: ERROR_CALL_NOT_IMPLEMENTED)
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> ModuleHandle;             // module handle (see <a href="nsirequestchangenotification" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiRequestChangeNotification(&#10;    _In_ ULONG ModuleHandle,&#10;    _In_ PNPI_MODULEID ModuleId,&#10;    _In_ NSI_OBJECT_ID ObjectId,&#10;    _In_opt_ LPOVERLAPPED Overlapped,&#10;    _Out_ PHANDLE NotificationHandle&#10;    );">NsiRequestChangeNotification</a>); 0 = look the module up by ModuleId
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved0C;               // alignment padding; nothing reads or writes it
+            <a href="npi_moduleid" title="typedef struct _NPI_MODULEID&#10;{&#10;    USHORT Length;&#10;    NPI_MODULEID_TYPE Type;&#10;    union&#10;    {&#10;        GUID Guid;&#10;        LUID IfLuid;&#10;    };&#10;} NPI_MODULEID, *PNPI_MODULEID;">PNPI_MODULEID</a> ModuleId;
+            <a href="nsi_object_id" title="typedef ULONG NSI_OBJECT_ID, *PNSI_OBJECT_ID;">NSI_OBJECT_ID</a> ObjectId;
+            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> Reserved1C;               // alignment padding; nothing reads or writes it
+            <a href="nsi_store" title="typedef enum _NSI_STORE&#10;{&#10;    NsiPersistent,              // Registry-backed configuration reapplied at boot.&#10;    NsiActive,                  // Active configuration used by the running system.&#10;    NsiBoth,                    // Apply changes to both the active and persistent stores.&#10;    NsiCurrent,                 // Active values merged with persistent defaults.&#10;    NsiBootFirmwareTable        // Configuration supplied by firmware for network boot.&#10;} NSI_STORE;">NSI_STORE</a> Store;
+            union                           // 0x24
+            {
+                <a href="nsi_get_action" title="typedef enum _NSI_GET_ACTION&#10;{&#10;    NsiGetExact = 0,            // The instance identified by the key (used by NsiGetParameter/NsiGetAllParameters).&#10;    NsiGetFirst = 1,            // Start at the first instance (NsiAllocateAndGetTable and IP Helper always pass this).&#10;    NsiGetNext = 2              // Continue with the instance that follows the key in the first KeyTable entry.&#10;} NSI_GET_ACTION;">NSI_GET_ACTION</a> GetAction;   // get/enumerate requests
+                <a href="nsi_set_action" title="typedef enum _NSI_SET_ACTION&#10;{&#10;    NsiSetDefault = 0,                      // Update the parameters of an existing object.&#10;    NsiSetCreateOnly = 1,                   // Create an object without updating an existing object.&#10;    NsiSetCreateOrSet = 2,                  // Create an object or update its parameters if it already exists.&#10;    NsiSetDelete = 3,                       // Delete the object identified by the key.&#10;    NsiSetReset = 4,                        // Restore the stored parameters to their defaults.&#10;    NsiSetClear = 5,                        // Clear the stored parameters.&#10;    NsiSetCreateOrSetWithReference = 6,     // Create or update an object and retain a reference to it.&#10;    NsiSetDeleteWithReference = 7,          // Release a reference to the object, deleting it when no references remain.&#10;} NSI_SET_ACTION;">NSI_SET_ACTION</a> SetAction;   // set requests
+            };
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
 } NSI_EX_REQUEST_COMMON, *PNSI_EX_REQUEST_COMMON;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/a7d46637ced3668dae4a3e83f336714afc24e728/phnt/include/ntnsi.h#L1174">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntnsi.h#L1632">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

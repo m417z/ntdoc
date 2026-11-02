@@ -45,19 +45,23 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTNSI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NSI_UDP_OBJECT_ID values are the NSI object IDs of the UDP module (<a href="npi_ms_udp_moduleid" title="EXTERN_C CONST NPI_MODULEID NPI_MS_UDP_MODULEID;">NPI_MS_UDP_MODULEID</a>): global statistics, and
- * port reservations and exclusions.
+ * The NSI_UDP_OBJECT_ID values are the NSI object IDs of the UDP module (<a href="npi_ms_udp_moduleid" title="EXTERN_C CONST NPI_MODULEID NPI_MS_UDP_MODULEID;">NPI_MS_UDP_MODULEID</a>): global statistics,
+ * endpoints, and port reservations and exclusions. The table has 7 entries. The port pool objects (2-5) are installed
+ * per compartment by tcpip!UdpCreateCompartment (InetCreatePortPool).
  */
 </span><span class="ntdoc-code-body language-cpp">typedef enum _NSI_UDP_OBJECT_ID
 {
-    NsiUdpObjectGlobal = 0,
-    NsiUdpObjectPortReservationGranting = 3,
-    NsiUdpObjectPortReservation = 4,
-    NsiUdpObjectPortExclusionGranting = 5
+    NsiUdpObjectGlobal = 0,                     // Key: <a href="address_family" title="typedef USHORT ADDRESS_FAMILY;">ADDRESS_FAMILY</a> -- RW: <a href="nsi_udp_global_rw" title="typedef struct _NSI_UDP_GLOBAL_RW&#10;{&#10;    BOOLEAN DisableUro;             // UDP receive offload (receive segment coalescing). UdpOffloadSetUro applies it.&#10;    BOOLEAN DisableUso;             // UDP segmentation offload. UdpUpdateUsoDisabledMask applies it.&#10;} NSI_UDP_GLOBAL_RW, *PNSI_UDP_GLOBAL_RW;">NSI_UDP_GLOBAL_RW</a> -- ROD: <a href="netio_udp_stats_dynamic" title="typedef struct _NETIO_UDP_STATS_DYNAMIC&#10;{&#10;    ULONG64 InDatagrams;                // MIB_UDPSTATS2.dw64InDatagrams&#10;    ULONG NoPorts;                      // MIB_UDPSTATS2.dwNoPorts&#10;    ULONG InErrors;                     // MIB_UDPSTATS2.dwInErrors&#10;    ULONG64 OutDatagrams;               // MIB_UDPSTATS2.dw64OutDatagrams&#10;    ULONG NumAddrs;                     // MIB_UDPSTATS2.dwNumAddrs&#10;    ULONG Reserved;                     // alignment padding; nothing reads or writes it&#10;    ULONG64 SwSegments;                 // Datagrams that tcpip split in software from a segmented (UDP_SEND_MSG_SIZE) send.&#10;    ULONG64 HwSegments;                 // Datagrams the adapter produced through UDP segmentation offload (USO).&#10;} NETIO_UDP_STATS_DYNAMIC, *PNETIO_UDP_STATS_DYNAMIC;">NETIO_UDP_STATS_DYNAMIC</a>
+    NsiUdpObjectEndpoint = 1,                   // Key: <a href="nsi_udp_key_row" title="typedef struct _NSI_UDP_KEY_ROW&#10;{&#10;    union&#10;    {&#10;        SOCKADDR_INET LocalSockaddr;&#10;        SOCKADDR_IN LocalSockaddrV4;&#10;        SOCKADDR_IN6 LocalSockaddrV6;&#10;        struct&#10;        {&#10;            ADDRESS_FAMILY AddressFamily;&#10;            USHORT LocalPort;&#10;            union&#10;            {&#10;                IN_ADDR LocalAddressV4;&#10;                IPAddr LocalAddressV4Value;&#10;            } DUMMYUNIONNAME3;&#10;            union&#10;            {&#10;                IN6_ADDR LocalAddressV6;&#10;                IPv6Addr LocalAddressV6Value;&#10;...">NSI_UDP_KEY_ROW</a> -- ROD: <a href="nsi_udp_status_row" title="typedef struct _NSI_UDP_STATUS_ROW&#10;{&#10;    union&#10;    {&#10;        SOCKADDR_INET RemoteAddress;&#10;        SOCKADDR_IN RemoteSockaddrV4;&#10;        SOCKADDR_IN6 RemoteSockaddrV6;&#10;        struct&#10;        {&#10;            ADDRESS_FAMILY RemoteFamily;&#10;            USHORT RemotePort;&#10;            union&#10;            {&#10;                IN_ADDR RemoteAddressV4;&#10;                IPAddr RemoteAddressV4Value;&#10;            } DUMMYUNIONNAME3;&#10;            union&#10;            {&#10;                IN6_ADDR RemoteAddressV6;&#10;                IPv6Addr RemoteAddressV6Value;&#10;...">NSI_UDP_STATUS_ROW</a> -- ROS: <a href="nsi_udp_owner_row" title="typedef struct _NSI_UDP_OWNER_ROW&#10;{&#10;    ULONG OwningPid;&#10;    BOOLEAN DualMode;               // IPv6 wildcard socket that also accepts IPv4 (IP Helper lists it as 0.0.0.0 in the IPv4 table)&#10;    UCHAR Reserved05[3];            // alignment padding; nothing reads or writes it&#10;    LARGE_INTEGER CreateTimestamp;&#10;    union&#10;    {&#10;        ULONG Flags;                // NSI_UDP_OWNER_FLAGS&#10;        struct&#10;        {&#10;            ULONG SpecificPortBind : 1;&#10;            ULONG ReservedFlags : 31;   // unused bits; tcpip writes the whole ULONG (0 or SpecificPortBind) and nothing reads them&#10;        } DUMMYSTRUCTNAME;&#10;    } DUMMYUNIONNAME;&#10;    ULONG Reserved;                 // alignment padding; nothing reads or writes it&#10;    ULONGLONG OwningModuleInfo;&#10;} NSI_UDP_OWNER_ROW, *PNSI_UDP_OWNER_ROW;">NSI_UDP_OWNER_ROW</a>; enumeration only.
+    NsiUdpObjectPortPool = 2,                   // Per-compartment port pool.
+    NsiUdpObjectPortReservationGranting = 3,    // UDP port reservation granting object.
+    NsiUdpObjectPortReservation = 4,            // UDP port reservation object.
+    NsiUdpObjectPortExclusionGranting = 5,      // UDP port exclusion granting object.
+    NsiUdpObjectUroStats = 6                    // Key: NET_LUID (exactly 8 bytes) -- ROD 8 bytes of UDP receive offload statistics (tcpip!UdpOffloadUroGetAllStats; layout not decoded).
 } NSI_UDP_OBJECT_ID;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/a7d46637ced3668dae4a3e83f336714afc24e728/phnt/include/ntnsi.h#L567">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntnsi.h#L821">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

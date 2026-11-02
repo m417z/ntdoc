@@ -48,7 +48,7 @@
  * The NSI_SET_TCP_ENTRY structure is the key of a TCP connection (<a href="npi_ms_tcp_moduleid" title="EXTERN_C CONST NPI_MODULEID NPI_MS_TCP_MODULEID;">NPI_MS_TCP_MODULEID</a>, NsiTcpObjectConnection): the local
  * and remote endpoints as SOCKADDR_IN/SOCKADDR_IN6 values (56 bytes). SetTcpEntry passes it with MIB_TCP_STATE_DELETE_TCB
  * to reset a connection; System Informer uses it to close connections from the network tab.
- * \remarks Layout matches <a href="nsi_tcp_key_row" title="typedef struct _NSI_TCP_KEY_ROW&#10;{&#10;    SOCKADDR_INET LocalAddress;&#10;    SOCKADDR_INET RemoteAddress;&#10;} NSI_TCP_KEY_ROW, *PNSI_TCP_KEY_ROW;">NSI_TCP_KEY_ROW</a>.
+ * \remarks Layout matches <a href="nsi_tcp_key_row" title="typedef struct _NSI_TCP_KEY_ROW&#10;{&#10;    union&#10;    {&#10;        SOCKADDR_INET LocalAddress;&#10;        SOCKADDR_IN LocalSockaddrV4;&#10;        SOCKADDR_IN6 LocalSockaddrV6;&#10;        struct&#10;        {&#10;            ADDRESS_FAMILY LocalFamily;&#10;            USHORT LocalPort;&#10;            union&#10;            {&#10;                IN_ADDR LocalAddressV4;&#10;                IPAddr LocalAddressV4Value;&#10;            } DUMMYUNIONNAME3;&#10;            union&#10;            {&#10;                IN6_ADDR LocalAddressV6;&#10;                IPv6Addr LocalAddressV6Value;&#10;...">NSI_TCP_KEY_ROW</a>.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef struct _NSI_SET_TCP_ENTRY
 {
@@ -56,6 +56,7 @@
     {
         union
         {
+            SOCKADDR_INET LocalSockaddr;
             SOCKADDR_IN LocalTcpEntryIpV4;
             SOCKADDR_IN6 LocalTcpEntryIpV6;
         } DUMMYUNIONNAME;
@@ -63,15 +64,24 @@
         {
             <a href="address_family" title="typedef USHORT ADDRESS_FAMILY;">ADDRESS_FAMILY</a> LocalFamily;
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> LocalPort;
-            <a href="in_addr" title="typedef struct in_addr&#10;{&#10;    union&#10;    {&#10;        struct { UCHAR s_b1, s_b2, s_b3, s_b4; } S_un_b;&#10;        struct { USHORT s_w1, s_w2; } S_un_w;&#10;        ULONG S_addr;&#10;    } S_un;&#10;#define s_addr  S_un.S_addr /* can be used for most tcp &amp; ip code */&#10;#define s_host  S_un.S_un_b.s_b2    // host on imp&#10;#define s_net   S_un.S_un_b.s_b1    // network&#10;#define s_imp   S_un.S_un_w.s_w2    // imp&#10;#define s_impno S_un.S_un_b.s_b4    // imp #&#10;#define s_lh    S_un.S_un_b.s_b3    // logical host&#10;} IN_ADDR, * PIN_ADDR, FAR* LPIN_ADDR;">IN_ADDR</a> LocalAddressIPv4;
-            <a href="in6_addr" title="typedef struct in6_addr&#10;{&#10;    union&#10;    {&#10;        UCHAR Byte[16];&#10;        USHORT Word[8];&#10;    } u;&#10;#define in_addr6 in6_addr&#10;#define _S6_un   u&#10;#define _S6_u8   Byte&#10;#define s6_addr  _S6_un._S6_u8&#10;#define s6_bytes u.Byte&#10;#define s6_words u.Word&#10;} IN6_ADDR, *PIN6_ADDR, FAR *LPIN6_ADDR;">IN6_ADDR</a> LocalAddressIPv6;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> LocalScopeID;
+            union
+            {
+                <a href="in_addr" title="typedef struct in_addr&#10;{&#10;    union&#10;    {&#10;        struct { UCHAR s_b1, s_b2, s_b3, s_b4; } S_un_b;&#10;        struct { USHORT s_w1, s_w2; } S_un_w;&#10;        ULONG S_addr;&#10;    } S_un;&#10;#define s_addr  S_un.S_addr /* can be used for most tcp &amp; ip code */&#10;#define s_host  S_un.S_un_b.s_b2    // host on imp&#10;#define s_net   S_un.S_un_b.s_b1    // network&#10;#define s_imp   S_un.S_un_w.s_w2    // imp&#10;#define s_impno S_un.S_un_b.s_b4    // imp #&#10;#define s_lh    S_un.S_un_b.s_b3    // logical host&#10;} IN_ADDR, * PIN_ADDR, FAR* LPIN_ADDR;">IN_ADDR</a> LocalAddressIPv4;
+                IPAddr LocalAddressIPv4Value;
+            } DUMMYUNIONNAME3;
+            union
+            {
+                <a href="in6_addr" title="typedef struct in6_addr&#10;{&#10;    union&#10;    {&#10;        UCHAR Byte[16];&#10;        USHORT Word[8];&#10;    } u;&#10;#define in_addr6 in6_addr&#10;#define _S6_un   u&#10;#define _S6_u8   Byte&#10;#define s6_addr  _S6_un._S6_u8&#10;#define s6_bytes u.Byte&#10;#define s6_words u.Word&#10;} IN6_ADDR, *PIN6_ADDR, FAR *LPIN6_ADDR;">IN6_ADDR</a> LocalAddressIPv6;
+                IPv6Addr LocalAddressIPv6Value;
+            } DUMMYUNIONNAME5;
+            SCOPE_ID LocalScopeID;
         } DUMMYSTRUCTNAME;
     } DUMMYUNIONNAME;
     union
     {
         union
         {
+            SOCKADDR_INET RemoteSockaddr;
             SOCKADDR_IN RemoteTcpEntryIpV4;
             SOCKADDR_IN6 RemoteTcpEntryIpV6;
         } DUMMYUNIONNAME2;
@@ -79,15 +89,23 @@
         {
             <a href="address_family" title="typedef USHORT ADDRESS_FAMILY;">ADDRESS_FAMILY</a> RemoteFamily;
             <a href="ushort" title="typedef unsigned short USHORT;">USHORT</a> RemotePort;
-            <a href="in_addr" title="typedef struct in_addr&#10;{&#10;    union&#10;    {&#10;        struct { UCHAR s_b1, s_b2, s_b3, s_b4; } S_un_b;&#10;        struct { USHORT s_w1, s_w2; } S_un_w;&#10;        ULONG S_addr;&#10;    } S_un;&#10;#define s_addr  S_un.S_addr /* can be used for most tcp &amp; ip code */&#10;#define s_host  S_un.S_un_b.s_b2    // host on imp&#10;#define s_net   S_un.S_un_b.s_b1    // network&#10;#define s_imp   S_un.S_un_w.s_w2    // imp&#10;#define s_impno S_un.S_un_b.s_b4    // imp #&#10;#define s_lh    S_un.S_un_b.s_b3    // logical host&#10;} IN_ADDR, * PIN_ADDR, FAR* LPIN_ADDR;">IN_ADDR</a> RemoteAddressIPv4;
-            <a href="in6_addr" title="typedef struct in6_addr&#10;{&#10;    union&#10;    {&#10;        UCHAR Byte[16];&#10;        USHORT Word[8];&#10;    } u;&#10;#define in_addr6 in6_addr&#10;#define _S6_un   u&#10;#define _S6_u8   Byte&#10;#define s6_addr  _S6_un._S6_u8&#10;#define s6_bytes u.Byte&#10;#define s6_words u.Word&#10;} IN6_ADDR, *PIN6_ADDR, FAR *LPIN6_ADDR;">IN6_ADDR</a> RemoteAddressIPv6;
-            <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> RemoteScopeID;
+            union
+            {
+                <a href="in_addr" title="typedef struct in_addr&#10;{&#10;    union&#10;    {&#10;        struct { UCHAR s_b1, s_b2, s_b3, s_b4; } S_un_b;&#10;        struct { USHORT s_w1, s_w2; } S_un_w;&#10;        ULONG S_addr;&#10;    } S_un;&#10;#define s_addr  S_un.S_addr /* can be used for most tcp &amp; ip code */&#10;#define s_host  S_un.S_un_b.s_b2    // host on imp&#10;#define s_net   S_un.S_un_b.s_b1    // network&#10;#define s_imp   S_un.S_un_w.s_w2    // imp&#10;#define s_impno S_un.S_un_b.s_b4    // imp #&#10;#define s_lh    S_un.S_un_b.s_b3    // logical host&#10;} IN_ADDR, * PIN_ADDR, FAR* LPIN_ADDR;">IN_ADDR</a> RemoteAddressIPv4;
+                IPAddr RemoteAddressIPv4Value;
+            } DUMMYUNIONNAME4;
+            union
+            {
+                <a href="in6_addr" title="typedef struct in6_addr&#10;{&#10;    union&#10;    {&#10;        UCHAR Byte[16];&#10;        USHORT Word[8];&#10;    } u;&#10;#define in_addr6 in6_addr&#10;#define _S6_un   u&#10;#define _S6_u8   Byte&#10;#define s6_addr  _S6_un._S6_u8&#10;#define s6_bytes u.Byte&#10;#define s6_words u.Word&#10;} IN6_ADDR, *PIN6_ADDR, FAR *LPIN6_ADDR;">IN6_ADDR</a> RemoteAddressIPv6;
+                IPv6Addr RemoteAddressIPv6Value;
+            } DUMMYUNIONNAME6;
+            SCOPE_ID RemoteScopeID;
         } DUMMYSTRUCTNAME2;
     } DUMMYUNIONNAME2;
 } NSI_SET_TCP_ENTRY, *PNSI_SET_TCP_ENTRY;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/a7d46637ced3668dae4a3e83f336714afc24e728/phnt/include/ntnsi.h#L602">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntnsi.h#L894">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

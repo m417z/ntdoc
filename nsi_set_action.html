@@ -45,26 +45,26 @@
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTNSI_H
 
 </span><span class="ntdoc-code-intro language-cpp">/**
- * The NSI_SET_ACTION values select what <a href="nsisetparameter" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiSetParameter(&#10;    _In_ NSI_STORE Store,&#10;    _In_ NSI_SET_ACTION Action,&#10;    _In_ PNPI_MODULEID ModuleId,&#10;    _In_ NSI_OBJECT_ID ObjectId,&#10;    _In_reads_bytes_opt_(KeySize) PVOID Key,&#10;    _In_ ULONG KeySize,&#10;    _In_ NSI_PARAMETER_TYPE ParameterType,&#10;    _In_reads_bytes_opt_(ParameterBufferSize) PVOID ParameterBuffer,&#10;    _In_ ULONG ParameterBufferSize,&#10;    _In_ ULONG ParameterOffset&#10;    );">NsiSetParameter</a>(Ex) and <a href="nsisetallparameters" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiSetAllParameters(&#10;    _In_ NSI_STORE Store,&#10;    _In_ NSI_SET_ACTION Action,&#10;    _In_ PNPI_MODULEID ModuleId,&#10;    _In_ NSI_OBJECT_ID ObjectId,&#10;    _In_reads_bytes_opt_(KeySize) PVOID Key,&#10;    _In_ ULONG KeySize,&#10;    _In_reads_bytes_opt_(RwSize) PVOID Rw,&#10;    _In_ ULONG RwSize&#10;    );">NsiSetAllParameters</a>(Ex) do with the object named by
+ * The NSI_SET_ACTION values select what <a href="nsisetparameter" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiSetParameter(&#10;    _In_ NSI_STORE Store,&#10;    _In_ NSI_SET_ACTION Action,&#10;    _In_ PNPI_MODULEID ModuleId,&#10;    _In_ NSI_OBJECT_ID ObjectId,&#10;    _In_reads_bytes_opt_(KeySize) PVOID Key,&#10;    _In_ ULONG KeySize,&#10;    _In_ NSI_PARAMETER_TYPE ParameterType,&#10;    _In_reads_bytes_opt_(ParameterBufferSize) PVOID ParameterBuffer,&#10;    _In_ ULONG ParameterBufferSize,&#10;    _In_ ULONG ParameterOffset&#10;    );">NsiSetParameter</a>(Ex) and <a href="nsisetallparameters" title="NTSYSAPI&#10;ULONG&#10;NTAPI&#10;NsiSetAllParameters(&#10;    _In_ NSI_STORE Store,&#10;    _In_ NSI_SET_ACTION Action,&#10;    _In_ PNPI_MODULEID ModuleId,&#10;    _In_ NSI_OBJECT_ID ObjectId,&#10;    _In_reads_bytes_opt_(KeySize) PVOID Key,&#10;    _In_ ULONG KeySize,&#10;    _In_reads_bytes_opt_(ReadWriteBufferSize) PVOID ReadWriteBuffer,&#10;    _In_ ULONG ReadWriteBufferSize&#10;    );">NsiSetAllParameters</a>(Ex) do with the object named by
  * the key: change it, create it, create-or-change it, or delete it. The *WithReference variants keep a reference count so
  * that several callers can create and delete the same object (for example port reservations); Reset and Clear restore
  * or clear the stored parameters.
- * \remarks The value is the SetAction field of <a href="nsi_ex_request_common" title="typedef struct _NSI_EX_REQUEST_COMMON&#10;{&#10;    ULONGLONG MustBeZero;           // netio.sys fails the request with STATUS_NOT_IMPLEMENTED unless 0 (winnsi.dll: ERROR_CALL_NOT_IMPLEMENTED)&#10;    ULONG ModuleHandle;             // module handle (see NsiRequestChangeNotification); 0 = look the module up by ModuleId&#10;    ULONG Reserved0C;               // alignment padding; nothing reads or writes it&#10;    PNPI_MODULEID ModuleId;&#10;    NSI_OBJECT_ID ObjectId;&#10;    ULONG Reserved1C;               // alignment padding; nothing reads or writes it&#10;    NSI_STORE Store;&#10;    union                           // 0x24&#10;    {&#10;        NSI_GET_ACTION GetAction;   // get/enumerate requests&#10;        NSI_SET_ACTION SetAction;   // set requests&#10;    };&#10;} NSI_EX_REQUEST_COMMON, *PNSI_EX_REQUEST_COMMON;">NSI_EX_REQUEST_COMMON</a>.
+ * \remarks The value is the SetAction field of <a href="nsi_ex_request_common" title="typedef struct _NSI_EX_REQUEST_COMMON&#10;{&#10;    union&#10;    {&#10;        NSI_REQUEST_HEADER RequestHeader;&#10;        struct&#10;        {&#10;            ULONGLONG MustBeZero;           // netio.sys fails the request with STATUS_NOT_IMPLEMENTED unless 0 (winnsi.dll: ERROR_CALL_NOT_IMPLEMENTED)&#10;            ULONG ModuleHandle;             // module handle (see NsiRequestChangeNotification); 0 = look the module up by ModuleId&#10;            ULONG Reserved0C;               // alignment padding; nothing reads or writes it&#10;            PNPI_MODULEID ModuleId;&#10;            NSI_OBJECT_ID ObjectId;&#10;            ULONG Reserved1C;               // alignment padding; nothing reads or writes it&#10;            NSI_STORE Store;&#10;            union                           // 0x24&#10;            {&#10;                NSI_GET_ACTION GetAction;   // get/enumerate requests&#10;                NSI_SET_ACTION SetAction;   // set requests&#10;            };&#10;        } DUMMYSTRUCTNAME;&#10;...">NSI_EX_REQUEST_COMMON</a>.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef enum _NSI_SET_ACTION
 {
-    NsiSetDefault = 0,
-    NsiSetCreateOnly = 1,
-    NsiSetCreateOrSet = 2,
-    NsiSetDelete = 3,
-    NsiSetReset = 4,
-    NsiSetClear = 5,
-    NsiSetCreateOrSetWithReference = 6,
-    NsiSetDeleteWithReference = 7,
+    NsiSetDefault = 0,                      // Update the parameters of an existing object.
+    NsiSetCreateOnly = 1,                   // Create an object without updating an existing object.
+    NsiSetCreateOrSet = 2,                  // Create an object or update its parameters if it already exists.
+    NsiSetDelete = 3,                       // Delete the object identified by the key.
+    NsiSetReset = 4,                        // Restore the stored parameters to their defaults.
+    NsiSetClear = 5,                        // Clear the stored parameters.
+    NsiSetCreateOrSetWithReference = 6,     // Create or update an object and retain a reference to it.
+    NsiSetDeleteWithReference = 7,          // Release a reference to the object, deleting it when no references remain.
 } NSI_SET_ACTION;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/a7d46637ced3668dae4a3e83f336714afc24e728/phnt/include/ntnsi.h#L262">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntnsi.h#L244">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

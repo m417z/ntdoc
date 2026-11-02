@@ -44,15 +44,80 @@
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
 #if (PHNT_VERSION &gt;= PHNT_WINDOWS_10)
-
-</span><span class="ntdoc-code-intro language-cpp">/**
+/**
  * The RtlClearBitsEx routine clears a run of consecutive bits in an extended bitmap.
  *
  * \param BitMapHeader A pointer to the <a href="rtl_bitmap_ex" title="typedef struct _RTL_BITMAP_EX&#10;{&#10;    ULONG64 SizeOfBitMap;&#10;    PULONG64 Buffer;&#10;} RTL_BITMAP_EX, *PRTL_BITMAP_EX;">RTL_BITMAP_EX</a> that describes the bitmap.
  * \param StartingIndex The zero-based index of the first bit to clear.
  * \param NumberToClear The number of consecutive bits to clear.
  */
-</span><span class="ntdoc-code-body language-cpp">NTSYSAPI
+#ifndef PHNT_NO_INLINE_RTL_BITMAP
+
+</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">FORCEINLINE
+VOID
+NTAPI_INLINE
+RtlClearBitsEx(
+    _In_ <a href="rtl_bitmap_ex" title="typedef struct _RTL_BITMAP_EX&#10;{&#10;    ULONG64 SizeOfBitMap;&#10;    PULONG64 Buffer;&#10;} RTL_BITMAP_EX, *PRTL_BITMAP_EX;">PRTL_BITMAP_EX</a> BitMapHeader,
+    _In_ <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> StartingIndex,
+    _In_ <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> NumberToClear
+    )
+{
+    PUCHAR buffer;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> offset;
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> count;
+    <a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a> mask;
+    <a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a> bytes;
+
+    if (NumberToClear == 0)
+        return;
+
+    buffer = (PUCHAR)BitMapHeader-&gt;Buffer + (<a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a>)(StartingIndex &gt;&gt; 3);
+    offset = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)(StartingIndex &amp; 7);
+
+    if (offset != 0)
+    {
+        count = 8 - offset;
+        if (NumberToClear &lt; count)
+            count = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)NumberToClear;
+        mask = (<a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>)(((1u &lt;&lt; count) - 1) &lt;&lt; offset);
+        *buffer++ &amp;= (<a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>)~mask;
+        NumberToClear -= count;
+    }
+
+    bytes = (<a href="size_t-2" title="typedef ULONG_PTR SIZE_T;">SIZE_T</a>)(NumberToClear &gt;&gt; 3);
+    if (bytes != 0)
+    {
+        memset(buffer, 0, bytes);
+        buffer += bytes;
+    }
+
+    count = (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)(NumberToClear &amp; 7);
+    if (count != 0)
+    {
+        mask = (<a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>)((1u &lt;&lt; count) - 1);
+        *buffer &amp;= (<a href="uchar" title="typedef unsigned char UCHAR;">UCHAR</a>)~mask;
+    }
+}
+</span><span class="ntdoc-code-footer language-cpp">
+#endif
+#endif
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntrtl.h#L15258">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
+#if (PHNT_VERSION &gt;= PHNT_WINDOWS_10)
+/**
+ * The RtlClearBitsEx routine clears a run of consecutive bits in an extended bitmap.
+ *
+ * \param BitMapHeader A pointer to the <a href="rtl_bitmap_ex" title="typedef struct _RTL_BITMAP_EX&#10;{&#10;    ULONG64 SizeOfBitMap;&#10;    PULONG64 Buffer;&#10;} RTL_BITMAP_EX, *PRTL_BITMAP_EX;">RTL_BITMAP_EX</a> that describes the bitmap.
+ * \param StartingIndex The zero-based index of the first bit to clear.
+ * \param NumberToClear The number of consecutive bits to clear.
+ */
+#ifndef PHNT_NO_INLINE_RTL_BITMAP
+// ...
+#else
+
+</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 VOID
 NTAPI
 RtlClearBitsEx(
@@ -63,7 +128,8 @@ RtlClearBitsEx(
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/a7d46637ced3668dae4a3e83f336714afc24e728/phnt/include/ntrtl.h#L14744">View code on GitHub</a></span></code></pre></div>
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntrtl.h#L15304">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

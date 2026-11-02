@@ -46,16 +46,26 @@
 
 </span><span class="ntdoc-code-intro language-cpp">/**
  * The NSI_NDIS_CURRENT_THREAD_COMPARTMENT_PARAMETER_ID values are byte offsets for NsiNdisObjectCurrentThreadCompartment
- * (no key). NsiNdisCurrentThreadCompartmentType0Id reads the calling thread&#x27;s compartment ID
- * (GetCurrentThreadCompartmentId).
+ * (no key; 8-byte read/write block: NET_IF_COMPARTMENT_ID CompartmentId, NET_IF_COMPARTMENT_SCOPE CompartmentScope).
+ * NsiNdisCurrentThreadCompartmentType0Id is used by GetCurrentThreadCompartmentId and
+ * NsiNdisCurrentThreadCompartmentType0Scope by GetCurrentThreadCompartmentScope.
+ *
+ * ndis.sys registers GetAll, SetParameter and SetAll handlers, read/write block only:
+ * - GetAll (ndisNsiGetAllThreadInformation): returns the thread&#x27;s compartment and scope. When the thread has no
+ *   compartment, CompartmentId is the session&#x27;s compartment (from the impersonation token&#x27;s session, else the thread&#x27;s),
+ *   else NET_IF_COMPARTMENT_ID_PRIMARY, and CompartmentScope is 0.
+ * - SetParameter (ndisNsiSetThreadInformation): NsiActive only (STATUS_NOT_IMPLEMENTED otherwise), NsiSetDefault and a
+ *   non-NULL parameter; offset 0 calls NdisSetThreadObjectCompartmentId and offset 4 NdisSetThreadObjectCompartmentScope.
+ *   Any other offset fails with STATUS_INVALID_PARAMETER.
  */
 </span><span class="ntdoc-code-body language-cpp">typedef enum _NSI_NDIS_CURRENT_THREAD_COMPARTMENT_PARAMETER_ID
 {
-    NsiNdisCurrentThreadCompartmentType0Id = 0x000
+    NsiNdisCurrentThreadCompartmentType0Id = 0x000,     // NET_IF_COMPARTMENT_ID CompartmentId (4 bytes).
+    NsiNdisCurrentThreadCompartmentType0Scope = 0x004   // NET_IF_COMPARTMENT_SCOPE CompartmentScope (4 bytes).
 } NSI_NDIS_CURRENT_THREAD_COMPARTMENT_PARAMETER_ID;
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/a7d46637ced3668dae4a3e83f336714afc24e728/phnt/include/ntnsi.h#L399">View code on GitHub</a></span></code></pre></div>
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntnsi.h#L508">View code on GitHub</a></span></code></pre></div>
 </div>
 <div class="ntdoc-descriptions">
 <div class="ntdoc-description-title">

@@ -43,15 +43,54 @@
     <div class="ntdoc-code-elements">
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
-
-</span><span class="ntdoc-code-intro language-cpp">/**
+/**
  * The RtlFindLeastSignificantBit routine returns the zero-based position of the least significant nonzero bit in its parameter.
  *
  * \param Set The 64-bit value to be searched for its least significant nonzero bit.
  * \return The zero-based bit position of the least significant nonzero bit, or -1 if every bit is zero.
  * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlfindleastsignificantbit">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlfindleastsignificantbit</a>
  */
-</span><span class="ntdoc-code-body language-cpp">NTSYSAPI
+#ifndef PHNT_NO_INLINE_RTL_BITMAP
+
+</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">FORCEINLINE
+<a href="cchar" title="typedef char CCHAR;">CCHAR</a>
+NTAPI_INLINE
+RtlFindLeastSignificantBit(
+    _In_ <a href="ulonglong" title="typedef unsigned __int64 ULONGLONG;">ULONGLONG</a> Set
+    )
+{
+    <a href="ulong" title="typedef unsigned long ULONG;">ULONG</a> index;
+
+#ifdef _WIN64
+    if (_BitScanForward64(&amp;index, Set))
+        return (<a href="cchar" title="typedef char CCHAR;">CCHAR</a>)index;
+#else
+    if (_BitScanForward(&amp;index, (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)Set))
+        return (<a href="cchar" title="typedef char CCHAR;">CCHAR</a>)(index);
+    if (_BitScanForward(&amp;index, (<a href="ulong" title="typedef unsigned long ULONG;">ULONG</a>)(Set &gt;&gt; 32)))
+        return (<a href="cchar" title="typedef char CCHAR;">CCHAR</a>)(index + 32);
+#endif
+
+    return (<a href="cchar" title="typedef char CCHAR;">CCHAR</a>)-1;
+}
+</span><span class="ntdoc-code-footer language-cpp">
+#endif
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntrtl.h#L14555">View code on GitHub</a></span></code></pre></div>
+<div class="ntdoc-code-element">
+<pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">#ifndef _NTRTL_H
+/**
+ * The RtlFindLeastSignificantBit routine returns the zero-based position of the least significant nonzero bit in its parameter.
+ *
+ * \param Set The 64-bit value to be searched for its least significant nonzero bit.
+ * \return The zero-based bit position of the least significant nonzero bit, or -1 if every bit is zero.
+ * \sa <a target="_blank" href="https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlfindleastsignificantbit">https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-rtlfindleastsignificantbit</a>
+ */
+#ifndef PHNT_NO_INLINE_RTL_BITMAP
+// ...
+#else
+
+</span><span class="ntdoc-code-intro language-cpp"></span><span class="ntdoc-code-body language-cpp">NTSYSAPI
 <a href="cchar" title="typedef char CCHAR;">CCHAR</a>
 NTAPI
 RtlFindLeastSignificantBit(
@@ -59,7 +98,8 @@ RtlFindLeastSignificantBit(
     );
 </span><span class="ntdoc-code-footer language-cpp">
 #endif
-</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/a7d46637ced3668dae4a3e83f336714afc24e728/phnt/include/ntrtl.h#L14202">View code on GitHub</a></span></code></pre></div>
+#endif
+</span><span class="ntdoc-code-links"><hr><a target="_blank" href="https://github.com/winsiderss/systeminformer/blob/4760d1993e840e71834514d507f957772ed6f36b/phnt/include/ntrtl.h#L14577">View code on GitHub</a></span></code></pre></div>
 <div class="ntdoc-code-element">
 <pre class="ntdoc-code-pre"><code class="ntdoc-code"><span class="ntdoc-code-header language-cpp">// wdm.h
 
@@ -90,7 +130,7 @@ RtlFindLeastSignificantBit(
 <h2>Return value</h2>
 <p>The zero-based bit position of the least significant nonzero bit, or -1 if every bit is zero.</p>
 <h2>See also</h2>
-<p><a href="rtlfindmostsignificantbit" title="NTSYSAPI&#10;CCHAR&#10;NTAPI&#10;RtlFindMostSignificantBit(&#10;    _In_ ULONGLONG Set&#10;    );">RtlFindMostSignificantBit</a></p>
+<p><a href="rtlfindmostsignificantbit" title="FORCEINLINE&#10;CCHAR&#10;NTAPI_INLINE&#10;RtlFindMostSignificantBit(&#10;    _In_ ULONGLONG Set&#10;    )&#10;{&#10;    ULONG index;&#10;&#10;#ifdef _WIN64&#10;    if (_BitScanReverse64(&amp;index, Set))&#10;        return (CCHAR)index;&#10;#else&#10;    if (_BitScanReverse(&amp;index, (ULONG)(Set &gt;&gt; 32)))&#10;        return (CCHAR)(index + 32);&#10;    if (_BitScanReverse(&amp;index, (ULONG)Set))&#10;        return (CCHAR)(index);&#10;#endif&#10;&#10;    return (CCHAR)-1;&#10;...">RtlFindMostSignificantBit</a></p>
 <hr>
 <div class="ntdoc-description-links">
 <p>
